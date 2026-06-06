@@ -9,6 +9,17 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
+type AuthUser = {
+  id: string;
+  email: string;
+  passwordHash: string;
+  name: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type PublicUser = Omit<AuthUser, 'passwordHash'>;
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -61,16 +72,10 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return user;
+    return this.toPublicUser(user);
   }
 
-  private async createAuthResponse(user: {
-    id: string;
-    email: string;
-    name: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }) {
+  private async createAuthResponse(user: AuthUser) {
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
@@ -78,7 +83,17 @@ export class AuthService {
 
     return {
       accessToken,
-      user,
+      user: this.toPublicUser(user),
+    };
+  }
+
+  private toPublicUser(user: AuthUser): PublicUser {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 }
