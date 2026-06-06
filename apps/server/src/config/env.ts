@@ -14,4 +14,5 @@ export const env = {
   databaseUrl: requiredEnv('DATABASE_URL'),
   jwtSecret: requiredEnv('JWT_SECRET'),
   port: process.env.PORT ?? '3001',
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
 };

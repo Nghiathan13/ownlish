@@ -2,6 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import type { AuthRequest } from './types/auth.types';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -17,6 +18,8 @@ describe('AuthController', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -36,5 +39,68 @@ describe('AuthController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('delegates register to AuthService', async () => {
+    const dto = {
+      email: 'test@example.com',
+      password: 'test123456',
+      name: 'Test User',
+    };
+    const response = {
+      accessToken: 'access-token',
+      user: {
+        id: 'user-id',
+        email: dto.email,
+        name: dto.name,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    };
+    authServiceMock.register.mockResolvedValue(response);
+
+    await expect(controller.register(dto)).resolves.toBe(response);
+    expect(authServiceMock.register).toHaveBeenCalledWith(dto);
+  });
+
+  it('delegates login to AuthService', async () => {
+    const dto = {
+      email: 'test@example.com',
+      password: 'test123456',
+    };
+    const response = {
+      accessToken: 'access-token',
+      user: {
+        id: 'user-id',
+        email: dto.email,
+        name: 'Test User',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    };
+    authServiceMock.login.mockResolvedValue(response);
+
+    await expect(controller.login(dto)).resolves.toBe(response);
+    expect(authServiceMock.login).toHaveBeenCalledWith(dto);
+  });
+
+  it('delegates current user lookup to AuthService', async () => {
+    const request = {
+      user: {
+        id: 'user-id',
+        email: 'test@example.com',
+      },
+    } as AuthRequest;
+    const response = {
+      id: 'user-id',
+      email: 'test@example.com',
+      name: 'Test User',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    };
+    authServiceMock.me.mockResolvedValue(response);
+
+    await expect(controller.me(request)).resolves.toBe(response);
+    expect(authServiceMock.me).toHaveBeenCalledWith('user-id');
   });
 });
