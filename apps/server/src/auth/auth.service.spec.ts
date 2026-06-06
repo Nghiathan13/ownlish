@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
+import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 
@@ -71,7 +72,10 @@ describe('AuthService', () => {
     expect(usersServiceMock.findByEmail).toHaveBeenCalledWith(
       'test@example.com',
     );
-    expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
+    expect(bcrypt.hash).toHaveBeenCalledWith(
+      'password123',
+      env.bcryptSaltRounds,
+    );
     expect(usersServiceMock.create).toHaveBeenCalledWith({
       email: 'test@example.com',
       passwordHash: 'hashed-password',

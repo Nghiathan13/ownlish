@@ -7,23 +7,26 @@ type CreateUserInput = {
   name?: string;
 };
 
+type UserResult = ReturnType<PrismaService['user']['findUnique']>;
+type CreatedUserResult = ReturnType<PrismaService['user']['create']>;
+
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findByEmail(email: string) {
+  findByEmail(email: string): UserResult {
     return this.prisma.user.findUnique({
       where: { email },
     });
   }
 
-  findById(id: string) {
+  findById(id: string): UserResult {
     return this.prisma.user.findUnique({
       where: { id },
     });
   }
 
-  create(input: CreateUserInput) {
+  create(input: CreateUserInput): CreatedUserResult {
     return this.prisma.user.create({
       data: input,
     });
