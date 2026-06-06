@@ -1,3 +1,4 @@
+import { env } from '../config/env';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
@@ -9,7 +10,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
   imports: [
     UsersModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: env.jwtSecret,
       signOptions: {
         expiresIn: '7d',
       },
