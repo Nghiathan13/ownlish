@@ -54,6 +54,16 @@ export class AuthService {
     return this.createAuthResponse(user);
   }
 
+  async me(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
+
   private async createAuthResponse(user: {
     id: string;
     email: string;
