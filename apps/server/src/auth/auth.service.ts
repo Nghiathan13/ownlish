@@ -8,17 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-
-type AuthUser = {
-  id: string;
-  email: string;
-  passwordHash: string;
-  name: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type PublicUser = Omit<AuthUser, 'passwordHash'>;
+import type { AuthResponse, AuthUser, PublicUser } from './types/auth.types';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +17,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<AuthResponse> {
     const email = dto.email.trim().toLowerCase();
     const existingUser = await this.usersService.findByEmail(email);
 
@@ -45,7 +35,7 @@ export class AuthService {
     return this.createAuthResponse(user);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthResponse> {
     const email = dto.email.trim().toLowerCase();
     const user = await this.usersService.findByEmail(email);
 
@@ -65,7 +55,7 @@ export class AuthService {
     return this.createAuthResponse(user);
   }
 
-  async me(userId: string) {
+  async me(userId: string): Promise<PublicUser> {
     const user = await this.usersService.findById(userId);
 
     if (!user) {
@@ -75,7 +65,7 @@ export class AuthService {
     return this.toPublicUser(user);
   }
 
-  private async createAuthResponse(user: AuthUser) {
+  private async createAuthResponse(user: AuthUser): Promise<AuthResponse> {
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
