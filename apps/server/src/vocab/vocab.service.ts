@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVocabWordDto } from './dto/create-vocab-word.dto';
+import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { normalizeWord } from './lib/normalize-word';
 
@@ -18,7 +19,7 @@ type UpdatedVocabWordResult = ReturnType<PrismaService['vocabWord']['update']>;
 export class VocabService {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(userId: string): VocabWordListResult {
+  list(userId: string, query: ListVocabWordsDto = {}): VocabWordListResult {
     return this.prisma.vocabWord.findMany({
       where: {
         userId,
@@ -27,7 +28,13 @@ export class VocabService {
       orderBy: {
         createdAt: 'desc',
       },
+      take: query.limit ?? 50,
+      skip: query.offset ?? 0,
     });
+  }
+
+  get(userId: string, id: string): Promise<Awaited<VocabWordResult>> {
+    return this.findActiveWordOrThrow(userId, id);
   }
 
   async create(
@@ -35,7 +42,7 @@ export class VocabService {
     dto: CreateVocabWordDto,
   ): Promise<Awaited<CreatedVocabWordResult>> {
     const word = this.normalizeRequiredWord(dto.word);
-    const normalizedWord = normalizeWord(dto.word);
+    const normalizedWord = normalizeWord(word);
 
     try {
       return await this.prisma.vocabWord.create({
@@ -64,12 +71,7 @@ export class VocabService {
 
     const data = {
       ...dto,
-      ...(dto.word
-        ? {
-            word: this.normalizeRequiredWord(dto.word),
-            normalizedWord: normalizeWord(dto.word),
-          }
-        : {}),
+      ...this.buildWordUpdateData(dto.word),
     };
 
     try {
@@ -127,6 +129,19 @@ export class VocabService {
     }
 
     return normalizedWord;
+  }
+
+  private buildWordUpdateData(word?: string) {
+    if (!word) {
+      return {};
+    }
+
+    const normalizedWord = this.normalizeRequiredWord(word);
+
+    return {
+      word: normalizedWord,
+      normalizedWord: normalizeWord(normalizedWord),
+    };
   }
 
   private isUniqueConstraintError(error: unknown): boolean {

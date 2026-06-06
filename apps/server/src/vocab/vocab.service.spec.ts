@@ -71,7 +71,51 @@ describe('VocabService', () => {
       orderBy: {
         createdAt: 'desc',
       },
+      take: 50,
+      skip: 0,
     });
+  });
+
+  it('lists active words with pagination', async () => {
+    prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+
+    await service.list('user-id', {
+      limit: 10,
+      offset: 20,
+    });
+
+    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        deletedAt: null,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 10,
+      skip: 20,
+    });
+  });
+
+  it('gets an active word for a user', async () => {
+    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
+
+    await expect(service.get('user-id', 'word-id')).resolves.toBe(vocabWord);
+    expect(prismaMock.vocabWord.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'word-id',
+        userId: 'user-id',
+        deletedAt: null,
+      },
+    });
+  });
+
+  it('throws not found when getting a missing word', async () => {
+    prismaMock.vocabWord.findFirst.mockResolvedValue(null);
+
+    await expect(service.get('user-id', 'missing-id')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('creates a word with normalized word', async () => {

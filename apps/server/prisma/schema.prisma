@@ -44,8 +44,8 @@ model VocabWord {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, normalizedWord])
   @@index([userId])
   @@index([userId, deletedAt])
+  @@index([userId, normalizedWord])
   @@map("vocab_words")
 }

@@ -71,6 +71,18 @@ describe('VocabController (e2e)', () => {
     const wordId = createResponse.body.id;
 
     await request(app.getHttpServer())
+      .get(`/vocab/${wordId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          id: wordId,
+          word: 'Hello',
+          normalizedWord: 'hello',
+        });
+      });
+
+    await request(app.getHttpServer())
       .get('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
@@ -136,5 +148,44 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send(payload)
       .expect(409);
+  });
+
+  it('allows creating the same word after soft delete', async () => {
+    const payload = {
+      word: 'hello',
+    };
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(payload)
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .delete(`/vocab/${createResponse.body.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const reAddResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(payload)
+      .expect(201);
+
+    expect(reAddResponse.body.id).not.toBe(createResponse.body.id);
+    expect(reAddResponse.body).toMatchObject({
+      word: 'hello',
+      normalizedWord: 'hello',
+      deletedAt: null,
+    });
+
+    await request(app.getHttpServer())
+      .get('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0].id).toBe(reAddResponse.body.id);
+      });
   });
 });
