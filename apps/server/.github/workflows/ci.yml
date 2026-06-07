@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: engvocab
+          POSTGRES_PASSWORD: engvocab
+          POSTGRES_DB: engvocab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U engvocab -d engvocab"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab
+      JWT_SECRET: test-jwt-secret
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+      BCRYPT_SALT_ROUNDS: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Run migrations
+        run: pnpm prisma migrate deploy
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Run e2e tests
+        run: pnpm test:e2e
+
+      - name: Build
+        run: pnpm build
