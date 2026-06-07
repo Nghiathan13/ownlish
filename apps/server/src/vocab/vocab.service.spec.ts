@@ -97,6 +97,32 @@ describe('VocabService', () => {
     });
   });
 
+  it('lists active words with search filter', async () => {
+    prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+
+    await service.list('user-id', {
+      search: ' Hello ',
+      limit: 10,
+      offset: 0,
+    });
+
+    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        deletedAt: null,
+        normalizedWord: {
+          contains: 'hello',
+          mode: 'insensitive',
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 10,
+      skip: 0,
+    });
+  });
+
   it('lists due review words for a user', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
     prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);

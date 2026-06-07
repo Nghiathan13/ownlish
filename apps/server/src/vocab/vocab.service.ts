@@ -21,10 +21,20 @@ export class VocabService {
   constructor(private readonly prisma: PrismaService) {}
 
   list(userId: string, query: ListVocabWordsDto = {}): VocabWordListResult {
+    const search = query.search?.trim();
+
     return this.prisma.vocabWord.findMany({
       where: {
         userId,
         deletedAt: null,
+        ...(search
+          ? {
+              normalizedWord: {
+                contains: normalizeWord(search),
+                mode: 'insensitive' as const,
+              },
+            }
+          : {}),
       },
       orderBy: {
         createdAt: 'desc',

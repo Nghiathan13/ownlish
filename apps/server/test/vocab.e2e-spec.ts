@@ -152,6 +152,38 @@ describe('VocabController (e2e)', () => {
     return request(app.getHttpServer()).get('/vocab').expect(401);
   });
 
+  it('searches vocabulary words', async () => {
+    const helloResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'hello',
+        meaningVi: 'xin chao',
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'world',
+        meaningVi: 'the gioi',
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .get('/vocab?search=hello')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0]).toMatchObject({
+          id: helloResponse.body.id,
+          word: 'hello',
+        });
+      });
+  });
+
   it('lists due review words only', async () => {
     const newWordResponse = await request(app.getHttpServer())
       .post('/vocab')
