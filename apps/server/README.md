@@ -94,6 +94,29 @@ pnpm test:e2e
 pnpm build
 ```
 
+## Docker
+
+Build the API image:
+
+```bash
+docker build -t engvocab-server .
+```
+
+Run the API container against the local PostgreSQL container:
+
+```bash
+docker run --rm -p 3001:3001 \
+  --env-file .env \
+  --add-host=host.docker.internal:host-gateway \
+  engvocab-server
+```
+
+When running from Docker, use a `DATABASE_URL` that the container can reach, for example:
+
+```bash
+DATABASE_URL="postgresql://engvocab:engvocab@host.docker.internal:5433/engvocab"
+```
+
 ## Database
 
 Local PostgreSQL runs on port `5433` to avoid conflicts with a system PostgreSQL on `5432`.
