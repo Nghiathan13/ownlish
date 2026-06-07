@@ -87,11 +87,17 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0]).toMatchObject({
+        expect(response.body.items).toHaveLength(1);
+        expect(response.body.items[0]).toMatchObject({
           id: wordId,
           word: 'Hello',
           normalizedWord: 'hello',
+        });
+        expect(response.body.meta).toMatchObject({
+          limit: 50,
+          offset: 0,
+          total: 1,
+          hasMore: false,
         });
       });
 
@@ -145,7 +151,13 @@ describe('VocabController (e2e)', () => {
       .get('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
-      .expect([]);
+      .expect((response) => {
+        expect(response.body.items).toEqual([]);
+        expect(response.body.meta).toMatchObject({
+          total: 0,
+          hasMore: false,
+        });
+      });
   });
 
   it('requires authentication', () => {
@@ -176,10 +188,14 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0]).toMatchObject({
+        expect(response.body.items).toHaveLength(1);
+        expect(response.body.items[0]).toMatchObject({
           id: helloResponse.body.id,
           word: 'hello',
+        });
+        expect(response.body.meta).toMatchObject({
+          total: 1,
+          hasMore: false,
         });
       });
   });
@@ -309,8 +325,12 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toHaveLength(1);
-        expect(response.body[0].id).toBe(reAddResponse.body.id);
+        expect(response.body.items).toHaveLength(1);
+        expect(response.body.items[0].id).toBe(reAddResponse.body.id);
+        expect(response.body.meta).toMatchObject({
+          total: 1,
+          hasMore: false,
+        });
       });
   });
 });

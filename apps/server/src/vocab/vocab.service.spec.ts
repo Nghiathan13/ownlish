@@ -13,6 +13,7 @@ describe('VocabService', () => {
   const prismaMock = {
     vocabWord: {
       findMany: jest.fn(),
+      count: jest.fn(),
       create: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
@@ -61,8 +62,17 @@ describe('VocabService', () => {
 
   it('lists active words for a user', async () => {
     prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+    prismaMock.vocabWord.count.mockResolvedValue(1);
 
-    await expect(service.list('user-id')).resolves.toEqual([vocabWord]);
+    await expect(service.list('user-id')).resolves.toEqual({
+      items: [vocabWord],
+      meta: {
+        limit: 50,
+        offset: 0,
+        total: 1,
+        hasMore: false,
+      },
+    });
     expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-id',
@@ -74,14 +84,30 @@ describe('VocabService', () => {
       take: 50,
       skip: 0,
     });
+    expect(prismaMock.vocabWord.count).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        deletedAt: null,
+      },
+    });
   });
 
   it('lists active words with pagination', async () => {
     prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+    prismaMock.vocabWord.count.mockResolvedValue(21);
 
-    await service.list('user-id', {
-      limit: 10,
-      offset: 20,
+    await expect(
+      service.list('user-id', {
+        limit: 10,
+        offset: 20,
+      }),
+    ).resolves.toMatchObject({
+      meta: {
+        limit: 10,
+        offset: 20,
+        total: 21,
+        hasMore: false,
+      },
     });
 
     expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
@@ -97,8 +123,37 @@ describe('VocabService', () => {
     });
   });
 
+  it('sets hasMore when more paginated words are available', async () => {
+    prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+    prismaMock.vocabWord.count.mockResolvedValue(25);
+
+    await expect(
+      service.list('user-id', {
+        limit: 10,
+        offset: 10,
+      }),
+    ).resolves.toMatchObject({
+      meta: {
+        hasMore: true,
+      },
+    });
+
+    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        deletedAt: null,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 10,
+      skip: 10,
+    });
+  });
+
   it('lists active words with search filter', async () => {
     prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+    prismaMock.vocabWord.count.mockResolvedValue(1);
 
     await service.list('user-id', {
       search: ' Hello ',
@@ -120,6 +175,16 @@ describe('VocabService', () => {
       },
       take: 10,
       skip: 0,
+    });
+    expect(prismaMock.vocabWord.count).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        deletedAt: null,
+        normalizedWord: {
+          contains: 'hello',
+          mode: 'insensitive',
+        },
+      },
     });
   });
 

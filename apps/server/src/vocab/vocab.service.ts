@@ -15,33 +15,63 @@ type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
 type VocabWordListResult = ReturnType<PrismaService['vocabWord']['findMany']>;
 type CreatedVocabWordResult = ReturnType<PrismaService['vocabWord']['create']>;
 type UpdatedVocabWordResult = ReturnType<PrismaService['vocabWord']['update']>;
+type VocabWordListResponse = {
+  items: Awaited<VocabWordListResult>;
+  meta: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+};
 
 @Injectable()
 export class VocabService {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(userId: string, query: ListVocabWordsDto = {}): VocabWordListResult {
+  async list(
+    userId: string,
+    query: ListVocabWordsDto = {},
+  ): Promise<VocabWordListResponse> {
     const search = query.search?.trim();
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+    const where = {
+      userId,
+      deletedAt: null,
+      ...(search
+        ? {
+            normalizedWord: {
+              contains: normalizeWord(search),
+              mode: 'insensitive' as const,
+            },
+          }
+        : {}),
+    };
 
-    return this.prisma.vocabWord.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-        ...(search
-          ? {
-              normalizedWord: {
-                contains: normalizeWord(search),
-                mode: 'insensitive' as const,
-              },
-            }
-          : {}),
+    const [items, total] = await Promise.all([
+      this.prisma.vocabWord.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.vocabWord.count({
+        where,
+      }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + items.length < total,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: query.limit ?? 50,
-      skip: query.offset ?? 0,
-    });
+    };
   }
 
   listDueReviewWords(userId: string): VocabWordListResult {

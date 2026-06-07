@@ -73,13 +73,22 @@ describe('VocabController', () => {
   });
 
   it('delegates list to VocabService with current user id', async () => {
-    vocabServiceMock.list.mockResolvedValue([vocabWord]);
+    const response = {
+      items: [vocabWord],
+      meta: {
+        limit: 10,
+        offset: 20,
+        total: 1,
+        hasMore: false,
+      },
+    };
+    vocabServiceMock.list.mockResolvedValue(response);
     const query = {
       limit: 10,
       offset: 20,
     };
 
-    await expect(controller.list(request, query)).resolves.toEqual([vocabWord]);
+    await expect(controller.list(request, query)).resolves.toEqual(response);
     expect(vocabServiceMock.list).toHaveBeenCalledWith('user-id', query);
   });
 
