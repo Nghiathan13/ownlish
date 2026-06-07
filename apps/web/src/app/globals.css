@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +22,142 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  border-radius: 8px;
+}
+
+.page {
+  width: min(960px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 64px 0;
+}
+
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+}
+
+.panel,
+.auth-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  border-radius: 12px;
+  padding: 32px;
+}
+
+.auth-card {
+  width: min(420px, 100%);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 12px;
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: 1.25rem;
+}
+
+.muted {
+  color: color-mix(in srgb, var(--foreground) 64%, transparent);
+}
+
+.actions,
+.auth-tabs,
+.page-header {
+  display: flex;
+  gap: 12px;
+}
+
+.page-header {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.actions {
+  margin-top: 24px;
+}
+
+.actions a,
+button {
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  background: var(--foreground);
+  color: var(--background);
+  cursor: pointer;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+
+.actions a + a,
+.auth-tabs button {
+  background: transparent;
+  color: var(--foreground);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.auth-tabs {
+  margin: 24px 0;
+}
+
+.auth-tabs button.active {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.auth-form input {
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  padding: 10px 12px;
+}
+
+.form-error {
+  margin: 0;
+  color: #e5484d;
+}
+
+.empty-state {
+  margin-top: 32px;
 }
