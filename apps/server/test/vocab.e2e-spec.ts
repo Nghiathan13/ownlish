@@ -113,6 +113,26 @@ describe('VocabController (e2e)', () => {
       });
 
     await request(app.getHttpServer())
+      .patch(`/vocab/${wordId}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 3,
+        wrongCount: 1,
+        lastReview: '2026-06-07T00:00:00.000Z',
+        nextReview: '2026-06-08T00:00:00.000Z',
+      })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          id: wordId,
+          level: 3,
+          wrongCount: 1,
+          lastReview: '2026-06-07T00:00:00.000Z',
+          nextReview: '2026-06-08T00:00:00.000Z',
+        });
+      });
+
+    await request(app.getHttpServer())
       .delete(`/vocab/${wordId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
@@ -130,6 +150,19 @@ describe('VocabController (e2e)', () => {
 
   it('requires authentication', () => {
     return request(app.getHttpServer()).get('/vocab').expect(401);
+  });
+
+  it('returns not found when updating review for a missing word', () => {
+    return request(app.getHttpServer())
+      .patch('/vocab/missing-id/review')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 3,
+        wrongCount: 1,
+        lastReview: '2026-06-07T00:00:00.000Z',
+        nextReview: '2026-06-08T00:00:00.000Z',
+      })
+      .expect(404);
   });
 
   it('rejects duplicate active words for the same user', async () => {

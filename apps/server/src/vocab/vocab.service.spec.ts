@@ -200,6 +200,63 @@ describe('VocabService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('updates review fields for an active word', async () => {
+    const lastReview = '2026-06-07T00:00:00.000Z';
+    const nextReview = '2026-06-08T00:00:00.000Z';
+
+    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
+    prismaMock.vocabWord.update.mockResolvedValue({
+      ...vocabWord,
+      level: 2,
+      wrongCount: 1,
+      lastReview: new Date(lastReview),
+      nextReview: new Date(nextReview),
+    });
+
+    await expect(
+      service.updateReview('user-id', 'word-id', {
+        level: 2,
+        wrongCount: 1,
+        lastReview,
+        nextReview,
+      }),
+    ).resolves.toMatchObject({
+      level: 2,
+      wrongCount: 1,
+    });
+
+    expect(prismaMock.vocabWord.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'word-id',
+        userId: 'user-id',
+        deletedAt: null,
+      },
+    });
+    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
+      where: { id: 'word-id' },
+      data: {
+        level: 2,
+        wrongCount: 1,
+        lastReview: new Date(lastReview),
+        nextReview: new Date(nextReview),
+      },
+    });
+  });
+
+  it('throws not found when updating review for a missing word', async () => {
+    prismaMock.vocabWord.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.updateReview('user-id', 'missing-id', {
+        level: 2,
+        wrongCount: 1,
+        lastReview: '2026-06-07T00:00:00.000Z',
+        nextReview: '2026-06-08T00:00:00.000Z',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
+  });
+
   it('throws bad request when updating to a blank word', async () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
 

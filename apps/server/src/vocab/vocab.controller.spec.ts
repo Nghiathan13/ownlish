@@ -12,6 +12,7 @@ describe('VocabController', () => {
     get: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateReview: jest.fn(),
     softDelete: jest.fn(),
   };
 
@@ -111,6 +112,29 @@ describe('VocabController', () => {
 
     await controller.update(request, 'word-id', dto);
     expect(vocabServiceMock.update).toHaveBeenCalledWith(
+      'user-id',
+      'word-id',
+      dto,
+    );
+  });
+
+  it('delegates update review to VocabService with current user id', async () => {
+    const dto = {
+      level: 2,
+      wrongCount: 1,
+      lastReview: '2026-06-07T00:00:00.000Z',
+      nextReview: '2026-06-08T00:00:00.000Z',
+    };
+    vocabServiceMock.updateReview.mockResolvedValue({
+      ...vocabWord,
+      level: 2,
+      wrongCount: 1,
+      lastReview: new Date(dto.lastReview),
+      nextReview: new Date(dto.nextReview),
+    });
+
+    await controller.updateReview(request, 'word-id', dto);
+    expect(vocabServiceMock.updateReview).toHaveBeenCalledWith(
       'user-id',
       'word-id',
       dto,

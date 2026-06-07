@@ -15,6 +15,7 @@ import type { AuthRequest } from '../auth/types/auth.types';
 import { CreateVocabWordDto } from './dto/create-vocab-word.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
+import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
 import { VocabService } from './vocab.service';
 
 @Controller('vocab')
@@ -44,6 +45,15 @@ export class VocabController {
     @Body() dto: CreateVocabWordDto,
   ): ReturnType<VocabService['create']> {
     return this.vocabService.create(request.user.id, dto);
+  }
+
+  @Patch(':id/review')
+  updateReview(
+    @Req() request: AuthRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateVocabReviewDto,
+  ): ReturnType<VocabService['updateReview']> {
+    return this.vocabService.updateReview(request.user.id, id, dto);
   }
 
   @Patch(':id')

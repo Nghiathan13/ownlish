@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateVocabWordDto } from './dto/create-vocab-word.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
+import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
 import { normalizeWord } from './lib/normalize-word';
 
 type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
@@ -86,6 +87,24 @@ export class VocabService {
 
       throw error;
     }
+  }
+
+  async updateReview(
+    userId: string,
+    id: string,
+    dto: UpdateVocabReviewDto,
+  ): Promise<Awaited<UpdatedVocabWordResult>> {
+    await this.findActiveWordOrThrow(userId, id);
+
+    return this.prisma.vocabWord.update({
+      where: { id },
+      data: {
+        level: dto.level,
+        wrongCount: dto.wrongCount,
+        lastReview: new Date(dto.lastReview),
+        nextReview: new Date(dto.nextReview),
+      },
+    });
   }
 
   async softDelete(
