@@ -200,6 +200,82 @@ describe('VocabController (e2e)', () => {
       });
   });
 
+  it('returns vocabulary stats', async () => {
+    await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'new word',
+      })
+      .expect(201);
+
+    const masteredResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'mastered word',
+        level: 7,
+      })
+      .expect(201);
+
+    const difficultResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'difficult word',
+        wrongCount: 3,
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${masteredResponse.body.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 7,
+        wrongCount: 0,
+        lastReview: '2999-01-01T00:00:00.000Z',
+        nextReview: '2999-01-02T00:00:00.000Z',
+      })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${difficultResponse.body.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 1,
+        wrongCount: 3,
+        lastReview: '2999-01-01T00:00:00.000Z',
+        nextReview: '2999-01-02T00:00:00.000Z',
+      })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get('/vocab/stats')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          total: 3,
+          due: 1,
+          mastered: 1,
+          highWrongCount: 1,
+        });
+        expect(response.body.levels).toHaveLength(8);
+        expect(response.body.levels).toContainEqual({
+          level: 0,
+          count: 1,
+        });
+        expect(response.body.levels).toContainEqual({
+          level: 1,
+          count: 1,
+        });
+        expect(response.body.levels).toContainEqual({
+          level: 7,
+          count: 1,
+        });
+      });
+  });
+
   it('lists due review words only', async () => {
     const newWordResponse = await request(app.getHttpServer())
       .post('/vocab')

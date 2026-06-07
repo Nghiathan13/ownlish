@@ -9,6 +9,7 @@ describe('VocabController', () => {
 
   const vocabServiceMock = {
     list: jest.fn(),
+    getStats: jest.fn(),
     listDueReviewWords: jest.fn(),
     get: jest.fn(),
     create: jest.fn(),
@@ -99,6 +100,20 @@ describe('VocabController', () => {
       vocabWord,
     ]);
     expect(vocabServiceMock.listDueReviewWords).toHaveBeenCalledWith('user-id');
+  });
+
+  it('delegates stats to VocabService with current user id', async () => {
+    const response = {
+      total: 1,
+      due: 1,
+      mastered: 0,
+      highWrongCount: 0,
+      levels: [{ level: 0, count: 1 }],
+    };
+    vocabServiceMock.getStats.mockResolvedValue(response);
+
+    await expect(controller.getStats(request)).resolves.toEqual(response);
+    expect(vocabServiceMock.getStats).toHaveBeenCalledWith('user-id');
   });
 
   it('delegates get to VocabService with current user id', async () => {

@@ -10,6 +10,11 @@ import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
 import { normalizeWord } from './lib/normalize-word';
+import {
+  HIGH_WRONG_COUNT_THRESHOLD,
+  MAX_VOCAB_LEVEL,
+  MIN_VOCAB_LEVEL,
+} from './vocab.constants';
 
 type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
 type VocabWordListResult = ReturnType<PrismaService['vocabWord']['findMany']>;
@@ -23,6 +28,16 @@ type VocabWordListResponse = {
     total: number;
     hasMore: boolean;
   };
+};
+type VocabStatsResponse = {
+  total: number;
+  due: number;
+  mastered: number;
+  highWrongCount: number;
+  levels: Array<{
+    level: number;
+    count: number;
+  }>;
 };
 
 @Injectable()
@@ -99,6 +114,81 @@ export class VocabService {
         },
       ],
     });
+  }
+
+  async getStats(userId: string): Promise<VocabStatsResponse> {
+    const now = new Date();
+    const activeWhere = {
+      userId,
+      deletedAt: null,
+    };
+    const [total, due, mastered, highWrongCount, levelRows] = await Promise.all(
+      [
+        this.prisma.vocabWord.count({
+          where: activeWhere,
+        }),
+        this.prisma.vocabWord.count({
+          where: {
+            ...activeWhere,
+            OR: [
+              {
+                nextReview: null,
+              },
+              {
+                nextReview: {
+                  lte: now,
+                },
+              },
+            ],
+          },
+        }),
+        this.prisma.vocabWord.count({
+          where: {
+            ...activeWhere,
+            level: MAX_VOCAB_LEVEL,
+          },
+        }),
+        this.prisma.vocabWord.count({
+          where: {
+            ...activeWhere,
+            wrongCount: {
+              gte: HIGH_WRONG_COUNT_THRESHOLD,
+            },
+          },
+        }),
+        this.prisma.vocabWord.groupBy({
+          by: ['level'],
+          where: activeWhere,
+          _count: {
+            _all: true,
+          },
+          orderBy: {
+            level: 'asc',
+          },
+        }),
+      ],
+    );
+    const levelCountByLevel = new Map(
+      levelRows.map((row) => [row.level, row._count._all]),
+    );
+
+    return {
+      total,
+      due,
+      mastered,
+      highWrongCount,
+      levels: Array.from(
+        { length: MAX_VOCAB_LEVEL - MIN_VOCAB_LEVEL + 1 },
+        (_, index) => {
+          const level = MIN_VOCAB_LEVEL + index;
+
+          return {
+            level,
+            count: levelCountByLevel.get(level) ?? 0,
+          };
+        },
+      ),
+    };
   }
 
   get(userId: string, id: string): Promise<Awaited<VocabWordResult>> {
