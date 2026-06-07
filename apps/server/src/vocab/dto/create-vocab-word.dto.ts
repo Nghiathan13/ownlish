@@ -7,6 +7,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { MAX_VOCAB_LEVEL, MIN_VOCAB_LEVEL } from '../vocab.constants';
 
 export class CreateVocabWordDto {
   @IsString()
@@ -46,8 +47,8 @@ export class CreateVocabWordDto {
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  @Max(7)
+  @Min(MIN_VOCAB_LEVEL)
+  @Max(MAX_VOCAB_LEVEL)
   level?: number;
 
   @IsOptional()
