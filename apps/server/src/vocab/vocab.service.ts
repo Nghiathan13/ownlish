@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVocabWordDto } from './dto/create-vocab-word.dto';
+import { ListDueReviewWordsDto } from './dto/list-due-review-words.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
@@ -89,31 +90,55 @@ export class VocabService {
     };
   }
 
-  listDueReviewWords(userId: string): VocabWordListResult {
-    return this.prisma.vocabWord.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-        OR: [
-          {
-            nextReview: null,
-          },
-          {
-            nextReview: {
-              lte: new Date(),
-            },
-          },
-        ],
-      },
-      orderBy: [
+  async listDueReviewWords(
+    userId: string,
+    query: ListDueReviewWordsDto = {},
+  ): Promise<VocabWordListResponse> {
+    const limit = query.limit ?? 50;
+    const offset = query.offset ?? 0;
+    const where = {
+      userId,
+      deletedAt: null,
+      OR: [
         {
-          nextReview: 'asc',
+          nextReview: null,
         },
         {
-          createdAt: 'asc',
+          nextReview: {
+            lte: new Date(),
+          },
         },
       ],
-    });
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.vocabWord.findMany({
+        where,
+        orderBy: [
+          {
+            nextReview: 'asc',
+          },
+          {
+            createdAt: 'asc',
+          },
+        ],
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.vocabWord.count({
+        where,
+      }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + items.length < total,
+      },
+    };
   }
 
   async getStats(userId: string): Promise<VocabStatsResponse> {

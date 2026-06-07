@@ -94,12 +94,28 @@ describe('VocabController', () => {
   });
 
   it('delegates due review list to VocabService with current user id', async () => {
-    vocabServiceMock.listDueReviewWords.mockResolvedValue([vocabWord]);
+    const response = {
+      items: [vocabWord],
+      meta: {
+        limit: 10,
+        offset: 0,
+        total: 1,
+        hasMore: false,
+      },
+    };
+    const query = {
+      limit: 10,
+      offset: 0,
+    };
+    vocabServiceMock.listDueReviewWords.mockResolvedValue(response);
 
-    await expect(controller.listDueReviewWords(request)).resolves.toEqual([
-      vocabWord,
-    ]);
-    expect(vocabServiceMock.listDueReviewWords).toHaveBeenCalledWith('user-id');
+    await expect(controller.listDueReviewWords(request, query)).resolves.toEqual(
+      response,
+    );
+    expect(vocabServiceMock.listDueReviewWords).toHaveBeenCalledWith(
+      'user-id',
+      query,
+    );
   });
 
   it('delegates stats to VocabService with current user id', async () => {
@@ -138,13 +154,16 @@ describe('VocabController', () => {
     const dto = {
       word: 'updated',
     };
-    vocabServiceMock.update.mockResolvedValue({
+    const response = {
       ...vocabWord,
       word: 'updated',
       normalizedWord: 'updated',
-    });
+    };
+    vocabServiceMock.update.mockResolvedValue(response);
 
-    await controller.update(request, 'word-id', dto);
+    await expect(controller.update(request, 'word-id', dto)).resolves.toEqual(
+      response,
+    );
     expect(vocabServiceMock.update).toHaveBeenCalledWith(
       'user-id',
       'word-id',
@@ -159,15 +178,18 @@ describe('VocabController', () => {
       lastReview: '2026-06-07T00:00:00.000Z',
       nextReview: '2026-06-08T00:00:00.000Z',
     };
-    vocabServiceMock.updateReview.mockResolvedValue({
+    const response = {
       ...vocabWord,
       level: 2,
       wrongCount: 1,
       lastReview: new Date(dto.lastReview),
       nextReview: new Date(dto.nextReview),
-    });
+    };
+    vocabServiceMock.updateReview.mockResolvedValue(response);
 
-    await controller.updateReview(request, 'word-id', dto);
+    await expect(
+      controller.updateReview(request, 'word-id', dto),
+    ).resolves.toEqual(response);
     expect(vocabServiceMock.updateReview).toHaveBeenCalledWith(
       'user-id',
       'word-id',
@@ -176,12 +198,15 @@ describe('VocabController', () => {
   });
 
   it('delegates soft delete to VocabService with current user id', async () => {
-    vocabServiceMock.softDelete.mockResolvedValue({
+    const response = {
       ...vocabWord,
       deletedAt: new Date('2026-01-02T00:00:00.000Z'),
-    });
+    };
+    vocabServiceMock.softDelete.mockResolvedValue(response);
 
-    await controller.softDelete(request, 'word-id');
+    await expect(controller.softDelete(request, 'word-id')).resolves.toEqual(
+      response,
+    );
     expect(vocabServiceMock.softDelete).toHaveBeenCalledWith(
       'user-id',
       'word-id',

@@ -13,6 +13,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreateVocabWordDto } from './dto/create-vocab-word.dto';
+import { ListDueReviewWordsDto } from './dto/list-due-review-words.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
@@ -39,8 +40,9 @@ export class VocabController {
   @Get('review/due')
   listDueReviewWords(
     @Req() request: AuthRequest,
+    @Query() query: ListDueReviewWordsDto,
   ): ReturnType<VocabService['listDueReviewWords']> {
-    return this.vocabService.listDueReviewWords(request.user.id);
+    return this.vocabService.listDueReviewWords(request.user.id, query);
   }
 
   @Get(':id')

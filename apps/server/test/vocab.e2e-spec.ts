@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -20,6 +20,13 @@ describe('VocabController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     prisma = app.get(PrismaService);
 
     await prisma.user.deleteMany({
@@ -324,15 +331,21 @@ describe('VocabController (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
-      .get('/vocab/review/due')
+      .get('/vocab/review/due?limit=10&offset=0')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        const ids = response.body.map((word: { id: string }) => word.id);
+        const ids = response.body.items.map((word: { id: string }) => word.id);
 
         expect(ids).toContain(newWordResponse.body.id);
         expect(ids).toContain(dueWordResponse.body.id);
         expect(ids).not.toContain(futureWordResponse.body.id);
+        expect(response.body.meta).toMatchObject({
+          limit: 10,
+          offset: 0,
+          total: 2,
+          hasMore: false,
+        });
       });
   });
 

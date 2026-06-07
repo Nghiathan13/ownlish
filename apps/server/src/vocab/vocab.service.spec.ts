@@ -192,11 +192,23 @@ describe('VocabService', () => {
   it('lists due review words for a user', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
     prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+    prismaMock.vocabWord.count.mockResolvedValue(25);
 
     try {
-      await expect(service.listDueReviewWords('user-id')).resolves.toEqual([
-        vocabWord,
-      ]);
+      await expect(
+        service.listDueReviewWords('user-id', {
+          limit: 10,
+          offset: 20,
+        }),
+      ).resolves.toEqual({
+        items: [vocabWord],
+        meta: {
+          limit: 10,
+          offset: 20,
+          total: 25,
+          hasMore: true,
+        },
+      });
 
       expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
         where: {
@@ -221,6 +233,24 @@ describe('VocabService', () => {
             createdAt: 'asc',
           },
         ],
+        take: 10,
+        skip: 20,
+      });
+      expect(prismaMock.vocabWord.count).toHaveBeenCalledWith({
+        where: {
+          userId: 'user-id',
+          deletedAt: null,
+          OR: [
+            {
+              nextReview: null,
+            },
+            {
+              nextReview: {
+                lte: new Date('2026-06-07T00:00:00.000Z'),
+              },
+            },
+          ],
+        },
       });
     } finally {
       jest.useRealTimers();
