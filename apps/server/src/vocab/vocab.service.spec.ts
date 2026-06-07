@@ -167,8 +167,7 @@ describe('VocabService', () => {
         userId: 'user-id',
         deletedAt: null,
         normalizedWord: {
-          contains: 'hello',
-          mode: 'insensitive',
+          startsWith: 'hello',
         },
       },
       orderBy: {
@@ -182,8 +181,7 @@ describe('VocabService', () => {
         userId: 'user-id',
         deletedAt: null,
         normalizedWord: {
-          contains: 'hello',
-          mode: 'insensitive',
+          startsWith: 'hello',
         },
       },
     });

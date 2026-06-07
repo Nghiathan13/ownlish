@@ -185,13 +185,13 @@ describe('VocabController (e2e)', () => {
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        word: 'world',
-        meaningVi: 'the gioi',
+        word: 'shell',
+        meaningVi: 'vo',
       })
       .expect(201);
 
     await request(app.getHttpServer())
-      .get('/vocab?search=hello')
+      .get('/vocab?search=he')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {

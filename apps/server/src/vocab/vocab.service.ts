@@ -18,11 +18,11 @@ import {
 } from './vocab.constants';
 
 type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
-type VocabWordListResult = ReturnType<PrismaService['vocabWord']['findMany']>;
+type VocabWordList = Awaited<ReturnType<PrismaService['vocabWord']['findMany']>>;
 type CreatedVocabWordResult = ReturnType<PrismaService['vocabWord']['create']>;
 type UpdatedVocabWordResult = ReturnType<PrismaService['vocabWord']['update']>;
 type VocabWordListResponse = {
-  items: Awaited<VocabWordListResult>;
+  items: VocabWordList;
   meta: {
     limit: number;
     offset: number;
@@ -56,13 +56,12 @@ export class VocabService {
       userId,
       deletedAt: null,
       ...(search
-        ? {
-            normalizedWord: {
-              contains: normalizeWord(search),
-              mode: 'insensitive' as const,
-            },
-          }
-        : {}),
+          ? {
+              normalizedWord: {
+                startsWith: normalizeWord(search),
+              },
+            }
+          : {}),
     };
 
     const [items, total] = await Promise.all([
