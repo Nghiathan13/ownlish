@@ -9,6 +9,7 @@ describe('VocabController', () => {
 
   const vocabServiceMock = {
     list: jest.fn(),
+    listDueReviewWords: jest.fn(),
     get: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -80,6 +81,15 @@ describe('VocabController', () => {
 
     await expect(controller.list(request, query)).resolves.toEqual([vocabWord]);
     expect(vocabServiceMock.list).toHaveBeenCalledWith('user-id', query);
+  });
+
+  it('delegates due review list to VocabService with current user id', async () => {
+    vocabServiceMock.listDueReviewWords.mockResolvedValue([vocabWord]);
+
+    await expect(controller.listDueReviewWords(request)).resolves.toEqual([
+      vocabWord,
+    ]);
+    expect(vocabServiceMock.listDueReviewWords).toHaveBeenCalledWith('user-id');
   });
 
   it('delegates get to VocabService with current user id', async () => {

@@ -31,6 +31,13 @@ export class VocabController {
     return this.vocabService.list(request.user.id, query);
   }
 
+  @Get('review/due')
+  listDueReviewWords(
+    @Req() request: AuthRequest,
+  ): ReturnType<VocabService['listDueReviewWords']> {
+    return this.vocabService.listDueReviewWords(request.user.id);
+  }
+
   @Get(':id')
   get(
     @Req() request: AuthRequest,

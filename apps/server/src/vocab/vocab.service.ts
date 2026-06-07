@@ -34,6 +34,33 @@ export class VocabService {
     });
   }
 
+  listDueReviewWords(userId: string): VocabWordListResult {
+    return this.prisma.vocabWord.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        OR: [
+          {
+            nextReview: null,
+          },
+          {
+            nextReview: {
+              lte: new Date(),
+            },
+          },
+        ],
+      },
+      orderBy: [
+        {
+          nextReview: 'asc',
+        },
+        {
+          createdAt: 'asc',
+        },
+      ],
+    });
+  }
+
   get(userId: string, id: string): Promise<Awaited<VocabWordResult>> {
     return this.findActiveWordOrThrow(userId, id);
   }

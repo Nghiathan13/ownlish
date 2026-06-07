@@ -47,7 +47,7 @@ export class CreateVocabWordDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Max(10)
+  @Max(7)
   level?: number;
 
   @IsOptional()

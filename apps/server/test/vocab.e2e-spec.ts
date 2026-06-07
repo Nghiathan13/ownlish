@@ -152,6 +152,66 @@ describe('VocabController (e2e)', () => {
     return request(app.getHttpServer()).get('/vocab').expect(401);
   });
 
+  it('lists due review words only', async () => {
+    const newWordResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'new word',
+      })
+      .expect(201);
+
+    const dueWordResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'due word',
+      })
+      .expect(201);
+
+    const futureWordResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'future word',
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${dueWordResponse.body.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 1,
+        wrongCount: 0,
+        lastReview: '2000-01-01T00:00:00.000Z',
+        nextReview: '2000-01-02T00:00:00.000Z',
+      })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${futureWordResponse.body.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 1,
+        wrongCount: 0,
+        lastReview: '2999-01-01T00:00:00.000Z',
+        nextReview: '2999-01-02T00:00:00.000Z',
+      })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get('/vocab/review/due')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        const ids = response.body.map((word: { id: string }) => word.id);
+
+        expect(ids).toContain(newWordResponse.body.id);
+        expect(ids).toContain(dueWordResponse.body.id);
+        expect(ids).not.toContain(futureWordResponse.body.id);
+      });
+  });
+
   it('returns not found when updating review for a missing word', () => {
     return request(app.getHttpServer())
       .patch('/vocab/missing-id/review')

@@ -97,6 +97,44 @@ describe('VocabService', () => {
     });
   });
 
+  it('lists due review words for a user', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
+    prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
+
+    try {
+      await expect(service.listDueReviewWords('user-id')).resolves.toEqual([
+        vocabWord,
+      ]);
+
+      expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: 'user-id',
+          deletedAt: null,
+          OR: [
+            {
+              nextReview: null,
+            },
+            {
+              nextReview: {
+                lte: new Date('2026-06-07T00:00:00.000Z'),
+              },
+            },
+          ],
+        },
+        orderBy: [
+          {
+            nextReview: 'asc',
+          },
+          {
+            createdAt: 'asc',
+          },
+        ],
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('gets an active word for a user', async () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
 
