@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { AddWordForm } from "@/features/vocabulary/components/AddWordForm";
-import { DeleteWordConfirm } from "@/features/vocabulary/components/DeleteWordConfirm";
-import { EditWordPanel } from "@/features/vocabulary/components/EditWordPanel";
-import { VocabularyPagination } from "@/features/vocabulary/components/VocabularyPagination";
-import { VocabularySearch } from "@/features/vocabulary/components/VocabularySearch";
-import { VocabularyStateBlock } from "@/features/vocabulary/components/VocabularyStateBlock";
-import { VocabularyTable } from "@/features/vocabulary/components/VocabularyTable";
+import {
+  AddWordForm,
+  DeleteWordConfirm,
+  EditWordPanel,
+  VocabularyPagination,
+  VocabularySearch,
+  VocabularyStateBlock,
+  VocabularyTable,
+} from "@/features/vocabulary/components";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui/Button";
