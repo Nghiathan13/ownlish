@@ -5,6 +5,13 @@ import type {
   UpdateVocabWordInput,
   VocabWord,
 } from "@/entities/vocab/api/vocab";
+import {
+  getVocabWordFormError,
+  toUpdateVocabWordInput,
+  toVocabWordFormValues,
+  VOCAB_WORD_FORM_LIMITS,
+  type VocabWordFormValues,
+} from "@/features/vocabulary/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
 import { Button } from "@/shared/ui/Button";
 import { Field } from "@/shared/ui/Field";
@@ -17,42 +24,30 @@ type EditWordPanelProps = {
   word: VocabWord;
 };
 
-function optionalValue(value: string) {
-  const trimmedValue = value.trim();
-
-  return trimmedValue || undefined;
-}
-
 export function EditWordPanel({
   isSubmitting,
   onCancel,
   onUpdate,
   word,
 }: EditWordPanelProps) {
-  const [wordValue, setWordValue] = useState(word.word);
-  const [ipa, setIpa] = useState(word.ipa ?? "");
-  const [type, setType] = useState(word.type ?? "");
-  const [meaningVi, setMeaningVi] = useState(word.meaningVi ?? "");
+  const [values, setValues] = useState<VocabWordFormValues>(() =>
+    toVocabWordFormValues(word),
+  );
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    const trimmedWord = wordValue.trim();
+    const validationError = getVocabWordFormError(values);
 
-    if (!trimmedWord) {
-      setError("Word is required.");
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     try {
-      await onUpdate(word, {
-        word: trimmedWord,
-        ipa: optionalValue(ipa),
-        type: optionalValue(type),
-        meaningVi: optionalValue(meaningVi),
-      });
+      await onUpdate(word, toUpdateVocabWordInput(values));
 
       onCancel();
     } catch (caughtError) {
@@ -62,6 +57,14 @@ export function EditWordPanel({
           : "Cannot update word.",
       );
     }
+  }
+
+  function updateValue(field: keyof VocabWordFormValues, value: string) {
+    setValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+    clearError();
   }
 
   function clearError() {
@@ -86,48 +89,36 @@ export function EditWordPanel({
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Word">
           <TextInput
-            value={wordValue}
-            onChange={(event) => {
-              setWordValue(event.target.value);
-              clearError();
-            }}
-            maxLength={120}
+            value={values.word}
+            onChange={(event) => updateValue("word", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.word}
             required
           />
         </Field>
 
         <Field label="Type">
           <TextInput
-            value={type}
-            onChange={(event) => {
-              setType(event.target.value);
-              clearError();
-            }}
-            maxLength={80}
+            value={values.type}
+            onChange={(event) => updateValue("type", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.type}
             placeholder="noun, verb..."
           />
         </Field>
 
         <Field label="IPA">
           <TextInput
-            value={ipa}
-            onChange={(event) => {
-              setIpa(event.target.value);
-              clearError();
-            }}
-            maxLength={120}
+            value={values.ipa}
+            onChange={(event) => updateValue("ipa", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.ipa}
             placeholder="/wɜːd/"
           />
         </Field>
 
         <Field label="Vietnamese meaning">
           <TextInput
-            value={meaningVi}
-            onChange={(event) => {
-              setMeaningVi(event.target.value);
-              clearError();
-            }}
-            maxLength={500}
+            value={values.meaningVi}
+            onChange={(event) => updateValue("meaningVi", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.meaningVi}
           />
         </Field>
       </div>

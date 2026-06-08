@@ -2,6 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import type { CreateVocabWordInput } from "@/entities/vocab/api/vocab";
+import {
+  EMPTY_VOCAB_WORD_FORM_VALUES,
+  getVocabWordFormError,
+  toCreateVocabWordInput,
+  VOCAB_WORD_FORM_LIMITS,
+  type VocabWordFormValues,
+} from "@/features/vocabulary/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
 import { Button } from "@/shared/ui/Button";
 import { Field } from "@/shared/ui/Field";
@@ -11,17 +18,10 @@ type AddWordFormProps = {
   onCreate: (input: CreateVocabWordInput) => Promise<void>;
 };
 
-function optionalValue(value: string) {
-  const trimmedValue = value.trim();
-
-  return trimmedValue || undefined;
-}
-
 export function AddWordForm({ onCreate }: AddWordFormProps) {
-  const [word, setWord] = useState("");
-  const [ipa, setIpa] = useState("");
-  const [type, setType] = useState("");
-  const [meaningVi, setMeaningVi] = useState("");
+  const [values, setValues] = useState<VocabWordFormValues>(
+    EMPTY_VOCAB_WORD_FORM_VALUES,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -29,27 +29,19 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
     event.preventDefault();
     setError(null);
 
-    const trimmedWord = word.trim();
+    const validationError = getVocabWordFormError(values);
 
-    if (!trimmedWord) {
-      setError("Word is required.");
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await onCreate({
-        word: trimmedWord,
-        ipa: optionalValue(ipa),
-        type: optionalValue(type),
-        meaningVi: optionalValue(meaningVi),
-      });
+      await onCreate(toCreateVocabWordInput(values));
 
-      setWord("");
-      setIpa("");
-      setType("");
-      setMeaningVi("");
+      setValues(EMPTY_VOCAB_WORD_FORM_VALUES);
     } catch (caughtError) {
       setError(
         caughtError instanceof ApiError
@@ -59,6 +51,14 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function updateValue(field: keyof VocabWordFormValues, value: string) {
+    setValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+    clearError();
   }
 
   function clearError() {
@@ -83,48 +83,36 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Word">
           <TextInput
-            value={word}
-            onChange={(event) => {
-              setWord(event.target.value);
-              clearError();
-            }}
-            maxLength={120}
+            value={values.word}
+            onChange={(event) => updateValue("word", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.word}
             required
           />
         </Field>
 
         <Field label="Type">
           <TextInput
-            value={type}
-            onChange={(event) => {
-              setType(event.target.value);
-              clearError();
-            }}
-            maxLength={80}
+            value={values.type}
+            onChange={(event) => updateValue("type", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.type}
             placeholder="noun, verb..."
           />
         </Field>
 
         <Field label="IPA">
           <TextInput
-            value={ipa}
-            onChange={(event) => {
-              setIpa(event.target.value);
-              clearError();
-            }}
-            maxLength={120}
+            value={values.ipa}
+            onChange={(event) => updateValue("ipa", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.ipa}
             placeholder="/wɜːd/"
           />
         </Field>
 
         <Field label="Vietnamese meaning">
           <TextInput
-            value={meaningVi}
-            onChange={(event) => {
-              setMeaningVi(event.target.value);
-              clearError();
-            }}
-            maxLength={500}
+            value={values.meaningVi}
+            onChange={(event) => updateValue("meaningVi", event.target.value)}
+            maxLength={VOCAB_WORD_FORM_LIMITS.meaningVi}
           />
         </Field>
       </div>

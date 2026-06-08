@@ -31,10 +31,15 @@ export type VocabWordListResponse = {
 };
 
 export type CreateVocabWordInput = {
+  band?: string;
+  definition?: string;
+  example?: string;
   ipa?: string;
+  level?: number;
   meaningVi?: string;
   type?: string;
   word: string;
+  wrongCount?: number;
 };
 
 export type UpdateVocabWordInput = Partial<CreateVocabWordInput>;
