@@ -79,3 +79,10 @@ export function createVocabWord(token: string, input: CreateVocabWordInput) {
     body: JSON.stringify(input),
   });
 }
+
+export function deleteVocabWord(token: string, id: string) {
+  return apiRequest<VocabWord>(`/vocab/${id}`, {
+    method: "DELETE",
+    token,
+  });
+}

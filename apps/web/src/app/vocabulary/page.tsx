@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   createVocabWord,
+  deleteVocabWord,
   listVocabWords,
   type CreateVocabWordInput,
   type VocabWord,
@@ -35,6 +36,7 @@ export default function VocabularyPage() {
   const [totalWords, setTotalWords] = useState(0);
   const [isLoadingWords, setIsLoadingWords] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "guest") {
@@ -115,6 +117,41 @@ export default function VocabularyPage() {
     }
   }
 
+  async function handleDeleteWord(wordToDelete: VocabWord) {
+    if (!accessToken) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete "${wordToDelete.word}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingWordId(wordToDelete.id);
+    setLoadError(null);
+
+    try {
+      await deleteVocabWord(accessToken, wordToDelete.id);
+
+      setWords((currentWords) =>
+        currentWords.filter((word) => word.id !== wordToDelete.id),
+      );
+      setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        clearSession();
+        return;
+      }
+
+      setLoadError(
+        error instanceof ApiError ? error.message : "Cannot delete word.",
+      );
+    } finally {
+      setDeletingWordId(null);
+    }
+  }
+
   if (status === "checking") {
     return (
       <PageShell>
@@ -188,6 +225,7 @@ export default function VocabularyPage() {
                   <th className="px-4 py-3 font-semibold">Meaning</th>
                   <th className="px-4 py-3 font-semibold">Level</th>
                   <th className="px-4 py-3 font-semibold">Next review</th>
+                  <th className="px-4 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -201,6 +239,16 @@ export default function VocabularyPage() {
                     <td className="px-4 py-3">{word.level}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatDate(word.nextReview)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={deletingWordId === word.id}
+                        onClick={() => handleDeleteWord(word)}
+                      >
+                        {deletingWordId === word.id ? "Deleting..." : "Delete"}
+                      </Button>
                     </td>
                   </tr>
                 ))}
