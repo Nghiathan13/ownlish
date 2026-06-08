@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createVocabWord,
   deleteVocabWord,
@@ -26,6 +26,7 @@ export function useVocabularyWords({
   const [isLoadingWords, setIsLoadingWords] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
+  const mutationVersionRef = useRef(0);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -33,6 +34,7 @@ export function useVocabularyWords({
     }
 
     let cancelled = false;
+    const requestMutationVersion = mutationVersionRef.current;
 
     queueMicrotask(() => {
       if (!cancelled) {
@@ -43,7 +45,10 @@ export function useVocabularyWords({
 
     listVocabWords(accessToken)
       .then((response) => {
-        if (cancelled) {
+        if (
+          cancelled ||
+          requestMutationVersion !== mutationVersionRef.current
+        ) {
           return;
         }
 
@@ -87,6 +92,7 @@ export function useVocabularyWords({
     try {
       const createdWord = await createVocabWord(accessToken, input);
 
+      mutationVersionRef.current += 1;
       setWords((currentWords) => [createdWord, ...currentWords]);
       setTotalWords((currentTotal) => currentTotal + 1);
       setLoadError(null);
@@ -117,6 +123,7 @@ export function useVocabularyWords({
     try {
       await deleteVocabWord(accessToken, wordToDelete.id);
 
+      mutationVersionRef.current += 1;
       setWords((currentWords) =>
         currentWords.filter((word) => word.id !== wordToDelete.id),
       );
