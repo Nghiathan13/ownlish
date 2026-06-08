@@ -1,0 +1,147 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  createVocabWord,
+  deleteVocabWord,
+  listVocabWords,
+  type CreateVocabWordInput,
+  type VocabWord,
+} from "@/entities/vocab/api/vocab";
+import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+
+type UseVocabularyWordsParams = {
+  accessToken: string | null;
+  clearSession: () => void;
+  isAuthenticated: boolean;
+};
+
+export function useVocabularyWords({
+  accessToken,
+  clearSession,
+  isAuthenticated,
+}: UseVocabularyWordsParams) {
+  const [words, setWords] = useState<VocabWord[]>([]);
+  const [totalWords, setTotalWords] = useState(0);
+  const [isLoadingWords, setIsLoadingWords] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      return;
+    }
+
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setIsLoadingWords(true);
+        setLoadError(null);
+      }
+    });
+
+    listVocabWords(accessToken)
+      .then((response) => {
+        if (cancelled) {
+          return;
+        }
+
+        setWords(response.items);
+        setTotalWords(response.meta.total);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (isUnauthorizedError(error)) {
+          clearSession();
+          return;
+        }
+
+        setWords([]);
+        setTotalWords(0);
+        setLoadError(
+          error instanceof ApiError
+            ? error.message
+            : "Cannot load vocabulary.",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingWords(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, clearSession, isAuthenticated]);
+
+  async function createWord(input: CreateVocabWordInput) {
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      const createdWord = await createVocabWord(accessToken, input);
+
+      setWords((currentWords) => [createdWord, ...currentWords]);
+      setTotalWords((currentTotal) => currentTotal + 1);
+      setLoadError(null);
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        clearSession();
+        return;
+      }
+
+      throw error;
+    }
+  }
+
+  async function deleteWord(wordToDelete: VocabWord) {
+    if (!accessToken) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete "${wordToDelete.word}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingWordId(wordToDelete.id);
+    setLoadError(null);
+
+    try {
+      await deleteVocabWord(accessToken, wordToDelete.id);
+
+      setWords((currentWords) =>
+        currentWords.filter((word) => word.id !== wordToDelete.id),
+      );
+      setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        clearSession();
+        return;
+      }
+
+      setLoadError(
+        error instanceof ApiError ? error.message : "Cannot delete word.",
+      );
+    } finally {
+      setDeletingWordId(null);
+    }
+  }
+
+  return {
+    createWord,
+    deleteWord,
+    deletingWordId,
+    isLoadingWords,
+    loadError,
+    totalWords,
+    words,
+  };
+}
