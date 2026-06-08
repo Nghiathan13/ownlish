@@ -30,6 +30,13 @@ export type VocabWordListResponse = {
   };
 };
 
+export type CreateVocabWordInput = {
+  ipa?: string;
+  meaningVi?: string;
+  type?: string;
+  word: string;
+};
+
 type ListVocabWordsParams = {
   limit?: number;
   offset?: number;
@@ -62,5 +69,13 @@ export function listVocabWords(
 ) {
   return apiRequest<VocabWordListResponse>(`/vocab${buildVocabQuery(params)}`, {
     token,
+  });
+}
+
+export function createVocabWord(token: string, input: CreateVocabWordInput) {
+  return apiRequest<VocabWord>("/vocab", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
   });
 }

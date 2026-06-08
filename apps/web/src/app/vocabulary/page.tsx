@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  createVocabWord,
   listVocabWords,
+  type CreateVocabWordInput,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { AddWordForm } from "@/features/vocabulary/components/AddWordForm";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { Button } from "@/shared/ui/Button";
 import { Panel } from "@/shared/ui/Panel";
@@ -91,6 +94,27 @@ export default function VocabularyPage() {
     };
   }, [accessToken, clearSession, status]);
 
+  async function handleCreateWord(input: CreateVocabWordInput) {
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      const createdWord = await createVocabWord(accessToken, input);
+
+      setWords((currentWords) => [createdWord, ...currentWords]);
+      setTotalWords((currentTotal) => currentTotal + 1);
+      setLoadError(null);
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        clearSession();
+        return;
+      }
+
+      throw error;
+    }
+  }
+
   if (status === "checking") {
     return (
       <PageShell>
@@ -125,6 +149,8 @@ export default function VocabularyPage() {
             Logout
           </Button>
         </div>
+
+        <AddWordForm onCreate={handleCreateWord} />
 
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">
           {isLoadingWords ? (
