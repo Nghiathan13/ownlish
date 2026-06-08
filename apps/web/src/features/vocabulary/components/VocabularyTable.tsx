@@ -4,6 +4,7 @@ import { Button } from "@/shared/ui/Button";
 type VocabularyTableProps = {
   deletingWordId: string | null;
   onDelete: (word: VocabWord) => void;
+  onEdit: (word: VocabWord) => void;
   words: VocabWord[];
 };
 
@@ -22,6 +23,7 @@ function formatDate(value: string | null) {
 export function VocabularyTable({
   deletingWordId,
   onDelete,
+  onEdit,
   words,
 }: VocabularyTableProps) {
   return (
@@ -49,14 +51,23 @@ export function VocabularyTable({
               {formatDate(word.nextReview)}
             </td>
             <td className="px-4 py-3">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={deletingWordId === word.id}
-                onClick={() => onDelete(word)}
-              >
-                {deletingWordId === word.id ? "Deleting..." : "Delete"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => onEdit(word)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={deletingWordId === word.id}
+                  onClick={() => onDelete(word)}
+                >
+                  {deletingWordId === word.id ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
             </td>
           </tr>
         ))}

@@ -37,6 +37,8 @@ export type CreateVocabWordInput = {
   word: string;
 };
 
+export type UpdateVocabWordInput = Partial<CreateVocabWordInput>;
+
 type ListVocabWordsParams = {
   limit?: number;
   offset?: number;
@@ -84,5 +86,17 @@ export function deleteVocabWord(token: string, id: string) {
   return apiRequest<VocabWord>(`/vocab/${id}`, {
     method: "DELETE",
     token,
+  });
+}
+
+export function updateVocabWord(
+  token: string,
+  id: string,
+  input: UpdateVocabWordInput,
+) {
+  return apiRequest<VocabWord>(`/vocab/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(input),
   });
 }

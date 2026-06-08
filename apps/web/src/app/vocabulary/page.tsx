@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { AddWordForm } from "@/features/vocabulary/components/AddWordForm";
+import { EditWordPanel } from "@/features/vocabulary/components/EditWordPanel";
 import { VocabularyStateBlock } from "@/features/vocabulary/components/VocabularyStateBlock";
 import { VocabularyTable } from "@/features/vocabulary/components/VocabularyTable";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
@@ -22,12 +24,15 @@ export default function VocabularyPage() {
     isLoadingWords,
     loadError,
     totalWords,
+    updateWord,
+    updatingWordId,
     words,
   } = useVocabularyWords({
     accessToken,
     clearSession,
     isAuthenticated: status === "authenticated",
   });
+  const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
 
   useEffect(() => {
     if (status === "guest") {
@@ -72,6 +77,16 @@ export default function VocabularyPage() {
 
         <AddWordForm onCreate={createWord} />
 
+        {editingWord ? (
+          <EditWordPanel
+            key={editingWord.id}
+            isSubmitting={updatingWordId === editingWord.id}
+            onCancel={() => setEditingWord(null)}
+            onUpdate={updateWord}
+            word={editingWord}
+          />
+        ) : null}
+
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">
           {isLoadingWords || loadError || words.length === 0 ? (
             <VocabularyStateBlock
@@ -83,6 +98,7 @@ export default function VocabularyPage() {
             <VocabularyTable
               deletingWordId={deletingWordId}
               onDelete={deleteWord}
+              onEdit={setEditingWord}
               words={words}
             />
           )}

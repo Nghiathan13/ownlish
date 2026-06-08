@@ -5,7 +5,9 @@ import {
   createVocabWord,
   deleteVocabWord,
   listVocabWords,
+  updateVocabWord,
   type CreateVocabWordInput,
+  type UpdateVocabWordInput,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
@@ -26,6 +28,7 @@ export function useVocabularyWords({
   const [isLoadingWords, setIsLoadingWords] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
+  const [updatingWordId, setUpdatingWordId] = useState<string | null>(null);
   const mutationVersionRef = useRef(0);
 
   useEffect(() => {
@@ -142,6 +145,40 @@ export function useVocabularyWords({
     }
   }
 
+  async function updateWord(wordToUpdate: VocabWord, input: UpdateVocabWordInput) {
+    if (!accessToken) {
+      return;
+    }
+
+    setUpdatingWordId(wordToUpdate.id);
+    setLoadError(null);
+
+    try {
+      const updatedWord = await updateVocabWord(
+        accessToken,
+        wordToUpdate.id,
+        input,
+      );
+
+      mutationVersionRef.current += 1;
+      setWords((currentWords) =>
+        currentWords.map((word) =>
+          word.id === updatedWord.id ? updatedWord : word,
+        ),
+      );
+      setLoadError(null);
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        clearSession();
+        return;
+      }
+
+      throw error;
+    } finally {
+      setUpdatingWordId(null);
+    }
+  }
+
   return {
     createWord,
     deleteWord,
@@ -149,6 +186,8 @@ export function useVocabularyWords({
     isLoadingWords,
     loadError,
     totalWords,
+    updateWord,
+    updatingWordId,
     words,
   };
 }
