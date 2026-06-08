@@ -23,8 +23,9 @@ type UseVocabularyWordsParams = {
 
 type LoadWordsOptions = {
   isCancelled?: () => boolean;
-  nextOffset?: number;
-  nextSearch?: string;
+  offset: number;
+  preserveCurrentOnError?: boolean;
+  search: string;
 };
 
 export function useVocabularyWords({
@@ -46,9 +47,10 @@ export function useVocabularyWords({
   const loadWords = useCallback(
     async ({
       isCancelled,
-      nextOffset = offset,
-      nextSearch = search,
-    }: LoadWordsOptions = {}) => {
+      offset: nextOffset,
+      preserveCurrentOnError = false,
+      search: nextSearch,
+    }: LoadWordsOptions) => {
       if (!accessToken) {
         return;
       }
@@ -88,8 +90,10 @@ export function useVocabularyWords({
           return;
         }
 
-        setWords([]);
-        setTotalWords(0);
+        if (!preserveCurrentOnError) {
+          setWords([]);
+          setTotalWords(0);
+        }
         setLoadError(
           error instanceof ApiError
             ? error.message
@@ -101,7 +105,7 @@ export function useVocabularyWords({
         }
       }
     },
-    [accessToken, clearSession, offset, search],
+    [accessToken, clearSession],
   );
 
   useEffect(() => {
@@ -125,6 +129,8 @@ export function useVocabularyWords({
 
     void loadWords({
       isCancelled: () => cancelled,
+      offset,
+      search,
     });
 
     return () => {
@@ -138,15 +144,19 @@ export function useVocabularyWords({
     }
 
     try {
-      await createVocabWord(accessToken, input);
+      const createdWord = await createVocabWord(accessToken, input);
 
       mutationVersionRef.current += 1;
 
       if (offset !== 0) {
         setOffset(0);
       } else {
-        await loadWords({
-          nextOffset: 0,
+        setWords((currentWords) => [createdWord, ...currentWords]);
+        setTotalWords((currentTotal) => currentTotal + 1);
+        void loadWords({
+          offset: 0,
+          preserveCurrentOnError: true,
+          search,
         });
       }
     } catch (error) {
@@ -171,7 +181,15 @@ export function useVocabularyWords({
       await deleteVocabWord(accessToken, wordToDelete.id);
 
       mutationVersionRef.current += 1;
-      await loadWords();
+      setWords((currentWords) =>
+        currentWords.filter((word) => word.id !== wordToDelete.id),
+      );
+      setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
+      void loadWords({
+        offset,
+        preserveCurrentOnError: true,
+        search,
+      });
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearSession();
@@ -195,14 +213,23 @@ export function useVocabularyWords({
     setLoadError(null);
 
     try {
-      await updateVocabWord(
+      const updatedWord = await updateVocabWord(
         accessToken,
         wordToUpdate.id,
         input,
       );
 
       mutationVersionRef.current += 1;
-      await loadWords();
+      setWords((currentWords) =>
+        currentWords.map((word) =>
+          word.id === updatedWord.id ? updatedWord : word,
+        ),
+      );
+      void loadWords({
+        offset,
+        preserveCurrentOnError: true,
+        search,
+      });
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearSession();
