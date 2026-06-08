@@ -4,8 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
 import { useAuthSession } from "../hooks/useAuthSession";
-
-type AuthMode = "login" | "register";
+import { getAuthValidationError, type AuthMode } from "../lib/authValidation";
 
 export function AuthForm() {
   const router = useRouter();
@@ -18,10 +17,22 @@ export function AuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isRegister = mode === "register";
+  const validationError = getAuthValidationError({
+    email,
+    mode,
+    name,
+    password,
+  });
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -55,6 +66,12 @@ export function AuthForm() {
     setError(null);
   }
 
+  function clearError() {
+    if (error) {
+      setError(null);
+    }
+  }
+
   return (
     <section className="auth-card" aria-labelledby="auth-title">
       <div>
@@ -84,13 +101,16 @@ export function AuthForm() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="auth-form">
+      <form onSubmit={handleSubmit} className="auth-form" noValidate>
         {isRegister ? (
           <label>
             Name
             <input
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value);
+                clearError();
+              }}
               autoComplete="name"
               maxLength={80}
             />
@@ -102,7 +122,10 @@ export function AuthForm() {
           <input
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              clearError();
+            }}
             autoComplete="email"
             required
           />
@@ -113,7 +136,10 @@ export function AuthForm() {
           <input
             type="password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              clearError();
+            }}
             autoComplete={isRegister ? "new-password" : "current-password"}
             minLength={8}
             required
