@@ -48,6 +48,7 @@ type ListVocabWordsParams = {
   limit?: number;
   offset?: number;
   search?: string;
+  signal?: AbortSignal;
 };
 
 function buildVocabQuery(params: ListVocabWordsParams = {}) {
@@ -75,6 +76,7 @@ export function listVocabWords(
   params: ListVocabWordsParams = {},
 ) {
   return apiRequest<VocabWordListResponse>(`/vocab${buildVocabQuery(params)}`, {
+    signal: params.signal,
     token,
   });
 }

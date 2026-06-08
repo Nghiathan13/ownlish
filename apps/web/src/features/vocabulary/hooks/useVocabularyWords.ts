@@ -10,7 +10,7 @@ import {
   type UpdateVocabWordInput,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
-import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+import { ApiError, isAbortError, isUnauthorizedError } from "@/shared/api/http";
 
 const VOCABULARY_PAGE_SIZE = 50;
 
@@ -22,10 +22,10 @@ type UseVocabularyWordsParams = {
 };
 
 type LoadWordsOptions = {
-  isCancelled?: () => boolean;
   offset: number;
   preserveCurrentOnError?: boolean;
   search: string;
+  signal?: AbortSignal;
 };
 
 export function useVocabularyWords({
@@ -46,33 +46,30 @@ export function useVocabularyWords({
 
   const loadWords = useCallback(
     async ({
-      isCancelled,
       offset: nextOffset,
       preserveCurrentOnError = false,
       search: nextSearch,
+      signal,
     }: LoadWordsOptions) => {
-      if (!accessToken) {
+      if (!accessToken || signal?.aborted) {
         return;
       }
 
       const requestMutationVersion = mutationVersionRef.current;
 
-      queueMicrotask(() => {
-        if (!isCancelled?.()) {
-          setIsLoadingWords(true);
-          setLoadError(null);
-        }
-      });
+      setIsLoadingWords(true);
+      setLoadError(null);
 
       try {
         const response = await listVocabWords(accessToken, {
           limit: VOCABULARY_PAGE_SIZE,
           offset: nextOffset,
           search: nextSearch.trim() || undefined,
+          signal,
         });
 
         if (
-          isCancelled?.() ||
+          signal?.aborted ||
           requestMutationVersion !== mutationVersionRef.current
         ) {
           return;
@@ -81,7 +78,7 @@ export function useVocabularyWords({
         setWords(response.items);
         setTotalWords(response.meta.total);
       } catch (error) {
-        if (isCancelled?.()) {
+        if (signal?.aborted || isAbortError(error)) {
           return;
         }
 
@@ -100,7 +97,7 @@ export function useVocabularyWords({
             : "Cannot load vocabulary.",
         );
       } finally {
-        if (!isCancelled?.()) {
+        if (!signal?.aborted) {
           setIsLoadingWords(false);
         }
       }
@@ -117,24 +114,22 @@ export function useVocabularyWords({
 
     if (searchChanged && offset !== 0) {
       previousSearchRef.current = search;
-      queueMicrotask(() => {
-        setOffset(0);
-      });
+      setOffset(0);
       return;
     }
 
     previousSearchRef.current = search;
 
-    let cancelled = false;
+    const abortController = new AbortController();
 
     void loadWords({
-      isCancelled: () => cancelled,
       offset,
       search,
+      signal: abortController.signal,
     });
 
     return () => {
-      cancelled = true;
+      abortController.abort();
     };
   }, [isAuthenticated, loadWords, offset, search]);
 

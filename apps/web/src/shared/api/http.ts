@@ -22,6 +22,10 @@ export function isUnauthorizedError(error: unknown) {
   return error instanceof ApiError && error.status === 401;
 }
 
+export function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 function getApiErrorMessage(body: ApiErrorBody | null) {
   if (Array.isArray(body?.message)) {
     return body.message.filter(Boolean).join(" ");
@@ -57,7 +61,11 @@ export async function apiRequest<T>(
         ...headers,
       },
     });
-  } catch {
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
+
     throw new ApiError("Cannot connect to server.", 0);
   }
 
