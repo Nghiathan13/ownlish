@@ -1,0 +1,29 @@
+import type { ButtonHTMLAttributes } from "react";
+import { classNames } from "@/shared/lib/classNames";
+
+type ButtonVariant = "primary" | "secondary";
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+};
+
+const baseClassName =
+  "inline-flex items-center justify-center rounded-lg border px-3.5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
+
+const variantClassNames: Record<ButtonVariant, string> = {
+  primary: "border-foreground bg-foreground text-background",
+  secondary: "border-border bg-transparent text-foreground hover:bg-muted",
+};
+
+export function Button({
+  className,
+  variant = "primary",
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      className={classNames(baseClassName, variantClassNames[variant], className)}
+      {...props}
+    />
+  );
+}

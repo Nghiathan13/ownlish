@@ -3,6 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
+import { Button } from "@/shared/ui/Button";
+import { Field } from "@/shared/ui/Field";
+import { Panel } from "@/shared/ui/Panel";
+import { TextInput } from "@/shared/ui/TextInput";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { getAuthValidationError, type AuthMode } from "../lib/authValidation";
 
@@ -73,39 +77,42 @@ export function AuthForm() {
   }
 
   return (
-    <section className="auth-card" aria-labelledby="auth-title">
+    <Panel className="w-[min(420px,100%)]" aria-labelledby="auth-title">
       <div>
-        <p className="eyebrow">EngVocab</p>
-        <h1 id="auth-title">{isRegister ? "Create account" : "Sign in"}</h1>
-        <p className="muted">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          EngVocab
+        </p>
+        <h1 id="auth-title" className="mb-3 text-3xl font-bold leading-tight">
+          {isRegister ? "Create account" : "Sign in"}
+        </h1>
+        <p className="text-muted-foreground">
           {isRegister
             ? "Create an account to sync your vocabulary."
             : "Sign in to manage your vocabulary."}
         </p>
       </div>
 
-      <div className="auth-tabs" role="tablist" aria-label="Auth mode">
-        <button
+      <div className="my-6 flex gap-3" role="tablist" aria-label="Auth mode">
+        <Button
           type="button"
-          className={mode === "login" ? "active" : ""}
+          variant={mode === "login" ? "primary" : "secondary"}
           onClick={() => switchMode("login")}
         >
           Login
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={mode === "register" ? "active" : ""}
+          variant={mode === "register" ? "primary" : "secondary"}
           onClick={() => switchMode("register")}
         >
           Register
-        </button>
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="auth-form" noValidate>
+      <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
         {isRegister ? (
-          <label>
-            Name
-            <input
+          <Field label="Name">
+            <TextInput
               value={name}
               onChange={(event) => {
                 setName(event.target.value);
@@ -114,12 +121,11 @@ export function AuthForm() {
               autoComplete="name"
               maxLength={80}
             />
-          </label>
+          </Field>
         ) : null}
 
-        <label>
-          Email
-          <input
+        <Field label="Email">
+          <TextInput
             type="email"
             value={email}
             onChange={(event) => {
@@ -129,11 +135,10 @@ export function AuthForm() {
             autoComplete="email"
             required
           />
-        </label>
+        </Field>
 
-        <label>
-          Password
-          <input
+        <Field label="Password">
+          <TextInput
             type="password"
             value={password}
             onChange={(event) => {
@@ -144,18 +149,18 @@ export function AuthForm() {
             minLength={8}
             required
           />
-        </label>
+        </Field>
 
-        {error ? <p className="form-error">{error}</p> : null}
+        {error ? <p className="m-0 text-sm text-danger">{error}</p> : null}
 
-        <button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting
             ? "Please wait..."
             : isRegister
               ? "Create account"
               : "Sign in"}
-        </button>
+        </Button>
       </form>
-    </section>
+    </Panel>
   );
 }

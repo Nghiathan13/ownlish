@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { Button } from "@/shared/ui/Button";
+import { Panel } from "@/shared/ui/Panel";
+import { PageShell } from "@/shared/ui/PageShell";
 
 export default function VocabularyPage() {
   const router = useRouter();
@@ -17,11 +20,11 @@ export default function VocabularyPage() {
 
   if (status === "checking") {
     return (
-      <main className="page">
-        <section className="panel">
-          <p className="muted">Checking your session...</p>
-        </section>
-      </main>
+      <PageShell>
+        <Panel>
+          <p className="text-muted-foreground">Checking your session...</p>
+        </Panel>
+      </PageShell>
     );
   }
 
@@ -30,27 +33,38 @@ export default function VocabularyPage() {
   }
 
   return (
-    <main className="page">
-      <section className="panel">
-        <div className="page-header">
+    <PageShell>
+      <Panel>
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="eyebrow">Vocabulary</p>
-            <h1>Your vocabulary</h1>
-            <p className="muted">{user?.email}</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Vocabulary
+            </p>
+            <h1 className="mb-3 text-3xl font-bold leading-tight">
+              Your vocabulary
+            </h1>
+            <p className="text-muted-foreground">{user?.email}</p>
           </div>
-          <button type="button" onClick={clearSession}>
+          <Button type="button" onClick={clearSession}>
             Logout
-          </button>
+          </Button>
         </div>
 
-        <div className="empty-state">
-          <h2>Vocabulary list comes next.</h2>
-          <p className="muted">
+        <div className="mt-8">
+          <h2 className="mb-2 text-xl font-semibold">
+            Vocabulary list comes next.
+          </h2>
+          <p className="text-muted-foreground">
             Auth is connected. The next step is loading words from the backend.
           </p>
-          <Link href="/">Back home</Link>
+          <Link
+            href="/"
+            className="mt-4 inline-flex text-sm font-semibold text-foreground underline underline-offset-4"
+          >
+            Back home
+          </Link>
         </div>
-      </section>
-    </main>
+      </Panel>
+    </PageShell>
   );
 }
