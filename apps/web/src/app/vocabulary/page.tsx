@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { AddWordForm } from "@/features/vocabulary/components/AddWordForm";
+import { DeleteWordConfirm } from "@/features/vocabulary/components/DeleteWordConfirm";
 import { EditWordPanel } from "@/features/vocabulary/components/EditWordPanel";
 import { VocabularyPagination } from "@/features/vocabulary/components/VocabularyPagination";
 import { VocabularySearch } from "@/features/vocabulary/components/VocabularySearch";
@@ -44,6 +45,9 @@ export default function VocabularyPage() {
     search: debouncedSearch,
   });
   const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
+  const [wordPendingDelete, setWordPendingDelete] = useState<VocabWord | null>(
+    null,
+  );
 
   useEffect(() => {
     if (status === "guest") {
@@ -100,17 +104,30 @@ export default function VocabularyPage() {
 
         <VocabularySearch search={search} onSearchChange={setSearch} />
 
+        {wordPendingDelete ? (
+          <DeleteWordConfirm
+            isDeleting={deletingWordId === wordPendingDelete.id}
+            onCancel={() => setWordPendingDelete(null)}
+            onConfirm={async (word) => {
+              await deleteWord(word);
+              setWordPendingDelete(null);
+            }}
+            word={wordPendingDelete}
+          />
+        ) : null}
+
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">
           {isLoadingWords || loadError || words.length === 0 ? (
             <VocabularyStateBlock
               error={loadError}
+              hasSearch={Boolean(debouncedSearch.trim())}
               isEmpty={words.length === 0}
               isLoading={isLoadingWords}
             />
           ) : (
             <VocabularyTable
               deletingWordId={deletingWordId}
-              onDelete={deleteWord}
+              onDelete={setWordPendingDelete}
               onEdit={setEditingWord}
               words={words}
             />

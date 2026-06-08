@@ -164,12 +164,6 @@ export function useVocabularyWords({
       return;
     }
 
-    const confirmed = window.confirm(`Delete "${wordToDelete.word}"?`);
-
-    if (!confirmed) {
-      return;
-    }
-
     setDeletingWordId(wordToDelete.id);
     setLoadError(null);
 

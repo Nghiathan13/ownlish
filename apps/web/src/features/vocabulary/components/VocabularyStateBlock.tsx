@@ -1,6 +1,7 @@
 import { Button } from "@/shared/ui/Button";
 
 type VocabularyStateBlockProps = {
+  hasSearch: boolean;
   isLoading: boolean;
   error: string | null;
   isEmpty: boolean;
@@ -8,6 +9,7 @@ type VocabularyStateBlockProps = {
 
 export function VocabularyStateBlock({
   error,
+  hasSearch,
   isEmpty,
   isLoading,
 }: VocabularyStateBlockProps) {
@@ -38,10 +40,13 @@ export function VocabularyStateBlock({
   if (isEmpty) {
     return (
       <div className="p-6">
-        <h2 className="mb-2 text-xl font-semibold">No vocabulary yet.</h2>
+        <h2 className="mb-2 text-xl font-semibold">
+          {hasSearch ? "No matching words." : "No vocabulary yet."}
+        </h2>
         <p className="text-muted-foreground">
-          Add word support comes next. This page is now connected to the
-          backend.
+          {hasSearch
+            ? "Try a different search term."
+            : "Add your first word with the form above."}
         </p>
       </div>
     );
