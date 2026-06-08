@@ -7,9 +7,11 @@ import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { AddWordForm } from "@/features/vocabulary/components/AddWordForm";
 import { EditWordPanel } from "@/features/vocabulary/components/EditWordPanel";
+import { VocabularySearch } from "@/features/vocabulary/components/VocabularySearch";
 import { VocabularyStateBlock } from "@/features/vocabulary/components/VocabularyStateBlock";
 import { VocabularyTable } from "@/features/vocabulary/components/VocabularyTable";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui/Button";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -17,6 +19,8 @@ import { PageShell } from "@/shared/ui/PageShell";
 export default function VocabularyPage() {
   const router = useRouter();
   const { accessToken, clearSession, status, user } = useAuthSession();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const {
     createWord,
     deleteWord,
@@ -31,6 +35,7 @@ export default function VocabularyPage() {
     accessToken,
     clearSession,
     isAuthenticated: status === "authenticated",
+    search: debouncedSearch,
   });
   const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
 
@@ -86,6 +91,8 @@ export default function VocabularyPage() {
             word={editingWord}
           />
         ) : null}
+
+        <VocabularySearch search={search} onSearchChange={setSearch} />
 
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">
           {isLoadingWords || loadError || words.length === 0 ? (

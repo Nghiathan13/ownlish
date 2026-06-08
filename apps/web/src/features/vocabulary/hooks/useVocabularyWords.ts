@@ -16,12 +16,14 @@ type UseVocabularyWordsParams = {
   accessToken: string | null;
   clearSession: () => void;
   isAuthenticated: boolean;
+  search: string;
 };
 
 export function useVocabularyWords({
   accessToken,
   clearSession,
   isAuthenticated,
+  search,
 }: UseVocabularyWordsParams) {
   const [words, setWords] = useState<VocabWord[]>([]);
   const [totalWords, setTotalWords] = useState(0);
@@ -46,7 +48,9 @@ export function useVocabularyWords({
       }
     });
 
-    listVocabWords(accessToken)
+    listVocabWords(accessToken, {
+      search: search.trim() || undefined,
+    })
       .then((response) => {
         if (
           cancelled ||
@@ -85,7 +89,7 @@ export function useVocabularyWords({
     return () => {
       cancelled = true;
     };
-  }, [accessToken, clearSession, isAuthenticated]);
+  }, [accessToken, clearSession, isAuthenticated, search]);
 
   async function createWord(input: CreateVocabWordInput) {
     if (!accessToken) {
