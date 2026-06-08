@@ -12,6 +12,8 @@ import {
 } from "@/entities/vocab/api/vocab";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 
+const VOCABULARY_PAGE_SIZE = 50;
+
 type UseVocabularyWordsParams = {
   accessToken: string | null;
   clearSession: () => void;
@@ -31,12 +33,26 @@ export function useVocabularyWords({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
   const [updatingWordId, setUpdatingWordId] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
   const mutationVersionRef = useRef(0);
+  const previousSearchRef = useRef(search);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
       return;
     }
+
+    const searchChanged = previousSearchRef.current !== search;
+
+    if (searchChanged && offset !== 0) {
+      previousSearchRef.current = search;
+      queueMicrotask(() => {
+        setOffset(0);
+      });
+      return;
+    }
+
+    previousSearchRef.current = search;
 
     let cancelled = false;
     const requestMutationVersion = mutationVersionRef.current;
@@ -49,6 +65,8 @@ export function useVocabularyWords({
     });
 
     listVocabWords(accessToken, {
+      limit: VOCABULARY_PAGE_SIZE,
+      offset,
       search: search.trim() || undefined,
     })
       .then((response) => {
@@ -89,7 +107,7 @@ export function useVocabularyWords({
     return () => {
       cancelled = true;
     };
-  }, [accessToken, clearSession, isAuthenticated, search]);
+  }, [accessToken, clearSession, isAuthenticated, offset, search]);
 
   async function createWord(input: CreateVocabWordInput) {
     if (!accessToken) {
@@ -102,6 +120,7 @@ export function useVocabularyWords({
       mutationVersionRef.current += 1;
       setWords((currentWords) => [createdWord, ...currentWords]);
       setTotalWords((currentTotal) => currentTotal + 1);
+      setOffset(0);
       setLoadError(null);
     } catch (error) {
       if (isUnauthorizedError(error)) {
@@ -183,11 +202,23 @@ export function useVocabularyWords({
   }
 
   return {
+    canGoNext: offset + words.length < totalWords,
+    canGoPrevious: offset > 0,
     createWord,
     deleteWord,
     deletingWordId,
     isLoadingWords,
     loadError,
+    nextPage: () => {
+      setOffset((currentOffset) => currentOffset + VOCABULARY_PAGE_SIZE);
+    },
+    offset,
+    pageSize: VOCABULARY_PAGE_SIZE,
+    previousPage: () => {
+      setOffset((currentOffset) =>
+        Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE),
+      );
+    },
     totalWords,
     updateWord,
     updatingWordId,

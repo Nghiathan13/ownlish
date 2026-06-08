@@ -7,6 +7,7 @@ import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { AddWordForm } from "@/features/vocabulary/components/AddWordForm";
 import { EditWordPanel } from "@/features/vocabulary/components/EditWordPanel";
+import { VocabularyPagination } from "@/features/vocabulary/components/VocabularyPagination";
 import { VocabularySearch } from "@/features/vocabulary/components/VocabularySearch";
 import { VocabularyStateBlock } from "@/features/vocabulary/components/VocabularyStateBlock";
 import { VocabularyTable } from "@/features/vocabulary/components/VocabularyTable";
@@ -22,11 +23,16 @@ export default function VocabularyPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const {
+    canGoNext,
+    canGoPrevious,
     createWord,
     deleteWord,
     deletingWordId,
     isLoadingWords,
     loadError,
+    nextPage,
+    offset,
+    previousPage,
     totalWords,
     updateWord,
     updatingWordId,
@@ -110,6 +116,16 @@ export default function VocabularyPage() {
             />
           )}
         </div>
+
+        <VocabularyPagination
+          canGoNext={canGoNext}
+          canGoPrevious={canGoPrevious}
+          itemCount={words.length}
+          offset={offset}
+          onNext={nextPage}
+          onPrevious={previousPage}
+          total={totalWords}
+        />
 
         <div className="mt-6">
           <Link
