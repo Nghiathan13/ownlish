@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createVocabWord,
   deleteVocabWord,
@@ -21,6 +21,12 @@ type UseVocabularyWordsParams = {
   search: string;
 };
 
+type LoadWordsOptions = {
+  isCancelled?: () => boolean;
+  nextOffset?: number;
+  nextSearch?: string;
+};
+
 export function useVocabularyWords({
   accessToken,
   clearSession,
@@ -37,8 +43,69 @@ export function useVocabularyWords({
   const mutationVersionRef = useRef(0);
   const previousSearchRef = useRef(search);
 
+  const loadWords = useCallback(
+    async ({
+      isCancelled,
+      nextOffset = offset,
+      nextSearch = search,
+    }: LoadWordsOptions = {}) => {
+      if (!accessToken) {
+        return;
+      }
+
+      const requestMutationVersion = mutationVersionRef.current;
+
+      queueMicrotask(() => {
+        if (!isCancelled?.()) {
+          setIsLoadingWords(true);
+          setLoadError(null);
+        }
+      });
+
+      try {
+        const response = await listVocabWords(accessToken, {
+          limit: VOCABULARY_PAGE_SIZE,
+          offset: nextOffset,
+          search: nextSearch.trim() || undefined,
+        });
+
+        if (
+          isCancelled?.() ||
+          requestMutationVersion !== mutationVersionRef.current
+        ) {
+          return;
+        }
+
+        setWords(response.items);
+        setTotalWords(response.meta.total);
+      } catch (error) {
+        if (isCancelled?.()) {
+          return;
+        }
+
+        if (isUnauthorizedError(error)) {
+          clearSession();
+          return;
+        }
+
+        setWords([]);
+        setTotalWords(0);
+        setLoadError(
+          error instanceof ApiError
+            ? error.message
+            : "Cannot load vocabulary.",
+        );
+      } finally {
+        if (!isCancelled?.()) {
+          setIsLoadingWords(false);
+        }
+      }
+    },
+    [accessToken, clearSession, offset, search],
+  );
+
   useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
+    if (!isAuthenticated) {
       return;
     }
 
@@ -55,59 +122,15 @@ export function useVocabularyWords({
     previousSearchRef.current = search;
 
     let cancelled = false;
-    const requestMutationVersion = mutationVersionRef.current;
 
-    queueMicrotask(() => {
-      if (!cancelled) {
-        setIsLoadingWords(true);
-        setLoadError(null);
-      }
+    void loadWords({
+      isCancelled: () => cancelled,
     });
-
-    listVocabWords(accessToken, {
-      limit: VOCABULARY_PAGE_SIZE,
-      offset,
-      search: search.trim() || undefined,
-    })
-      .then((response) => {
-        if (
-          cancelled ||
-          requestMutationVersion !== mutationVersionRef.current
-        ) {
-          return;
-        }
-
-        setWords(response.items);
-        setTotalWords(response.meta.total);
-      })
-      .catch((error) => {
-        if (cancelled) {
-          return;
-        }
-
-        if (isUnauthorizedError(error)) {
-          clearSession();
-          return;
-        }
-
-        setWords([]);
-        setTotalWords(0);
-        setLoadError(
-          error instanceof ApiError
-            ? error.message
-            : "Cannot load vocabulary.",
-        );
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoadingWords(false);
-        }
-      });
 
     return () => {
       cancelled = true;
     };
-  }, [accessToken, clearSession, isAuthenticated, offset, search]);
+  }, [isAuthenticated, loadWords, offset, search]);
 
   async function createWord(input: CreateVocabWordInput) {
     if (!accessToken) {
@@ -115,13 +138,17 @@ export function useVocabularyWords({
     }
 
     try {
-      const createdWord = await createVocabWord(accessToken, input);
+      await createVocabWord(accessToken, input);
 
       mutationVersionRef.current += 1;
-      setWords((currentWords) => [createdWord, ...currentWords]);
-      setTotalWords((currentTotal) => currentTotal + 1);
-      setOffset(0);
-      setLoadError(null);
+
+      if (offset !== 0) {
+        setOffset(0);
+      } else {
+        await loadWords({
+          nextOffset: 0,
+        });
+      }
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearSession();
@@ -150,10 +177,7 @@ export function useVocabularyWords({
       await deleteVocabWord(accessToken, wordToDelete.id);
 
       mutationVersionRef.current += 1;
-      setWords((currentWords) =>
-        currentWords.filter((word) => word.id !== wordToDelete.id),
-      );
-      setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
+      await loadWords();
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearSession();
@@ -177,18 +201,14 @@ export function useVocabularyWords({
     setLoadError(null);
 
     try {
-      const updatedWord = await updateVocabWord(
+      await updateVocabWord(
         accessToken,
         wordToUpdate.id,
         input,
       );
 
       mutationVersionRef.current += 1;
-      setWords((currentWords) =>
-        currentWords.map((word) =>
-          word.id === updatedWord.id ? updatedWord : word,
-        ),
-      );
+      await loadWords();
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearSession();
