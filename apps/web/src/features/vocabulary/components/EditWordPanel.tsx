@@ -19,14 +19,14 @@ import { TextInput } from "@/shared/ui/TextInput";
 
 type EditWordPanelProps = {
   isSubmitting: boolean;
-  onCancel: () => void;
+  onClose: () => void;
   onUpdate: (word: VocabWord, input: UpdateVocabWordInput) => Promise<void>;
   word: VocabWord;
 };
 
 export function EditWordPanel({
   isSubmitting,
-  onCancel,
+  onClose,
   onUpdate,
   word,
 }: EditWordPanelProps) {
@@ -49,7 +49,7 @@ export function EditWordPanel({
     try {
       await onUpdate(word, toUpdateVocabWordInput(values));
 
-      onCancel();
+      onClose();
     } catch (caughtError) {
       setError(
         caughtError instanceof ApiError
@@ -129,7 +129,7 @@ export function EditWordPanel({
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : "Save changes"}
         </Button>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="secondary" onClick={onClose}>
           Cancel
         </Button>
       </div>

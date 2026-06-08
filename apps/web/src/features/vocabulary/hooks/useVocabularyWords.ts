@@ -166,7 +166,6 @@ export function useVocabularyWords({
           word.id === updatedWord.id ? updatedWord : word,
         ),
       );
-      setLoadError(null);
     } catch (error) {
       if (isUnauthorizedError(error)) {
         clearSession();

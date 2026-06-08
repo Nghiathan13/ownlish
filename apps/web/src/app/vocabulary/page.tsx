@@ -81,7 +81,7 @@ export default function VocabularyPage() {
           <EditWordPanel
             key={editingWord.id}
             isSubmitting={updatingWordId === editingWord.id}
-            onCancel={() => setEditingWord(null)}
+            onClose={() => setEditingWord(null)}
             onUpdate={updateWord}
             word={editingWord}
           />

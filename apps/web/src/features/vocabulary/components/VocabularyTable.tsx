@@ -1,4 +1,5 @@
 import type { VocabWord } from "@/entities/vocab/api/vocab";
+import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
 
 type VocabularyTableProps = {
@@ -7,18 +8,6 @@ type VocabularyTableProps = {
   onEdit: (word: VocabWord) => void;
   words: VocabWord[];
 };
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return "Not scheduled";
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 export function VocabularyTable({
   deletingWordId,
@@ -48,7 +37,7 @@ export function VocabularyTable({
             <td className="px-4 py-3">{word.meaningVi || "-"}</td>
             <td className="px-4 py-3">{word.level}</td>
             <td className="px-4 py-3 text-muted-foreground">
-              {formatDate(word.nextReview)}
+              {formatDisplayDate(word.nextReview)}
             </td>
             <td className="px-4 py-3">
               <div className="flex gap-2">
