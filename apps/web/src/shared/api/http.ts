@@ -18,6 +18,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isUnauthorizedError(error: unknown) {
+  return error instanceof ApiError && error.status === 401;
+}
+
 function getApiErrorMessage(body: ApiErrorBody | null) {
   if (Array.isArray(body?.message)) {
     return body.message.filter(Boolean).join(" ");
