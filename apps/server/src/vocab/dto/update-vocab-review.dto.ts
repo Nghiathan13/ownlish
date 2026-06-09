@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, Max, Min } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { MAX_VOCAB_LEVEL, MIN_VOCAB_LEVEL } from '../vocab.constants';
 
 export class UpdateVocabReviewDto {
@@ -14,6 +14,7 @@ export class UpdateVocabReviewDto {
   @IsDateString()
   lastReview: string;
 
+  @IsOptional()
   @IsDateString()
-  nextReview: string;
+  nextReview: string | null;
 }

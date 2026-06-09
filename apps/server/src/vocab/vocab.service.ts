@@ -100,6 +100,9 @@ export class VocabService {
     const where = {
       userId,
       deletedAt: null,
+      level: {
+        lt: MAX_VOCAB_LEVEL,
+      },
       OR: [
         {
           nextReview: null,
@@ -156,6 +159,9 @@ export class VocabService {
         this.prisma.vocabWord.count({
           where: {
             ...activeWhere,
+            level: {
+              lt: MAX_VOCAB_LEVEL,
+            },
             OR: [
               {
                 nextReview: null,
@@ -285,7 +291,7 @@ export class VocabService {
         level: dto.level,
         wrongCount: dto.wrongCount,
         lastReview: new Date(dto.lastReview),
-        nextReview: new Date(dto.nextReview),
+        nextReview: dto.nextReview ? new Date(dto.nextReview) : null,
       },
     });
   }

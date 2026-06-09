@@ -240,9 +240,12 @@ describe('VocabController (e2e)', () => {
         level: 7,
         wrongCount: 0,
         lastReview: '2999-01-01T00:00:00.000Z',
-        nextReview: '2999-01-02T00:00:00.000Z',
+        nextReview: null,
       })
-      .expect(200);
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.nextReview).toBeNull();
+      });
 
     await request(app.getHttpServer())
       .patch(`/vocab/${difficultResponse.body.id}/review`)
@@ -307,6 +310,14 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
+    const masteredWordResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'mastered word',
+      })
+      .expect(201);
+
     await request(app.getHttpServer())
       .patch(`/vocab/${dueWordResponse.body.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
@@ -330,6 +341,17 @@ describe('VocabController (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
+      .patch(`/vocab/${masteredWordResponse.body.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 7,
+        wrongCount: 0,
+        lastReview: '2000-01-01T00:00:00.000Z',
+        nextReview: null,
+      })
+      .expect(200);
+
+    await request(app.getHttpServer())
       .get('/vocab/review/due?limit=10&offset=0')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
@@ -339,6 +361,7 @@ describe('VocabController (e2e)', () => {
         expect(ids).toContain(newWordResponse.body.id);
         expect(ids).toContain(dueWordResponse.body.id);
         expect(ids).not.toContain(futureWordResponse.body.id);
+        expect(ids).not.toContain(masteredWordResponse.body.id);
         expect(response.body.meta).toMatchObject({
           limit: 10,
           offset: 0,

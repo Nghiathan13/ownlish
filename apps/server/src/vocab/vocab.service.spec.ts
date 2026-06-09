@@ -212,6 +212,9 @@ describe('VocabService', () => {
         where: {
           userId: 'user-id',
           deletedAt: null,
+          level: {
+            lt: 7,
+          },
           OR: [
             {
               nextReview: null,
@@ -238,6 +241,9 @@ describe('VocabService', () => {
         where: {
           userId: 'user-id',
           deletedAt: null,
+          level: {
+            lt: 7,
+          },
           OR: [
             {
               nextReview: null,
@@ -305,6 +311,9 @@ describe('VocabService', () => {
         where: {
           userId: 'user-id',
           deletedAt: null,
+          level: {
+            lt: 7,
+          },
           OR: [
             {
               nextReview: null,
@@ -493,6 +502,42 @@ describe('VocabService', () => {
         wrongCount: 1,
         lastReview: new Date(lastReview),
         nextReview: new Date(nextReview),
+      },
+    });
+  });
+
+  it('allows clearing next review when a word is mastered', async () => {
+    const lastReview = '2026-06-07T00:00:00.000Z';
+
+    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
+    prismaMock.vocabWord.update.mockResolvedValue({
+      ...vocabWord,
+      level: 7,
+      wrongCount: 0,
+      lastReview: new Date(lastReview),
+      nextReview: null,
+    });
+
+    await expect(
+      service.updateReview('user-id', 'word-id', {
+        level: 7,
+        wrongCount: 0,
+        lastReview,
+        nextReview: null,
+      }),
+    ).resolves.toMatchObject({
+      level: 7,
+      wrongCount: 0,
+      nextReview: null,
+    });
+
+    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
+      where: { id: 'word-id' },
+      data: {
+        level: 7,
+        wrongCount: 0,
+        lastReview: new Date(lastReview),
+        nextReview: null,
       },
     });
   });
