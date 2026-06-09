@@ -28,6 +28,12 @@ export default function HomePage() {
           >
             Vocabulary
           </Link>
+          <Link
+            href="/review"
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm font-semibold text-foreground no-underline hover:bg-muted"
+          >
+            Review
+          </Link>
         </div>
       </Panel>
     </PageShell>

@@ -44,6 +44,13 @@ export type CreateVocabWordInput = {
 
 export type UpdateVocabWordInput = Partial<CreateVocabWordInput>;
 
+export type UpdateVocabReviewInput = {
+  level: number;
+  wrongCount: number;
+  lastReview: string;
+  nextReview: string;
+};
+
 type ListVocabWordsParams = {
   limit?: number;
   offset?: number;
@@ -81,9 +88,34 @@ export function listVocabWords(
   });
 }
 
+export function listDueReviewWords(
+  token: string,
+  params: ListVocabWordsParams = {},
+) {
+  return apiRequest<VocabWordListResponse>(
+    `/vocab/review/due${buildVocabQuery(params)}`,
+    {
+      signal: params.signal,
+      token,
+    },
+  );
+}
+
 export function createVocabWord(token: string, input: CreateVocabWordInput) {
   return apiRequest<VocabWord>("/vocab", {
     method: "POST",
+    token,
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateVocabReview(
+  token: string,
+  id: string,
+  input: UpdateVocabReviewInput,
+) {
+  return apiRequest<VocabWord>(`/vocab/${id}/review`, {
+    method: "PATCH",
     token,
     body: JSON.stringify(input),
   });
