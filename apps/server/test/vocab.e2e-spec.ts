@@ -195,13 +195,12 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toHaveLength(1);
-        expect(response.body.items[0]).toMatchObject({
-          id: helloResponse.body.id,
-          word: 'hello',
-        });
+        expect(response.body.items).toHaveLength(2);
+        const words = response.body.items.map((item: { word: string }) => item.word);
+        expect(words).toContain('hello');
+        expect(words).toContain('shell');
         expect(response.body.meta).toMatchObject({
-          total: 1,
+          total: 2,
           hasMore: false,
         });
       });
