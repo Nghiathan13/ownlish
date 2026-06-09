@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
@@ -20,6 +20,7 @@ export default function ReviewPage() {
 
 function ReviewPageContent() {
   const { accessToken, clearSession } = useAuthSession();
+  const [initialTotal, setInitialTotal] = useState<number | null>(null);
   const [showMeaning, setShowMeaning] = useState(false);
   const {
     currentWord,
@@ -28,7 +29,6 @@ function ReviewPageContent() {
     isEmpty,
     isLoading,
     isSubmittingGrade,
-    remainingWords,
     reload,
     totalWords,
   } = useReviewQueue({
@@ -36,6 +36,14 @@ function ReviewPageContent() {
     clearSession,
     isAuthenticated: Boolean(accessToken),
   });
+
+  useEffect(() => {
+    if (!isLoading && totalWords > 0 && initialTotal === null) {
+      setInitialTotal(totalWords);
+    } else if (totalWords === 0 && initialTotal !== null) {
+      setInitialTotal(null);
+    }
+  }, [totalWords, isLoading, initialTotal]);
 
   async function handleGrade(grade: ReviewGrade) {
     await gradeCurrentWord(grade);
@@ -53,8 +61,8 @@ function ReviewPageContent() {
             Review due words
           </h1>
           <p className="text-muted-foreground">
-            {totalWords
-              ? `${remainingWords} of ${totalWords} words remaining`
+            {totalWords && initialTotal
+              ? `${totalWords}/${initialTotal} words remaining`
               : "Practice words that are ready today."}
           </p>
         </div>
