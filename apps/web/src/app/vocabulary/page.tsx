@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { VocabWord } from "@/entities/vocab/api/vocab";
+import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import {
   AddWordForm,
@@ -21,8 +21,15 @@ import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
 
 export default function VocabularyPage() {
-  const router = useRouter();
-  const { accessToken, clearSession, status, user } = useAuthSession();
+  return (
+    <RequireAuth>
+      <VocabularyPageContent />
+    </RequireAuth>
+  );
+}
+
+function VocabularyPageContent() {
+  const { accessToken, clearSession, user } = useAuthSession();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const {
@@ -43,33 +50,13 @@ export default function VocabularyPage() {
   } = useVocabularyWords({
     accessToken,
     clearSession,
-    isAuthenticated: status === "authenticated",
+    isAuthenticated: Boolean(accessToken),
     search: debouncedSearch,
   });
   const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
   const [wordPendingDelete, setWordPendingDelete] = useState<VocabWord | null>(
     null,
   );
-
-  useEffect(() => {
-    if (status === "guest") {
-      router.replace("/login");
-    }
-  }, [router, status]);
-
-  if (status === "checking") {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Checking your session...</p>
-        </Panel>
-      </PageShell>
-    );
-  }
-
-  if (status === "guest") {
-    return null;
-  }
 
   return (
     <PageShell>

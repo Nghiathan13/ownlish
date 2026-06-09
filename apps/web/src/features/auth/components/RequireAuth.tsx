@@ -1,0 +1,38 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
+import { Panel } from "@/shared/ui/Panel";
+import { PageShell } from "@/shared/ui/PageShell";
+import { useAuthSession } from "../hooks/useAuthSession";
+
+type RequireAuthProps = {
+  children: ReactNode;
+};
+
+export function RequireAuth({ children }: RequireAuthProps) {
+  const router = useRouter();
+  const { status } = useAuthSession();
+
+  useEffect(() => {
+    if (status === "guest") {
+      router.replace("/login");
+    }
+  }, [router, status]);
+
+  if (status === "checking") {
+    return (
+      <PageShell>
+        <Panel>
+          <p className="text-muted-foreground">Checking your session...</p>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  if (status === "guest") {
+    return null;
+  }
+
+  return children;
+}
