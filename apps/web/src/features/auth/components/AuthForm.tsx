@@ -92,11 +92,12 @@ export function AuthForm() {
         </p>
       </div>
 
-      <div className="my-6 flex gap-3" role="tablist" aria-label="Auth mode">
+      <div className="my-6 flex gap-3" aria-label="Auth mode">
         <Button
           type="button"
           variant={mode === "login" ? "primary" : "secondary"}
           onClick={() => switchMode("login")}
+          aria-pressed={mode === "login"}
         >
           Login
         </Button>
@@ -104,6 +105,7 @@ export function AuthForm() {
           type="button"
           variant={mode === "register" ? "primary" : "secondary"}
           onClick={() => switchMode("register")}
+          aria-pressed={mode === "register"}
         >
           Register
         </Button>
