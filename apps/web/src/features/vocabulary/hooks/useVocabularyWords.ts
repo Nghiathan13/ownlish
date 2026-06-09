@@ -133,109 +133,139 @@ export function useVocabularyWords({
     };
   }, [isAuthenticated, loadWords, offset, search]);
 
-  async function createWord(input: CreateVocabWordInput) {
-    if (!accessToken) {
-      return;
-    }
+  const createWord = useCallback(
+    async (input: CreateVocabWordInput) => {
+      if (!accessToken) {
+        return;
+      }
 
-    try {
-      const createdWord = await createVocabWord(accessToken, input);
+      try {
+        const createdWord = await createVocabWord(accessToken, input);
 
-      mutationVersionRef.current += 1;
+        mutationVersionRef.current += 1;
 
-      if (offset !== 0) {
-        setOffset(0);
-      } else {
-        setWords((currentWords) => [createdWord, ...currentWords]);
-        setTotalWords((currentTotal) => currentTotal + 1);
+        if (offset !== 0) {
+          setOffset(0);
+        } else {
+          setWords((currentWords) => [createdWord, ...currentWords]);
+          setTotalWords((currentTotal) => currentTotal + 1);
+          void loadWords({
+            offset: 0,
+            preserveCurrentOnError: true,
+            search,
+          });
+        }
+      } catch (error) {
+        if (isUnauthorizedError(error)) {
+          clearSession();
+          return;
+        }
+
+        throw error;
+      }
+    },
+    [accessToken, offset, search, loadWords, clearSession],
+  );
+
+  const deleteWord = useCallback(
+    async (wordToDelete: VocabWord) => {
+      if (!accessToken) {
+        return;
+      }
+
+      setDeletingWordId(wordToDelete.id);
+      setLoadError(null);
+
+      try {
+        await deleteVocabWord(accessToken, wordToDelete.id);
+
+        mutationVersionRef.current += 1;
+        setWords((currentWords) =>
+          currentWords.filter((word) => word.id !== wordToDelete.id),
+        );
+        setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
+
+        const isLastItemOnPage = words.length === 1;
+        if (isLastItemOnPage && offset > 0) {
+          setOffset((currentOffset) =>
+            Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE),
+          );
+        } else {
+          void loadWords({
+            offset,
+            preserveCurrentOnError: true,
+            search,
+          });
+        }
+      } catch (error) {
+        if (isUnauthorizedError(error)) {
+          clearSession();
+          return;
+        }
+
+        setLoadError(
+          error instanceof ApiError ? error.message : "Cannot delete word.",
+        );
+      } finally {
+        setDeletingWordId(null);
+      }
+    },
+    [accessToken, words.length, offset, search, loadWords, clearSession],
+  );
+
+  const updateWord = useCallback(
+    async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
+      if (!accessToken) {
+        return;
+      }
+
+      setUpdatingWordId(wordToUpdate.id);
+      setLoadError(null);
+
+      try {
+        const updatedWord = await updateVocabWord(
+          accessToken,
+          wordToUpdate.id,
+          input,
+        );
+
+        mutationVersionRef.current += 1;
+        setWords((currentWords) =>
+          currentWords.map((word) =>
+            word.id === updatedWord.id ? updatedWord : word,
+          ),
+        );
         void loadWords({
-          offset: 0,
+          offset,
           preserveCurrentOnError: true,
           search,
         });
+      } catch (error) {
+        if (isUnauthorizedError(error)) {
+          clearSession();
+          return;
+        }
+
+        throw error;
+      } finally {
+        setUpdatingWordId(null);
       }
-    } catch (error) {
-      if (isUnauthorizedError(error)) {
-        clearSession();
-        return;
-      }
+    },
+    [accessToken, offset, search, loadWords, clearSession],
+  );
 
-      throw error;
-    }
-  }
+  const isInitialLoading = isLoadingWords && words.length === 0;
+  const isRefreshing = isLoadingWords && words.length > 0;
 
-  async function deleteWord(wordToDelete: VocabWord) {
-    if (!accessToken) {
-      return;
-    }
+  const nextPage = useCallback(() => {
+    setOffset((currentOffset) => currentOffset + VOCABULARY_PAGE_SIZE);
+  }, []);
 
-    setDeletingWordId(wordToDelete.id);
-    setLoadError(null);
-
-    try {
-      await deleteVocabWord(accessToken, wordToDelete.id);
-
-      mutationVersionRef.current += 1;
-      setWords((currentWords) =>
-        currentWords.filter((word) => word.id !== wordToDelete.id),
-      );
-      setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
-      void loadWords({
-        offset,
-        preserveCurrentOnError: true,
-        search,
-      });
-    } catch (error) {
-      if (isUnauthorizedError(error)) {
-        clearSession();
-        return;
-      }
-
-      setLoadError(
-        error instanceof ApiError ? error.message : "Cannot delete word.",
-      );
-    } finally {
-      setDeletingWordId(null);
-    }
-  }
-
-  async function updateWord(wordToUpdate: VocabWord, input: UpdateVocabWordInput) {
-    if (!accessToken) {
-      return;
-    }
-
-    setUpdatingWordId(wordToUpdate.id);
-    setLoadError(null);
-
-    try {
-      const updatedWord = await updateVocabWord(
-        accessToken,
-        wordToUpdate.id,
-        input,
-      );
-
-      mutationVersionRef.current += 1;
-      setWords((currentWords) =>
-        currentWords.map((word) =>
-          word.id === updatedWord.id ? updatedWord : word,
-        ),
-      );
-      void loadWords({
-        offset,
-        preserveCurrentOnError: true,
-        search,
-      });
-    } catch (error) {
-      if (isUnauthorizedError(error)) {
-        clearSession();
-        return;
-      }
-
-      throw error;
-    } finally {
-      setUpdatingWordId(null);
-    }
-  }
+  const previousPage = useCallback(() => {
+    setOffset((currentOffset) =>
+      Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE),
+    );
+  }, []);
 
   return {
     canGoNext: offset + words.length < totalWords,
@@ -243,18 +273,14 @@ export function useVocabularyWords({
     createWord,
     deleteWord,
     deletingWordId,
+    isInitialLoading,
     isLoadingWords,
+    isRefreshing,
     loadError,
-    nextPage: () => {
-      setOffset((currentOffset) => currentOffset + VOCABULARY_PAGE_SIZE);
-    },
+    nextPage,
     offset,
     pageSize: VOCABULARY_PAGE_SIZE,
-    previousPage: () => {
-      setOffset((currentOffset) =>
-        Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE),
-      );
-    },
+    previousPage,
     totalWords,
     updateWord,
     updatingWordId,

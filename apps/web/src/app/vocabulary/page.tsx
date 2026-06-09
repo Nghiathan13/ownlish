@@ -38,7 +38,8 @@ function VocabularyPageContent() {
     createWord,
     deleteWord,
     deletingWordId,
-    isLoadingWords,
+    isInitialLoading,
+    isRefreshing,
     loadError,
     nextPage,
     offset,
@@ -106,20 +107,26 @@ function VocabularyPageContent() {
         ) : null}
 
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">
-          {isLoadingWords || loadError || words.length === 0 ? (
+          {isInitialLoading || loadError || words.length === 0 ? (
             <VocabularyStateBlock
               error={loadError}
               hasSearch={Boolean(debouncedSearch.trim())}
               isEmpty={words.length === 0}
-              isLoading={isLoadingWords}
+              isLoading={isInitialLoading}
             />
           ) : (
-            <VocabularyTable
-              deletingWordId={deletingWordId}
-              onDelete={setWordPendingDelete}
-              onEdit={setEditingWord}
-              words={words}
-            />
+            <div
+              className={`transition-opacity duration-200 ${
+                isRefreshing ? "opacity-50 pointer-events-none" : "opacity-100"
+              }`}
+            >
+              <VocabularyTable
+                deletingWordId={deletingWordId}
+                onDelete={setWordPendingDelete}
+                onEdit={setEditingWord}
+                words={words}
+              />
+            </div>
           )}
         </div>
 
