@@ -48,7 +48,7 @@ export type UpdateVocabReviewInput = {
   level: number;
   wrongCount: number;
   lastReview: string;
-  nextReview: string;
+  nextReview: string | null;
 };
 
 type ListVocabWordsParams = {

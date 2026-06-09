@@ -4,7 +4,6 @@ import type {
 } from "@/entities/vocab/api/vocab";
 
 const MAX_REVIEW_LEVEL = 7;
-const MASTERED_NEXT_REVIEW = "2999-01-02T00:00:00.000Z";
 
 export type ReviewGrade = "forgot" | "remember";
 
@@ -59,7 +58,7 @@ export function buildReviewUpdate(
     lastReview: reviewedAt.toISOString(),
     nextReview:
       nextLevel === MAX_REVIEW_LEVEL
-        ? MASTERED_NEXT_REVIEW
+        ? null
         : addDays(reviewedAt, getDaysForLevel(word.level)).toISOString(),
   };
 }
