@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listDueReviewWords,
   updateVocabReview,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
-import { ApiError, isAbortError, isUnauthorizedError } from "@/shared/api/http";
+import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
 type UseReviewQueueParams = {
@@ -20,125 +21,89 @@ export function useReviewQueue({
   clearSession,
   isAuthenticated,
 }: UseReviewQueueParams) {
-  const [reviewWords, setReviewWords] = useState<VocabWord[]>([]);
-  const [totalWords, setTotalWords] = useState(0);
-  const [isLoading, setIsLoading] = useState(isAuthenticated);
-  const [isSubmittingGrade, setIsSubmittingGrade] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [gradedWordIds, setGradedWordIds] = useState<string[]>([]);
 
-  const loadQueue = useCallback(
-    async (signal?: AbortSignal) => {
-      if (!accessToken || signal?.aborted) {
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
+  const { data, isLoading, error: queryError } = useQuery({
+    queryKey: ["review-queue", { accessToken }],
+    queryFn: async ({ signal }) => {
+      if (!accessToken) throw new Error("No access token");
       try {
-        const response = await listDueReviewWords(accessToken, {
+        return await listDueReviewWords(accessToken, {
           offset: 0,
           signal,
         });
-
-        if (signal?.aborted) {
-          return;
-        }
-
-        setReviewWords(response.items);
-        setTotalWords(response.meta.total);
-      } catch (caughtError) {
-        if (signal?.aborted || isAbortError(caughtError)) {
-          return;
-        }
-
-        if (isUnauthorizedError(caughtError)) {
+      } catch (error) {
+        if (isUnauthorizedError(error)) {
           clearSession();
-          return;
         }
-
-        setReviewWords([]);
-        setTotalWords(0);
-        setError(
-          caughtError instanceof ApiError
-            ? caughtError.message
-            : "Cannot load review words.",
-        );
-      } finally {
-        if (!signal?.aborted) {
-          setIsLoading(false);
-        }
+        throw error;
       }
     },
-    [accessToken, clearSession],
-  );
+    enabled: isAuthenticated && Boolean(accessToken),
+  });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
+  const allWords = data?.items ?? [];
+  const reviewWords = allWords.filter((word) => !gradedWordIds.includes(word.id));
+  const totalWords = Math.max(0, (data?.meta.total ?? 0) - gradedWordIds.length);
 
-    const abortController = new AbortController();
+  const loadError = queryError
+    ? queryError instanceof ApiError
+      ? queryError.message
+      : "Cannot load review words."
+    : null;
 
-    queueMicrotask(() => {
-      if (!abortController.signal.aborted) {
-        void loadQueue(abortController.signal);
+  const gradeMutation = useMutation({
+    mutationFn: ({ word, grade }: { word: VocabWord; grade: ReviewGrade }) => {
+      if (!accessToken) throw new Error("No access token");
+      return updateVocabReview(
+        accessToken,
+        word.id,
+        buildReviewUpdate(word, grade)
+      );
+    },
+    onMutate: async ({ word }) => {
+      const previousGradedWordIds = gradedWordIds;
+      setGradedWordIds((current) => [...current, word.id]);
+      return { previousGradedWordIds };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousGradedWordIds) {
+        setGradedWordIds(context.previousGradedWordIds);
       }
-    });
-
-    return () => {
-      abortController.abort();
-    };
-  }, [isAuthenticated, loadQueue]);
+      if (isUnauthorizedError(error)) {
+        clearSession();
+      }
+    },
+  });
 
   const reload = useCallback(() => {
-    void loadQueue();
-  }, [loadQueue]);
+    setGradedWordIds([]);
+    queryClient.invalidateQueries({ queryKey: ["review-queue"] });
+  }, [queryClient]);
 
-  async function gradeCurrentWord(grade: ReviewGrade) {
-    const currentWord = reviewWords[0];
+  const gradeCurrentWord = useCallback(
+    (grade: ReviewGrade) => {
+      const currentWord = reviewWords[0];
+      if (!currentWord) return Promise.resolve();
+      return gradeMutation.mutateAsync({ word: currentWord, grade });
+    },
+    [reviewWords, gradeMutation],
+  );
 
-    if (!accessToken || !currentWord) {
-      return;
-    }
-
-    setIsSubmittingGrade(true);
-    setError(null);
-
-    try {
-      await updateVocabReview(
-        accessToken,
-        currentWord.id,
-        buildReviewUpdate(currentWord, grade),
-      );
-
-      setReviewWords((currentWords) =>
-        currentWords.filter((word) => word.id !== currentWord.id),
-      );
-      setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
-    } catch (caughtError) {
-      if (isUnauthorizedError(caughtError)) {
-        clearSession();
-        return;
-      }
-
-      setError(
-        caughtError instanceof ApiError
-          ? caughtError.message
-          : "Cannot update review.",
-      );
-    } finally {
-      setIsSubmittingGrade(false);
-    }
-  }
+  const mutationError = gradeMutation.error
+    ? gradeMutation.error instanceof ApiError
+      ? gradeMutation.error.message
+      : "Cannot update review."
+    : null;
 
   return {
     currentWord: reviewWords[0] ?? null,
-    error,
+    error: loadError || mutationError,
     gradeCurrentWord,
     isEmpty: reviewWords.length === 0,
     isLoading,
-    isSubmittingGrade,
+    isSubmittingGrade: gradeMutation.isPending,
     remainingWords: reviewWords.length,
     reload,
     totalWords,

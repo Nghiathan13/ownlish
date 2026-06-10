@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   createVocabWord,
   deleteVocabWord,
@@ -10,7 +11,7 @@ import {
   type UpdateVocabWordInput,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
-import { ApiError, isAbortError, isUnauthorizedError } from "@/shared/api/http";
+import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 
 const VOCABULARY_PAGE_SIZE = 50;
 
@@ -21,241 +22,193 @@ type UseVocabularyWordsParams = {
   search: string;
 };
 
-type LoadWordsOptions = {
-  offset: number;
-  preserveCurrentOnError?: boolean;
-  search: string;
-  signal?: AbortSignal;
-};
-
 export function useVocabularyWords({
   accessToken,
   clearSession,
   isAuthenticated,
   search,
 }: UseVocabularyWordsParams) {
-  const [words, setWords] = useState<VocabWord[]>([]);
-  const [totalWords, setTotalWords] = useState(0);
-  const [isLoadingWords, setIsLoadingWords] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
-  const [updatingWordId, setUpdatingWordId] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
-  const mutationVersionRef = useRef(0);
+  const queryClient = useQueryClient();
   const previousSearchRef = useRef(search);
 
-  const loadWords = useCallback(
-    async ({
-      offset: nextOffset,
-      preserveCurrentOnError = false,
-      search: nextSearch,
-      signal,
-    }: LoadWordsOptions) => {
-      if (!accessToken || signal?.aborted) {
-        return;
-      }
+  // Sync offset synchronously during render when search changes
+  let activeOffset = offset;
+  if (previousSearchRef.current !== search) {
+    previousSearchRef.current = search;
+    setOffset(0);
+    activeOffset = 0;
+  }
 
-      const requestMutationVersion = mutationVersionRef.current;
-
-      setIsLoadingWords(true);
-      setLoadError(null);
-
+  const { data, isLoading: isInitialLoading, isFetching, error: queryError } = useQuery({
+    queryKey: ["vocab", { accessToken, search, offset: activeOffset }],
+    queryFn: async ({ signal }) => {
+      if (!accessToken) throw new Error("No access token");
       try {
-        const response = await listVocabWords(accessToken, {
+        return await listVocabWords(accessToken, {
           limit: VOCABULARY_PAGE_SIZE,
-          offset: nextOffset,
-          search: nextSearch.trim() || undefined,
+          offset: activeOffset,
+          search: search.trim() || undefined,
           signal,
         });
-
-        if (
-          signal?.aborted ||
-          requestMutationVersion !== mutationVersionRef.current
-        ) {
-          return;
-        }
-
-        setWords(response.items);
-        setTotalWords(response.meta.total);
-      } catch (error) {
-        if (signal?.aborted || isAbortError(error)) {
-          return;
-        }
-
-        if (isUnauthorizedError(error)) {
-          clearSession();
-          return;
-        }
-
-        if (!preserveCurrentOnError) {
-          setWords([]);
-          setTotalWords(0);
-        }
-        setLoadError(
-          error instanceof ApiError
-            ? error.message
-            : "Cannot load vocabulary.",
-        );
-      } finally {
-        if (!signal?.aborted) {
-          setIsLoadingWords(false);
-        }
-      }
-    },
-    [accessToken, clearSession],
-  );
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
-
-    const searchChanged = previousSearchRef.current !== search;
-
-    if (searchChanged && offset !== 0) {
-      previousSearchRef.current = search;
-      setOffset(0);
-      return;
-    }
-
-    previousSearchRef.current = search;
-
-    const abortController = new AbortController();
-
-    void loadWords({
-      offset,
-      search,
-      signal: abortController.signal,
-    });
-
-    return () => {
-      abortController.abort();
-    };
-  }, [isAuthenticated, loadWords, offset, search]);
-
-  const createWord = useCallback(
-    async (input: CreateVocabWordInput) => {
-      if (!accessToken) {
-        return;
-      }
-
-      try {
-        const createdWord = await createVocabWord(accessToken, input);
-
-        mutationVersionRef.current += 1;
-
-        if (offset !== 0) {
-          setOffset(0);
-        } else {
-          setWords((currentWords) => [createdWord, ...currentWords]);
-          setTotalWords((currentTotal) => currentTotal + 1);
-          void loadWords({
-            offset: 0,
-            preserveCurrentOnError: true,
-            search,
-          });
-        }
       } catch (error) {
         if (isUnauthorizedError(error)) {
           clearSession();
-          return;
         }
-
         throw error;
       }
     },
-    [accessToken, offset, search, loadWords, clearSession],
-  );
+    enabled: isAuthenticated && Boolean(accessToken),
+    placeholderData: keepPreviousData,
+  });
 
-  const deleteWord = useCallback(
-    async (wordToDelete: VocabWord) => {
-      if (!accessToken) {
-        return;
+  const words = data?.items ?? [];
+  const totalWords = data?.meta.total ?? 0;
+  const isRefreshing = isFetching && words.length > 0;
+
+  const loadError = queryError
+    ? queryError instanceof ApiError
+      ? queryError.message
+      : "Cannot load vocabulary."
+    : null;
+
+  const createMutation = useMutation({
+    mutationFn: (input: CreateVocabWordInput) => {
+      if (!accessToken) throw new Error("No access token");
+      return createVocabWord(accessToken, input);
+    },
+    onSuccess: (createdWord) => {
+      if (offset === 0) {
+        queryClient.setQueryData(
+          ["vocab", { accessToken, search, offset: 0 }],
+          (oldData: any) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              items: [createdWord, ...oldData.items],
+              meta: {
+                ...oldData.meta,
+                total: oldData.meta.total + 1,
+              },
+            };
+          }
+        );
       }
-
-      setDeletingWordId(wordToDelete.id);
-      setLoadError(null);
-
-      try {
-        await deleteVocabWord(accessToken, wordToDelete.id);
-
-        mutationVersionRef.current += 1;
-        setWords((currentWords) =>
-          currentWords.filter((word) => word.id !== wordToDelete.id),
-        );
-        setTotalWords((currentTotal) => Math.max(0, currentTotal - 1));
-
-        const isLastItemOnPage = words.length === 1;
-        if (isLastItemOnPage && offset > 0) {
-          setOffset((currentOffset) =>
-            Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE),
-          );
-        } else {
-          void loadWords({
-            offset,
-            preserveCurrentOnError: true,
-            search,
-          });
-        }
-      } catch (error) {
-        if (isUnauthorizedError(error)) {
-          clearSession();
-          return;
-        }
-
-        setLoadError(
-          error instanceof ApiError ? error.message : "Cannot delete word.",
-        );
-      } finally {
-        setDeletingWordId(null);
+      queryClient.invalidateQueries({ queryKey: ["vocab"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        clearSession();
       }
     },
-    [accessToken, words.length, offset, search, loadWords, clearSession],
-  );
+  });
 
-  const updateWord = useCallback(
-    async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
-      if (!accessToken) {
-        return;
-      }
+  const updateMutation = useMutation({
+    mutationFn: ({
+      wordToUpdate,
+      input,
+    }: {
+      wordToUpdate: VocabWord;
+      input: UpdateVocabWordInput;
+    }) => {
+      if (!accessToken) throw new Error("No access token");
+      return updateVocabWord(accessToken, wordToUpdate.id, input);
+    },
+    onMutate: async ({ wordToUpdate, input }) => {
+      const queryKey = ["vocab", { accessToken, search, offset }];
+      await queryClient.cancelQueries({ queryKey });
+      const previousVocab = queryClient.getQueryData(queryKey);
 
-      setUpdatingWordId(wordToUpdate.id);
-      setLoadError(null);
-
-      try {
-        const updatedWord = await updateVocabWord(
-          accessToken,
-          wordToUpdate.id,
-          input,
-        );
-
-        mutationVersionRef.current += 1;
-        setWords((currentWords) =>
-          currentWords.map((word) =>
-            word.id === updatedWord.id ? updatedWord : word,
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          items: oldData.items.map((w: VocabWord) =>
+            w.id === wordToUpdate.id ? { ...w, ...input } : w
           ),
-        );
-        void loadWords({
-          offset,
-          preserveCurrentOnError: true,
-          search,
-        });
-      } catch (error) {
-        if (isUnauthorizedError(error)) {
-          clearSession();
-          return;
-        }
+        };
+      });
 
-        throw error;
-      } finally {
-        setUpdatingWordId(null);
+      return { previousVocab };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousVocab) {
+        queryClient.setQueryData(
+          ["vocab", { accessToken, search, offset }],
+          context.previousVocab
+        );
+      }
+      if (isUnauthorizedError(error)) {
+        clearSession();
       }
     },
-    [accessToken, offset, search, loadWords, clearSession],
-  );
+    onSuccess: (updatedWord) => {
+      queryClient.setQueryData(
+        ["vocab", { accessToken, search, offset }],
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            items: oldData.items.map((w: VocabWord) =>
+              w.id === updatedWord.id ? updatedWord : w
+            ),
+          };
+        }
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["vocab"] });
+    },
+  });
 
-  const isInitialLoading = isLoadingWords && words.length === 0;
-  const isRefreshing = isLoadingWords && words.length > 0;
+  const deleteMutation = useMutation({
+    mutationFn: (wordToDelete: VocabWord) => {
+      if (!accessToken) throw new Error("No access token");
+      return deleteVocabWord(accessToken, wordToDelete.id);
+    },
+    onMutate: async (wordToDelete) => {
+      const queryKey = ["vocab", { accessToken, search, offset }];
+      await queryClient.cancelQueries({ queryKey });
+      const previousVocab = queryClient.getQueryData(queryKey);
+
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          items: oldData.items.filter((w: VocabWord) => w.id !== wordToDelete.id),
+          meta: {
+            ...oldData.meta,
+            total: Math.max(0, oldData.meta.total - 1),
+          },
+        };
+      });
+
+      return { previousVocab };
+    },
+    onError: (error, wordToDelete, context) => {
+      if (context?.previousVocab) {
+        queryClient.setQueryData(
+          ["vocab", { accessToken, search, offset }],
+          context.previousVocab
+        );
+      }
+      if (isUnauthorizedError(error)) {
+        clearSession();
+      }
+    },
+    onSuccess: (_, wordToDelete) => {
+      const currentWordsCount = words.length;
+      const isLastItemOnPage = currentWordsCount === 1;
+      if (isLastItemOnPage && offset > 0) {
+        setOffset((currentOffset) =>
+          Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE)
+        );
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["vocab"] });
+    },
+  });
 
   const nextPage = useCallback(() => {
     setOffset((currentOffset) => currentOffset + VOCABULARY_PAGE_SIZE);
@@ -263,27 +216,35 @@ export function useVocabularyWords({
 
   const previousPage = useCallback(() => {
     setOffset((currentOffset) =>
-      Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE),
+      Math.max(0, currentOffset - VOCABULARY_PAGE_SIZE)
     );
   }, []);
 
   return {
-    canGoNext: offset + words.length < totalWords,
-    canGoPrevious: offset > 0,
-    createWord,
-    deleteWord,
-    deletingWordId,
+    canGoNext: activeOffset + words.length < totalWords,
+    canGoPrevious: activeOffset > 0,
+    createWord: async (input: CreateVocabWordInput) => {
+      await createMutation.mutateAsync(input);
+    },
+    deleteWord: async (wordToDelete: VocabWord) => {
+      await deleteMutation.mutateAsync(wordToDelete);
+    },
+    deletingWordId: deleteMutation.isPending ? deleteMutation.variables?.id ?? null : null,
     isInitialLoading,
-    isLoadingWords,
+    isLoadingWords: isFetching,
     isRefreshing,
     loadError,
     nextPage,
-    offset,
+    offset: activeOffset,
     pageSize: VOCABULARY_PAGE_SIZE,
     previousPage,
     totalWords,
-    updateWord,
-    updatingWordId,
+    updateWord: async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
+      await updateMutation.mutateAsync({ wordToUpdate, input });
+    },
+    updatingWordId: updateMutation.isPending
+      ? updateMutation.variables?.wordToUpdate.id ?? null
+      : null,
     words,
   };
 }
