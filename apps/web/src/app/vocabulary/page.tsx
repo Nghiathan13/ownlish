@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
@@ -16,7 +15,6 @@ import {
 } from "@/features/vocabulary/components";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { Button } from "@/shared/ui/Button";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
 
@@ -75,9 +73,6 @@ function VocabularyPageContent() {
               {totalWords ? ` · ${totalWords} words` : ""}
             </p>
           </div>
-          <Button type="button" onClick={clearSession}>
-            Logout
-          </Button>
         </div>
 
         <AddWordForm onCreate={createWord} />
@@ -140,14 +135,6 @@ function VocabularyPageContent() {
           total={totalWords}
         />
 
-        <div className="mt-6">
-          <Link
-            href="/"
-            className="inline-flex text-sm font-semibold text-foreground underline underline-offset-4"
-          >
-            Back home
-          </Link>
-        </div>
       </Panel>
     </PageShell>
   );

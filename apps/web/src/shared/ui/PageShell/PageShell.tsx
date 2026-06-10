@@ -16,7 +16,7 @@ export function PageShell({
     <main
       className={classNames(
         "mx-auto w-full max-w-[992px] px-4 py-16",
-        centered && "grid min-h-dvh place-items-center",
+        centered && "flex-1 grid place-items-center",
         className,
       )}
     >

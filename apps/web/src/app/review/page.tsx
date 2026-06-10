@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
@@ -84,14 +83,6 @@ function ReviewPageContent() {
           />
         )}
 
-        <div className="mt-6">
-          <Link
-            href="/vocabulary"
-            className="inline-flex text-sm font-semibold text-foreground underline underline-offset-4"
-          >
-            Back to vocabulary
-          </Link>
-        </div>
       </Panel>
     </PageShell>
   );
