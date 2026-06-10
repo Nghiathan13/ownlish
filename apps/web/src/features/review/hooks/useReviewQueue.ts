@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listDueReviewWords,
   updateVocabReview,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
+import {
+  getReviewQueueQueryKey,
+  optimisticallyRemoveFromReviewQueue,
+  restoreReviewQueue,
+} from "@/entities/vocab/lib/reviewQueueCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
@@ -22,10 +27,9 @@ export function useReviewQueue({
   isAuthenticated,
 }: UseReviewQueueParams) {
   const queryClient = useQueryClient();
-  const [gradedWordIds, setGradedWordIds] = useState<string[]>([]);
 
   const { data, isLoading, error: queryError } = useQuery({
-    queryKey: ["review-queue", { accessToken }],
+    queryKey: getReviewQueueQueryKey(accessToken),
     queryFn: async ({ signal }) => {
       if (!accessToken) throw new Error("No access token");
       try {
@@ -43,9 +47,8 @@ export function useReviewQueue({
     enabled: isAuthenticated && Boolean(accessToken),
   });
 
-  const allWords = data?.items ?? [];
-  const reviewWords = allWords.filter((word) => !gradedWordIds.includes(word.id));
-  const totalWords = Math.max(0, (data?.meta.total ?? 0) - gradedWordIds.length);
+  const reviewWords = data?.items ?? [];
+  const totalWords = data?.meta.total ?? 0;
 
   const loadError = queryError
     ? queryError instanceof ApiError
@@ -63,24 +66,28 @@ export function useReviewQueue({
       );
     },
     onMutate: async ({ word }) => {
-      const previousGradedWordIds = gradedWordIds;
-      setGradedWordIds((current) => [...current, word.id]);
-      return { previousGradedWordIds };
+      const previousQueue = await optimisticallyRemoveFromReviewQueue(
+        queryClient,
+        accessToken,
+        word.id,
+      );
+
+      return { previousQueue };
     },
     onError: (error, variables, context) => {
-      if (context?.previousGradedWordIds) {
-        setGradedWordIds(context.previousGradedWordIds);
-      }
+      restoreReviewQueue(queryClient, accessToken, context?.previousQueue);
       if (isUnauthorizedError(error)) {
         clearSession();
       }
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["review-queue"] });
+    },
   });
 
   const reload = useCallback(() => {
-    setGradedWordIds([]);
-    queryClient.invalidateQueries({ queryKey: ["review-queue"] });
-  }, [queryClient]);
+    queryClient.invalidateQueries({ queryKey: getReviewQueueQueryKey(accessToken) });
+  }, [queryClient, accessToken]);
 
   const gradeCurrentWord = useCallback(
     (grade: ReviewGrade) => {

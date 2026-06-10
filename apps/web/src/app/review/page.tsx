@@ -37,8 +37,10 @@ function ReviewPageContent() {
   });
 
   useEffect(() => {
-    if (!isLoading && totalWords > 0 && initialTotal === null) {
-      setInitialTotal(totalWords);
+    if (!isLoading && totalWords > 0) {
+      if (initialTotal === null || totalWords > initialTotal) {
+        setInitialTotal(totalWords);
+      }
     } else if (totalWords === 0 && initialTotal !== null) {
       setInitialTotal(null);
     }
