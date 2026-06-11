@@ -118,7 +118,7 @@ export function useVocabularyWords({
       : "Cannot load vocabulary."
     : null;
 
-  const createMutation = useMutation({
+  const { mutateAsync: createWordMutation } = useMutation({
     mutationFn: (input: CreateVocabWordInput) => {
       if (!accessToken) throw new Error("No access token");
       return createVocabWord(accessToken, input);
@@ -156,7 +156,12 @@ export function useVocabularyWords({
     },
   });
 
-  const updateMutation = useMutation({
+  const {
+    mutateAsync: updateWordMutation,
+    error: updateMutationError,
+    isPending: isUpdatingWord,
+    variables: updateMutationVariables,
+  } = useMutation({
     mutationFn: ({
       wordToUpdate,
       input,
@@ -213,7 +218,12 @@ export function useVocabularyWords({
     },
   });
 
-  const deleteMutation = useMutation({
+  const {
+    mutateAsync: deleteWordMutation,
+    error: deleteMutationError,
+    isPending: isDeletingWord,
+    variables: deleteMutationVariables,
+  } = useMutation({
     mutationFn: (wordToDelete: VocabWord) => {
       if (!accessToken) throw new Error("No access token");
       return deleteVocabWord(accessToken, wordToDelete.id);
@@ -268,8 +278,7 @@ export function useVocabularyWords({
         setPageState((currentPageState) => ({
           ...currentPageState,
           offset: Math.max(0, currentPageState.offset - VOCABULARY_PAGE_SIZE),
-        })
-        );
+        }));
       }
     },
     onSettled: () => {
@@ -280,8 +289,8 @@ export function useVocabularyWords({
   });
 
   const mutationError =
-    getMutationErrorMessage(deleteMutation.error) ??
-    getMutationErrorMessage(updateMutation.error);
+    getMutationErrorMessage(deleteMutationError) ??
+    getMutationErrorMessage(updateMutationError);
 
   const loadError = queryLoadError ?? mutationError;
 
@@ -303,16 +312,33 @@ export function useVocabularyWords({
     void refetch();
   }, [refetch]);
 
+  const createWord = useCallback(
+    async (input: CreateVocabWordInput) => {
+      await createWordMutation(input);
+    },
+    [createWordMutation],
+  );
+
+  const deleteWord = useCallback(
+    async (wordToDelete: VocabWord) => {
+      await deleteWordMutation(wordToDelete);
+    },
+    [deleteWordMutation],
+  );
+
+  const updateWord = useCallback(
+    async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
+      await updateWordMutation({ wordToUpdate, input });
+    },
+    [updateWordMutation],
+  );
+
   return {
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
-    createWord: async (input: CreateVocabWordInput) => {
-      await createMutation.mutateAsync(input);
-    },
-    deleteWord: async (wordToDelete: VocabWord) => {
-      await deleteMutation.mutateAsync(wordToDelete);
-    },
-    deletingWordId: deleteMutation.isPending ? deleteMutation.variables?.id ?? null : null,
+    createWord,
+    deleteWord,
+    deletingWordId: isDeletingWord ? deleteMutationVariables?.id ?? null : null,
     isInitialLoading,
     isLoadingWords: isFetching,
     isRefreshing,
@@ -323,11 +349,9 @@ export function useVocabularyWords({
     previousPage,
     reload,
     totalWords,
-    updateWord: async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
-      await updateMutation.mutateAsync({ wordToUpdate, input });
-    },
-    updatingWordId: updateMutation.isPending
-      ? updateMutation.variables?.wordToUpdate.id ?? null
+    updateWord,
+    updatingWordId: isUpdatingWord
+      ? updateMutationVariables?.wordToUpdate.id ?? null
       : null,
     words,
   };

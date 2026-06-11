@@ -60,7 +60,11 @@ export function useReviewQueue({
       : "Cannot load review words."
     : null;
 
-  const gradeMutation = useMutation({
+  const {
+    mutateAsync: gradeWord,
+    error: gradeError,
+    isPending: isSubmittingGrade,
+  } = useMutation({
     mutationFn: ({ word, grade }: { word: VocabWord; grade: ReviewGrade }) => {
       if (!accessToken) throw new Error("No access token");
       return updateVocabReview(
@@ -98,14 +102,14 @@ export function useReviewQueue({
   const gradeCurrentWord = useCallback(
     (grade: ReviewGrade) => {
       if (!currentWord) return Promise.resolve();
-      return gradeMutation.mutateAsync({ word: currentWord, grade });
+      return gradeWord({ word: currentWord, grade });
     },
-    [currentWord, gradeMutation],
+    [currentWord, gradeWord],
   );
 
-  const mutationError = gradeMutation.error
-    ? gradeMutation.error instanceof ApiError
-      ? gradeMutation.error.message
+  const mutationError = gradeError
+    ? gradeError instanceof ApiError
+      ? gradeError.message
       : "Cannot update review."
     : null;
 
@@ -115,7 +119,7 @@ export function useReviewQueue({
     gradeCurrentWord,
     isEmpty: (reviewWords?.length ?? 0) === 0,
     isLoading,
-    isSubmittingGrade: gradeMutation.isPending,
+    isSubmittingGrade,
     remainingWords: reviewWords?.length ?? 0,
     reload,
     totalWords,
