@@ -8,6 +8,7 @@ export type AuthUser = {
 
 export type AuthResponse = {
   accessToken: string;
+  refreshToken: string;
   user: AuthUser;
 };
 
@@ -18,6 +19,10 @@ export type LoginInput = {
 
 export type RegisterInput = LoginInput & {
   name?: string;
+};
+
+export type RefreshTokenInput = {
+  refreshToken: string;
 };
 
 export function login(input: LoginInput) {
@@ -37,5 +42,19 @@ export function register(input: RegisterInput) {
 export function getCurrentUser(token: string) {
   return apiRequest<AuthUser>("/auth/me", {
     token,
+  });
+}
+
+export function refreshSession(input: RefreshTokenInput) {
+  return apiRequest<AuthResponse>("/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function logoutSession(input: RefreshTokenInput) {
+  return apiRequest<{ success: true }>("/auth/logout", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }

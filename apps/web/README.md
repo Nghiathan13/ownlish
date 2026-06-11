@@ -41,6 +41,30 @@ pnpm build
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | No | `http://localhost:3001` | EngVocab API base URL |
 
+## Deployment
+
+The recommended production host is Vercel through Git integration.
+
+Set this environment variable in the Vercel project:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://<backend-production-url>
+```
+
+After Vercel creates the web deployment URL, update the backend production
+environment so browser requests are allowed:
+
+```env
+CORS_ORIGIN=https://<web-production-url>
+```
+
+Use the default Vercel build settings:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+```
+
 ## Current Scope
 
 - Login/register with the backend API

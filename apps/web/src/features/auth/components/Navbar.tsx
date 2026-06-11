@@ -6,7 +6,7 @@ import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 
 export function Navbar() {
   const pathname = usePathname();
-  const { clearSession, status, user } = useAuthSession();
+  const { logout, status, user } = useAuthSession();
 
   const isAuth = status === "authenticated";
 
@@ -50,7 +50,9 @@ export function Navbar() {
               </span>
               <button
                 type="button"
-                onClick={clearSession}
+                onClick={() => {
+                  void logout();
+                }}
                 className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
               >
                 Logout
