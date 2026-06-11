@@ -42,6 +42,7 @@ function VocabularyPageContent() {
     nextPage,
     offset,
     previousPage,
+    reload,
     totalWords,
     updateWord,
     updatingWordId,
@@ -109,6 +110,7 @@ function VocabularyPageContent() {
               hasSearch={Boolean(debouncedSearch.trim())}
               isEmpty={words.length === 0}
               isLoading={isInitialLoading}
+              onRetry={reload}
             />
           ) : (
             <div

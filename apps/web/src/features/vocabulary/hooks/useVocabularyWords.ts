@@ -85,6 +85,7 @@ export function useVocabularyWords({
     isLoading: isInitialLoading,
     isFetching,
     error: queryError,
+    refetch,
   } = useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
@@ -298,6 +299,10 @@ export function useVocabularyWords({
     }));
   }, []);
 
+  const reload = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   return {
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
@@ -316,6 +321,7 @@ export function useVocabularyWords({
     offset: pageState.offset,
     pageSize: VOCABULARY_PAGE_SIZE,
     previousPage,
+    reload,
     totalWords,
     updateWord: async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
       await updateMutation.mutateAsync({ wordToUpdate, input });

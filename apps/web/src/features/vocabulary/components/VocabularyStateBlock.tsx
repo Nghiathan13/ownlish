@@ -5,6 +5,7 @@ type VocabularyStateBlockProps = {
   isLoading: boolean;
   error: string | null;
   isEmpty: boolean;
+  onRetry: () => void;
 };
 
 export function VocabularyStateBlock({
@@ -12,6 +13,7 @@ export function VocabularyStateBlock({
   hasSearch,
   isEmpty,
   isLoading,
+  onRetry,
 }: VocabularyStateBlockProps) {
   if (isLoading) {
     return (
@@ -28,7 +30,7 @@ export function VocabularyStateBlock({
         <Button
           type="button"
           variant="secondary"
-          onClick={() => window.location.reload()}
+          onClick={onRetry}
           className="w-fit"
         >
           Retry
