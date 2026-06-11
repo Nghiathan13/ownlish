@@ -17,7 +17,10 @@ describe('AuthService', () => {
   const usersServiceMock = {
     findByEmail: jest.fn(),
     findById: jest.fn(),
+    findByRefreshTokenHash: jest.fn(),
     create: jest.fn(),
+    updateRefreshToken: jest.fn(),
+    clearRefreshToken: jest.fn(),
   };
 
   const jwtServiceMock = {
@@ -29,6 +32,8 @@ describe('AuthService', () => {
     email: 'test@example.com',
     passwordHash: 'hashed-password',
     name: 'Test User',
+    refreshTokenHash: null,
+    refreshTokenExpiresAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -81,8 +86,16 @@ describe('AuthService', () => {
       passwordHash: 'hashed-password',
       name: 'Test User',
     });
-    expect(result).toEqual({
+    expect(usersServiceMock.updateRefreshToken).toHaveBeenCalledWith(
+      user.id,
+      {
+        refreshTokenHash: expect.any(String),
+        refreshTokenExpiresAt: expect.any(Date),
+      },
+    );
+    expect(result).toMatchObject({
       accessToken: 'access-token',
+      refreshToken: expect.any(String),
       user: {
         id: user.id,
         email: user.email,
@@ -122,6 +135,14 @@ describe('AuthService', () => {
       'hashed-password',
     );
     expect(result.accessToken).toBe('access-token');
+    expect(result.refreshToken).toEqual(expect.any(String));
+    expect(usersServiceMock.updateRefreshToken).toHaveBeenCalledWith(
+      user.id,
+      {
+        refreshTokenHash: expect.any(String),
+        refreshTokenExpiresAt: expect.any(Date),
+      },
+    );
     expect(result.user).not.toHaveProperty('passwordHash');
   });
 
@@ -158,5 +179,58 @@ describe('AuthService', () => {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     });
+  });
+
+  it('refreshes an active session and rotates the refresh token', async () => {
+    const activeUser = {
+      ...user,
+      refreshTokenHash: 'stored-hash',
+      refreshTokenExpiresAt: new Date(Date.now() + 60_000),
+    };
+    usersServiceMock.findByRefreshTokenHash.mockResolvedValue(activeUser);
+    jwtServiceMock.signAsync.mockResolvedValue('new-access-token');
+
+    const result = await service.refresh({ refreshToken: 'refresh-token' });
+
+    expect(usersServiceMock.findByRefreshTokenHash).toHaveBeenCalledWith(
+      expect.any(String),
+    );
+    expect(usersServiceMock.updateRefreshToken).toHaveBeenCalledWith(
+      user.id,
+      {
+        refreshTokenHash: expect.any(String),
+        refreshTokenExpiresAt: expect.any(Date),
+      },
+    );
+    expect(result).toMatchObject({
+      accessToken: 'new-access-token',
+      refreshToken: expect.any(String),
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  });
+
+  it('rejects expired refresh tokens and clears stored token', async () => {
+    usersServiceMock.findByRefreshTokenHash.mockResolvedValue({
+      ...user,
+      refreshTokenHash: 'stored-hash',
+      refreshTokenExpiresAt: new Date(Date.now() - 60_000),
+    });
+
+    await expect(
+      service.refresh({ refreshToken: 'expired-refresh-token' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(usersServiceMock.clearRefreshToken).toHaveBeenCalledWith(user.id);
+  });
+
+  it('logs out by clearing a matching refresh token', async () => {
+    usersServiceMock.findByRefreshTokenHash.mockResolvedValue(user);
+
+    await expect(
+      service.logout({ refreshToken: 'refresh-token' }),
+    ).resolves.toEqual({ success: true });
+    expect(usersServiceMock.clearRefreshToken).toHaveBeenCalledWith(user.id);
   });
 });

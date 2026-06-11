@@ -5,11 +5,17 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { createHash, randomBytes } from 'node:crypto';
 import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import type { AuthResponse, AuthUser, PublicUser } from './types/auth.types';
+
+type LogoutResponse = {
+  success: true;
+};
 
 @Injectable()
 export class AuthService {
@@ -66,7 +72,45 @@ export class AuthService {
     return this.toPublicUser(user);
   }
 
+  async refresh(dto: RefreshTokenDto): Promise<AuthResponse> {
+    const refreshTokenHash = this.hashRefreshToken(dto.refreshToken);
+    const user =
+      await this.usersService.findByRefreshTokenHash(refreshTokenHash);
+
+    if (!user || !user.refreshTokenExpiresAt) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (user.refreshTokenExpiresAt.getTime() <= Date.now()) {
+      await this.usersService.clearRefreshToken(user.id);
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    return this.createAuthResponse(user);
+  }
+
+  async logout(dto: RefreshTokenDto): Promise<LogoutResponse> {
+    const refreshTokenHash = this.hashRefreshToken(dto.refreshToken);
+    const user =
+      await this.usersService.findByRefreshTokenHash(refreshTokenHash);
+
+    if (user) {
+      await this.usersService.clearRefreshToken(user.id);
+    }
+
+    return { success: true };
+  }
+
   private async createAuthResponse(user: AuthUser): Promise<AuthResponse> {
+    const refreshToken = this.createRefreshToken();
+    const refreshTokenHash = this.hashRefreshToken(refreshToken);
+    const refreshTokenExpiresAt = this.createRefreshTokenExpiresAt();
+
+    await this.usersService.updateRefreshToken(user.id, {
+      refreshTokenHash,
+      refreshTokenExpiresAt,
+    });
+
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
@@ -74,8 +118,23 @@ export class AuthService {
 
     return {
       accessToken,
+      refreshToken,
       user: this.toPublicUser(user),
     };
+  }
+
+  private createRefreshToken(): string {
+    return randomBytes(64).toString('base64url');
+  }
+
+  private hashRefreshToken(refreshToken: string): string {
+    return createHash('sha256').update(refreshToken).digest('hex');
+  }
+
+  private createRefreshTokenExpiresAt(): Date {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + env.refreshTokenTtlDays);
+    return expiresAt;
   }
 
   private toPublicUser(user: AuthUser): PublicUser {

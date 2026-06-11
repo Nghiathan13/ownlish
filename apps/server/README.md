@@ -60,6 +60,7 @@ The server runs on `http://localhost:3001` by default.
 | `PORT` | No | `3001` | API server port |
 | `CORS_ORIGIN` | No | `http://localhost:3000` | Allowed frontend origin |
 | `BCRYPT_SALT_ROUNDS` | No | `10` | Password hashing cost |
+| `REFRESH_TOKEN_TTL_DAYS` | No | `30` | Refresh token lifetime in days |
 
 ## API Overview
 
@@ -71,6 +72,8 @@ Auth:
 
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
 - `GET /auth/me`
 
 Vocabulary:

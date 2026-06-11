@@ -10,6 +10,8 @@ describe('AuthController', () => {
   const authServiceMock = {
     register: jest.fn(),
     login: jest.fn(),
+    refresh: jest.fn(),
+    logout: jest.fn(),
     me: jest.fn(),
   };
 
@@ -49,6 +51,7 @@ describe('AuthController', () => {
     };
     const response = {
       accessToken: 'access-token',
+      refreshToken: 'refresh-token',
       user: {
         id: 'user-id',
         email: dto.email,
@@ -70,6 +73,7 @@ describe('AuthController', () => {
     };
     const response = {
       accessToken: 'access-token',
+      refreshToken: 'refresh-token',
       user: {
         id: 'user-id',
         email: dto.email,
@@ -82,6 +86,38 @@ describe('AuthController', () => {
 
     await expect(controller.login(dto)).resolves.toBe(response);
     expect(authServiceMock.login).toHaveBeenCalledWith(dto);
+  });
+
+  it('delegates refresh to AuthService', async () => {
+    const dto = {
+      refreshToken: 'refresh-token',
+    };
+    const response = {
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+      user: {
+        id: 'user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    };
+    authServiceMock.refresh.mockResolvedValue(response);
+
+    await expect(controller.refresh(dto)).resolves.toBe(response);
+    expect(authServiceMock.refresh).toHaveBeenCalledWith(dto);
+  });
+
+  it('delegates logout to AuthService', async () => {
+    const dto = {
+      refreshToken: 'refresh-token',
+    };
+    const response = { success: true };
+    authServiceMock.logout.mockResolvedValue(response);
+
+    await expect(controller.logout(dto)).resolves.toBe(response);
+    expect(authServiceMock.logout).toHaveBeenCalledWith(dto);
   });
 
   it('delegates current user lookup to AuthService', async () => {

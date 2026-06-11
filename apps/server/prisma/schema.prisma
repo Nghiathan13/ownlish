@@ -12,13 +12,15 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  name         String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  vocabWords   VocabWord[]
+  id                    String      @id @default(uuid())
+  email                 String      @unique
+  passwordHash          String      @map("password_hash")
+  name                  String?
+  refreshTokenHash      String?     @unique @map("refresh_token_hash")
+  refreshTokenExpiresAt DateTime?   @map("refresh_token_expires_at")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+  vocabWords            VocabWord[]
 
   @@map("users")
 }

@@ -32,4 +32,5 @@ export const env = {
   port: process.env.PORT ?? '3001',
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
   bcryptSaltRounds: optionalNumberEnv('BCRYPT_SALT_ROUNDS', 10),
+  refreshTokenTtlDays: optionalNumberEnv('REFRESH_TOKEN_TTL_DAYS', 30),
 };

@@ -45,6 +45,7 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(registerResponse.body.accessToken).toEqual(expect.any(String));
+    expect(registerResponse.body.refreshToken).toEqual(expect.any(String));
     expect(registerResponse.body.user).toMatchObject({
       email,
       name: 'Auth E2E',
@@ -60,6 +61,7 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(loginResponse.body.accessToken).toEqual(expect.any(String));
+    expect(loginResponse.body.refreshToken).toEqual(expect.any(String));
     expect(loginResponse.body.user).not.toHaveProperty('passwordHash');
 
     await request(app.getHttpServer())
@@ -73,6 +75,36 @@ describe('AuthController (e2e)', () => {
         });
         expect(response.body).not.toHaveProperty('passwordHash');
       });
+
+    const refreshResponse = await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({
+        refreshToken: loginResponse.body.refreshToken,
+      })
+      .expect(201);
+
+    expect(refreshResponse.body.accessToken).toEqual(expect.any(String));
+    expect(refreshResponse.body.refreshToken).toEqual(expect.any(String));
+    expect(refreshResponse.body.refreshToken).not.toBe(
+      loginResponse.body.refreshToken,
+    );
+
+    await request(app.getHttpServer())
+      .post('/auth/logout')
+      .send({
+        refreshToken: refreshResponse.body.refreshToken,
+      })
+      .expect(201)
+      .expect((response) => {
+        expect(response.body).toEqual({ success: true });
+      });
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({
+        refreshToken: refreshResponse.body.refreshToken,
+      })
+      .expect(401);
   });
 
   it('rejects invalid current user token', () => {

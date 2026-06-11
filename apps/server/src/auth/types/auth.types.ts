@@ -13,6 +13,7 @@ export type PublicUser = Omit<AuthUser, 'passwordHash'>;
 
 export type AuthResponse = {
   accessToken: string;
+  refreshToken: string;
   user: PublicUser;
 };
 

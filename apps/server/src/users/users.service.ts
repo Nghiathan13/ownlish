@@ -9,6 +9,7 @@ type CreateUserInput = {
 
 type UserResult = ReturnType<PrismaService['user']['findUnique']>;
 type CreatedUserResult = ReturnType<PrismaService['user']['create']>;
+type UpdatedUserResult = ReturnType<PrismaService['user']['update']>;
 
 @Injectable()
 export class UsersService {
@@ -26,9 +27,38 @@ export class UsersService {
     });
   }
 
+  findByRefreshTokenHash(refreshTokenHash: string): UserResult {
+    return this.prisma.user.findUnique({
+      where: { refreshTokenHash },
+    });
+  }
+
   create(input: CreateUserInput): CreatedUserResult {
     return this.prisma.user.create({
       data: input,
+    });
+  }
+
+  updateRefreshToken(
+    id: string,
+    input: {
+      refreshTokenHash: string;
+      refreshTokenExpiresAt: Date;
+    },
+  ): UpdatedUserResult {
+    return this.prisma.user.update({
+      where: { id },
+      data: input,
+    });
+  }
+
+  clearRefreshToken(id: string): UpdatedUserResult {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        refreshTokenHash: null,
+        refreshTokenExpiresAt: null,
+      },
     });
   }
 }
