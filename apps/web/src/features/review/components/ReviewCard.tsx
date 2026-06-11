@@ -17,6 +17,8 @@ export function ReviewCard({
   showMeaning,
   word,
 }: ReviewCardProps) {
+  const canGrade = showMeaning && !isSubmitting;
+
   return (
     <div className="grid gap-6 rounded-xl border border-border p-6">
       <div>
@@ -54,15 +56,17 @@ export function ReviewCard({
         <Button
           type="button"
           variant="secondary"
-          disabled={isSubmitting}
+          disabled={!canGrade}
           onClick={() => onGrade("forgot")}
+          title={showMeaning ? "Forgot" : "Show meaning before grading"}
         >
           Forgot
         </Button>
         <Button
           type="button"
-          disabled={isSubmitting}
+          disabled={!canGrade}
           onClick={() => onGrade("remember")}
+          title={showMeaning ? "Remember" : "Show meaning before grading"}
         >
           Remember
         </Button>

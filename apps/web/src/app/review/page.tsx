@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
@@ -37,10 +37,49 @@ function ReviewPageContent() {
     userId: user?.id ?? null,
   });
 
-  async function handleGrade(grade: ReviewGrade) {
+  const handleGrade = useCallback(async (grade: ReviewGrade) => {
+    if (!showMeaning) {
+      return;
+    }
+
     await gradeCurrentWord(grade);
     setShowMeaning(false);
-  }
+  }, [gradeCurrentWord, showMeaning]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (!currentWord || isSubmittingGrade) {
+        return;
+      }
+
+      if (event.code === "Space") {
+        event.preventDefault();
+        setShowMeaning((current) => !current);
+        return;
+      }
+
+      if (!showMeaning) {
+        return;
+      }
+
+      if (event.key === "1") {
+        event.preventDefault();
+        void handleGrade("forgot");
+        return;
+      }
+
+      if (event.key === "2") {
+        event.preventDefault();
+        void handleGrade("remember");
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentWord, handleGrade, isSubmittingGrade, showMeaning]);
 
   return (
     <PageShell>
