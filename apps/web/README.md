@@ -1,6 +1,7 @@
 # EngVocab Web
 
-Next.js web client for EngVocab.
+Next.js web client for EngVocab. The app connects to the NestJS API and covers
+authentication, vocabulary management, review flow, and dashboard stats.
 
 ## Local Setup
 
@@ -24,6 +25,16 @@ pnpm dev
 
 The web app runs on `http://localhost:3000`.
 
+## Quality Checks
+
+Run the same checks used by CI:
+
+```bash
+pnpm test
+pnpm lint
+pnpm build
+```
+
 ## Environment Variables
 
 | Name | Required | Default | Purpose |
@@ -34,4 +45,11 @@ The web app runs on `http://localhost:3000`.
 
 - Login/register with the backend API
 - Restore session through `/auth/me`
-- Protected `/vocabulary` placeholder
+- Dashboard stats from `/vocab/stats`
+- Vocabulary list, create, update, delete
+- Due-word review with Remember/Forgot scheduling
+
+## CI
+
+GitHub Actions runs tests, lint, and production build on pushes and pull
+requests targeting `main`.
