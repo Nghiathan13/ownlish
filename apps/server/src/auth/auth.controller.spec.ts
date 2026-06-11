@@ -1,5 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { env } from '../config/env';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import type { AuthRequest } from './types/auth.types';
@@ -23,6 +25,14 @@ describe('AuthController', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot([
+          {
+            ttl: env.authRateLimit.ttlMs,
+            limit: env.authRateLimit.limit,
+          },
+        ]),
+      ],
       controllers: [AuthController],
       providers: [
         {

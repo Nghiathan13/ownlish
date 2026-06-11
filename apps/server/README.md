@@ -56,11 +56,14 @@ The server runs on `http://localhost:3001` by default.
 | Name | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `DATABASE_URL` | Yes | - | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | - | Secret used to sign access tokens |
+| `JWT_SECRET` | Yes | - | Secret used to sign access tokens. Must be at least 32 characters |
 | `PORT` | No | `3001` | API server port |
 | `CORS_ORIGIN` | No | `http://localhost:3000` | Allowed frontend origin |
+| `ACCESS_TOKEN_TTL_SECONDS` | No | `900` | Access token lifetime in seconds |
 | `BCRYPT_SALT_ROUNDS` | No | `10` | Password hashing cost |
 | `REFRESH_TOKEN_TTL_DAYS` | No | `30` | Refresh token lifetime in days |
+| `AUTH_RATE_LIMIT_LIMIT` | No | `10` | Request limit for auth endpoints |
+| `AUTH_RATE_LIMIT_TTL_SECONDS` | No | `60` | Rate limit window for auth endpoints |
 
 ## API Overview
 
