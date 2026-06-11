@@ -27,7 +27,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab
-      JWT_SECRET: test-jwt-secret
+      JWT_SECRET: test-jwt-secret-at-least-32-characters
       PORT: 3001
       CORS_ORIGIN: http://localhost:3000
       BCRYPT_SALT_ROUNDS: 10
