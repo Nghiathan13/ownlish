@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
+import { RefreshSessionsService } from './refresh-sessions.service';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn(),
@@ -17,10 +18,14 @@ describe('AuthService', () => {
   const usersServiceMock = {
     findByEmail: jest.fn(),
     findById: jest.fn(),
-    findByRefreshTokenHash: jest.fn(),
     create: jest.fn(),
-    updateRefreshToken: jest.fn(),
-    clearRefreshToken: jest.fn(),
+  };
+
+  const refreshSessionsServiceMock = {
+    create: jest.fn(),
+    findByTokenHash: jest.fn(),
+    rotate: jest.fn(),
+    revoke: jest.fn(),
   };
 
   const jwtServiceMock = {
@@ -32,8 +37,6 @@ describe('AuthService', () => {
     email: 'test@example.com',
     passwordHash: 'hashed-password',
     name: 'Test User',
-    refreshTokenHash: null,
-    refreshTokenExpiresAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -47,6 +50,10 @@ describe('AuthService', () => {
         {
           provide: UsersService,
           useValue: usersServiceMock,
+        },
+        {
+          provide: RefreshSessionsService,
+          useValue: refreshSessionsServiceMock,
         },
         {
           provide: JwtService,
@@ -86,13 +93,11 @@ describe('AuthService', () => {
       passwordHash: 'hashed-password',
       name: 'Test User',
     });
-    expect(usersServiceMock.updateRefreshToken).toHaveBeenCalledWith(
-      user.id,
-      {
-        refreshTokenHash: expect.any(String),
-        refreshTokenExpiresAt: expect.any(Date),
-      },
-    );
+    expect(refreshSessionsServiceMock.create).toHaveBeenCalledWith({
+      userId: user.id,
+      tokenHash: expect.any(String),
+      expiresAt: expect.any(Date),
+    });
     expect(result).toMatchObject({
       accessToken: 'access-token',
       refreshToken: expect.any(String),
@@ -136,13 +141,11 @@ describe('AuthService', () => {
     );
     expect(result.accessToken).toBe('access-token');
     expect(result.refreshToken).toEqual(expect.any(String));
-    expect(usersServiceMock.updateRefreshToken).toHaveBeenCalledWith(
-      user.id,
-      {
-        refreshTokenHash: expect.any(String),
-        refreshTokenExpiresAt: expect.any(Date),
-      },
-    );
+    expect(refreshSessionsServiceMock.create).toHaveBeenCalledWith({
+      userId: user.id,
+      tokenHash: expect.any(String),
+      expiresAt: expect.any(Date),
+    });
     expect(result.user).not.toHaveProperty('passwordHash');
   });
 
@@ -182,26 +185,27 @@ describe('AuthService', () => {
   });
 
   it('refreshes an active session and rotates the refresh token', async () => {
-    const activeUser = {
-      ...user,
-      refreshTokenHash: 'stored-hash',
-      refreshTokenExpiresAt: new Date(Date.now() + 60_000),
-    };
-    usersServiceMock.findByRefreshTokenHash.mockResolvedValue(activeUser);
+    refreshSessionsServiceMock.findByTokenHash.mockResolvedValue({
+      id: 'session-id',
+      userId: user.id,
+      tokenHash: 'stored-hash',
+      expiresAt: new Date(Date.now() + 60_000),
+      revokedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      user,
+    });
     jwtServiceMock.signAsync.mockResolvedValue('new-access-token');
 
     const result = await service.refresh({ refreshToken: 'refresh-token' });
 
-    expect(usersServiceMock.findByRefreshTokenHash).toHaveBeenCalledWith(
+    expect(refreshSessionsServiceMock.findByTokenHash).toHaveBeenCalledWith(
       expect.any(String),
     );
-    expect(usersServiceMock.updateRefreshToken).toHaveBeenCalledWith(
-      user.id,
-      {
-        refreshTokenHash: expect.any(String),
-        refreshTokenExpiresAt: expect.any(Date),
-      },
-    );
+    expect(refreshSessionsServiceMock.rotate).toHaveBeenCalledWith('session-id', {
+      tokenHash: expect.any(String),
+      expiresAt: expect.any(Date),
+    });
     expect(result).toMatchObject({
       accessToken: 'new-access-token',
       refreshToken: expect.any(String),
@@ -213,24 +217,42 @@ describe('AuthService', () => {
   });
 
   it('rejects expired refresh tokens and clears stored token', async () => {
-    usersServiceMock.findByRefreshTokenHash.mockResolvedValue({
-      ...user,
-      refreshTokenHash: 'stored-hash',
-      refreshTokenExpiresAt: new Date(Date.now() - 60_000),
+    refreshSessionsServiceMock.findByTokenHash.mockResolvedValue({
+      id: 'session-id',
+      userId: user.id,
+      tokenHash: 'stored-hash',
+      expiresAt: new Date(Date.now() - 60_000),
+      revokedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      user,
     });
 
     await expect(
       service.refresh({ refreshToken: 'expired-refresh-token' }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(usersServiceMock.clearRefreshToken).toHaveBeenCalledWith(user.id);
+    expect(refreshSessionsServiceMock.revoke).toHaveBeenCalledWith(
+      'session-id',
+    );
   });
 
   it('logs out by clearing a matching refresh token', async () => {
-    usersServiceMock.findByRefreshTokenHash.mockResolvedValue(user);
+    refreshSessionsServiceMock.findByTokenHash.mockResolvedValue({
+      id: 'session-id',
+      userId: user.id,
+      tokenHash: 'stored-hash',
+      expiresAt: new Date(Date.now() + 60_000),
+      revokedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      user,
+    });
 
     await expect(
       service.logout({ refreshToken: 'refresh-token' }),
     ).resolves.toEqual({ success: true });
-    expect(usersServiceMock.clearRefreshToken).toHaveBeenCalledWith(user.id);
+    expect(refreshSessionsServiceMock.revoke).toHaveBeenCalledWith(
+      'session-id',
+    );
   });
 });

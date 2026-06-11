@@ -42,6 +42,16 @@ type VocabStatsResponse = {
     count: number;
   }>;
 };
+type RawVocabStatsRow = {
+  total: number;
+  due: number;
+  mastered: number;
+  high_wrong_count: number;
+  levels: Array<{
+    level: number;
+    count: number;
+  }> | null;
+};
 
 @Injectable()
 export class VocabService {
@@ -147,68 +157,63 @@ export class VocabService {
 
   async getStats(userId: string): Promise<VocabStatsResponse> {
     const now = new Date();
-    const activeWhere = {
-      userId,
-      deletedAt: null,
-    };
-    const [total, due, mastered, highWrongCount, levelRows] = await Promise.all(
-      [
-        this.prisma.vocabWord.count({
-          where: activeWhere,
-        }),
-        this.prisma.vocabWord.count({
-          where: {
-            ...activeWhere,
-            level: {
-              lt: MAX_VOCAB_LEVEL,
-            },
-            OR: [
-              {
-                nextReview: null,
-              },
-              {
-                nextReview: {
-                  lte: now,
-                },
-              },
-            ],
-          },
-        }),
-        this.prisma.vocabWord.count({
-          where: {
-            ...activeWhere,
-            level: MAX_VOCAB_LEVEL,
-          },
-        }),
-        this.prisma.vocabWord.count({
-          where: {
-            ...activeWhere,
-            wrongCount: {
-              gte: HIGH_WRONG_COUNT_THRESHOLD,
-            },
-          },
-        }),
-        this.prisma.vocabWord.groupBy({
-          by: ['level'],
-          where: activeWhere,
-          _count: {
-            _all: true,
-          },
-          orderBy: {
-            level: 'asc',
-          },
-        }),
-      ],
-    );
+    const [stats] = await this.prisma.$queryRaw<RawVocabStatsRow[]>`
+      WITH active AS (
+        SELECT "level", "wrong_count", "next_review"
+        FROM "vocab_words"
+        WHERE "user_id" = ${userId}
+          AND "deleted_at" IS NULL
+      ),
+      summary AS (
+        SELECT
+          COUNT(*)::int AS "total",
+          COUNT(*) FILTER (
+            WHERE "level" < ${MAX_VOCAB_LEVEL}
+              AND ("next_review" IS NULL OR "next_review" <= ${now})
+          )::int AS "due",
+          COUNT(*) FILTER (WHERE "level" = ${MAX_VOCAB_LEVEL})::int AS "mastered",
+          COUNT(*) FILTER (
+            WHERE "wrong_count" >= ${HIGH_WRONG_COUNT_THRESHOLD}
+          )::int AS "high_wrong_count"
+        FROM active
+      ),
+      level_counts AS (
+        SELECT "level", COUNT(*)::int AS "count"
+        FROM active
+        GROUP BY "level"
+      )
+      SELECT
+        summary."total",
+        summary."due",
+        summary."mastered",
+        summary."high_wrong_count",
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'level', level_counts."level",
+              'count', level_counts."count"
+            )
+            ORDER BY level_counts."level"
+          ) FILTER (WHERE level_counts."level" IS NOT NULL),
+          '[]'::jsonb
+        ) AS "levels"
+      FROM summary
+      LEFT JOIN level_counts ON true
+      GROUP BY
+        summary."total",
+        summary."due",
+        summary."mastered",
+        summary."high_wrong_count"
+    `;
     const levelCountByLevel = new Map(
-      levelRows.map((row) => [row.level, row._count._all]),
+      (stats?.levels ?? []).map((row) => [row.level, row.count]),
     );
 
     return {
-      total,
-      due,
-      mastered,
-      highWrongCount,
+      total: stats?.total ?? 0,
+      due: stats?.due ?? 0,
+      mastered: stats?.mastered ?? 0,
+      highWrongCount: stats?.high_wrong_count ?? 0,
       levels: Array.from(
         { length: MAX_VOCAB_LEVEL - MIN_VOCAB_LEVEL + 1 },
         (_, index) => {

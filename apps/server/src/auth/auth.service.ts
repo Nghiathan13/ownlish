@@ -11,6 +11,7 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RefreshSessionsService } from './refresh-sessions.service';
 import type { AuthResponse, AuthUser, PublicUser } from './types/auth.types';
 
 type LogoutResponse = {
@@ -22,6 +23,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly refreshSessionsService: RefreshSessionsService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -74,28 +76,28 @@ export class AuthService {
 
   async refresh(dto: RefreshTokenDto): Promise<AuthResponse> {
     const refreshTokenHash = this.hashRefreshToken(dto.refreshToken);
-    const user =
-      await this.usersService.findByRefreshTokenHash(refreshTokenHash);
+    const session =
+      await this.refreshSessionsService.findByTokenHash(refreshTokenHash);
 
-    if (!user || !user.refreshTokenExpiresAt) {
+    if (!session || session.revokedAt) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    if (user.refreshTokenExpiresAt.getTime() <= Date.now()) {
-      await this.usersService.clearRefreshToken(user.id);
+    if (session.expiresAt.getTime() <= Date.now()) {
+      await this.refreshSessionsService.revoke(session.id);
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    return this.createAuthResponse(user);
+    return this.rotateSessionAuthResponse(session.id, session.user);
   }
 
   async logout(dto: RefreshTokenDto): Promise<LogoutResponse> {
     const refreshTokenHash = this.hashRefreshToken(dto.refreshToken);
-    const user =
-      await this.usersService.findByRefreshTokenHash(refreshTokenHash);
+    const session =
+      await this.refreshSessionsService.findByTokenHash(refreshTokenHash);
 
-    if (user) {
-      await this.usersService.clearRefreshToken(user.id);
+    if (session && !session.revokedAt) {
+      await this.refreshSessionsService.revoke(session.id);
     }
 
     return { success: true };
@@ -106,11 +108,35 @@ export class AuthService {
     const refreshTokenHash = this.hashRefreshToken(refreshToken);
     const refreshTokenExpiresAt = this.createRefreshTokenExpiresAt();
 
-    await this.usersService.updateRefreshToken(user.id, {
-      refreshTokenHash,
-      refreshTokenExpiresAt,
+    await this.refreshSessionsService.create({
+      userId: user.id,
+      tokenHash: refreshTokenHash,
+      expiresAt: refreshTokenExpiresAt,
     });
 
+    return this.buildAuthResponse(user, refreshToken);
+  }
+
+  private async rotateSessionAuthResponse(
+    sessionId: string,
+    user: AuthUser,
+  ): Promise<AuthResponse> {
+    const refreshToken = this.createRefreshToken();
+    const refreshTokenHash = this.hashRefreshToken(refreshToken);
+    const refreshTokenExpiresAt = this.createRefreshTokenExpiresAt();
+
+    await this.refreshSessionsService.rotate(sessionId, {
+      tokenHash: refreshTokenHash,
+      expiresAt: refreshTokenExpiresAt,
+    });
+
+    return this.buildAuthResponse(user, refreshToken);
+  }
+
+  private async buildAuthResponse(
+    user: AuthUser,
+    refreshToken: string,
+  ): Promise<AuthResponse> {
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,

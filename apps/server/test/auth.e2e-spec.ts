@@ -107,6 +107,62 @@ describe('AuthController (e2e)', () => {
       .expect(401);
   });
 
+  it('keeps refresh sessions independent across devices', async () => {
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email,
+        password,
+        name: 'Auth E2E',
+      })
+      .expect(201);
+
+    const firstLoginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email,
+        password,
+      })
+      .expect(201);
+
+    const secondLoginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email,
+        password,
+      })
+      .expect(201);
+
+    expect(firstLoginResponse.body.refreshToken).not.toBe(
+      secondLoginResponse.body.refreshToken,
+    );
+
+    await request(app.getHttpServer())
+      .post('/auth/logout')
+      .send({
+        refreshToken: firstLoginResponse.body.refreshToken,
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({
+        refreshToken: firstLoginResponse.body.refreshToken,
+      })
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({
+        refreshToken: secondLoginResponse.body.refreshToken,
+      })
+      .expect(201)
+      .expect((response) => {
+        expect(response.body.accessToken).toEqual(expect.any(String));
+        expect(response.body.refreshToken).toEqual(expect.any(String));
+      });
+  });
+
   it('rejects invalid current user token', () => {
     return request(app.getHttpServer())
       .get('/auth/me')

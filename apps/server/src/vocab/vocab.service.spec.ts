@@ -11,6 +11,7 @@ describe('VocabService', () => {
   let service: VocabService;
 
   const prismaMock = {
+    $queryRaw: jest.fn(),
     vocabWord: {
       findMany: jest.fn(),
       count: jest.fn(),
@@ -263,23 +264,16 @@ describe('VocabService', () => {
 
   it('gets vocabulary stats for a user', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
-    prismaMock.vocabWord.count
-      .mockResolvedValueOnce(10)
-      .mockResolvedValueOnce(4)
-      .mockResolvedValueOnce(2)
-      .mockResolvedValueOnce(3);
-    prismaMock.vocabWord.groupBy.mockResolvedValue([
+    prismaMock.$queryRaw.mockResolvedValue([
       {
-        level: 0,
-        _count: {
-          _all: 4,
-        },
-      },
-      {
-        level: 7,
-        _count: {
-          _all: 2,
-        },
+        total: 10,
+        due: 4,
+        mastered: 2,
+        high_wrong_count: 3,
+        levels: [
+          { level: 0, count: 4 },
+          { level: 7, count: 2 },
+        ],
       },
     ]);
 
@@ -301,60 +295,7 @@ describe('VocabService', () => {
         ],
       });
 
-      expect(prismaMock.vocabWord.count).toHaveBeenNthCalledWith(1, {
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-        },
-      });
-      expect(prismaMock.vocabWord.count).toHaveBeenNthCalledWith(2, {
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-          level: {
-            lt: 7,
-          },
-          OR: [
-            {
-              nextReview: null,
-            },
-            {
-              nextReview: {
-                lte: new Date('2026-06-07T00:00:00.000Z'),
-              },
-            },
-          ],
-        },
-      });
-      expect(prismaMock.vocabWord.count).toHaveBeenNthCalledWith(3, {
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-          level: 7,
-        },
-      });
-      expect(prismaMock.vocabWord.count).toHaveBeenNthCalledWith(4, {
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-          wrongCount: {
-            gte: 3,
-          },
-        },
-      });
-      expect(prismaMock.vocabWord.groupBy).toHaveBeenCalledWith({
-        by: ['level'],
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-        },
-        _count: {
-          _all: true,
-        },
-        orderBy: {
-          level: 'asc',
-        },
-      });
+      expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
     } finally {
       jest.useRealTimers();
     }
