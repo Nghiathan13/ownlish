@@ -51,6 +51,7 @@ function VocabularyPageContent() {
     clearSession,
     isAuthenticated: Boolean(accessToken),
     search: debouncedSearch,
+    userId: user?.id ?? null,
   });
   const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
   const [wordPendingDelete, setWordPendingDelete] = useState<VocabWord | null>(

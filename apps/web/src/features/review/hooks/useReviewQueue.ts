@@ -19,17 +19,19 @@ type UseReviewQueueParams = {
   accessToken: string | null;
   clearSession: () => void;
   isAuthenticated: boolean;
+  userId: string | null;
 };
 
 export function useReviewQueue({
   accessToken,
   clearSession,
   isAuthenticated,
+  userId,
 }: UseReviewQueueParams) {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error: queryError } = useQuery({
-    queryKey: getReviewQueueQueryKey(accessToken),
+    queryKey: getReviewQueueQueryKey(userId),
     queryFn: async ({ signal }) => {
       if (!accessToken) throw new Error("No access token");
       try {
@@ -44,10 +46,11 @@ export function useReviewQueue({
         throw error;
       }
     },
-    enabled: isAuthenticated && Boolean(accessToken),
+    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
   });
 
-  const reviewWords = data?.items ?? [];
+  const reviewWords = data?.items;
+  const currentWord = reviewWords?.[0] ?? null;
   const totalWords = data?.meta.total ?? 0;
 
   const loadError = queryError
@@ -68,34 +71,34 @@ export function useReviewQueue({
     onMutate: async ({ word }) => {
       const previousQueue = await optimisticallyRemoveFromReviewQueue(
         queryClient,
-        accessToken,
+        userId,
         word.id,
+        { decrementTotal: false },
       );
 
       return { previousQueue };
     },
     onError: (error, variables, context) => {
-      restoreReviewQueue(queryClient, accessToken, context?.previousQueue);
+      restoreReviewQueue(queryClient, userId, context?.previousQueue);
       if (isUnauthorizedError(error)) {
         clearSession();
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["review-queue"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vocab"] });
     },
   });
 
   const reload = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: getReviewQueueQueryKey(accessToken) });
-  }, [queryClient, accessToken]);
+    queryClient.invalidateQueries({ queryKey: getReviewQueueQueryKey(userId) });
+  }, [queryClient, userId]);
 
   const gradeCurrentWord = useCallback(
     (grade: ReviewGrade) => {
-      const currentWord = reviewWords[0];
       if (!currentWord) return Promise.resolve();
       return gradeMutation.mutateAsync({ word: currentWord, grade });
     },
-    [reviewWords, gradeMutation],
+    [currentWord, gradeMutation],
   );
 
   const mutationError = gradeMutation.error
@@ -105,13 +108,13 @@ export function useReviewQueue({
     : null;
 
   return {
-    currentWord: reviewWords[0] ?? null,
+    currentWord,
     error: loadError || mutationError,
     gradeCurrentWord,
-    isEmpty: reviewWords.length === 0,
+    isEmpty: (reviewWords?.length ?? 0) === 0,
     isLoading,
     isSubmittingGrade: gradeMutation.isPending,
-    remainingWords: reviewWords.length,
+    remainingWords: reviewWords?.length ?? 0,
     reload,
     totalWords,
   };
