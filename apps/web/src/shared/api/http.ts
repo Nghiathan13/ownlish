@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/shared/config/env";
+import { isRecord } from "@/shared/lib/parse";
 
 type ApiRequestOptions = RequestInit & {
   token?: string | null;
@@ -26,30 +27,36 @@ export function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
-function getApiErrorMessage(body: ApiErrorBody | null) {
-  if (Array.isArray(body?.message)) {
-    return body.message.filter(Boolean).join(" ");
+function getApiErrorMessage(body: unknown) {
+  if (!isRecord(body)) {
+    return "Request failed. Please try again.";
   }
 
-  if (typeof body?.message === "string") {
-    return body.message;
+  const errorBody = body as ApiErrorBody;
+
+  if (Array.isArray(errorBody.message)) {
+    return errorBody.message.filter(Boolean).join(" ");
   }
 
-  if (typeof body?.error === "string") {
-    return body.error;
+  if (typeof errorBody.message === "string") {
+    return errorBody.message;
+  }
+
+  if (typeof errorBody.error === "string") {
+    return errorBody.error;
   }
 
   return "Request failed. Please try again.";
 }
 
 async function readJsonBody(response: Response) {
-  return response.json().catch(() => null) as Promise<ApiErrorBody | null>;
+  return response.json().catch(() => null) as Promise<unknown>;
 }
 
-export async function apiRequest<T>(
+export async function apiRequest(
   path: string,
   { token, headers, ...options }: ApiRequestOptions = {},
-): Promise<T> {
+): Promise<unknown> {
   let response: Response;
 
   try {
@@ -75,5 +82,5 @@ export async function apiRequest<T>(
     throw new ApiError(getApiErrorMessage(body), response.status);
   }
 
-  return body as T;
+  return body;
 }

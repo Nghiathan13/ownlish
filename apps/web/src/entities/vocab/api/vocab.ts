@@ -1,4 +1,11 @@
-import { apiRequest } from "@/shared/api/http";
+import { ApiError, apiRequest } from "@/shared/api/http";
+import {
+  isBoolean,
+  isNullableString,
+  isNumber,
+  isRecord,
+  isString,
+} from "@/shared/lib/parse";
 
 export type VocabWord = {
   id: string;
@@ -69,6 +76,136 @@ type ListVocabWordsParams = {
   signal?: AbortSignal;
 };
 
+function invalidResponse(): never {
+  throw new ApiError("Invalid server response.", 0);
+}
+
+function parseVocabWord(body: unknown): VocabWord {
+  if (!isRecord(body)) invalidResponse();
+
+  const {
+    id,
+    userId,
+    word,
+    normalizedWord,
+    ipa,
+    type,
+    meaningVi,
+    definition,
+    example,
+    band,
+    level,
+    wrongCount,
+    lastReview,
+    nextReview,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  } = body;
+
+  if (
+    !isString(id) ||
+    !isString(userId) ||
+    !isString(word) ||
+    !isString(normalizedWord) ||
+    !isNullableString(ipa) ||
+    !isNullableString(type) ||
+    !isNullableString(meaningVi) ||
+    !isNullableString(definition) ||
+    !isNullableString(example) ||
+    !isNullableString(band) ||
+    !isNumber(level) ||
+    !isNumber(wrongCount) ||
+    !isNullableString(lastReview) ||
+    !isNullableString(nextReview) ||
+    !isString(createdAt) ||
+    !isString(updatedAt) ||
+    !isNullableString(deletedAt)
+  ) {
+    invalidResponse();
+  }
+
+  return {
+    id,
+    userId,
+    word,
+    normalizedWord,
+    ipa,
+    type,
+    meaningVi,
+    definition,
+    example,
+    band,
+    level,
+    wrongCount,
+    lastReview,
+    nextReview,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  };
+}
+
+function parseVocabWordListResponse(body: unknown): VocabWordListResponse {
+  if (!isRecord(body) || !Array.isArray(body.items) || !isRecord(body.meta)) {
+    invalidResponse();
+  }
+
+  const { limit, offset, total, hasMore } = body.meta;
+
+  if (
+    !isNumber(limit) ||
+    !isNumber(offset) ||
+    !isNumber(total) ||
+    !isBoolean(hasMore)
+  ) {
+    invalidResponse();
+  }
+
+  return {
+    items: body.items.map(parseVocabWord),
+    meta: {
+      limit,
+      offset,
+      total,
+      hasMore,
+    },
+  };
+}
+
+function parseVocabStats(body: unknown): VocabStats {
+  if (!isRecord(body) || !Array.isArray(body.levels)) {
+    invalidResponse();
+  }
+
+  const { total, due, mastered, highWrongCount, levels } = body;
+
+  if (
+    !isNumber(total) ||
+    !isNumber(due) ||
+    !isNumber(mastered) ||
+    !isNumber(highWrongCount)
+  ) {
+    invalidResponse();
+  }
+
+  return {
+    total,
+    due,
+    mastered,
+    highWrongCount,
+    levels: levels.map((levelStat) => {
+      if (!isRecord(levelStat)) invalidResponse();
+
+      const { level, count } = levelStat;
+
+      if (!isNumber(level) || !isNumber(count)) invalidResponse();
+
+      return { level, count };
+    }),
+  };
+}
+
 function buildVocabQuery(params: ListVocabWordsParams = {}) {
   const searchParams = new URLSearchParams();
 
@@ -93,41 +230,38 @@ export function listVocabWords(
   token: string,
   params: ListVocabWordsParams = {},
 ) {
-  return apiRequest<VocabWordListResponse>(`/vocab${buildVocabQuery(params)}`, {
+  return apiRequest(`/vocab${buildVocabQuery(params)}`, {
     signal: params.signal,
     token,
-  });
+  }).then(parseVocabWordListResponse);
 }
 
 export function getVocabStats(
   token: string,
   options: { signal?: AbortSignal } = {},
 ) {
-  return apiRequest<VocabStats>("/vocab/stats", {
+  return apiRequest("/vocab/stats", {
     signal: options.signal,
     token,
-  });
+  }).then(parseVocabStats);
 }
 
 export function listDueReviewWords(
   token: string,
   params: ListVocabWordsParams = {},
 ) {
-  return apiRequest<VocabWordListResponse>(
-    `/vocab/review/due${buildVocabQuery(params)}`,
-    {
-      signal: params.signal,
-      token,
-    },
-  );
+  return apiRequest(`/vocab/review/due${buildVocabQuery(params)}`, {
+    signal: params.signal,
+    token,
+  }).then(parseVocabWordListResponse);
 }
 
 export function createVocabWord(token: string, input: CreateVocabWordInput) {
-  return apiRequest<VocabWord>("/vocab", {
+  return apiRequest("/vocab", {
     method: "POST",
     token,
     body: JSON.stringify(input),
-  });
+  }).then(parseVocabWord);
 }
 
 export function updateVocabReview(
@@ -135,18 +269,18 @@ export function updateVocabReview(
   id: string,
   input: UpdateVocabReviewInput,
 ) {
-  return apiRequest<VocabWord>(`/vocab/${id}/review`, {
+  return apiRequest(`/vocab/${id}/review`, {
     method: "PATCH",
     token,
     body: JSON.stringify(input),
-  });
+  }).then(parseVocabWord);
 }
 
 export function deleteVocabWord(token: string, id: string) {
-  return apiRequest<VocabWord>(`/vocab/${id}`, {
+  return apiRequest(`/vocab/${id}`, {
     method: "DELETE",
     token,
-  });
+  }).then(parseVocabWord);
 }
 
 export function updateVocabWord(
@@ -154,9 +288,9 @@ export function updateVocabWord(
   id: string,
   input: UpdateVocabWordInput,
 ) {
-  return apiRequest<VocabWord>(`/vocab/${id}`, {
+  return apiRequest(`/vocab/${id}`, {
     method: "PATCH",
     token,
     body: JSON.stringify(input),
-  });
+  }).then(parseVocabWord);
 }
