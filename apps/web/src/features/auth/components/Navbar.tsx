@@ -21,15 +21,15 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-[992px] items-center justify-between px-4">
-        {/* Logo */}
-        <Link href="/" className="text-base font-bold hover:opacity-80">
-          EngVocab
-        </Link>
+      <div className="mx-auto flex max-w-[992px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:flex-nowrap">
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
+          <Link href="/" className="shrink-0 text-base font-bold hover:opacity-80">
+            EngVocab
+          </Link>
+        </div>
 
-        {/* Tabs */}
         {isAuth ? (
-          <div className="flex items-center gap-6">
+          <div className="order-3 flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap sm:order-none sm:w-auto sm:gap-6 sm:overflow-visible">
             <Link href="/" className={linkClass("/")}>
               Dashboard
             </Link>
@@ -42,8 +42,7 @@ export function Navbar() {
           </div>
         ) : null}
 
-        {/* User Info & Actions */}
-        <div className="flex items-center gap-4">
+        <div className="order-2 flex shrink-0 items-center gap-3 sm:order-none sm:gap-4">
           {status === "checking" ? null : isAuth ? (
             <>
               <span className="hidden text-xs text-muted-foreground sm:inline">
