@@ -102,6 +102,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           variant={mode === "login" ? "primary" : "secondary"}
           onClick={() => switchMode("login")}
           aria-pressed={mode === "login"}
+          disabled={isSubmitting}
         >
           Login
         </Button>
@@ -110,12 +111,18 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           variant={mode === "register" ? "primary" : "secondary"}
           onClick={() => switchMode("register")}
           aria-pressed={mode === "register"}
+          disabled={isSubmitting}
         >
           Register
         </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-4" noValidate>
+      <form
+        onSubmit={handleSubmit}
+        className="grid gap-4"
+        noValidate
+        aria-busy={isSubmitting}
+      >
         {isRegister ? (
           <Field label="Name">
             <TextInput
@@ -126,6 +133,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
               }}
               autoComplete="name"
               maxLength={80}
+              disabled={isSubmitting}
             />
           </Field>
         ) : null}
@@ -140,6 +148,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
             }}
             autoComplete="email"
             required
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -154,10 +163,15 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
             autoComplete={isRegister ? "new-password" : "current-password"}
             minLength={8}
             required
+            disabled={isSubmitting}
           />
         </Field>
 
-        {error ? <p className="m-0 text-sm text-danger">{error}</p> : null}
+        {error ? (
+          <p className="m-0 text-sm text-danger" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting

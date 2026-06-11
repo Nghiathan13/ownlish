@@ -78,6 +78,7 @@ export function EditWordPanel({
       onSubmit={handleSubmit}
       className="mt-6 grid gap-4 rounded-xl border border-border p-4"
       noValidate
+      aria-busy={isSubmitting}
     >
       <div>
         <h2 className="text-lg font-semibold">Edit word</h2>
@@ -93,6 +94,7 @@ export function EditWordPanel({
             onChange={(event) => updateValue("word", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.word}
             required
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -102,6 +104,7 @@ export function EditWordPanel({
             onChange={(event) => updateValue("type", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.type}
             placeholder="noun, verb..."
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -111,6 +114,7 @@ export function EditWordPanel({
             onChange={(event) => updateValue("ipa", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.ipa}
             placeholder="/wɜːd/"
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -119,17 +123,27 @@ export function EditWordPanel({
             value={values.meaningVi}
             onChange={(event) => updateValue("meaningVi", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.meaningVi}
+            disabled={isSubmitting}
           />
         </Field>
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : "Save changes"}
         </Button>
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
       </div>

@@ -72,6 +72,7 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
       onSubmit={handleSubmit}
       className="mt-8 grid gap-4 rounded-xl border border-border p-4"
       noValidate
+      aria-busy={isSubmitting}
     >
       <div>
         <h2 className="text-lg font-semibold">Add word</h2>
@@ -87,6 +88,7 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
             onChange={(event) => updateValue("word", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.word}
             required
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -96,6 +98,7 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
             onChange={(event) => updateValue("type", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.type}
             placeholder="noun, verb..."
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -105,6 +108,7 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
             onChange={(event) => updateValue("ipa", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.ipa}
             placeholder="/wɜːd/"
+            disabled={isSubmitting}
           />
         </Field>
 
@@ -113,11 +117,16 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
             value={values.meaningVi}
             onChange={(event) => updateValue("meaningVi", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.meaningVi}
+            disabled={isSubmitting}
           />
         </Field>
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isSubmitting} className="w-fit">
         {isSubmitting ? "Adding..." : "Add word"}
