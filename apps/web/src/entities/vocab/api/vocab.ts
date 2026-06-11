@@ -30,6 +30,17 @@ export type VocabWordListResponse = {
   };
 };
 
+export type VocabStats = {
+  total: number;
+  due: number;
+  mastered: number;
+  highWrongCount: number;
+  levels: Array<{
+    level: number;
+    count: number;
+  }>;
+};
+
 export type CreateVocabWordInput = {
   band?: string;
   definition?: string;
@@ -84,6 +95,16 @@ export function listVocabWords(
 ) {
   return apiRequest<VocabWordListResponse>(`/vocab${buildVocabQuery(params)}`, {
     signal: params.signal,
+    token,
+  });
+}
+
+export function getVocabStats(
+  token: string,
+  options: { signal?: AbortSignal } = {},
+) {
+  return apiRequest<VocabStats>("/vocab/stats", {
+    signal: options.signal,
     token,
   });
 }

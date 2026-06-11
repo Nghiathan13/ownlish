@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthQueryReset } from "@/features/auth/components/AuthQueryReset";
+import { Navbar } from "@/features/auth/components/Navbar";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import { QueryProvider } from "@/shared/providers/QueryProvider";
-import { Navbar } from "@/features/auth/components/Navbar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <QueryProvider>
+            <AuthQueryReset />
             <Navbar />
             {children}
           </QueryProvider>

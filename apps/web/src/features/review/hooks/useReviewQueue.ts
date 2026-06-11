@@ -12,6 +12,7 @@ import {
   optimisticallyRemoveFromReviewQueue,
   restoreReviewQueue,
 } from "@/entities/vocab/lib/reviewQueueCache";
+import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
@@ -86,6 +87,7 @@ export function useReviewQueue({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vocab"] });
+      queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
     },
   });
 
