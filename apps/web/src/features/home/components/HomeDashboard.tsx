@@ -89,6 +89,23 @@ export function HomeDashboard() {
                 Retry
               </button>
             </DashboardMessage>
+          ) : stats?.total === 0 ? (
+            <DashboardMessage>
+              <div>
+                <p className="font-semibold text-foreground">
+                  Your vocabulary is empty.
+                </p>
+                <p className="text-sm">
+                  Add your first word to start tracking review progress.
+                </p>
+              </div>
+              <Link
+                className={classNames(actionLinkClassName, primaryLinkClassName)}
+                href="/vocabulary"
+              >
+                Add first word
+              </Link>
+            </DashboardMessage>
           ) : stats ? (
             <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

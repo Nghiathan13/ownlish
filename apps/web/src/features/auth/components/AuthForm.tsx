@@ -10,7 +10,11 @@ import { TextInput } from "@/shared/ui/TextInput";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { getAuthValidationError, type AuthMode } from "../lib/authValidation";
 
-export function AuthForm() {
+type AuthFormProps = {
+  redirectTo?: string;
+};
+
+export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
   const router = useRouter();
   const { login, register } = useAuthSession();
   const [mode, setMode] = useState<AuthMode>("login");
@@ -53,7 +57,7 @@ export function AuthForm() {
         });
       }
 
-      router.replace("/vocabulary");
+      router.replace(redirectTo);
     } catch (caughtError) {
       setError(
         caughtError instanceof ApiError

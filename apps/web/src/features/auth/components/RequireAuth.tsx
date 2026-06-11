@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -11,14 +11,16 @@ type RequireAuthProps = {
 };
 
 export function RequireAuth({ children }: RequireAuthProps) {
+  const pathname = usePathname();
   const router = useRouter();
   const { status } = useAuthSession();
 
   useEffect(() => {
     if (status === "guest") {
-      router.replace("/login");
+      const currentPath = `${pathname}${window.location.search}`;
+      router.replace(`/login?redirect=${encodeURIComponent(currentPath)}`);
     }
-  }, [router, status]);
+  }, [pathname, router, status]);
 
   if (status === "checking") {
     return (

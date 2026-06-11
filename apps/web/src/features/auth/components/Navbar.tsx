@@ -30,6 +30,9 @@ export function Navbar() {
         {/* Tabs */}
         {isAuth ? (
           <div className="flex items-center gap-6">
+            <Link href="/" className={linkClass("/")}>
+              Dashboard
+            </Link>
             <Link href="/vocabulary" className={linkClass("/vocabulary")}>
               Vocabulary
             </Link>
