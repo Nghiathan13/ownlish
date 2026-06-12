@@ -8,11 +8,9 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  createVocabWord,
   deleteVocabWord,
   listVocabWords,
   updateVocabWord,
-  type CreateVocabWordInput,
   type UpdateVocabWordInput,
   type VocabWordListResponse,
   type VocabWord,
@@ -26,6 +24,7 @@ import {
   invalidateVocabMutationQueries,
 } from "@/entities/vocab/lib/vocabCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+import { useCreateVocabularyWord } from "./useCreateVocabularyWord";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
 const VOCABULARY_PAGE_SIZE = 50;
@@ -97,37 +96,14 @@ export function useVocabularyWords({
       : "Cannot load vocabulary."
     : null;
 
-  const { mutateAsync: createWordMutation } = useMutation({
-    mutationFn: (input: CreateVocabWordInput) => {
-      if (!accessToken) throw new Error("No access token");
-      return createVocabWord(accessToken, input);
-    },
-    onSuccess: (createdWord) => {
-      if (pageState.offset !== 0) {
-        resetToFirstPage();
-      } else {
-        queryClient.setQueryData<VocabWordListResponse>(
-          queryKey,
-          (oldData) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              items: [createdWord, ...oldData.items],
-              meta: {
-                ...oldData.meta,
-                total: oldData.meta.total + 1,
-              },
-            };
-          },
-        );
-      }
-      invalidateVocabMutationQueries(queryClient, userId);
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        clearSession();
-      }
-    },
+  const createWord = useCreateVocabularyWord({
+    accessToken,
+    clearSession,
+    pageState,
+    queryClient,
+    queryKey,
+    resetToFirstPage,
+    userId,
   });
 
   const {
@@ -258,13 +234,6 @@ export function useVocabularyWords({
   const reload = useCallback(() => {
     void refetch();
   }, [refetch]);
-
-  const createWord = useCallback(
-    async (input: CreateVocabWordInput) => {
-      await createWordMutation(input);
-    },
-    [createWordMutation],
-  );
 
   const deleteWord = useCallback(
     async (wordToDelete: VocabWord) => {
