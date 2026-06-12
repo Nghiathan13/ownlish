@@ -14,7 +14,7 @@ import {
 } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+import { ApiError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
 type UseReviewQueueParams = {
@@ -64,12 +64,12 @@ export function useReviewQueue({
     isPending: isSubmittingGrade,
   } = useMutation({
     mutationFn: ({ word, grade }: { word: VocabWord; grade: ReviewGrade }) => {
-      if (!accessToken) throw new Error("No access token");
-      return updateVocabReview(
+      return runAuthenticatedRequest({
         accessToken,
-        word.id,
-        buildReviewUpdate(word, grade)
-      );
+        clearSession,
+        request: (token) =>
+          updateVocabReview(token, word.id, buildReviewUpdate(word, grade)),
+      });
     },
     onMutate: async ({ word }) => {
       const previousQueue = await optimisticallyRemoveFromReviewQueue(
@@ -83,9 +83,6 @@ export function useReviewQueue({
     },
     onError: (error, variables, context) => {
       restoreReviewQueue(queryClient, userId, context?.previousQueue);
-      if (isUnauthorizedError(error)) {
-        clearSession();
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vocab"] });
