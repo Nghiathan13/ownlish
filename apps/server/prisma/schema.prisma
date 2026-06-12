@@ -18,6 +18,7 @@ model User {
   name            String?
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
+  collections     WordCollection[]
   refreshSessions RefreshSession[]
   vocabWords      VocabWord[]
 
@@ -60,6 +61,7 @@ model VocabWord {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
 
+  collectionItems CollectionUserWordItem[]
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -67,4 +69,96 @@ model VocabWord {
   @@index([userId, normalizedWord])
   @@index([userId, deletedAt, level, nextReview])
   @@map("vocab_words")
+}
+
+enum WordCollectionKind {
+  SYSTEM
+  USER
+}
+
+model CatalogWord {
+  id             String    @id @default(uuid())
+  word           String
+  normalizedWord String    @unique @map("normalized_word")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  collectionItems CollectionCatalogItem[]
+  definitions     CatalogDefinition[]
+
+  @@index([word])
+  @@map("catalog_words")
+}
+
+model CatalogDefinition {
+  id                 String   @id @default(uuid())
+  catalogWordId      String   @map("catalog_word_id")
+  sourceDefinitionId Int      @map("source_definition_id")
+  sourceWordId       Int      @map("source_word_id")
+  type               String
+  meaningVi          String?  @map("meaning_vi")
+  definition         String?
+  example            String?
+  exampleVi          String?  @map("example_vi")
+  ipaUk              String?  @map("ipa_uk")
+  ipaUs              String?  @map("ipa_us")
+  band               String?
+  source             String
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  catalogWord CatalogWord @relation(fields: [catalogWordId], references: [id], onDelete: Cascade)
+
+  @@unique([source, sourceDefinitionId])
+  @@index([catalogWordId])
+  @@index([source, band])
+  @@map("catalog_definitions")
+}
+
+model WordCollection {
+  id          String             @id @default(uuid())
+  ownerUserId String?            @map("owner_user_id")
+  name        String
+  description String?
+  kind        WordCollectionKind @default(USER)
+  source      String?
+  cefrLevel   String?            @map("cefr_level")
+  isPublic    Boolean            @default(false) @map("is_public")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  catalogItems  CollectionCatalogItem[]
+  owner         User?                    @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  userWordItems CollectionUserWordItem[]
+
+  @@index([kind])
+  @@index([ownerUserId])
+  @@index([source, cefrLevel])
+  @@map("word_collections")
+}
+
+model CollectionCatalogItem {
+  collectionId  String @map("collection_id")
+  catalogWordId String @map("catalog_word_id")
+  sortOrder     Int    @default(0) @map("sort_order")
+
+  catalogWord CatalogWord     @relation(fields: [catalogWordId], references: [id], onDelete: Cascade)
+  collection  WordCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, catalogWordId])
+  @@index([catalogWordId])
+  @@map("collection_catalog_items")
+}
+
+model CollectionUserWordItem {
+  collectionId String @map("collection_id")
+  vocabWordId  String @map("vocab_word_id")
+  sortOrder    Int    @default(0) @map("sort_order")
+
+  collection WordCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  vocabWord  VocabWord      @relation(fields: [vocabWordId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, vocabWordId])
+  @@index([vocabWordId])
+  @@map("collection_user_word_items")
 }

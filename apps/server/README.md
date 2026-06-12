@@ -93,11 +93,31 @@ Vocabulary:
 - `PATCH /vocab/:id/review`
 - `DELETE /vocab/:id`
 
-Vocabulary endpoints require `Authorization: Bearer <accessToken>`.
+Collections:
+
+- `GET /collections`
+- `GET /collections/:id`
+- `POST /collections/:id/import`
+
+Vocabulary and collection endpoints require `Authorization: Bearer <accessToken>`.
 Auth refresh tokens are stored in an HttpOnly cookie. For production web
 deployments on a different domain, use `REFRESH_TOKEN_COOKIE_SECURE=true`,
 `REFRESH_TOKEN_COOKIE_SAME_SITE=none`, and set `CORS_ORIGIN` to the exact web
 origin.
+
+## Oxford Catalog Seed
+
+System Oxford collections are stored separately from user vocabulary. Run this
+after migrations when a database needs the built-in Oxford A1-C1 catalog:
+
+```bash
+pnpm seed:oxford ../vocab_english.db
+```
+
+The script imports Oxford A1-C1 catalog words and definitions, then creates the
+public system collections `Oxford A1`, `Oxford A2`, `Oxford B1`, `Oxford B2`,
+and `Oxford C1`. Importing a collection into a user's vocabulary skips words the
+user already has.
 
 ## Checks
 
@@ -122,6 +142,12 @@ before pointing production traffic at the API:
 
 ```bash
 pnpm prisma migrate deploy
+```
+
+Then seed the Oxford catalog once:
+
+```bash
+pnpm seed:oxford ../vocab_english.db
 ```
 
 Use a production-only connection string in Railway. Do not commit production
