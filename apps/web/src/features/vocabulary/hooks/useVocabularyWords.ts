@@ -1,28 +1,12 @@
 "use client";
 
 import { useCallback } from "react";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  deleteVocabWord,
-  listVocabWords,
-  type VocabWordListResponse,
-  type VocabWord,
-} from "@/entities/vocab/api/vocab";
-import {
-  optimisticallyRemoveFromReviewQueue,
-  restoreReviewQueue,
-} from "@/entities/vocab/lib/reviewQueueCache";
-import {
-  getVocabQueryKey,
-  invalidateVocabMutationQueries,
-} from "@/entities/vocab/lib/vocabCache";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { listVocabWords } from "@/entities/vocab/api/vocab";
+import { getVocabQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { useCreateVocabularyWord } from "./useCreateVocabularyWord";
+import { useDeleteVocabularyWord } from "./useDeleteVocabularyWord";
 import { useUpdateVocabularyWord } from "./useUpdateVocabularyWord";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
@@ -113,68 +97,15 @@ export function useVocabularyWords({
     userId,
   });
 
-  const {
-    mutateAsync: deleteWordMutation,
-    isPending: isDeletingWord,
-    variables: deleteMutationVariables,
-  } = useMutation({
-    mutationFn: (wordToDelete: VocabWord) => {
-      if (!accessToken) throw new Error("No access token");
-      return deleteVocabWord(accessToken, wordToDelete.id);
-    },
-    onMutate: async (wordToDelete) => {
-      const offsetAtStart = pageState.offset;
-      const wordCountAtStart = words.length;
-      await queryClient.cancelQueries({ queryKey });
-      const previousVocab =
-        queryClient.getQueryData<VocabWordListResponse>(queryKey);
-
-      queryClient.setQueryData<VocabWordListResponse>(queryKey, (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          items: oldData.items.filter((w: VocabWord) => w.id !== wordToDelete.id),
-          meta: {
-            ...oldData.meta,
-            total: Math.max(0, oldData.meta.total - 1),
-          },
-        };
-      });
-
-      const previousReviewQueue = await optimisticallyRemoveFromReviewQueue(
-        queryClient,
-        userId,
-        wordToDelete.id,
-      );
-
-      return {
-        previousVocab,
-        queryKey,
-        offsetAtStart,
-        wordCountAtStart,
-        previousReviewQueue,
-      };
-    },
-    onError: (error, wordToDelete, context) => {
-      if (context?.previousVocab && context.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousVocab);
-      }
-      restoreReviewQueue(queryClient, userId, context?.previousReviewQueue);
-      if (isUnauthorizedError(error)) {
-        clearSession();
-      }
-    },
-    onSuccess: (_, __, context) => {
-      const stillOnSamePage = pageState.offset === context?.offsetAtStart;
-      const isLastItemOnPage = context?.wordCountAtStart === 1;
-
-      if (isLastItemOnPage && (context?.offsetAtStart ?? 0) > 0 && stillOnSamePage) {
-        moveBackOnePage();
-      }
-    },
-    onSettled: () => {
-      invalidateVocabMutationQueries(queryClient, userId);
-    },
+  const { deleteWord, deletingWordId } = useDeleteVocabularyWord({
+    accessToken,
+    clearSession,
+    moveBackOnePage,
+    pageState,
+    queryClient,
+    queryKey,
+    userId,
+    words,
   });
 
   const loadError = queryLoadError;
@@ -183,19 +114,12 @@ export function useVocabularyWords({
     void refetch();
   }, [refetch]);
 
-  const deleteWord = useCallback(
-    async (wordToDelete: VocabWord) => {
-      await deleteWordMutation(wordToDelete);
-    },
-    [deleteWordMutation],
-  );
-
   return {
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
     createWord,
     deleteWord,
-    deletingWordId: isDeletingWord ? deleteMutationVariables?.id ?? null : null,
+    deletingWordId,
     isInitialLoading,
     isLoadingWords: isFetching,
     isRefreshing,
