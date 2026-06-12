@@ -76,17 +76,10 @@ export function EditWordPanel({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-6 grid gap-4 rounded-xl border border-border p-4"
+      className="grid gap-4"
       noValidate
       aria-busy={isSubmitting}
     >
-      <div>
-        <h2 className="text-lg font-semibold">Edit word</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Update the selected vocabulary word.
-        </p>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Word">
           <TextInput

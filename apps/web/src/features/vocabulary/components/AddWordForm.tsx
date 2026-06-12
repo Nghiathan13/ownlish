@@ -16,9 +16,10 @@ import { TextInput } from "@/shared/ui/TextInput";
 
 type AddWordFormProps = {
   onCreate: (input: CreateVocabWordInput) => Promise<void>;
+  onCreated?: () => void;
 };
 
-export function AddWordForm({ onCreate }: AddWordFormProps) {
+export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
   const [values, setValues] = useState<VocabWordFormValues>(
     EMPTY_VOCAB_WORD_FORM_VALUES,
   );
@@ -42,6 +43,7 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
       await onCreate(toCreateVocabWordInput(values));
 
       setValues(EMPTY_VOCAB_WORD_FORM_VALUES);
+      onCreated?.();
     } catch (caughtError) {
       setError(
         caughtError instanceof ApiError
@@ -70,17 +72,10 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-8 grid gap-4 rounded-xl border border-border p-4"
+      className="grid gap-4"
       noValidate
       aria-busy={isSubmitting}
     >
-      <div>
-        <h2 className="text-lg font-semibold">Add word</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Add a word to your vocabulary list.
-        </p>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Word">
           <TextInput
@@ -128,9 +123,11 @@ export function AddWordForm({ onCreate }: AddWordFormProps) {
         </p>
       ) : null}
 
-      <Button type="submit" disabled={isSubmitting} className="w-fit">
-        {isSubmitting ? "Adding..." : "Add word"}
-      </Button>
+      <div>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Adding..." : "Add word"}
+        </Button>
+      </div>
     </form>
   );
 }

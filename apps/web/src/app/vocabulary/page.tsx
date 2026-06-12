@@ -15,6 +15,8 @@ import {
 } from "@/features/vocabulary/components";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { Button } from "@/shared/ui/Button";
+import { Modal } from "@/shared/ui/Modal";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
 
@@ -54,6 +56,7 @@ function VocabularyPageContent() {
     search: debouncedSearch,
     userId: user?.id ?? null,
   });
+  const [isAddWordOpen, setIsAddWordOpen] = useState(false);
   const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
   const [wordPendingDelete, setWordPendingDelete] = useState<VocabWord | null>(
     null,
@@ -75,18 +78,38 @@ function VocabularyPageContent() {
               {totalWords ? ` · ${totalWords} words` : ""}
             </p>
           </div>
+          <Button type="button" onClick={() => setIsAddWordOpen(true)}>
+            Add word
+          </Button>
         </div>
 
-        <AddWordForm onCreate={createWord} />
+        {isAddWordOpen ? (
+          <Modal
+            title="Add word"
+            description="Add a word to your vocabulary list."
+            onClose={() => setIsAddWordOpen(false)}
+          >
+            <AddWordForm
+              onCreate={createWord}
+              onCreated={() => setIsAddWordOpen(false)}
+            />
+          </Modal>
+        ) : null}
 
         {editingWord ? (
-          <EditWordPanel
-            key={editingWord.id}
-            isSubmitting={updatingWordId === editingWord.id}
+          <Modal
+            title="Edit word"
+            description="Update the selected vocabulary word."
             onClose={() => setEditingWord(null)}
-            onUpdate={updateWord}
-            word={editingWord}
-          />
+          >
+            <EditWordPanel
+              key={editingWord.id}
+              isSubmitting={updatingWordId === editingWord.id}
+              onClose={() => setEditingWord(null)}
+              onUpdate={updateWord}
+              word={editingWord}
+            />
+          </Modal>
         ) : null}
 
         <VocabularySearch search={search} onSearchChange={setSearch} />
