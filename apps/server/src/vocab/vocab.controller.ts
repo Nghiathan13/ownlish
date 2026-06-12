@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -48,7 +49,7 @@ export class VocabController {
   @Get(':id')
   get(
     @Req() request: AuthRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ): ReturnType<VocabService['get']> {
     return this.vocabService.get(request.user.id, id);
   }
@@ -64,7 +65,7 @@ export class VocabController {
   @Patch(':id/review')
   updateReview(
     @Req() request: AuthRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() dto: UpdateVocabReviewDto,
   ): ReturnType<VocabService['updateReview']> {
     return this.vocabService.updateReview(request.user.id, id, dto);
@@ -73,7 +74,7 @@ export class VocabController {
   @Patch(':id')
   update(
     @Req() request: AuthRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() dto: UpdateVocabWordDto,
   ): ReturnType<VocabService['update']> {
     return this.vocabService.update(request.user.id, id, dto);
@@ -82,7 +83,7 @@ export class VocabController {
   @Delete(':id')
   softDelete(
     @Req() request: AuthRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ): ReturnType<VocabService['softDelete']> {
     return this.vocabService.softDelete(request.user.id, id);
   }

@@ -43,15 +43,17 @@ const optionalBooleanEnv = (key: string, fallback: boolean) => {
     return fallback;
   }
 
-  if (value === 'true') {
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue === 'true' || normalizedValue === '1') {
     return true;
   }
 
-  if (value === 'false') {
+  if (normalizedValue === 'false' || normalizedValue === '0') {
     return false;
   }
 
-  throw new Error(`${key} must be true or false`);
+  throw new Error(`${key} must be true, false, 1, or 0`);
 };
 
 const optionalCookieSameSiteEnv = (fallback: 'lax' | 'none' | 'strict') => {

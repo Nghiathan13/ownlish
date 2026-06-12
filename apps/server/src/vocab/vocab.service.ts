@@ -53,6 +53,23 @@ type RawVocabStatsRow = {
   }> | null;
 };
 
+function buildListResponse(
+  items: VocabWordList,
+  limit: number,
+  offset: number,
+  total: number,
+): VocabWordListResponse {
+  return {
+    items,
+    meta: {
+      limit,
+      offset,
+      total,
+      hasMore: offset + items.length < total,
+    },
+  };
+}
+
 @Injectable()
 export class VocabService {
   constructor(private readonly prisma: PrismaService) {}
@@ -90,15 +107,7 @@ export class VocabService {
       }),
     ]);
 
-    return {
-      items,
-      meta: {
-        limit,
-        offset,
-        total,
-        hasMore: offset + items.length < total,
-      },
-    };
+    return buildListResponse(items, limit, offset, total);
   }
 
   async listDueReviewWords(
@@ -144,15 +153,7 @@ export class VocabService {
       }),
     ]);
 
-    return {
-      items,
-      meta: {
-        limit,
-        offset,
-        total,
-        hasMore: offset + items.length < total,
-      },
-    };
+    return buildListResponse(items, limit, offset, total);
   }
 
   async getStats(userId: string): Promise<VocabStatsResponse> {

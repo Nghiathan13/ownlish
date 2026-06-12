@@ -373,7 +373,7 @@ describe('VocabController (e2e)', () => {
 
   it('returns not found when updating review for a missing word', () => {
     return request(app.getHttpServer())
-      .patch('/vocab/missing-id/review')
+      .patch('/vocab/00000000-0000-4000-8000-000000000000/review')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 3,
@@ -382,6 +382,40 @@ describe('VocabController (e2e)', () => {
         nextReview: '2026-06-08T00:00:00.000Z',
       })
       .expect(404);
+  });
+
+  it('rejects malformed vocabulary ids', () => {
+    return request(app.getHttpServer())
+      .patch('/vocab/missing-id/review')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 3,
+        wrongCount: 1,
+        lastReview: '2026-06-07T00:00:00.000Z',
+        nextReview: '2026-06-08T00:00:00.000Z',
+      })
+      .expect(400);
+  });
+
+  it('rejects invalid review dates', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'invalid review date',
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${createResponse.body.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        level: 3,
+        wrongCount: 1,
+        lastReview: 'not-a-date',
+        nextReview: '2026-06-08T00:00:00.000Z',
+      })
+      .expect(400);
   });
 
   it('rejects duplicate active words for the same user', async () => {
