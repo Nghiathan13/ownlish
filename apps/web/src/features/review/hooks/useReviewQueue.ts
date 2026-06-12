@@ -13,6 +13,7 @@ import {
   restoreReviewQueue,
 } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
+import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
@@ -34,18 +35,15 @@ export function useReviewQueue({
   const { data, isLoading, error: queryError } = useQuery({
     queryKey: getReviewQueueQueryKey(userId),
     queryFn: async ({ signal }) => {
-      if (!accessToken) throw new Error("No access token");
-      try {
-        return await listDueReviewWords(accessToken, {
-          offset: 0,
-          signal,
-        });
-      } catch (error) {
-        if (isUnauthorizedError(error)) {
-          clearSession();
-        }
-        throw error;
-      }
+      return runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) =>
+          listDueReviewWords(token, {
+            offset: 0,
+            signal,
+          }),
+      });
     },
     enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
   });

@@ -4,7 +4,8 @@ import { useCallback } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { listVocabWords } from "@/entities/vocab/api/vocab";
 import { getVocabQueryKey } from "@/entities/vocab/lib/vocabCache";
-import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { ApiError } from "@/shared/api/http";
 import { useCreateVocabularyWord } from "./useCreateVocabularyWord";
 import { useDeleteVocabularyWord } from "./useDeleteVocabularyWord";
 import { useUpdateVocabularyWord } from "./useUpdateVocabularyWord";
@@ -50,20 +51,17 @@ export function useVocabularyWords({
   } = useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
-      if (!accessToken) throw new Error("No access token");
-      try {
-        return await listVocabWords(accessToken, {
+      return runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) =>
+          listVocabWords(token, {
           limit: VOCABULARY_PAGE_SIZE,
           offset: pageState.offset,
           search: pageState.search.trim() || undefined,
           signal,
-        });
-      } catch (error) {
-        if (isUnauthorizedError(error)) {
-          clearSession();
-        }
-        throw error;
-      }
+        }),
+      });
     },
     enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
     placeholderData: keepPreviousData,
