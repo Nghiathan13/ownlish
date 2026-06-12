@@ -35,14 +35,6 @@ function getVocabQueryKey(userId: string | null, pageState: VocabPageState) {
   return ["vocab", { userId, search: pageState.search, offset: pageState.offset }] as const;
 }
 
-function getMutationErrorMessage(error: Error | null) {
-  if (!error) {
-    return null;
-  }
-
-  return error instanceof ApiError ? error.message : "Request failed.";
-}
-
 type UseVocabularyWordsParams = {
   accessToken: string | null;
   clearSession: () => void;
@@ -158,7 +150,6 @@ export function useVocabularyWords({
 
   const {
     mutateAsync: updateWordMutation,
-    error: updateMutationError,
     isPending: isUpdatingWord,
     variables: updateMutationVariables,
   } = useMutation({
@@ -220,7 +211,6 @@ export function useVocabularyWords({
 
   const {
     mutateAsync: deleteWordMutation,
-    error: deleteMutationError,
     isPending: isDeletingWord,
     variables: deleteMutationVariables,
   } = useMutation({
@@ -288,11 +278,7 @@ export function useVocabularyWords({
     },
   });
 
-  const mutationError =
-    getMutationErrorMessage(deleteMutationError) ??
-    getMutationErrorMessage(updateMutationError);
-
-  const loadError = queryLoadError ?? mutationError;
+  const loadError = queryLoadError;
 
   const nextPage = useCallback(() => {
     setPageState((currentPageState) => ({
