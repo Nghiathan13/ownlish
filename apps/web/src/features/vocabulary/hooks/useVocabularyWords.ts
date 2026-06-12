@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -24,9 +24,9 @@ import {
 import {
   getVocabQueryKey,
   invalidateVocabMutationQueries,
-  type VocabPageState,
 } from "@/entities/vocab/lib/vocabCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+import { useVocabularyPageState } from "./useVocabularyPageState";
 
 const VOCABULARY_PAGE_SIZE = 50;
 
@@ -45,25 +45,17 @@ export function useVocabularyWords({
   search,
   userId,
 }: UseVocabularyWordsParams) {
-  const [pageState, setPageState] = useState<VocabPageState>({
-    offset: 0,
+  const {
+    moveBackOnePage,
+    nextPage,
+    pageState,
+    previousPage,
+    resetToFirstPage,
+  } = useVocabularyPageState({
+    pageSize: VOCABULARY_PAGE_SIZE,
     search,
   });
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (pageState.search === search) {
-      return;
-    }
-
-    queueMicrotask(() => {
-      setPageState((currentPageState) =>
-        currentPageState.search === search
-          ? currentPageState
-          : { search, offset: 0 },
-      );
-    });
-  }, [pageState.search, search]);
 
   const queryKey = getVocabQueryKey(userId, pageState);
 
@@ -112,10 +104,7 @@ export function useVocabularyWords({
     },
     onSuccess: (createdWord) => {
       if (pageState.offset !== 0) {
-        setPageState((currentPageState) => ({
-          ...currentPageState,
-          offset: 0,
-        }));
+        resetToFirstPage();
       } else {
         queryClient.setQueryData<VocabWordListResponse>(
           queryKey,
@@ -256,10 +245,7 @@ export function useVocabularyWords({
       const isLastItemOnPage = context?.wordCountAtStart === 1;
 
       if (isLastItemOnPage && (context?.offsetAtStart ?? 0) > 0 && stillOnSamePage) {
-        setPageState((currentPageState) => ({
-          ...currentPageState,
-          offset: Math.max(0, currentPageState.offset - VOCABULARY_PAGE_SIZE),
-        }));
+        moveBackOnePage();
       }
     },
     onSettled: () => {
@@ -268,20 +254,6 @@ export function useVocabularyWords({
   });
 
   const loadError = queryLoadError;
-
-  const nextPage = useCallback(() => {
-    setPageState((currentPageState) => ({
-      ...currentPageState,
-      offset: currentPageState.offset + VOCABULARY_PAGE_SIZE,
-    }));
-  }, []);
-
-  const previousPage = useCallback(() => {
-    setPageState((currentPageState) => ({
-      ...currentPageState,
-      offset: Math.max(0, currentPageState.offset - VOCABULARY_PAGE_SIZE),
-    }));
-  }, []);
 
   const reload = useCallback(() => {
     void refetch();
