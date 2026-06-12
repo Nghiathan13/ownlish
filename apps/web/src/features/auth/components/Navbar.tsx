@@ -36,6 +36,9 @@ export function Navbar() {
             <Link href="/vocabulary" className={linkClass("/vocabulary")}>
               Vocabulary
             </Link>
+            <Link href="/collections" className={linkClass("/collections")}>
+              Collections
+            </Link>
             <Link href="/review" className={linkClass("/review")}>
               Review
             </Link>

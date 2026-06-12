@@ -101,9 +101,9 @@ export function HomeDashboard() {
               </div>
               <Link
                 className={classNames(actionLinkClassName, primaryLinkClassName)}
-                href="/vocabulary"
+                href="/collections"
               >
-                Add first word
+                Browse collections
               </Link>
             </DashboardMessage>
           ) : stats ? (

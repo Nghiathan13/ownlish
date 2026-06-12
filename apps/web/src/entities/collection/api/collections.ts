@@ -1,0 +1,223 @@
+import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import {
+  isBoolean,
+  isNullableString,
+  isNumber,
+  isRecord,
+  isString,
+} from "@/shared/lib/parse";
+
+export type WordCollectionKind = "SYSTEM" | "USER";
+
+export type CollectionSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  kind: WordCollectionKind;
+  source: string | null;
+  cefrLevel: string | null;
+  isPublic: boolean;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CatalogDefinition = {
+  id: string;
+  type: string;
+  meaningVi: string | null;
+  definition: string | null;
+  example: string | null;
+  exampleVi: string | null;
+  ipaUk: string | null;
+  ipaUs: string | null;
+  band: string | null;
+  source: string;
+};
+
+export type CatalogWord = {
+  id: string;
+  word: string;
+  normalizedWord: string;
+  definitions: CatalogDefinition[];
+};
+
+export type CollectionDetail = CollectionSummary & {
+  catalogWords: CatalogWord[];
+};
+
+export type ImportCollectionResult = {
+  imported: number;
+  skipped: number;
+};
+
+function parseCollectionKind(value: unknown): WordCollectionKind {
+  if (value === "SYSTEM" || value === "USER") return value;
+
+  invalidApiResponse();
+}
+
+function parseCollectionSummary(body: unknown): CollectionSummary {
+  if (!isRecord(body)) invalidApiResponse();
+
+  const {
+    id,
+    name,
+    description,
+    kind,
+    source,
+    cefrLevel,
+    isPublic,
+    itemCount,
+    createdAt,
+    updatedAt,
+  } = body;
+
+  if (
+    !isString(id) ||
+    !isString(name) ||
+    !isNullableString(description) ||
+    !isNullableString(source) ||
+    !isNullableString(cefrLevel) ||
+    !isBoolean(isPublic) ||
+    !isNumber(itemCount) ||
+    !isString(createdAt) ||
+    !isString(updatedAt)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    id,
+    name,
+    description,
+    kind: parseCollectionKind(kind),
+    source,
+    cefrLevel,
+    isPublic,
+    itemCount,
+    createdAt,
+    updatedAt,
+  };
+}
+
+function parseCatalogDefinition(body: unknown): CatalogDefinition {
+  if (!isRecord(body)) invalidApiResponse();
+
+  const {
+    id,
+    type,
+    meaningVi,
+    definition,
+    example,
+    exampleVi,
+    ipaUk,
+    ipaUs,
+    band,
+    source,
+  } = body;
+
+  if (
+    !isString(id) ||
+    !isString(type) ||
+    !isNullableString(meaningVi) ||
+    !isNullableString(definition) ||
+    !isNullableString(example) ||
+    !isNullableString(exampleVi) ||
+    !isNullableString(ipaUk) ||
+    !isNullableString(ipaUs) ||
+    !isNullableString(band) ||
+    !isString(source)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    id,
+    type,
+    meaningVi,
+    definition,
+    example,
+    exampleVi,
+    ipaUk,
+    ipaUs,
+    band,
+    source,
+  };
+}
+
+function parseCatalogWord(body: unknown): CatalogWord {
+  if (!isRecord(body) || !Array.isArray(body.definitions)) {
+    invalidApiResponse();
+  }
+
+  const { id, word, normalizedWord, definitions } = body;
+
+  if (!isString(id) || !isString(word) || !isString(normalizedWord)) {
+    invalidApiResponse();
+  }
+
+  return {
+    id,
+    word,
+    normalizedWord,
+    definitions: definitions.map(parseCatalogDefinition),
+  };
+}
+
+function parseCollectionDetail(body: unknown): CollectionDetail {
+  const summary = parseCollectionSummary(body);
+
+  if (!isRecord(body) || !Array.isArray(body.catalogWords)) {
+    invalidApiResponse();
+  }
+
+  return {
+    ...summary,
+    catalogWords: body.catalogWords.map(parseCatalogWord),
+  };
+}
+
+function parseImportCollectionResult(body: unknown): ImportCollectionResult {
+  if (!isRecord(body)) invalidApiResponse();
+
+  const { imported, skipped } = body;
+
+  if (!isNumber(imported) || !isNumber(skipped)) {
+    invalidApiResponse();
+  }
+
+  return {
+    imported,
+    skipped,
+  };
+}
+
+export function listCollections(token: string, options: { signal?: AbortSignal } = {}) {
+  return apiRequest("/collections", {
+    signal: options.signal,
+    token,
+  }).then((body) => {
+    if (!Array.isArray(body)) invalidApiResponse();
+
+    return body.map(parseCollectionSummary);
+  });
+}
+
+export function getCollection(
+  token: string,
+  id: string,
+  options: { signal?: AbortSignal } = {},
+) {
+  return apiRequest(`/collections/${id}`, {
+    signal: options.signal,
+    token,
+  }).then(parseCollectionDetail);
+}
+
+export function importCollection(token: string, id: string) {
+  return apiRequest(`/collections/${id}/import`, {
+    method: "POST",
+    token,
+  }).then(parseImportCollectionResult);
+}
