@@ -107,6 +107,92 @@ pnpm test:e2e
 pnpm build
 ```
 
+## Production Deployment
+
+Recommended production architecture:
+
+```txt
+Vercel web client -> Railway NestJS API -> Supabase Postgres
+```
+
+### Supabase database
+
+Use Supabase as the production PostgreSQL database. Apply Prisma migrations
+before pointing production traffic at the API:
+
+```bash
+pnpm prisma migrate deploy
+```
+
+Use a production-only connection string in Railway. Do not commit production
+connection strings or `.env.production.local`.
+
+With Supabase Session Pooler, Railway may need `sslmode=no-verify` if Node.js
+reports a self-signed certificate chain:
+
+```env
+DATABASE_URL="postgres://prisma.<project-ref>:<password>@<region>.pooler.supabase.com:5432/postgres?sslmode=no-verify"
+```
+
+`sslmode=no-verify` still uses TLS, but skips certificate-chain verification.
+Prefer a verified CA setup later if this service handles sensitive production
+traffic.
+
+### Railway API
+
+Set these variables in the Railway service:
+
+```env
+NODE_ENV=production
+DATABASE_URL=<supabase-postgres-url>
+JWT_SECRET=<64-plus-character-secret>
+ACCESS_TOKEN_TTL_SECONDS=900
+REFRESH_TOKEN_TTL_DAYS=30
+CORS_ORIGIN=https://<vercel-web-domain>
+REFRESH_TOKEN_COOKIE_NAME=engvocab.refreshToken
+REFRESH_TOKEN_COOKIE_SECURE=true
+REFRESH_TOKEN_COOKIE_SAME_SITE=none
+AUTH_RATE_LIMIT_LIMIT=10
+AUTH_RATE_LIMIT_TTL_SECONDS=60
+BCRYPT_SALT_ROUNDS=10
+```
+
+Do not set `PORT` manually on Railway unless needed; Railway provides it.
+
+The root path `/` may return `404`. Use `/health` or auth endpoints for smoke
+tests.
+
+### Production smoke tests
+
+Set the API URL:
+
+```bash
+API=https://<railway-api-domain>
+```
+
+Login with a missing user should return `401`, not `500`:
+
+```bash
+curl -i -X POST "$API/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"notfound@example.com","password":"test123456"}'
+```
+
+Register, refresh, and logout should work with the HttpOnly refresh cookie:
+
+```bash
+curl -i -c cookies.txt -b cookies.txt \
+  -X POST "$API/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"prodtest@example.com","password":"test123456","name":"Prod Test"}'
+
+curl -i -c cookies.txt -b cookies.txt \
+  -X POST "$API/auth/refresh"
+
+curl -i -c cookies.txt -b cookies.txt \
+  -X POST "$API/auth/logout"
+```
+
 ## Docker
 
 Build the API image:
