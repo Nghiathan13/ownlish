@@ -21,8 +21,28 @@ if (!existsSync(sqlitePath)) {
   throw new Error(`SQLite database not found: ${sqlitePath}`);
 }
 
+function buildPrismaPgConfig(connectionString) {
+  const parsedUrl = new URL(connectionString);
+  const sslMode = parsedUrl.searchParams.get('sslmode');
+
+  if (sslMode !== 'no-verify') {
+    return {
+      connectionString,
+    };
+  }
+
+  parsedUrl.searchParams.delete('sslmode');
+
+  return {
+    connectionString: parsedUrl.toString(),
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  };
+}
+
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: databaseUrl }),
+  adapter: new PrismaPg(buildPrismaPgConfig(databaseUrl)),
 });
 
 function readOxfordDefinitions() {
