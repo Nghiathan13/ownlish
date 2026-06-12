@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from "@/shared/api/http";
+import { apiRequest, invalidApiResponse } from "@/shared/api/http";
 import {
   isBoolean,
   isNullableString,
@@ -76,12 +76,8 @@ type ListVocabWordsParams = {
   signal?: AbortSignal;
 };
 
-function invalidResponse(): never {
-  throw new ApiError("Invalid server response.", 0);
-}
-
 function parseVocabWord(body: unknown): VocabWord {
-  if (!isRecord(body)) invalidResponse();
+  if (!isRecord(body)) invalidApiResponse();
 
   const {
     id,
@@ -122,7 +118,7 @@ function parseVocabWord(body: unknown): VocabWord {
     !isString(updatedAt) ||
     !isNullableString(deletedAt)
   ) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   return {
@@ -148,7 +144,7 @@ function parseVocabWord(body: unknown): VocabWord {
 
 function parseVocabWordListResponse(body: unknown): VocabWordListResponse {
   if (!isRecord(body) || !Array.isArray(body.items) || !isRecord(body.meta)) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   const { limit, offset, total, hasMore } = body.meta;
@@ -159,7 +155,7 @@ function parseVocabWordListResponse(body: unknown): VocabWordListResponse {
     !isNumber(total) ||
     !isBoolean(hasMore)
   ) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   return {
@@ -175,7 +171,7 @@ function parseVocabWordListResponse(body: unknown): VocabWordListResponse {
 
 function parseVocabStats(body: unknown): VocabStats {
   if (!isRecord(body) || !Array.isArray(body.levels)) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   const { total, due, mastered, highWrongCount, levels } = body;
@@ -186,7 +182,7 @@ function parseVocabStats(body: unknown): VocabStats {
     !isNumber(mastered) ||
     !isNumber(highWrongCount)
   ) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   return {
@@ -195,11 +191,11 @@ function parseVocabStats(body: unknown): VocabStats {
     mastered,
     highWrongCount,
     levels: levels.map((levelStat) => {
-      if (!isRecord(levelStat)) invalidResponse();
+      if (!isRecord(levelStat)) invalidApiResponse();
 
       const { level, count } = levelStat;
 
-      if (!isNumber(level) || !isNumber(count)) invalidResponse();
+      if (!isNumber(level) || !isNumber(count)) invalidApiResponse();
 
       return { level, count };
     }),

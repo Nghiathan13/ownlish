@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from "@/shared/api/http";
+import { apiRequest, invalidApiResponse } from "@/shared/api/http";
 import { isNullableString, isRecord, isString } from "@/shared/lib/parse";
 
 export type AuthUser = {
@@ -9,7 +9,6 @@ export type AuthUser = {
 
 export type AuthResponse = {
   accessToken: string;
-  refreshToken: string;
   user: AuthUser;
 };
 
@@ -22,45 +21,36 @@ export type RegisterInput = LoginInput & {
   name?: string;
 };
 
-export type RefreshTokenInput = {
-  refreshToken: string;
-};
-
-function invalidResponse(): never {
-  throw new ApiError("Invalid server response.", 0);
-}
-
 function parseAuthUser(body: unknown): AuthUser {
-  if (!isRecord(body)) invalidResponse();
+  if (!isRecord(body)) invalidApiResponse();
 
   const { id, email, name } = body;
 
   if (!isString(id) || !isString(email) || !isNullableString(name)) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   return { id, email, name };
 }
 
 function parseAuthResponse(body: unknown): AuthResponse {
-  if (!isRecord(body)) invalidResponse();
+  if (!isRecord(body)) invalidApiResponse();
 
-  const { accessToken, refreshToken, user } = body;
+  const { accessToken, user } = body;
 
-  if (!isString(accessToken) || !isString(refreshToken)) {
-    invalidResponse();
+  if (!isString(accessToken)) {
+    invalidApiResponse();
   }
 
   return {
     accessToken,
-    refreshToken,
     user: parseAuthUser(user),
   };
 }
 
 function parseLogoutResponse(body: unknown): { success: true } {
   if (!isRecord(body) || body.success !== true) {
-    invalidResponse();
+    invalidApiResponse();
   }
 
   return { success: true };
@@ -86,16 +76,14 @@ export function getCurrentUser(token: string) {
   }).then(parseAuthUser);
 }
 
-export function refreshSession(input: RefreshTokenInput) {
+export function refreshSession() {
   return apiRequest("/auth/refresh", {
     method: "POST",
-    body: JSON.stringify(input),
   }).then(parseAuthResponse);
 }
 
-export function logoutSession(input: RefreshTokenInput) {
+export function logoutSession() {
   return apiRequest("/auth/logout", {
     method: "POST",
-    body: JSON.stringify(input),
   }).then(parseLogoutResponse);
 }

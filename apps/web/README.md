@@ -68,7 +68,7 @@ pnpm build
 ## Current Scope
 
 - Login/register with the backend API
-- Restore session through `/auth/me`
+- Restore session through the backend HttpOnly refresh-token cookie
 - Dashboard stats from `/vocab/stats`
 - Vocabulary list, create, update, delete
 - Due-word review with Remember/Forgot scheduling

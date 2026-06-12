@@ -23,6 +23,10 @@ export function isUnauthorizedError(error: unknown) {
   return error instanceof ApiError && error.status === 401;
 }
 
+export function invalidApiResponse(): never {
+  throw new ApiError("Invalid server response.", 0);
+}
+
 export function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
 }
@@ -62,6 +66,7 @@ export async function apiRequest(
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),

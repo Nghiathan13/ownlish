@@ -11,7 +11,6 @@ import {
 } from "react";
 import {
   AuthUser,
-  getCurrentUser,
   login as loginRequest,
   logoutSession,
   refreshSession,
@@ -53,69 +52,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveSession = useCallback((session: AuthResponse) => {
-    localStorage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, session.refreshToken);
     setAccessToken(session.accessToken);
     setUser(session.user);
     setStatus("authenticated");
   }, []);
 
   useEffect(() => {
-    const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     let cancelled = false;
 
     async function restoreSession() {
-      if (!storedAccessToken && !storedRefreshToken) {
-        if (cancelled) {
-          return;
-        }
-
-        setStatus("guest");
-        return;
-      }
-
-      if (storedAccessToken) {
-        try {
-          const nextUser = await getCurrentUser(storedAccessToken);
-
-          if (!cancelled) {
-            setAccessToken(storedAccessToken);
-            setUser(nextUser);
-            setStatus("authenticated");
-          }
-
-          return;
-        } catch (error) {
-          if (!isUnauthorizedError(error) || !storedRefreshToken) {
-            if (!cancelled) {
-              clearSession();
-            }
-
-            return;
-          }
-        }
-      }
-
-      if (!storedRefreshToken) {
-        if (!cancelled) {
-          clearSession();
-        }
-
-        return;
-      }
-
       try {
-        const session = await refreshSession({
-          refreshToken: storedRefreshToken,
-        });
+        const session = await refreshSession();
 
         if (!cancelled) {
           saveSession(session);
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          clearSession();
+          if (isUnauthorizedError(error)) {
+            clearSession();
+          } else {
+            setStatus("guest");
+          }
         }
       }
     }
@@ -144,12 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-    if (refreshToken) {
-      await logoutSession({ refreshToken }).catch(() => undefined);
-    }
-
+    await logoutSession().catch(() => undefined);
     clearSession();
   }, [clearSession]);
 
