@@ -13,7 +13,7 @@ import {
   invalidateVocabMutationQueries,
   type VocabPageState,
 } from "@/entities/vocab/lib/vocabCache";
-import { isUnauthorizedError } from "@/shared/api/http";
+import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type UseDeleteVocabularyWordParams = {
   accessToken: string | null;
@@ -42,8 +42,11 @@ export function useDeleteVocabularyWord({
     variables: deleteMutationVariables,
   } = useMutation({
     mutationFn: (wordToDelete: VocabWord) => {
-      if (!accessToken) throw new Error("No access token");
-      return deleteVocabWord(accessToken, wordToDelete.id);
+      return runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) => deleteVocabWord(token, wordToDelete.id),
+      });
     },
     onMutate: async (wordToDelete) => {
       const offsetAtStart = pageState.offset;
@@ -83,9 +86,6 @@ export function useDeleteVocabularyWord({
         queryClient.setQueryData(context.queryKey, context.previousVocab);
       }
       restoreReviewQueue(queryClient, userId, context?.previousReviewQueue);
-      if (isUnauthorizedError(error)) {
-        clearSession();
-      }
     },
     onSuccess: (_, __, context) => {
       const stillOnSamePage = pageState.offset === context?.offsetAtStart;

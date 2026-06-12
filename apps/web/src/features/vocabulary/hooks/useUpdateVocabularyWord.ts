@@ -7,7 +7,7 @@ import {
   type VocabWordListResponse,
 } from "@/entities/vocab/api/vocab";
 import { invalidateVocabMutationQueries } from "@/entities/vocab/lib/vocabCache";
-import { isUnauthorizedError } from "@/shared/api/http";
+import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type UpdateVocabularyWordVariables = {
   wordToUpdate: VocabWord;
@@ -35,8 +35,11 @@ export function useUpdateVocabularyWord({
     variables: updateMutationVariables,
   } = useMutation({
     mutationFn: ({ wordToUpdate, input }: UpdateVocabularyWordVariables) => {
-      if (!accessToken) throw new Error("No access token");
-      return updateVocabWord(accessToken, wordToUpdate.id, input);
+      return runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) => updateVocabWord(token, wordToUpdate.id, input),
+      });
     },
     onMutate: async ({ wordToUpdate, input }) => {
       await queryClient.cancelQueries({ queryKey });
@@ -58,9 +61,6 @@ export function useUpdateVocabularyWord({
     onError: (error, variables, context) => {
       if (context?.previousVocab && context.queryKey) {
         queryClient.setQueryData(context.queryKey, context.previousVocab);
-      }
-      if (isUnauthorizedError(error)) {
-        clearSession();
       }
     },
     onSuccess: (updatedWord) => {

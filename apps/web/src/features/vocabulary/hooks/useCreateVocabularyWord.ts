@@ -7,7 +7,7 @@ import {
 } from "@/entities/vocab/api/vocab";
 import type { VocabPageState } from "@/entities/vocab/lib/vocabCache";
 import { invalidateVocabMutationQueries } from "@/entities/vocab/lib/vocabCache";
-import { isUnauthorizedError } from "@/shared/api/http";
+import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type UseCreateVocabularyWordParams = {
   accessToken: string | null;
@@ -30,8 +30,11 @@ export function useCreateVocabularyWord({
 }: UseCreateVocabularyWordParams) {
   const { mutateAsync: createWordMutation } = useMutation({
     mutationFn: (input: CreateVocabWordInput) => {
-      if (!accessToken) throw new Error("No access token");
-      return createVocabWord(accessToken, input);
+      return runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) => createVocabWord(token, input),
+      });
     },
     onSuccess: (createdWord) => {
       if (pageState.offset !== 0) {
@@ -54,11 +57,6 @@ export function useCreateVocabularyWord({
       }
 
       invalidateVocabMutationQueries(queryClient, userId);
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        clearSession();
-      }
     },
   });
 
