@@ -18,12 +18,16 @@ import { ListDueReviewWordsDto } from './dto/list-due-review-words.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
+import { VocabStatsService } from './vocab-stats.service';
 import { VocabService } from './vocab.service';
 
 @Controller('vocab')
 @UseGuards(JwtAuthGuard)
 export class VocabController {
-  constructor(private readonly vocabService: VocabService) {}
+  constructor(
+    private readonly vocabService: VocabService,
+    private readonly vocabStatsService: VocabStatsService,
+  ) {}
 
   @Get()
   list(
@@ -34,8 +38,10 @@ export class VocabController {
   }
 
   @Get('stats')
-  getStats(@Req() request: AuthRequest): ReturnType<VocabService['getStats']> {
-    return this.vocabService.getStats(request.user.id);
+  getStats(
+    @Req() request: AuthRequest,
+  ): ReturnType<VocabStatsService['getStats']> {
+    return this.vocabStatsService.getStats(request.user.id);
   }
 
   @Get('review/due')

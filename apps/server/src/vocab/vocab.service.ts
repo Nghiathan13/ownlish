@@ -11,11 +11,7 @@ import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
 import { normalizeWord } from './lib/normalize-word';
-import {
-  HIGH_WRONG_COUNT_THRESHOLD,
-  MAX_VOCAB_LEVEL,
-  MIN_VOCAB_LEVEL,
-} from './vocab.constants';
+import { MAX_VOCAB_LEVEL } from './vocab.constants';
 
 type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
 type VocabWordList = Awaited<
@@ -32,27 +28,6 @@ type VocabWordListResponse = {
     hasMore: boolean;
   };
 };
-type VocabStatsResponse = {
-  total: number;
-  due: number;
-  mastered: number;
-  highWrongCount: number;
-  levels: Array<{
-    level: number;
-    count: number;
-  }>;
-};
-type RawVocabStatsRow = {
-  total: number;
-  due: number;
-  mastered: number;
-  high_wrong_count: number;
-  levels: Array<{
-    level: number;
-    count: number;
-  }> | null;
-};
-
 function buildListResponse(
   items: VocabWordList,
   limit: number,
@@ -154,79 +129,6 @@ export class VocabService {
     ]);
 
     return buildListResponse(items, limit, offset, total);
-  }
-
-  async getStats(userId: string): Promise<VocabStatsResponse> {
-    const now = new Date();
-    const [stats] = await this.prisma.$queryRaw<RawVocabStatsRow[]>`
-      WITH active AS (
-        SELECT "level", "wrong_count", "next_review"
-        FROM "vocab_words"
-        WHERE "user_id" = ${userId}
-          AND "deleted_at" IS NULL
-      ),
-      summary AS (
-        SELECT
-          COUNT(*)::int AS "total",
-          COUNT(*) FILTER (
-            WHERE "level" < ${MAX_VOCAB_LEVEL}
-              AND ("next_review" IS NULL OR "next_review" <= ${now})
-          )::int AS "due",
-          COUNT(*) FILTER (WHERE "level" = ${MAX_VOCAB_LEVEL})::int AS "mastered",
-          COUNT(*) FILTER (
-            WHERE "wrong_count" >= ${HIGH_WRONG_COUNT_THRESHOLD}
-          )::int AS "high_wrong_count"
-        FROM active
-      ),
-      level_counts AS (
-        SELECT "level", COUNT(*)::int AS "count"
-        FROM active
-        GROUP BY "level"
-      )
-      SELECT
-        summary."total",
-        summary."due",
-        summary."mastered",
-        summary."high_wrong_count",
-        COALESCE(
-          jsonb_agg(
-            jsonb_build_object(
-              'level', level_counts."level",
-              'count', level_counts."count"
-            )
-            ORDER BY level_counts."level"
-          ) FILTER (WHERE level_counts."level" IS NOT NULL),
-          '[]'::jsonb
-        ) AS "levels"
-      FROM summary
-      LEFT JOIN level_counts ON true
-      GROUP BY
-        summary."total",
-        summary."due",
-        summary."mastered",
-        summary."high_wrong_count"
-    `;
-    const levelCountByLevel = new Map(
-      (stats?.levels ?? []).map((row) => [row.level, row.count]),
-    );
-
-    return {
-      total: stats?.total ?? 0,
-      due: stats?.due ?? 0,
-      mastered: stats?.mastered ?? 0,
-      highWrongCount: stats?.high_wrong_count ?? 0,
-      levels: Array.from(
-        { length: MAX_VOCAB_LEVEL - MIN_VOCAB_LEVEL + 1 },
-        (_, index) => {
-          const level = MIN_VOCAB_LEVEL + index;
-
-          return {
-            level,
-            count: levelCountByLevel.get(level) ?? 0,
-          };
-        },
-      ),
-    };
   }
 
   get(userId: string, id: string): Promise<Awaited<VocabWordResult>> {

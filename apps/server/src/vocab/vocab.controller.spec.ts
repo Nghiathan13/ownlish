@@ -2,6 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { VocabController } from './vocab.controller';
+import { VocabStatsService } from './vocab-stats.service';
 import { VocabService } from './vocab.service';
 
 describe('VocabController', () => {
@@ -9,13 +10,15 @@ describe('VocabController', () => {
 
   const vocabServiceMock = {
     list: jest.fn(),
-    getStats: jest.fn(),
     listDueReviewWords: jest.fn(),
     get: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     updateReview: jest.fn(),
     softDelete: jest.fn(),
+  };
+  const vocabStatsServiceMock = {
+    getStats: jest.fn(),
   };
 
   const jwtServiceMock = {
@@ -58,6 +61,10 @@ describe('VocabController', () => {
         {
           provide: VocabService,
           useValue: vocabServiceMock,
+        },
+        {
+          provide: VocabStatsService,
+          useValue: vocabStatsServiceMock,
         },
         {
           provide: JwtService,
@@ -126,10 +133,10 @@ describe('VocabController', () => {
       highWrongCount: 0,
       levels: [{ level: 0, count: 1 }],
     };
-    vocabServiceMock.getStats.mockResolvedValue(response);
+    vocabStatsServiceMock.getStats.mockResolvedValue(response);
 
     await expect(controller.getStats(request)).resolves.toEqual(response);
-    expect(vocabServiceMock.getStats).toHaveBeenCalledWith('user-id');
+    expect(vocabStatsServiceMock.getStats).toHaveBeenCalledWith('user-id');
   });
 
   it('delegates get to VocabService with current user id', async () => {
