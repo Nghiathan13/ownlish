@@ -20,12 +20,14 @@ export function ReviewCard({
   const canGrade = showMeaning && !isSubmitting;
 
   return (
-    <div className="grid gap-6 rounded-xl border border-border p-6">
+    <div className="grid gap-5 rounded-xl border border-border p-4 sm:gap-6 sm:p-6">
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Level {word.level} · Wrong {word.wrongCount}
         </p>
-        <h2 className="text-4xl font-bold leading-tight">{word.word}</h2>
+        <h2 className="break-words text-3xl font-bold leading-tight sm:text-4xl">
+          {word.word}
+        </h2>
         {word.ipa ? (
           <p className="mt-2 text-muted-foreground">{word.ipa}</p>
         ) : null}
@@ -49,8 +51,13 @@ export function ReviewCard({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <Button type="button" variant="secondary" onClick={onToggleMeaning}>
+      <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onToggleMeaning}
+          className="w-full"
+        >
           {showMeaning ? "Hide meaning" : "Show meaning"}
         </Button>
         <Button
@@ -59,6 +66,7 @@ export function ReviewCard({
           disabled={!canGrade}
           onClick={() => onGrade("forgot")}
           title={showMeaning ? "Forgot" : "Show meaning before grading"}
+          className="w-full"
         >
           Forgot
         </Button>
@@ -67,6 +75,7 @@ export function ReviewCard({
           disabled={!canGrade}
           onClick={() => onGrade("remember")}
           title={showMeaning ? "Remember" : "Show meaning before grading"}
+          className="w-full"
         >
           Remember
         </Button>
