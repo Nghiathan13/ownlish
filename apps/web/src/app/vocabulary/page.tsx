@@ -115,15 +115,21 @@ function VocabularyPageContent() {
         <VocabularySearch search={search} onSearchChange={setSearch} />
 
         {wordPendingDelete ? (
-          <DeleteWordConfirm
-            isDeleting={deletingWordId === wordPendingDelete.id}
-            onCancel={() => setWordPendingDelete(null)}
-            onConfirm={async (word) => {
-              await deleteWord(word);
-              setWordPendingDelete(null);
-            }}
-            word={wordPendingDelete}
-          />
+          <Modal
+            title="Delete word"
+            description="This action removes the word from your vocabulary."
+            onClose={() => setWordPendingDelete(null)}
+          >
+            <DeleteWordConfirm
+              isDeleting={deletingWordId === wordPendingDelete.id}
+              onCancel={() => setWordPendingDelete(null)}
+              onConfirm={async (word) => {
+                await deleteWord(word);
+                setWordPendingDelete(null);
+              }}
+              word={wordPendingDelete}
+            />
+          </Modal>
         ) : null}
 
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">

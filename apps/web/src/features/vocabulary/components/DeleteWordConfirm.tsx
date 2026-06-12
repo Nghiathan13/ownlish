@@ -15,14 +15,11 @@ export function DeleteWordConfirm({
   word,
 }: DeleteWordConfirmProps) {
   return (
-    <div className="mt-6 grid gap-4 rounded-xl border border-border p-4">
-      <div>
-        <h2 className="text-lg font-semibold">Delete word</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Delete <span className="font-semibold text-foreground">{word.word}</span>{" "}
-          from your vocabulary?
-        </p>
-      </div>
+    <div className="grid gap-4">
+      <p className="text-sm text-muted-foreground">
+        Delete <span className="font-semibold text-foreground">{word.word}</span>{" "}
+        from your vocabulary?
+      </p>
 
       <div className="flex gap-3">
         <Button
