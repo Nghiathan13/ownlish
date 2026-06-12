@@ -132,7 +132,7 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        <div className="mt-8 overflow-x-auto rounded-xl border border-border">
+        <div className="mt-8 rounded-xl border border-border md:overflow-x-auto">
           {isInitialLoading || loadError || words.length === 0 ? (
             <VocabularyStateBlock
               error={loadError}
