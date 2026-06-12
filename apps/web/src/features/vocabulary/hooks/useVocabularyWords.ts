@@ -10,8 +10,6 @@ import {
 import {
   deleteVocabWord,
   listVocabWords,
-  updateVocabWord,
-  type UpdateVocabWordInput,
   type VocabWordListResponse,
   type VocabWord,
 } from "@/entities/vocab/api/vocab";
@@ -25,6 +23,7 @@ import {
 } from "@/entities/vocab/lib/vocabCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 import { useCreateVocabularyWord } from "./useCreateVocabularyWord";
+import { useUpdateVocabularyWord } from "./useUpdateVocabularyWord";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
 const VOCABULARY_PAGE_SIZE = 50;
@@ -106,63 +105,12 @@ export function useVocabularyWords({
     userId,
   });
 
-  const {
-    mutateAsync: updateWordMutation,
-    isPending: isUpdatingWord,
-    variables: updateMutationVariables,
-  } = useMutation({
-    mutationFn: ({
-      wordToUpdate,
-      input,
-    }: {
-      wordToUpdate: VocabWord;
-      input: UpdateVocabWordInput;
-    }) => {
-      if (!accessToken) throw new Error("No access token");
-      return updateVocabWord(accessToken, wordToUpdate.id, input);
-    },
-    onMutate: async ({ wordToUpdate, input }) => {
-      await queryClient.cancelQueries({ queryKey });
-      const previousVocab =
-        queryClient.getQueryData<VocabWordListResponse>(queryKey);
-
-      queryClient.setQueryData<VocabWordListResponse>(queryKey, (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          items: oldData.items.map((w: VocabWord) =>
-            w.id === wordToUpdate.id ? { ...w, ...input } : w
-          ),
-        };
-      });
-
-      return { previousVocab, queryKey };
-    },
-    onError: (error, variables, context) => {
-      if (context?.previousVocab && context.queryKey) {
-        queryClient.setQueryData(context.queryKey, context.previousVocab);
-      }
-      if (isUnauthorizedError(error)) {
-        clearSession();
-      }
-    },
-    onSuccess: (updatedWord) => {
-      queryClient.setQueryData<VocabWordListResponse>(
-        queryKey,
-        (oldData) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            items: oldData.items.map((w: VocabWord) =>
-              w.id === updatedWord.id ? updatedWord : w
-            ),
-          };
-        },
-      );
-    },
-    onSettled: () => {
-      invalidateVocabMutationQueries(queryClient, userId);
-    },
+  const { updateWord, updatingWordId } = useUpdateVocabularyWord({
+    accessToken,
+    clearSession,
+    queryClient,
+    queryKey,
+    userId,
   });
 
   const {
@@ -242,13 +190,6 @@ export function useVocabularyWords({
     [deleteWordMutation],
   );
 
-  const updateWord = useCallback(
-    async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
-      await updateWordMutation({ wordToUpdate, input });
-    },
-    [updateWordMutation],
-  );
-
   return {
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
@@ -266,9 +207,7 @@ export function useVocabularyWords({
     reload,
     totalWords,
     updateWord,
-    updatingWordId: isUpdatingWord
-      ? updateMutationVariables?.wordToUpdate.id ?? null
-      : null,
+    updatingWordId,
     words,
   };
 }
