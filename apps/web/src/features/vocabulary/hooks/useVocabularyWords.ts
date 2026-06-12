@@ -1,14 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { listVocabWords } from "@/entities/vocab/api/vocab";
-import { getVocabQueryKey } from "@/entities/vocab/lib/vocabCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { ApiError } from "@/shared/api/http";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCreateVocabularyWord } from "./useCreateVocabularyWord";
 import { useDeleteVocabularyWord } from "./useDeleteVocabularyWord";
 import { useUpdateVocabularyWord } from "./useUpdateVocabularyWord";
+import { useVocabularyListQuery } from "./useVocabularyListQuery";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
 const VOCABULARY_PAGE_SIZE = 50;
@@ -40,42 +36,23 @@ export function useVocabularyWords({
   });
   const queryClient = useQueryClient();
 
-  const queryKey = getVocabQueryKey(userId, pageState);
-
   const {
-    data,
-    isLoading: isInitialLoading,
-    isFetching,
-    error: queryError,
-    refetch,
-  } = useQuery({
+    isInitialLoading,
+    isLoadingWords,
+    isRefreshing,
+    loadError,
     queryKey,
-    queryFn: async ({ signal }) => {
-      return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
-        request: (token) =>
-          listVocabWords(token, {
-          limit: VOCABULARY_PAGE_SIZE,
-          offset: pageState.offset,
-          search: pageState.search.trim() || undefined,
-          signal,
-        }),
-      });
-    },
-    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
-    placeholderData: keepPreviousData,
+    reload,
+    totalWords,
+    words,
+  } = useVocabularyListQuery({
+    accessToken,
+    clearSession,
+    isAuthenticated,
+    pageSize: VOCABULARY_PAGE_SIZE,
+    pageState,
+    userId,
   });
-
-  const words = data?.items ?? [];
-  const totalWords = data?.meta.total ?? 0;
-  const isRefreshing = isFetching && words.length > 0;
-
-  const queryLoadError = queryError
-    ? queryError instanceof ApiError
-      ? queryError.message
-      : "Cannot load vocabulary."
-    : null;
 
   const createWord = useCreateVocabularyWord({
     accessToken,
@@ -106,12 +83,6 @@ export function useVocabularyWords({
     words,
   });
 
-  const loadError = queryLoadError;
-
-  const reload = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
   return {
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
@@ -119,7 +90,7 @@ export function useVocabularyWords({
     deleteWord,
     deletingWordId,
     isInitialLoading,
-    isLoadingWords: isFetching,
+    isLoadingWords,
     isRefreshing,
     loadError,
     nextPage,
