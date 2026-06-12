@@ -62,6 +62,9 @@ The server runs on `http://localhost:3001` by default.
 | `ACCESS_TOKEN_TTL_SECONDS` | No | `900` | Access token lifetime in seconds |
 | `BCRYPT_SALT_ROUNDS` | No | `10` | Password hashing cost |
 | `REFRESH_TOKEN_TTL_DAYS` | No | `30` | Refresh token lifetime in days |
+| `REFRESH_TOKEN_COOKIE_NAME` | No | `engvocab.refreshToken` | HttpOnly refresh token cookie name |
+| `REFRESH_TOKEN_COOKIE_SECURE` | No | `true` in production, otherwise `false` | Whether the refresh cookie requires HTTPS |
+| `REFRESH_TOKEN_COOKIE_SAME_SITE` | No | `none` when secure, otherwise `lax` | Refresh cookie SameSite policy: `lax`, `none`, or `strict` |
 | `AUTH_RATE_LIMIT_LIMIT` | No | `10` | Request limit for auth endpoints |
 | `AUTH_RATE_LIMIT_TTL_SECONDS` | No | `60` | Rate limit window for auth endpoints |
 
@@ -91,6 +94,10 @@ Vocabulary:
 - `DELETE /vocab/:id`
 
 Vocabulary endpoints require `Authorization: Bearer <accessToken>`.
+Auth refresh tokens are stored in an HttpOnly cookie. For production web
+deployments on a different domain, use `REFRESH_TOKEN_COOKIE_SECURE=true`,
+`REFRESH_TOKEN_COOKIE_SAME_SITE=none`, and set `CORS_ORIGIN` to the exact web
+origin.
 
 ## Checks
 

@@ -36,6 +36,44 @@ const optionalNumberEnv = (key: string, fallback: number) => {
   return parsedValue;
 };
 
+const optionalBooleanEnv = (key: string, fallback: boolean) => {
+  const value = process.env[key];
+
+  if (!value) {
+    return fallback;
+  }
+
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  throw new Error(`${key} must be true or false`);
+};
+
+const optionalCookieSameSiteEnv = (fallback: 'lax' | 'none' | 'strict') => {
+  const value = process.env.REFRESH_TOKEN_COOKIE_SAME_SITE;
+
+  if (!value) {
+    return fallback;
+  }
+
+  if (value === 'lax' || value === 'none' || value === 'strict') {
+    return value;
+  }
+
+  throw new Error('REFRESH_TOKEN_COOKIE_SAME_SITE must be lax, none, or strict');
+};
+
+const defaultSecureCookie = process.env.NODE_ENV === 'production';
+const secureRefreshTokenCookie = optionalBooleanEnv(
+  'REFRESH_TOKEN_COOKIE_SECURE',
+  defaultSecureCookie,
+);
+
 export const env = {
   databaseUrl: requiredEnv('DATABASE_URL'),
   jwtSecret: requiredSecretEnv('JWT_SECRET', 32),
@@ -44,6 +82,13 @@ export const env = {
   accessTokenTtlSeconds: optionalNumberEnv('ACCESS_TOKEN_TTL_SECONDS', 900),
   bcryptSaltRounds: optionalNumberEnv('BCRYPT_SALT_ROUNDS', 10),
   refreshTokenTtlDays: optionalNumberEnv('REFRESH_TOKEN_TTL_DAYS', 30),
+  refreshTokenCookie: {
+    name: process.env.REFRESH_TOKEN_COOKIE_NAME ?? 'engvocab.refreshToken',
+    secure: secureRefreshTokenCookie,
+    sameSite: optionalCookieSameSiteEnv(
+      secureRefreshTokenCookie ? 'none' : 'lax',
+    ),
+  },
   authRateLimit: {
     limit: optionalNumberEnv('AUTH_RATE_LIMIT_LIMIT', 10),
     ttlMs: optionalNumberEnv('AUTH_RATE_LIMIT_TTL_SECONDS', 60) * 1000,

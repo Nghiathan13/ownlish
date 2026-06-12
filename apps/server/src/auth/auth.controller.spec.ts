@@ -1,6 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerModule } from '@nestjs/throttler';
+import type { Request, Response } from 'express';
 import { env } from '../config/env';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -8,6 +9,7 @@ import type { AuthRequest } from './types/auth.types';
 
 describe('AuthController', () => {
   let controller: AuthController;
+  let responseMock: Pick<Response, 'clearCookie' | 'cookie'>;
 
   const authServiceMock = {
     register: jest.fn(),
@@ -23,6 +25,11 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+
+    responseMock = {
+      clearCookie: jest.fn(),
+      cookie: jest.fn(),
+    } as Pick<Response, 'clearCookie' | 'cookie'>;
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -72,8 +79,18 @@ describe('AuthController', () => {
     };
     authServiceMock.register.mockResolvedValue(response);
 
-    await expect(controller.register(dto)).resolves.toBe(response);
+    await expect(
+      controller.register(dto, responseMock as Response),
+    ).resolves.toEqual({
+      accessToken: response.accessToken,
+      user: response.user,
+    });
     expect(authServiceMock.register).toHaveBeenCalledWith(dto);
+    expect(responseMock.cookie).toHaveBeenCalledWith(
+      env.refreshTokenCookie.name,
+      response.refreshToken,
+      expect.objectContaining({ httpOnly: true, path: '/auth' }),
+    );
   });
 
   it('delegates login to AuthService', async () => {
@@ -94,8 +111,18 @@ describe('AuthController', () => {
     };
     authServiceMock.login.mockResolvedValue(response);
 
-    await expect(controller.login(dto)).resolves.toBe(response);
+    await expect(controller.login(dto, responseMock as Response)).resolves.toEqual(
+      {
+        accessToken: response.accessToken,
+        user: response.user,
+      },
+    );
     expect(authServiceMock.login).toHaveBeenCalledWith(dto);
+    expect(responseMock.cookie).toHaveBeenCalledWith(
+      env.refreshTokenCookie.name,
+      response.refreshToken,
+      expect.objectContaining({ httpOnly: true, path: '/auth' }),
+    );
   });
 
   it('delegates refresh to AuthService', async () => {
@@ -115,8 +142,51 @@ describe('AuthController', () => {
     };
     authServiceMock.refresh.mockResolvedValue(response);
 
-    await expect(controller.refresh(dto)).resolves.toBe(response);
+    await expect(
+      controller.refresh({ headers: {} } as Request, dto, responseMock as Response),
+    ).resolves.toEqual({
+      accessToken: response.accessToken,
+      user: response.user,
+    });
     expect(authServiceMock.refresh).toHaveBeenCalledWith(dto);
+    expect(responseMock.cookie).toHaveBeenCalledWith(
+      env.refreshTokenCookie.name,
+      response.refreshToken,
+      expect.objectContaining({ httpOnly: true, path: '/auth' }),
+    );
+  });
+
+  it('refreshes using the HttpOnly cookie when the body is empty', async () => {
+    const response = {
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+      user: {
+        id: 'user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    };
+    authServiceMock.refresh.mockResolvedValue(response);
+
+    await expect(
+      controller.refresh(
+        {
+          headers: {
+            cookie: `${env.refreshTokenCookie.name}=cookie-refresh-token`,
+          },
+        } as Request,
+        {},
+        responseMock as Response,
+      ),
+    ).resolves.toEqual({
+      accessToken: response.accessToken,
+      user: response.user,
+    });
+    expect(authServiceMock.refresh).toHaveBeenCalledWith({
+      refreshToken: 'cookie-refresh-token',
+    });
   });
 
   it('delegates logout to AuthService', async () => {
@@ -126,8 +196,14 @@ describe('AuthController', () => {
     const response = { success: true };
     authServiceMock.logout.mockResolvedValue(response);
 
-    await expect(controller.logout(dto)).resolves.toBe(response);
+    await expect(
+      controller.logout({ headers: {} } as Request, dto, responseMock as Response),
+    ).resolves.toBe(response);
     expect(authServiceMock.logout).toHaveBeenCalledWith(dto);
+    expect(responseMock.clearCookie).toHaveBeenCalledWith(
+      env.refreshTokenCookie.name,
+      expect.objectContaining({ path: '/auth' }),
+    );
   });
 
   it('delegates current user lookup to AuthService', async () => {

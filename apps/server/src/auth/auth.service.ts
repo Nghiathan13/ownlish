@@ -75,7 +75,8 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshTokenDto): Promise<AuthResponse> {
-    const refreshTokenHash = this.hashRefreshToken(dto.refreshToken);
+    const refreshToken = this.getRequiredRefreshToken(dto);
+    const refreshTokenHash = this.hashRefreshToken(refreshToken);
     const session =
       await this.refreshSessionsService.findByTokenHash(refreshTokenHash);
 
@@ -92,6 +93,10 @@ export class AuthService {
   }
 
   async logout(dto: RefreshTokenDto): Promise<LogoutResponse> {
+    if (!dto.refreshToken) {
+      return { success: true };
+    }
+
     const refreshTokenHash = this.hashRefreshToken(dto.refreshToken);
     const session =
       await this.refreshSessionsService.findByTokenHash(refreshTokenHash);
@@ -151,6 +156,14 @@ export class AuthService {
 
   private createRefreshToken(): string {
     return randomBytes(64).toString('base64url');
+  }
+
+  private getRequiredRefreshToken(dto: RefreshTokenDto): string {
+    if (!dto.refreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return dto.refreshToken;
   }
 
   private hashRefreshToken(refreshToken: string): string {

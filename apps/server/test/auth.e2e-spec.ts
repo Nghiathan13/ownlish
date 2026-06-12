@@ -5,6 +5,13 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+function getRefreshCookie(response: request.Response): string | undefined {
+  const setCookie = response.headers['set-cookie'];
+  const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+
+  return cookies.find((cookie) => cookie?.startsWith('engvocab.refreshToken='));
+}
+
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -35,7 +42,8 @@ describe('AuthController (e2e)', () => {
   });
 
   it('registers, logs in, and returns the current user', async () => {
-    const registerResponse = await request(app.getHttpServer())
+    const agent = request.agent(app.getHttpServer());
+    const registerResponse = await agent
       .post('/auth/register')
       .send({
         email,
@@ -45,14 +53,15 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(registerResponse.body.accessToken).toEqual(expect.any(String));
-    expect(registerResponse.body.refreshToken).toEqual(expect.any(String));
+    expect(registerResponse.body).not.toHaveProperty('refreshToken');
+    expect(getRefreshCookie(registerResponse)).toEqual(expect.any(String));
     expect(registerResponse.body.user).toMatchObject({
       email,
       name: 'Auth E2E',
     });
     expect(registerResponse.body.user).not.toHaveProperty('passwordHash');
 
-    const loginResponse = await request(app.getHttpServer())
+    const loginResponse = await agent
       .post('/auth/login')
       .send({
         email,
@@ -61,7 +70,8 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(loginResponse.body.accessToken).toEqual(expect.any(String));
-    expect(loginResponse.body.refreshToken).toEqual(expect.any(String));
+    expect(loginResponse.body).not.toHaveProperty('refreshToken');
+    expect(getRefreshCookie(loginResponse)).toEqual(expect.any(String));
     expect(loginResponse.body.user).not.toHaveProperty('passwordHash');
 
     await request(app.getHttpServer())
@@ -76,35 +86,22 @@ describe('AuthController (e2e)', () => {
         expect(response.body).not.toHaveProperty('passwordHash');
       });
 
-    const refreshResponse = await request(app.getHttpServer())
+    const refreshResponse = await agent
       .post('/auth/refresh')
-      .send({
-        refreshToken: loginResponse.body.refreshToken,
-      })
       .expect(201);
 
     expect(refreshResponse.body.accessToken).toEqual(expect.any(String));
-    expect(refreshResponse.body.refreshToken).toEqual(expect.any(String));
-    expect(refreshResponse.body.refreshToken).not.toBe(
-      loginResponse.body.refreshToken,
-    );
+    expect(refreshResponse.body).not.toHaveProperty('refreshToken');
+    expect(getRefreshCookie(refreshResponse)).toEqual(expect.any(String));
 
-    await request(app.getHttpServer())
+    await agent
       .post('/auth/logout')
-      .send({
-        refreshToken: refreshResponse.body.refreshToken,
-      })
       .expect(201)
       .expect((response) => {
         expect(response.body).toEqual({ success: true });
       });
 
-    await request(app.getHttpServer())
-      .post('/auth/refresh')
-      .send({
-        refreshToken: refreshResponse.body.refreshToken,
-      })
-      .expect(401);
+    await agent.post('/auth/refresh').expect(401);
   });
 
   it('keeps refresh sessions independent across devices', async () => {
@@ -117,7 +114,10 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    const firstLoginResponse = await request(app.getHttpServer())
+    const firstAgent = request.agent(app.getHttpServer());
+    const secondAgent = request.agent(app.getHttpServer());
+
+    const firstLoginResponse = await firstAgent
       .post('/auth/login')
       .send({
         email,
@@ -125,7 +125,7 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    const secondLoginResponse = await request(app.getHttpServer())
+    const secondLoginResponse = await secondAgent
       .post('/auth/login')
       .send({
         email,
@@ -133,33 +133,21 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    expect(firstLoginResponse.body.refreshToken).not.toBe(
-      secondLoginResponse.body.refreshToken,
+    expect(getRefreshCookie(firstLoginResponse)).not.toBe(
+      getRefreshCookie(secondLoginResponse),
     );
 
-    await request(app.getHttpServer())
-      .post('/auth/logout')
-      .send({
-        refreshToken: firstLoginResponse.body.refreshToken,
-      })
-      .expect(201);
+    await firstAgent.post('/auth/logout').expect(201);
 
-    await request(app.getHttpServer())
-      .post('/auth/refresh')
-      .send({
-        refreshToken: firstLoginResponse.body.refreshToken,
-      })
-      .expect(401);
+    await firstAgent.post('/auth/refresh').expect(401);
 
-    await request(app.getHttpServer())
+    await secondAgent
       .post('/auth/refresh')
-      .send({
-        refreshToken: secondLoginResponse.body.refreshToken,
-      })
       .expect(201)
       .expect((response) => {
         expect(response.body.accessToken).toEqual(expect.any(String));
-        expect(response.body.refreshToken).toEqual(expect.any(String));
+        expect(response.body).not.toHaveProperty('refreshToken');
+        expect(getRefreshCookie(response)).toEqual(expect.any(String));
       });
   });
 
