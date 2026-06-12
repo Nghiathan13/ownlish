@@ -21,19 +21,14 @@ import {
   optimisticallyRemoveFromReviewQueue,
   restoreReviewQueue,
 } from "@/entities/vocab/lib/reviewQueueCache";
-import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
+import {
+  getVocabQueryKey,
+  invalidateVocabMutationQueries,
+  type VocabPageState,
+} from "@/entities/vocab/lib/vocabCache";
 import { ApiError, isUnauthorizedError } from "@/shared/api/http";
 
 const VOCABULARY_PAGE_SIZE = 50;
-
-type VocabPageState = {
-  offset: number;
-  search: string;
-};
-
-function getVocabQueryKey(userId: string | null, pageState: VocabPageState) {
-  return ["vocab", { userId, search: pageState.search, offset: pageState.offset }] as const;
-}
 
 type UseVocabularyWordsParams = {
   accessToken: string | null;
@@ -137,9 +132,7 @@ export function useVocabularyWords({
           },
         );
       }
-      queryClient.invalidateQueries({ queryKey: ["vocab"] });
-      queryClient.invalidateQueries({ queryKey: ["review-queue"] });
-      queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
+      invalidateVocabMutationQueries(queryClient, userId);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -203,9 +196,7 @@ export function useVocabularyWords({
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["vocab"] });
-      queryClient.invalidateQueries({ queryKey: ["review-queue"] });
-      queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
+      invalidateVocabMutationQueries(queryClient, userId);
     },
   });
 
@@ -272,9 +263,7 @@ export function useVocabularyWords({
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["vocab"] });
-      queryClient.invalidateQueries({ queryKey: ["review-queue"] });
-      queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
+      invalidateVocabMutationQueries(queryClient, userId);
     },
   });
 
