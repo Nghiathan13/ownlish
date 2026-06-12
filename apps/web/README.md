@@ -43,7 +43,8 @@ pnpm build
 
 ## Deployment
 
-The recommended production host is Vercel through Git integration.
+The recommended production host is Vercel through Git integration. The
+production web app talks to the Railway API, which uses Supabase Postgres.
 
 Set this environment variable in the Vercel project:
 
@@ -58,12 +59,37 @@ environment so browser requests are allowed:
 CORS_ORIGIN=https://<web-production-url>
 ```
 
+For cross-site refresh-token cookies between Vercel and Railway, the backend
+must also use:
+
+```env
+REFRESH_TOKEN_COOKIE_SECURE=true
+REFRESH_TOKEN_COOKIE_SAME_SITE=none
+```
+
 Use the default Vercel build settings:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm build
 ```
+
+## Production Smoke Test
+
+After deploying the web and API:
+
+- Register a new account.
+- Log in and reload the page; the session should restore through the HttpOnly
+  refresh-token cookie.
+- Add, edit, delete, and search vocabulary words.
+- Complete review actions with Remember/Forgot.
+- Log out; refresh should no longer restore the session.
+
+In browser DevTools:
+
+- `localStorage` should not contain access or refresh tokens.
+- The refresh cookie should be HttpOnly, Secure, and SameSite=None on the API
+  domain.
 
 ## Current Scope
 
