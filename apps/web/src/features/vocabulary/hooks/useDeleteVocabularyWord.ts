@@ -100,7 +100,11 @@ export function useDeleteVocabularyWord({
       }
     },
     onSettled: () => {
-      invalidateVocabMutationQueries(queryClient, userId);
+      invalidateVocabMutationQueries({
+        queryClient,
+        userId,
+        vocabQueryKey: queryKey,
+      });
     },
   });
 

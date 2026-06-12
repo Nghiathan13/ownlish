@@ -1,4 +1,5 @@
-import type { QueryClient } from "@tanstack/react-query";
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import { getReviewQueueQueryKey } from "./reviewQueueCache";
 import { getVocabStatsQueryKey } from "./vocabStatsCache";
 
 export type VocabPageState = {
@@ -16,11 +17,28 @@ export function getVocabQueryKey(
   ] as const;
 }
 
-export function invalidateVocabMutationQueries(
-  queryClient: QueryClient,
-  userId: string | null,
-) {
-  void queryClient.invalidateQueries({ queryKey: ["vocab"] });
-  void queryClient.invalidateQueries({ queryKey: ["review-queue"] });
-  void queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
+export function getVocabUserQueryKey(userId: string | null) {
+  return ["vocab", { userId }] as const;
+}
+
+type InvalidateVocabMutationQueriesParams = {
+  queryClient: QueryClient;
+  userId: string | null;
+  vocabQueryKey: QueryKey;
+};
+
+export function invalidateVocabMutationQueries({
+  queryClient,
+  userId,
+  vocabQueryKey,
+}: InvalidateVocabMutationQueriesParams) {
+  void queryClient.invalidateQueries({ queryKey: vocabQueryKey, exact: true });
+  void queryClient.invalidateQueries({
+    queryKey: getReviewQueueQueryKey(userId),
+    exact: true,
+  });
+  void queryClient.invalidateQueries({
+    queryKey: getVocabStatsQueryKey(userId),
+    exact: true,
+  });
 }

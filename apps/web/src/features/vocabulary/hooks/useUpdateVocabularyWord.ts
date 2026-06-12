@@ -75,7 +75,11 @@ export function useUpdateVocabularyWord({
       });
     },
     onSettled: () => {
-      invalidateVocabMutationQueries(queryClient, userId);
+      invalidateVocabMutationQueries({
+        queryClient,
+        userId,
+        vocabQueryKey: queryKey,
+      });
     },
   });
 

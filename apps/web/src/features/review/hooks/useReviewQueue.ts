@@ -12,6 +12,7 @@ import {
   optimisticallyRemoveFromReviewQueue,
   restoreReviewQueue,
 } from "@/entities/vocab/lib/reviewQueueCache";
+import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { ApiError } from "@/shared/api/http";
@@ -85,7 +86,7 @@ export function useReviewQueue({
       restoreReviewQueue(queryClient, userId, context?.previousQueue);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["vocab"] });
+      queryClient.invalidateQueries({ queryKey: getVocabUserQueryKey(userId) });
       queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
     },
   });

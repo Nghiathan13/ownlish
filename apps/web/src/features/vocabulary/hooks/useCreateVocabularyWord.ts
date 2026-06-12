@@ -56,7 +56,11 @@ export function useCreateVocabularyWord({
         );
       }
 
-      invalidateVocabMutationQueries(queryClient, userId);
+      invalidateVocabMutationQueries({
+        queryClient,
+        userId,
+        vocabQueryKey: queryKey,
+      });
     },
   });
 
