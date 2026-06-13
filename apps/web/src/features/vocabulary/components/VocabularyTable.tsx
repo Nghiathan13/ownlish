@@ -186,14 +186,16 @@ function DefinitionMeaningCell({
     return <span className="text-muted-foreground">-</span>;
   }
 
+  const meaning = definition.meaningVi || definition.definition || "-";
+
   return (
-    <div className="grid gap-1">
+    <div className="flex items-start justify-between gap-3">
+      <p className="min-w-0 flex-1 break-words">{meaning}</p>
       {definition.band ? (
-        <span className="inline-flex w-fit rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+        <span className="inline-flex shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
           {definition.band}
         </span>
       ) : null}
-      <p>{definition.meaningVi || definition.definition || "-"}</p>
     </div>
   );
 }
