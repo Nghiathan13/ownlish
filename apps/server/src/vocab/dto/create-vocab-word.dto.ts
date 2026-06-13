@@ -18,7 +18,12 @@ export class CreateVocabWordDto {
   @IsOptional()
   @IsString()
   @MaxLength(120)
-  ipa?: string;
+  ipaUk?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  ipaUs?: string;
 
   @IsOptional()
   @IsString()
@@ -39,6 +44,11 @@ export class CreateVocabWordDto {
   @IsString()
   @MaxLength(1000)
   example?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  exampleVi?: string;
 
   @IsOptional()
   @IsString()

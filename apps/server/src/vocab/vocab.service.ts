@@ -466,8 +466,14 @@ export class VocabService {
       ...(input.band !== undefined
         ? { band: normalizeOptionalText(input.band) }
         : {}),
-      ...(input.ipa !== undefined
-        ? { ipaUk: normalizeOptionalText(input.ipa) }
+      ...(input.ipaUk !== undefined
+        ? { ipaUk: normalizeOptionalText(input.ipaUk) }
+        : {}),
+      ...(input.ipaUs !== undefined
+        ? { ipaUs: normalizeOptionalText(input.ipaUs) }
+        : {}),
+      ...(input.exampleVi !== undefined
+        ? { exampleVi: normalizeOptionalText(input.exampleVi) }
         : {}),
       ...(input.level !== undefined ? { level: input.level } : {}),
       ...(input.wrongCount !== undefined
@@ -485,7 +491,9 @@ export class VocabService {
       meaningVi: normalizeOptionalText(input.meaningVi),
       definition: normalizeOptionalText(input.definition),
       example: normalizeOptionalText(input.example),
-      ipaUk: normalizeOptionalText(input.ipa),
+      exampleVi: normalizeOptionalText(input.exampleVi),
+      ipaUk: normalizeOptionalText(input.ipaUk),
+      ipaUs: normalizeOptionalText(input.ipaUs),
       band: normalizeOptionalText(input.band),
       level: input.level ?? 0,
       wrongCount: input.wrongCount ?? 0,
@@ -498,7 +506,9 @@ export class VocabService {
       input.meaningVi !== undefined ||
       input.definition !== undefined ||
       input.example !== undefined ||
-      input.ipa !== undefined ||
+      input.exampleVi !== undefined ||
+      input.ipaUk !== undefined ||
+      input.ipaUs !== undefined ||
       input.band !== undefined ||
       input.level !== undefined ||
       input.wrongCount !== undefined

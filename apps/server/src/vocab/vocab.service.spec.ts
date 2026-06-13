@@ -278,6 +278,44 @@ describe('VocabService', () => {
     );
   });
 
+  it('creates a word with extended manual definition fields', async () => {
+    prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
+
+    await service.create('user-id', {
+      word: 'account',
+      type: 'noun',
+      ipaUk: '/əˈkaʊnt/',
+      ipaUs: '/əˈkaʊnt/',
+      meaningVi: 'tai khoan',
+      definition: 'an arrangement with a bank',
+      example: 'I opened a bank account.',
+      exampleVi: 'Toi da mo tai khoan ngan hang.',
+      band: 'A1',
+    });
+
+    expect(prismaMock.vocabWord.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-id',
+        word: 'account',
+        normalizedWord: 'account',
+        definitions: {
+          create: expect.objectContaining({
+            source: 'manual',
+            type: 'noun',
+            ipaUk: '/əˈkaʊnt/',
+            ipaUs: '/əˈkaʊnt/',
+            meaningVi: 'tai khoan',
+            definition: 'an arrangement with a bank',
+            example: 'I opened a bank account.',
+            exampleVi: 'Toi da mo tai khoan ngan hang.',
+            band: 'A1',
+          }),
+        },
+      },
+      include: expect.objectContaining({ definitions: expect.any(Object) }),
+    });
+  });
+
   it('creates a word with normalized word and manual definition', async () => {
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
