@@ -3,9 +3,11 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
+import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { Field } from "@/shared/ui/Field";
 import { Panel } from "@/shared/ui/Panel";
+import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 import { TextInput } from "@/shared/ui/TextInput";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { getAuthValidationError, type AuthMode } from "../lib/authValidation";
@@ -81,7 +83,10 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
   }
 
   return (
-    <Panel className="w-[min(420px,100%)]" aria-labelledby="auth-title">
+    <Panel
+      className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}
+      aria-labelledby="auth-title"
+    >
       <h1 id="auth-title" className="text-3xl font-bold leading-tight">
         {isRegister ? "Create account" : "Sign in"}
       </h1>

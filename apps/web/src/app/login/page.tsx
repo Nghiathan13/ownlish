@@ -5,8 +5,10 @@ import { Suspense, useEffect } from "react";
 import { AuthForm } from "@/features/auth/components/AuthForm";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { getSafeAuthRedirectPath } from "@/features/auth/lib/authRedirect";
+import { classNames } from "@/shared/lib/classNames";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
+import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 
 export default function LoginPage() {
   return (
@@ -42,7 +44,7 @@ function LoginPageContent() {
 function LoginPageStatus() {
   return (
     <PageShell centered>
-      <Panel className="w-[min(420px,100%)]">
+      <Panel className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}>
         <p className="text-muted-foreground">Checking your session...</p>
       </Panel>
     </PageShell>

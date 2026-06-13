@@ -7,6 +7,7 @@ import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import { classNames } from "@/shared/lib/classNames";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
+import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 
 const actionLinkClassName =
   "inline-flex items-center justify-center rounded-lg border px-3.5 py-2.5 text-sm font-semibold transition";
@@ -28,7 +29,7 @@ export function HomeDashboard() {
   if (status === "checking") {
     return (
       <PageShell centered>
-        <Panel className="w-[min(420px,100%)]">
+        <Panel className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}>
           <p className="text-muted-foreground">Checking your session...</p>
         </Panel>
       </PageShell>

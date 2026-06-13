@@ -20,7 +20,7 @@ export function VocabularyTable({
 
   return (
     <>
-      <div className="grid gap-3 p-3 md:hidden">
+      <div className="grid gap-3 md:hidden">
         {words.map((word) => {
           const wordRows = expandWordsToDefinitionRows([word]);
 
@@ -66,25 +66,12 @@ export function VocabularyTable({
                         </div>
                       </dl>
                       {definition ? (
-                        <div className="flex gap-3">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => onEdit(row.word, definition)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            disabled={deletingDefinitionId === definition.id}
-                            onClick={() => onDelete(row.word, definition)}
-                          >
-                            {deletingDefinitionId === definition.id
-                              ? "Deleting..."
-                              : "Delete"}
-                          </Button>
-                        </div>
+                        <DefinitionActionsCell
+                          definition={definition}
+                          deletingDefinitionId={deletingDefinitionId}
+                          onDelete={() => onDelete(row.word, definition)}
+                          onEdit={() => onEdit(row.word, definition)}
+                        />
                       ) : null}
                     </div>
                   );
@@ -95,15 +82,14 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden min-w-[760px] w-full border-collapse text-left text-sm md:table">
+      <table className="hidden min-w-[680px] w-full border-collapse text-left text-sm md:table">
         <thead className="border-b border-border bg-muted">
           <tr>
             <th className="px-4 py-3 font-semibold">Word</th>
             <th className="px-4 py-3 font-semibold">Type</th>
             <th className="px-4 py-3 font-semibold">Meaning</th>
             <th className="px-4 py-3 font-semibold">Next review</th>
-            <th className="px-4 py-3 font-semibold">Edit</th>
-            <th className="px-4 py-3 font-semibold">Delete</th>
+            <th className="px-4 py-3 font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -134,29 +120,12 @@ export function VocabularyTable({
                 </td>
                 <td className="px-4 py-3 align-middle">
                   {definition ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => onEdit(row.word, definition)}
-                    >
-                      Edit
-                    </Button>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 align-middle">
-                  {definition ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={deletingDefinitionId === definition.id}
-                      onClick={() => onDelete(row.word, definition)}
-                    >
-                      {deletingDefinitionId === definition.id
-                        ? "Deleting..."
-                        : "Delete"}
-                    </Button>
+                    <DefinitionActionsCell
+                      definition={definition}
+                      deletingDefinitionId={deletingDefinitionId}
+                      onDelete={() => onDelete(row.word, definition)}
+                      onEdit={() => onEdit(row.word, definition)}
+                    />
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
@@ -176,6 +145,34 @@ function getDefinitionRowKey(row: {
   definitionIndex: number;
 }) {
   return `${row.word.id}-${row.definition?.id ?? "empty"}-${row.definitionIndex}`;
+}
+
+function DefinitionActionsCell({
+  definition,
+  deletingDefinitionId,
+  onDelete,
+  onEdit,
+}: {
+  definition: VocabWordDefinition;
+  deletingDefinitionId: string | null;
+  onDelete: () => void;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button type="button" variant="secondary" onClick={onEdit}>
+        Edit
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={deletingDefinitionId === definition.id}
+        onClick={onDelete}
+      >
+        {deletingDefinitionId === definition.id ? "Deleting..." : "Delete"}
+      </Button>
+    </div>
+  );
 }
 
 function DefinitionTypeCell({
