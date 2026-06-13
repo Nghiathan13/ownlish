@@ -38,55 +38,55 @@ export function VocabularyTable({
                   const definition = row.definition;
 
                   return (
-                  <div key={getDefinitionRowKey(row)} className="grid gap-3">
-                    <dl className="grid grid-cols-3 gap-3">
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Type
-                        </dt>
-                        <dd className="mt-1">
-                          <DefinitionTypeCell definition={row.definition} />
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Meaning
-                        </dt>
-                        <dd className="mt-1">
-                          <DefinitionMeaningCell definition={row.definition} />
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Next review
-                        </dt>
-                        <dd className="mt-1 text-muted-foreground">
-                          <DefinitionNextReviewCell definition={row.definition} />
-                        </dd>
-                      </div>
-                    </dl>
-                    {definition ? (
-                      <div className="flex gap-3">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => onEdit(row.word, definition)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={deletingDefinitionId === definition.id}
-                          onClick={() => onDelete(row.word, definition)}
-                        >
-                          {deletingDefinitionId === definition.id
-                            ? "Deleting..."
-                            : "Delete"}
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
+                    <div key={getDefinitionRowKey(row)} className="grid gap-3">
+                      <dl className="grid grid-cols-3 gap-3">
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Type
+                          </dt>
+                          <dd className="mt-1">
+                            <DefinitionTypeCell definition={row.definition} />
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Meaning
+                          </dt>
+                          <dd className="mt-1">
+                            <DefinitionMeaningCell definition={row.definition} />
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Next review
+                          </dt>
+                          <dd className="mt-1 text-muted-foreground">
+                            <DefinitionNextReviewCell definition={row.definition} />
+                          </dd>
+                        </div>
+                      </dl>
+                      {definition ? (
+                        <div className="flex gap-3">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => onEdit(row.word, definition)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            disabled={deletingDefinitionId === definition.id}
+                            onClick={() => onDelete(row.word, definition)}
+                          >
+                            {deletingDefinitionId === definition.id
+                              ? "Deleting..."
+                              : "Delete"}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
                   );
                 })}
               </div>
@@ -111,57 +111,57 @@ export function VocabularyTable({
             const definition = row.definition;
 
             return (
-            <tr
-              key={getDefinitionRowKey(row)}
-              className={row.isLastInWord ? "border-b border-border" : undefined}
-            >
-              {row.isFirstInWord ? (
-                <td
-                  className="px-4 py-3 align-middle font-semibold"
-                  rowSpan={row.definitionCount}
-                >
-                  {row.word.word}
+              <tr
+                key={getDefinitionRowKey(row)}
+                className={row.isLastInWord ? "border-b border-border" : undefined}
+              >
+                {row.isFirstInWord ? (
+                  <td
+                    className="px-4 py-3 align-middle font-semibold"
+                    rowSpan={row.definitionCount}
+                  >
+                    {row.word.word}
+                  </td>
+                ) : null}
+                <td className="px-4 py-3 align-middle">
+                  <DefinitionTypeCell definition={row.definition} />
                 </td>
-              ) : null}
-              <td className="px-4 py-3 align-middle">
-                <DefinitionTypeCell definition={row.definition} />
-              </td>
-              <td className="px-4 py-3 align-middle">
-                <DefinitionMeaningCell definition={row.definition} />
-              </td>
-              <td className="px-4 py-3 align-middle text-muted-foreground">
-                <DefinitionNextReviewCell definition={row.definition} />
-              </td>
-              <td className="px-4 py-3 align-middle">
-                {definition ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => onEdit(row.word, definition)}
-                  >
-                    Edit
-                  </Button>
-                ) : (
-                  <span className="text-muted-foreground">-</span>
-                )}
-              </td>
-              <td className="px-4 py-3 align-middle">
-                {definition ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={deletingDefinitionId === definition.id}
-                    onClick={() => onDelete(row.word, definition)}
-                  >
-                    {deletingDefinitionId === definition.id
-                      ? "Deleting..."
-                      : "Delete"}
-                  </Button>
-                ) : (
-                  <span className="text-muted-foreground">-</span>
-                )}
-              </td>
-            </tr>
+                <td className="px-4 py-3 align-middle">
+                  <DefinitionMeaningCell definition={row.definition} />
+                </td>
+                <td className="px-4 py-3 align-middle text-muted-foreground">
+                  <DefinitionNextReviewCell definition={row.definition} />
+                </td>
+                <td className="px-4 py-3 align-middle">
+                  {definition ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => onEdit(row.word, definition)}
+                    >
+                      Edit
+                    </Button>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 align-middle">
+                  {definition ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={deletingDefinitionId === definition.id}
+                      onClick={() => onDelete(row.word, definition)}
+                    >
+                      {deletingDefinitionId === definition.id
+                        ? "Deleting..."
+                        : "Delete"}
+                    </Button>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </td>
+              </tr>
             );
           })}
         </tbody>

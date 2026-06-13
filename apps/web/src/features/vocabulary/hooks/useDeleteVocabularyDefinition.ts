@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useMutation, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import {
   deleteVocabDefinition,
+  type DeleteVocabDefinitionResult,
   type VocabWord,
   type VocabWordDefinition,
   type VocabWordListResponse,
@@ -48,7 +49,7 @@ export function useDeleteVocabularyDefinition({
     variables: deleteMutationVariables,
   } = useMutation({
     mutationFn: ({ definition }: DeleteVocabularyDefinitionTarget) => {
-      return runAuthenticatedRequest({
+      return runAuthenticatedRequest<DeleteVocabDefinitionResult>({
         accessToken,
         clearSession,
         request: (token) => deleteVocabDefinition(token, definition.id),
@@ -116,7 +117,7 @@ export function useDeleteVocabularyDefinition({
       }
       restoreReviewQueue(queryClient, userId, context?.previousReviewQueue);
     },
-    onSuccess: (_, __, context) => {
+    onSuccess: (_result, _target, context) => {
       const stillOnSamePage = pageState.offset === context?.offsetAtStart;
       const isLastWordOnPage = context?.wordCountAtStart === 1;
 

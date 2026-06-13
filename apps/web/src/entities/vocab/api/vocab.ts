@@ -95,6 +95,19 @@ export type UpdateVocabReviewInput = {
   nextReview: string | null;
 };
 
+export type DeleteVocabDefinitionResult =
+  | {
+      deletedDefinitionId: string;
+      vocabWordId: string;
+      wordRemoved: false;
+      word: VocabWord;
+    }
+  | {
+      deletedDefinitionId: string;
+      vocabWordId: string;
+      wordRemoved: true;
+    };
+
 type ListVocabWordsParams = {
   limit?: number;
   offset?: number;
@@ -301,6 +314,45 @@ function parseVocabStats(body: unknown): VocabStats {
   };
 }
 
+function parseDeleteVocabDefinitionResult(
+  body: unknown,
+): DeleteVocabDefinitionResult {
+  if (!isRecord(body)) invalidApiResponse();
+
+  const { deletedDefinitionId, vocabWordId, wordRemoved, word } = body;
+
+  if (
+    !isString(deletedDefinitionId) ||
+    !isString(vocabWordId) ||
+    !isBoolean(wordRemoved)
+  ) {
+    invalidApiResponse();
+  }
+
+  if (wordRemoved) {
+    if (word !== undefined) {
+      invalidApiResponse();
+    }
+
+    return {
+      deletedDefinitionId,
+      vocabWordId,
+      wordRemoved: true,
+    };
+  }
+
+  if (!isRecord(word)) {
+    invalidApiResponse();
+  }
+
+  return {
+    deletedDefinitionId,
+    vocabWordId,
+    wordRemoved: false,
+    word: parseVocabWord(word),
+  };
+}
+
 function buildVocabQuery(params: ListVocabWordsParams = {}) {
   const searchParams = new URLSearchParams();
 
@@ -375,7 +427,7 @@ export function deleteVocabDefinition(token: string, definitionId: string) {
   return apiRequest(`/vocab/definitions/${definitionId}`, {
     method: "DELETE",
     token,
-  }).then(parseVocabWord);
+  }).then(parseDeleteVocabDefinitionResult);
 }
 
 export function deleteVocabWord(token: string, id: string) {
