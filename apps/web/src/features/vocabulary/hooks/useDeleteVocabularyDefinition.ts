@@ -1,8 +1,9 @@
 import { useCallback } from "react";
 import { useMutation, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import {
-  deleteVocabWord,
+  deleteVocabDefinition,
   type VocabWord,
+  type VocabWordDefinition,
   type VocabWordListResponse,
 } from "@/entities/vocab/api/vocab";
 import {
@@ -15,7 +16,12 @@ import {
 } from "@/entities/vocab/lib/vocabCache";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
-type UseDeleteVocabularyWordParams = {
+export type DeleteVocabularyDefinitionTarget = {
+  word: VocabWord;
+  definition: VocabWordDefinition;
+};
+
+type UseDeleteVocabularyDefinitionParams = {
   accessToken: string | null;
   clearSession: () => void;
   moveBackOnePage: () => void;
@@ -26,7 +32,7 @@ type UseDeleteVocabularyWordParams = {
   words: VocabWord[];
 };
 
-export function useDeleteVocabularyWord({
+export function useDeleteVocabularyDefinition({
   accessToken,
   clearSession,
   moveBackOnePage,
@@ -35,34 +41,56 @@ export function useDeleteVocabularyWord({
   queryKey,
   userId,
   words,
-}: UseDeleteVocabularyWordParams) {
+}: UseDeleteVocabularyDefinitionParams) {
   const {
-    mutateAsync: deleteWordMutation,
-    isPending: isDeletingWord,
+    mutateAsync: deleteDefinitionMutation,
+    isPending: isDeletingDefinition,
     variables: deleteMutationVariables,
   } = useMutation({
-    mutationFn: (wordToDelete: VocabWord) => {
+    mutationFn: ({ definition }: DeleteVocabularyDefinitionTarget) => {
       return runAuthenticatedRequest({
         accessToken,
         clearSession,
-        request: (token) => deleteVocabWord(token, wordToDelete.id),
+        request: (token) => deleteVocabDefinition(token, definition.id),
       });
     },
-    onMutate: async (wordToDelete) => {
+    onMutate: async ({ word, definition }) => {
       const offsetAtStart = pageState.offset;
       const wordCountAtStart = words.length;
+      const removesWordFromList = word.definitions.length === 1;
+
       await queryClient.cancelQueries({ queryKey });
       const previousVocab =
         queryClient.getQueryData<VocabWordListResponse>(queryKey);
 
       queryClient.setQueryData<VocabWordListResponse>(queryKey, (oldData) => {
         if (!oldData) return oldData;
+
+        const nextItems = oldData.items
+          .map((item) => {
+            if (item.id !== word.id) {
+              return item;
+            }
+
+            const nextDefinitions = item.definitions.filter(
+              (itemDefinition) => itemDefinition.id !== definition.id,
+            );
+
+            return {
+              ...item,
+              definitions: nextDefinitions,
+            };
+          })
+          .filter((item) => item.definitions.length > 0);
+
         return {
           ...oldData,
-          items: oldData.items.filter((word) => word.id !== wordToDelete.id),
+          items: nextItems,
           meta: {
             ...oldData.meta,
-            total: Math.max(0, oldData.meta.total - 1),
+            total: removesWordFromList
+              ? Math.max(0, oldData.meta.total - 1)
+              : oldData.meta.total,
           },
         };
       });
@@ -70,7 +98,7 @@ export function useDeleteVocabularyWord({
       const previousReviewQueue = await optimisticallyRemoveFromReviewQueue(
         queryClient,
         userId,
-        wordToDelete.id,
+        definition.id,
       );
 
       return {
@@ -79,9 +107,10 @@ export function useDeleteVocabularyWord({
         offsetAtStart,
         wordCountAtStart,
         previousReviewQueue,
+        removesWordFromList,
       };
     },
-    onError: (error, wordToDelete, context) => {
+    onError: (_error, _target, context) => {
       if (context?.previousVocab && context.queryKey) {
         queryClient.setQueryData(context.queryKey, context.previousVocab);
       }
@@ -89,10 +118,11 @@ export function useDeleteVocabularyWord({
     },
     onSuccess: (_, __, context) => {
       const stillOnSamePage = pageState.offset === context?.offsetAtStart;
-      const isLastItemOnPage = context?.wordCountAtStart === 1;
+      const isLastWordOnPage = context?.wordCountAtStart === 1;
 
       if (
-        isLastItemOnPage &&
+        context?.removesWordFromList &&
+        isLastWordOnPage &&
         (context?.offsetAtStart ?? 0) > 0 &&
         stillOnSamePage
       ) {
@@ -108,15 +138,17 @@ export function useDeleteVocabularyWord({
     },
   });
 
-  const deleteWord = useCallback(
-    async (wordToDelete: VocabWord) => {
-      await deleteWordMutation(wordToDelete);
+  const deleteDefinition = useCallback(
+    async (target: DeleteVocabularyDefinitionTarget) => {
+      await deleteDefinitionMutation(target);
     },
-    [deleteWordMutation],
+    [deleteDefinitionMutation],
   );
 
   return {
-    deleteWord,
-    deletingWordId: isDeletingWord ? deleteMutationVariables?.id ?? null : null,
+    deleteDefinition,
+    deletingDefinitionId: isDeletingDefinition
+      ? deleteMutationVariables?.definition.id ?? null
+      : null,
   };
 }

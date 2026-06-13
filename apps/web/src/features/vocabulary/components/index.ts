@@ -1,5 +1,5 @@
 export { AddWordForm } from "./AddWordForm";
-export { DeleteWordConfirm } from "./DeleteWordConfirm";
+export { DeleteDefinitionConfirm } from "./DeleteDefinitionConfirm";
 export { EditWordPanel } from "./EditWordPanel";
 export { VocabularyPagination } from "./VocabularyPagination";
 export { VocabularySearch } from "./VocabularySearch";

@@ -371,6 +371,13 @@ export function updateVocabReview(
   }).then(parseVocabReviewItem);
 }
 
+export function deleteVocabDefinition(token: string, definitionId: string) {
+  return apiRequest(`/vocab/definitions/${definitionId}`, {
+    method: "DELETE",
+    token,
+  }).then(parseVocabWord);
+}
+
 export function deleteVocabWord(token: string, id: string) {
   return apiRequest(`/vocab/${id}`, {
     method: "DELETE",

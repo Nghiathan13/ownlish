@@ -123,9 +123,13 @@ export function toCreateVocabWordInput(
 export function toUpdateVocabWordInput(
   values: VocabWordFormValues,
   definitionId: string,
+  options?: { lockWord?: boolean },
 ): UpdateVocabWordInput {
+  const definitionFields = toDefinitionInputFields(values);
+
   return {
-    ...toCreateVocabWordInput(values),
+    ...(options?.lockWord ? {} : { word: values.word.trim() }),
+    ...definitionFields,
     definitionId,
   };
 }

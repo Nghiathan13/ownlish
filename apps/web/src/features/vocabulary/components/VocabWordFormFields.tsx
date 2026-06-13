@@ -8,12 +8,14 @@ import { Textarea } from "@/shared/ui/Textarea";
 
 type VocabWordFormFieldsProps = {
   disabled?: boolean;
+  disableWordField?: boolean;
   onChange: (field: keyof VocabWordFormValues, value: string) => void;
   values: VocabWordFormValues;
 };
 
 export function VocabWordFormFields({
   disabled = false,
+  disableWordField = false,
   onChange,
   values,
 }: VocabWordFormFieldsProps) {
@@ -26,7 +28,7 @@ export function VocabWordFormFields({
             onChange={(event) => onChange("word", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.word}
             required
-            disabled={disabled}
+            disabled={disabled || disableWordField}
           />
         </Field>
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { VocabWord } from "@/entities/vocab/api/vocab";
+import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import {
   AddWordForm,
-  DeleteWordConfirm,
+  DeleteDefinitionConfirm,
   EditWordPanel,
   VocabularyPagination,
   VocabularySearch,
@@ -41,8 +41,8 @@ function VocabularyPageContent() {
     canGoNext,
     canGoPrevious,
     createWord,
-    deleteWord,
-    deletingWordId,
+    deleteDefinition,
+    deletingDefinitionId,
     isInitialLoading,
     isRefreshing,
     loadError,
@@ -65,9 +65,10 @@ function VocabularyPageContent() {
   const [editingTarget, setEditingTarget] = useState<EditingTarget | null>(
     null,
   );
-  const [wordPendingDelete, setWordPendingDelete] = useState<VocabWord | null>(
-    null,
-  );
+  const [definitionPendingDelete, setDefinitionPendingDelete] = useState<{
+    word: VocabWord;
+    definition: VocabWordDefinition;
+  } | null>(null);
 
   return (
     <PageShell>
@@ -112,20 +113,23 @@ function VocabularyPageContent() {
 
         <VocabularySearch search={search} onSearchChange={setSearch} />
 
-        {wordPendingDelete ? (
+        {definitionPendingDelete ? (
           <Modal
-            title="Delete word"
-            description="This action removes the word from your vocabulary."
-            onClose={() => setWordPendingDelete(null)}
+            title="Delete definition"
+            description="This action removes the selected definition from your vocabulary."
+            onClose={() => setDefinitionPendingDelete(null)}
           >
-            <DeleteWordConfirm
-              isDeleting={deletingWordId === wordPendingDelete.id}
-              onCancel={() => setWordPendingDelete(null)}
-              onConfirm={async (word) => {
-                await deleteWord(word);
-                setWordPendingDelete(null);
+            <DeleteDefinitionConfirm
+              definition={definitionPendingDelete.definition}
+              isDeleting={
+                deletingDefinitionId === definitionPendingDelete.definition.id
+              }
+              onCancel={() => setDefinitionPendingDelete(null)}
+              onConfirm={async (word, definition) => {
+                await deleteDefinition({ word, definition });
+                setDefinitionPendingDelete(null);
               }}
-              word={wordPendingDelete}
+              word={definitionPendingDelete.word}
             />
           </Modal>
         ) : null}
@@ -146,8 +150,10 @@ function VocabularyPageContent() {
               }`}
             >
               <VocabularyTable
-                deletingWordId={deletingWordId}
-                onDelete={setWordPendingDelete}
+                deletingDefinitionId={deletingDefinitionId}
+                onDelete={(word, definition) => {
+                  setDefinitionPendingDelete({ word, definition });
+                }}
                 onEdit={(word, definition) => {
                   if (definition) {
                     setEditingTarget({

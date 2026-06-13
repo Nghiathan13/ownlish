@@ -126,6 +126,29 @@ describe("vocab word form mappers", () => {
     });
   });
 
+  it("omits word from update input when word is locked", () => {
+    expect(
+      toUpdateVocabWordInput(
+        makeValues({
+          word: " edited ",
+          meaningVi: " sửa ",
+        }),
+        "definition-id",
+        { lockWord: true },
+      ),
+    ).toEqual({
+      type: undefined,
+      ipaUk: undefined,
+      ipaUs: undefined,
+      meaningVi: "sửa",
+      definition: undefined,
+      example: undefined,
+      exampleVi: undefined,
+      band: undefined,
+      definitionId: "definition-id",
+    });
+  });
+
   it("includes definitionId in update input", () => {
     expect(
       toUpdateVocabWordInput(

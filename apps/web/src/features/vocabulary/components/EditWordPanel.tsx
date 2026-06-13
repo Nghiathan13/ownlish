@@ -5,8 +5,10 @@ import type {
   UpdateVocabWordInput,
   VocabWord,
 } from "@/entities/vocab/api/vocab";
+import { isOxfordDefinitionSource } from "@/entities/vocab/lib/vocabSources";
 import { VocabWordFormFields } from "@/features/vocabulary/components/VocabWordFormFields";
 import {
+  getVocabWordDefinition,
   getVocabWordFormError,
   toUpdateVocabWordInput,
   toVocabWordFormValues,
@@ -38,6 +40,10 @@ export function EditWordPanel({
     toVocabWordFormValues(word, definitionId),
   );
   const [error, setError] = useState<string | null>(null);
+  const definition = getVocabWordDefinition(word, definitionId);
+  const lockWord = definition
+    ? isOxfordDefinitionSource(definition.source)
+    : false;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,7 +57,11 @@ export function EditWordPanel({
     }
 
     try {
-      await onUpdate(word, definitionId, toUpdateVocabWordInput(values, definitionId));
+      await onUpdate(
+        word,
+        definitionId,
+        toUpdateVocabWordInput(values, definitionId, { lockWord }),
+      );
 
       onClose();
     } catch (caughtError) {
@@ -86,6 +96,7 @@ export function EditWordPanel({
     >
       <VocabWordFormFields
         disabled={isSubmitting}
+        disableWordField={lockWord}
         onChange={updateValue}
         values={values}
       />

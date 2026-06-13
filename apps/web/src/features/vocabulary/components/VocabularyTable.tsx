@@ -4,14 +4,14 @@ import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
 
 type VocabularyTableProps = {
-  deletingWordId: string | null;
-  onDelete: (word: VocabWord) => void;
+  deletingDefinitionId: string | null;
+  onDelete: (word: VocabWord, definition: VocabWordDefinition) => void;
   onEdit: (word: VocabWord, definition: VocabWordDefinition | null) => void;
   words: VocabWord[];
 };
 
 export function VocabularyTable({
-  deletingWordId,
+  deletingDefinitionId,
   onDelete,
   onEdit,
   words,
@@ -34,7 +34,10 @@ export function VocabularyTable({
               </div>
 
               <div className="grid gap-3 text-sm">
-                {wordRows.map((row) => (
+                {wordRows.map((row) => {
+                  const definition = row.definition;
+
+                  return (
                   <div key={getDefinitionRowKey(row)} className="grid gap-3">
                     <dl className="grid grid-cols-3 gap-3">
                       <div>
@@ -62,28 +65,30 @@ export function VocabularyTable({
                         </dd>
                       </div>
                     </dl>
-                    {row.definition ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => onEdit(row.word, row.definition)}
-                      >
-                        Edit
-                      </Button>
+                    {definition ? (
+                      <div className="flex gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => onEdit(row.word, definition)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={deletingDefinitionId === definition.id}
+                          onClick={() => onDelete(row.word, definition)}
+                        >
+                          {deletingDefinitionId === definition.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </Button>
+                      </div>
                     ) : null}
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-4 border-t border-border pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={deletingWordId === word.id}
-                  onClick={() => onDelete(word)}
-                >
-                  {deletingWordId === word.id ? "Deleting..." : "Delete"}
-                </Button>
+                  );
+                })}
               </div>
             </article>
           );
@@ -102,34 +107,37 @@ export function VocabularyTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {rows.map((row) => {
+            const definition = row.definition;
+
+            return (
             <tr
               key={getDefinitionRowKey(row)}
               className={row.isLastInWord ? "border-b border-border" : undefined}
             >
               {row.isFirstInWord ? (
                 <td
-                  className="px-4 py-3 align-top font-semibold"
+                  className="px-4 py-3 align-middle font-semibold"
                   rowSpan={row.definitionCount}
                 >
                   {row.word.word}
                 </td>
               ) : null}
-              <td className="px-4 py-3 align-top">
+              <td className="px-4 py-3 align-middle">
                 <DefinitionTypeCell definition={row.definition} />
               </td>
-              <td className="px-4 py-3 align-top">
+              <td className="px-4 py-3 align-middle">
                 <DefinitionMeaningCell definition={row.definition} />
               </td>
-              <td className="px-4 py-3 align-top text-muted-foreground">
+              <td className="px-4 py-3 align-middle text-muted-foreground">
                 <DefinitionNextReviewCell definition={row.definition} />
               </td>
-              <td className="px-4 py-3 align-top">
-                {row.definition ? (
+              <td className="px-4 py-3 align-middle">
+                {definition ? (
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => onEdit(row.word, row.definition)}
+                    onClick={() => onEdit(row.word, definition)}
                   >
                     Edit
                   </Button>
@@ -137,22 +145,25 @@ export function VocabularyTable({
                   <span className="text-muted-foreground">-</span>
                 )}
               </td>
-              {row.isFirstInWord ? (
-                <td className="px-4 py-3 align-top" rowSpan={row.definitionCount}>
+              <td className="px-4 py-3 align-middle">
+                {definition ? (
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={deletingWordId === row.word.id}
-                    onClick={() => onDelete(row.word)}
+                    disabled={deletingDefinitionId === definition.id}
+                    onClick={() => onDelete(row.word, definition)}
                   >
-                    {deletingWordId === row.word.id
+                    {deletingDefinitionId === definition.id
                       ? "Deleting..."
                       : "Delete"}
                   </Button>
-                </td>
-              ) : null}
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
+              </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </>

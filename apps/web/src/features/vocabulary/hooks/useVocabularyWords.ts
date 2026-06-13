@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateVocabularyWord } from "./useCreateVocabularyWord";
-import { useDeleteVocabularyWord } from "./useDeleteVocabularyWord";
+import { useDeleteVocabularyDefinition } from "./useDeleteVocabularyDefinition";
 import { useUpdateVocabularyWord } from "./useUpdateVocabularyWord";
 import { useVocabularyListQuery } from "./useVocabularyListQuery";
 import { useVocabularyPageState } from "./useVocabularyPageState";
@@ -73,7 +73,8 @@ export function useVocabularyWords({
     userId,
   });
 
-  const { deleteWord, deletingWordId } = useDeleteVocabularyWord({
+  const { deleteDefinition, deletingDefinitionId } =
+    useDeleteVocabularyDefinition({
     accessToken,
     clearSession,
     moveBackOnePage,
@@ -88,8 +89,8 @@ export function useVocabularyWords({
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
     createWord,
-    deleteWord,
-    deletingWordId,
+    deleteDefinition,
+    deletingDefinitionId,
     isInitialLoading,
     isLoadingWords,
     isRefreshing,
