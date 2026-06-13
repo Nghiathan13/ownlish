@@ -609,18 +609,32 @@ describe('VocabService', () => {
     expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
   });
 
-  it('soft deletes a single definition', async () => {
+  it('does not use legacy word fallback when deleting by definition id', async () => {
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.softDeleteDefinition('user-id', 'word-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prismaMock.vocabWordDefinition.findFirst).toHaveBeenCalledTimes(1);
+    expect(prismaMock.vocabWordDefinition.update).not.toHaveBeenCalled();
+  });
+
+  it('soft deletes the last definition and reports wordRemoved', async () => {
     prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(reviewDefinition);
     prismaMock.vocabWordDefinition.update.mockResolvedValue({
       ...reviewDefinition,
       deletedAt: new Date(),
     });
-    prismaMock.vocabWord.findUnique.mockResolvedValue({
-      ...vocabWord,
-      definitions: [],
-    });
+    prismaMock.vocabWord.findFirst.mockResolvedValue(null);
 
-    await service.softDeleteDefinition('user-id', 'definition-id');
+    await expect(
+      service.softDeleteDefinition('user-id', 'definition-id'),
+    ).resolves.toEqual({
+      deletedDefinitionId: 'definition-id',
+      vocabWordId: 'word-id',
+      wordRemoved: true,
+    });
 
     expect(prismaMock.vocabWordDefinition.update).toHaveBeenCalledWith({
       where: { id: 'definition-id' },
@@ -628,7 +642,34 @@ describe('VocabService', () => {
         deletedAt: expect.any(Date),
       },
     });
-    expect(prismaMock.vocabWordDefinition.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.vocabWord.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('soft deletes one definition and returns the remaining word', async () => {
+    const remainingDefinition = {
+      ...reviewDefinition,
+      id: 'remaining-definition-id',
+    };
+    const wordWithRemainingDefinition = {
+      ...vocabWord,
+      definitions: [remainingDefinition],
+    };
+
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(reviewDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...reviewDefinition,
+      deletedAt: new Date(),
+    });
+    prismaMock.vocabWord.findFirst.mockResolvedValue(wordWithRemainingDefinition);
+
+    await expect(
+      service.softDeleteDefinition('user-id', 'definition-id'),
+    ).resolves.toEqual({
+      deletedDefinitionId: 'definition-id',
+      vocabWordId: 'word-id',
+      wordRemoved: false,
+      word: wordWithRemainingDefinition,
+    });
   });
 
   it('throws not found when deleting missing definition', async () => {

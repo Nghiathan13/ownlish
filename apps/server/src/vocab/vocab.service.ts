@@ -10,6 +10,7 @@ import { ListDueReviewWordsDto } from './dto/list-due-review-words.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
+import type { DeleteVocabDefinitionResponse } from './types/delete-vocab-definition-response.types';
 import { OXFORD_DEFINITION_SOURCES } from '../collections/collections.constants';
 import { normalizeWord } from './lib/normalize-word';
 import { MAX_VOCAB_LEVEL } from './vocab.constants';
@@ -273,11 +274,12 @@ export class VocabService {
   async softDeleteDefinition(
     userId: string,
     definitionId: string,
-  ): Promise<Awaited<UpdatedVocabWordResult>> {
-    const definition = await this.findActiveDefinitionOrThrow(
+  ): Promise<DeleteVocabDefinitionResponse> {
+    const definition = await this.findActiveDefinitionByIdOrThrow(
       userId,
       definitionId,
     );
+    const vocabWordId = definition.vocabWordId;
 
     await this.prisma.vocabWordDefinition.update({
       where: { id: definition.id },
@@ -286,16 +288,26 @@ export class VocabService {
       },
     });
 
-    const word = await this.prisma.vocabWord.findUnique({
-      where: { id: definition.vocabWordId },
-      include: activeDefinitionsInclude,
-    });
+    try {
+      const word = await this.findActiveWordOrThrow(userId, vocabWordId);
 
-    if (!word) {
-      throw new NotFoundException('Word not found');
+      return {
+        deletedDefinitionId: definition.id,
+        vocabWordId,
+        wordRemoved: false,
+        word,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          deletedDefinitionId: definition.id,
+          vocabWordId,
+          wordRemoved: true,
+        };
+      }
+
+      throw error;
     }
-
-    return word;
   }
 
   async softDelete(
@@ -390,6 +402,27 @@ export class VocabService {
     return legacyWordDefinition;
   }
 
+  private async findActiveDefinitionByIdOrThrow(
+    userId: string,
+    definitionId: string,
+  ): Promise<ActiveReviewDefinitionResult> {
+    const definition = await this.prisma.vocabWordDefinition.findFirst({
+      where: {
+        id: definitionId,
+        deletedAt: null,
+        vocabWord: {
+          userId,
+        },
+      },
+      include: reviewDefinitionInclude,
+    });
+
+    if (!definition) {
+      throw new NotFoundException('Definition not found');
+    }
+
+    return definition;
+  }
 
   private async createDefinitionForExistingWord(
     userId: string,

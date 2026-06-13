@@ -185,6 +185,117 @@ describe('VocabController (e2e)', () => {
     return request(app.getHttpServer()).get('/vocab').expect(401);
   });
 
+  it('soft deletes a single definition and reports wordRemoved', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'delete me',
+        meaningVi: 'xoa',
+      })
+      .expect(201);
+
+    const wordId = createResponse.body.id;
+    const definitionId = createResponse.body.definitions[0].id;
+
+    await request(app.getHttpServer())
+      .delete(`/vocab/definitions/${definitionId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toEqual({
+          deletedDefinitionId: definitionId,
+          vocabWordId: wordId,
+          wordRemoved: true,
+        });
+        expect(response.body.word).toBeUndefined();
+      });
+
+    await request(app.getHttpServer())
+      .get(`/vocab/${wordId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .get('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.items).toEqual([]);
+        expect(response.body.meta.total).toBe(0);
+      });
+  });
+
+  it('returns not found when deleting with a word id instead of a definition id', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'strict delete',
+        meaningVi: 'xoa',
+      })
+      .expect(201);
+
+    const wordId = createResponse.body.id;
+
+    await request(app.getHttpServer())
+      .delete(`/vocab/definitions/${wordId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .get(`/vocab/${wordId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+  });
+
+  it('soft deletes one definition when other definitions remain', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'bank',
+        type: 'noun',
+        meaningVi: 'ngan hang',
+      })
+      .expect(201);
+
+    const wordId = createResponse.body.id;
+    const firstDefinitionId = createResponse.body.definitions[0].id;
+
+    const secondDefinition = await prisma.vocabWordDefinition.create({
+      data: {
+        vocabWordId: wordId,
+        source: 'manual',
+        type: 'verb',
+        meaningVi: 'tin tuong',
+      },
+    });
+
+    await request(app.getHttpServer())
+      .delete(`/vocab/definitions/${firstDefinitionId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          deletedDefinitionId: firstDefinitionId,
+          vocabWordId: wordId,
+          wordRemoved: false,
+        });
+        expect(response.body.word.definitions).toHaveLength(1);
+        expect(response.body.word.definitions[0].id).toBe(secondDefinition.id);
+      });
+
+    await request(app.getHttpServer())
+      .get(`/vocab/${wordId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.definitions).toHaveLength(1);
+        expect(response.body.definitions[0].id).toBe(secondDefinition.id);
+      });
+  });
+
   it('searches vocabulary words', async () => {
     const helloResponse = await request(app.getHttpServer())
       .post('/vocab')

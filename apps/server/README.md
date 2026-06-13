@@ -91,6 +91,7 @@ Vocabulary:
 - `POST /vocab`
 - `PATCH /vocab/:id`
 - `PATCH /vocab/:id/review`
+- `DELETE /vocab/definitions/:id`
 - `DELETE /vocab/:id`
 
 Collections:

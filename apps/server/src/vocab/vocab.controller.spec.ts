@@ -207,8 +207,9 @@ describe('VocabController', () => {
 
   it('delegates definition soft delete to VocabService with current user id', async () => {
     const response = {
-      ...vocabWord,
-      definitions: [],
+      deletedDefinitionId: 'definition-id',
+      vocabWordId: 'word-id',
+      wordRemoved: true,
     };
     vocabServiceMock.softDeleteDefinition.mockResolvedValue(response);
 
