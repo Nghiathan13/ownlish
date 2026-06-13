@@ -10,6 +10,7 @@ import { ListDueReviewWordsDto } from './dto/list-due-review-words.dto';
 import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
+import { OXFORD_DEFINITION_SOURCES } from '../collections/collections.constants';
 import { normalizeWord } from './lib/normalize-word';
 import { MAX_VOCAB_LEVEL } from './vocab.constants';
 
@@ -205,7 +206,19 @@ export class VocabService {
   ): Promise<Awaited<UpdatedVocabWordResult>> {
     await this.findActiveWordOrThrow(userId, id);
 
-    const wordUpdateData = this.buildWordUpdateData(dto.word);
+    let wordUpdateData = this.buildWordUpdateData(dto.word);
+
+    if (dto.word !== undefined && dto.definitionId) {
+      const targetDefinition = await this.resolveDefinitionForUpdate(
+        userId,
+        id,
+        dto.definitionId,
+      );
+
+      if (this.isOxfordDefinitionSource(targetDefinition.source)) {
+        wordUpdateData = {};
+      }
+    }
 
     try {
       if (Object.keys(wordUpdateData).length > 0) {
@@ -255,6 +268,34 @@ export class VocabService {
       },
       include: reviewDefinitionInclude,
     });
+  }
+
+  async softDeleteDefinition(
+    userId: string,
+    definitionId: string,
+  ): Promise<Awaited<UpdatedVocabWordResult>> {
+    const definition = await this.findActiveDefinitionOrThrow(
+      userId,
+      definitionId,
+    );
+
+    await this.prisma.vocabWordDefinition.update({
+      where: { id: definition.id },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    const word = await this.prisma.vocabWord.findUnique({
+      where: { id: definition.vocabWordId },
+      include: activeDefinitionsInclude,
+    });
+
+    if (!word) {
+      throw new NotFoundException('Word not found');
+    }
+
+    return word;
   }
 
   async softDelete(
@@ -512,6 +553,12 @@ export class VocabService {
       input.band !== undefined ||
       input.level !== undefined ||
       input.wrongCount !== undefined
+    );
+  }
+
+  private isOxfordDefinitionSource(source: string) {
+    return OXFORD_DEFINITION_SOURCES.includes(
+      source as (typeof OXFORD_DEFINITION_SOURCES)[number],
     );
   }
 

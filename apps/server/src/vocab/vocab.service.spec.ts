@@ -476,6 +476,41 @@ describe('VocabService', () => {
     );
   });
 
+  it('ignores word updates when editing an Oxford definition', async () => {
+    const oxfordDefinition = {
+      ...reviewDefinition,
+      id: 'oxford-definition-id',
+      source: 'oxford_3000',
+    };
+    const wordWithDefinition = {
+      ...vocabWord,
+      definitions: [oxfordDefinition],
+    };
+
+    prismaMock.vocabWord.findFirst
+      .mockResolvedValueOnce(wordWithDefinition)
+      .mockResolvedValueOnce(wordWithDefinition);
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(oxfordDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...oxfordDefinition,
+      meaningVi: 'nghia moi',
+    });
+
+    await service.update('user-id', 'word-id', {
+      definitionId: 'oxford-definition-id',
+      word: 'changed',
+      meaningVi: 'nghia moi',
+    });
+
+    expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
+    expect(prismaMock.vocabWordDefinition.update).toHaveBeenCalledWith({
+      where: { id: 'oxford-definition-id' },
+      data: {
+        meaningVi: 'nghia moi',
+      },
+    });
+  });
+
   it('throws not found when updating missing word', async () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(null);
 
@@ -572,6 +607,36 @@ describe('VocabService', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
+  });
+
+  it('soft deletes a single definition', async () => {
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(reviewDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...reviewDefinition,
+      deletedAt: new Date(),
+    });
+    prismaMock.vocabWord.findUnique.mockResolvedValue({
+      ...vocabWord,
+      definitions: [],
+    });
+
+    await service.softDeleteDefinition('user-id', 'definition-id');
+
+    expect(prismaMock.vocabWordDefinition.update).toHaveBeenCalledWith({
+      where: { id: 'definition-id' },
+      data: {
+        deletedAt: expect.any(Date),
+      },
+    });
+    expect(prismaMock.vocabWordDefinition.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('throws not found when deleting missing definition', async () => {
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.softDeleteDefinition('user-id', 'missing-id'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('soft deletes active definitions for a word', async () => {

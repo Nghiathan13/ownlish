@@ -86,6 +86,14 @@ export class VocabController {
     return this.vocabService.update(request.user.id, id, dto);
   }
 
+  @Delete('definitions/:id')
+  softDeleteDefinition(
+    @Req() request: AuthRequest,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): ReturnType<VocabService['softDeleteDefinition']> {
+    return this.vocabService.softDeleteDefinition(request.user.id, id);
+  }
+
   @Delete(':id')
   softDelete(
     @Req() request: AuthRequest,

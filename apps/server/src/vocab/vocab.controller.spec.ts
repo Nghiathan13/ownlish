@@ -15,6 +15,7 @@ describe('VocabController', () => {
     create: jest.fn(),
     update: jest.fn(),
     updateReview: jest.fn(),
+    softDeleteDefinition: jest.fn(),
     softDelete: jest.fn(),
   };
   const vocabStatsServiceMock = {
@@ -201,6 +202,22 @@ describe('VocabController', () => {
       'user-id',
       'word-id',
       dto,
+    );
+  });
+
+  it('delegates definition soft delete to VocabService with current user id', async () => {
+    const response = {
+      ...vocabWord,
+      definitions: [],
+    };
+    vocabServiceMock.softDeleteDefinition.mockResolvedValue(response);
+
+    await expect(
+      controller.softDeleteDefinition(request, 'definition-id'),
+    ).resolves.toEqual(response);
+    expect(vocabServiceMock.softDeleteDefinition).toHaveBeenCalledWith(
+      'user-id',
+      'definition-id',
     );
   });
 
