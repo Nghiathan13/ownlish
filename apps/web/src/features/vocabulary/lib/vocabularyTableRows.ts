@@ -12,7 +12,7 @@ export type VocabularyDefinitionRow = {
 export function expandWordsToDefinitionRows(
   words: VocabWord[],
 ): VocabularyDefinitionRow[] {
-  return words.flatMap((word) => {
+  return words.flatMap((word): VocabularyDefinitionRow[] => {
     const definitions = word.definitions;
     const definitionCount = definitions.length > 0 ? definitions.length : 1;
 
