@@ -11,6 +11,7 @@ import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type UpdateVocabularyWordVariables = {
   wordToUpdate: VocabWord;
+  definitionId: string;
   input: UpdateVocabWordInput;
 };
 
@@ -34,27 +35,25 @@ export function useUpdateVocabularyWord({
     isPending: isUpdatingWord,
     variables: updateMutationVariables,
   } = useMutation({
-    mutationFn: ({ wordToUpdate, input }: UpdateVocabularyWordVariables) => {
+    mutationFn: ({
+      wordToUpdate,
+      definitionId,
+      input,
+    }: UpdateVocabularyWordVariables) => {
       return runAuthenticatedRequest({
         accessToken,
         clearSession,
-        request: (token) => updateVocabWord(token, wordToUpdate.id, input),
+        request: (token) =>
+          updateVocabWord(token, wordToUpdate.id, {
+            ...input,
+            definitionId,
+          }),
       });
     },
-    onMutate: async ({ wordToUpdate, input }) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey });
       const previousVocab =
         queryClient.getQueryData<VocabWordListResponse>(queryKey);
-
-      queryClient.setQueryData<VocabWordListResponse>(queryKey, (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          items: oldData.items.map((word) =>
-            word.id === wordToUpdate.id ? { ...word, ...input } : word,
-          ),
-        };
-      });
 
       return { previousVocab, queryKey };
     },
@@ -84,8 +83,12 @@ export function useUpdateVocabularyWord({
   });
 
   const updateWord = useCallback(
-    async (wordToUpdate: VocabWord, input: UpdateVocabWordInput) => {
-      await updateWordMutation({ wordToUpdate, input });
+    async (
+      wordToUpdate: VocabWord,
+      definitionId: string,
+      input: UpdateVocabWordInput,
+    ) => {
+      await updateWordMutation({ wordToUpdate, definitionId, input });
     },
     [updateWordMutation],
   );
@@ -93,6 +96,9 @@ export function useUpdateVocabularyWord({
   return {
     isUpdatingWord,
     updateWord,
+    updatingDefinitionId: isUpdatingWord
+      ? updateMutationVariables?.definitionId ?? null
+      : null,
     updatingWordId: isUpdatingWord
       ? updateMutationVariables?.wordToUpdate.id ?? null
       : null,

@@ -18,20 +18,26 @@ import { Field } from "@/shared/ui/Field";
 import { TextInput } from "@/shared/ui/TextInput";
 
 type EditWordPanelProps = {
+  definitionId: string;
   isSubmitting: boolean;
   onClose: () => void;
-  onUpdate: (word: VocabWord, input: UpdateVocabWordInput) => Promise<void>;
+  onUpdate: (
+    word: VocabWord,
+    definitionId: string,
+    input: UpdateVocabWordInput,
+  ) => Promise<void>;
   word: VocabWord;
 };
 
 export function EditWordPanel({
+  definitionId,
   isSubmitting,
   onClose,
   onUpdate,
   word,
 }: EditWordPanelProps) {
   const [values, setValues] = useState<VocabWordFormValues>(() =>
-    toVocabWordFormValues(word),
+    toVocabWordFormValues(word, definitionId),
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +53,7 @@ export function EditWordPanel({
     }
 
     try {
-      await onUpdate(word, toUpdateVocabWordInput(values));
+      await onUpdate(word, definitionId, toUpdateVocabWordInput(values, definitionId));
 
       onClose();
     } catch (caughtError) {

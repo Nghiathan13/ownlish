@@ -28,6 +28,11 @@ export default function VocabularyPage() {
   );
 }
 
+type EditingTarget = {
+  word: VocabWord;
+  definitionId: string;
+};
+
 function VocabularyPageContent() {
   const { accessToken, clearSession, user } = useAuthSession();
   const [search, setSearch] = useState("");
@@ -47,7 +52,7 @@ function VocabularyPageContent() {
     reload,
     totalWords,
     updateWord,
-    updatingWordId,
+    updatingDefinitionId,
     words,
   } = useVocabularyWords({
     accessToken,
@@ -57,7 +62,9 @@ function VocabularyPageContent() {
     userId: user?.id ?? null,
   });
   const [isAddWordOpen, setIsAddWordOpen] = useState(false);
-  const [editingWord, setEditingWord] = useState<VocabWord | null>(null);
+  const [editingTarget, setEditingTarget] = useState<EditingTarget | null>(
+    null,
+  );
   const [wordPendingDelete, setWordPendingDelete] = useState<VocabWord | null>(
     null,
   );
@@ -84,18 +91,21 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        {editingWord ? (
+        {editingTarget ? (
           <Modal
             title="Edit word"
-            description="Update the selected vocabulary word."
-            onClose={() => setEditingWord(null)}
+            description="Update the selected vocabulary definition."
+            onClose={() => setEditingTarget(null)}
           >
             <EditWordPanel
-              key={editingWord.id}
-              isSubmitting={updatingWordId === editingWord.id}
-              onClose={() => setEditingWord(null)}
+              key={`${editingTarget.word.id}-${editingTarget.definitionId}`}
+              definitionId={editingTarget.definitionId}
+              isSubmitting={
+                updatingDefinitionId === editingTarget.definitionId
+              }
+              onClose={() => setEditingTarget(null)}
               onUpdate={updateWord}
-              word={editingWord}
+              word={editingTarget.word}
             />
           </Modal>
         ) : null}
@@ -138,7 +148,14 @@ function VocabularyPageContent() {
               <VocabularyTable
                 deletingWordId={deletingWordId}
                 onDelete={setWordPendingDelete}
-                onEdit={setEditingWord}
+                onEdit={(word, definition) => {
+                  if (definition) {
+                    setEditingTarget({
+                      word,
+                      definitionId: definition.id,
+                    });
+                  }
+                }}
                 words={words}
               />
             </div>

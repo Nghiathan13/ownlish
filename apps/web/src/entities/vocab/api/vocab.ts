@@ -82,7 +82,9 @@ export type CreateVocabWordInput = {
   wrongCount?: number;
 };
 
-export type UpdateVocabWordInput = Partial<CreateVocabWordInput>;
+export type UpdateVocabWordInput = Partial<CreateVocabWordInput> & {
+  definitionId?: string;
+};
 
 export type UpdateVocabReviewInput = {
   level: number;

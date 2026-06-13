@@ -64,7 +64,8 @@ export function useVocabularyWords({
     userId,
   });
 
-  const { updateWord, updatingWordId } = useUpdateVocabularyWord({
+  const { updateWord, updatingDefinitionId, updatingWordId } =
+    useUpdateVocabularyWord({
     accessToken,
     clearSession,
     queryClient,
@@ -100,6 +101,7 @@ export function useVocabularyWords({
     reload,
     totalWords,
     updateWord,
+    updatingDefinitionId,
     updatingWordId,
     words,
   };

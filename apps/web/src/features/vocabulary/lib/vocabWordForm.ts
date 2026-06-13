@@ -2,6 +2,7 @@ import type {
   CreateVocabWordInput,
   UpdateVocabWordInput,
   VocabWord,
+  VocabWordDefinition,
 } from "@/entities/vocab/api/vocab";
 
 export type VocabWordFormValues = {
@@ -29,6 +30,13 @@ function optionalValue(value: string) {
   const trimmedValue = value.trim();
 
   return trimmedValue || undefined;
+}
+
+export function getVocabWordDefinition(
+  word: VocabWord,
+  definitionId: string,
+): VocabWordDefinition | undefined {
+  return word.definitions.find((definition) => definition.id === definitionId);
 }
 
 export function getVocabWordFormError(values: VocabWordFormValues) {
@@ -70,14 +78,19 @@ export function toCreateVocabWordInput(
 
 export function toUpdateVocabWordInput(
   values: VocabWordFormValues,
+  definitionId: string,
 ): UpdateVocabWordInput {
-  return toCreateVocabWordInput(values);
+  return {
+    ...toCreateVocabWordInput(values),
+    definitionId,
+  };
 }
 
-export function toVocabWordFormValues(word: VocabWord): VocabWordFormValues {
-  const definition =
-    word.definitions.find((item) => item.source === "manual") ??
-    word.definitions[0];
+export function toVocabWordFormValues(
+  word: VocabWord,
+  definitionId: string,
+): VocabWordFormValues {
+  const definition = getVocabWordDefinition(word, definitionId);
 
   return {
     word: word.word,

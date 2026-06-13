@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/Button";
 type VocabularyTableProps = {
   deletingWordId: string | null;
   onDelete: (word: VocabWord) => void;
-  onEdit: (word: VocabWord) => void;
+  onEdit: (word: VocabWord, definition: VocabWordDefinition | null) => void;
   words: VocabWord[];
 };
 
@@ -35,46 +35,47 @@ export function VocabularyTable({
 
               <div className="grid gap-3 text-sm">
                 {wordRows.map((row) => (
-                  <dl
-                    key={getDefinitionRowKey(row)}
-                    className="grid grid-cols-3 gap-3"
-                  >
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Type
-                      </dt>
-                      <dd className="mt-1">
-                        <DefinitionTypeCell definition={row.definition} />
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Meaning
-                      </dt>
-                      <dd className="mt-1">
-                        <DefinitionMeaningCell definition={row.definition} />
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Next review
-                      </dt>
-                      <dd className="mt-1 text-muted-foreground">
-                        <DefinitionNextReviewCell definition={row.definition} />
-                      </dd>
-                    </div>
-                  </dl>
+                  <div key={getDefinitionRowKey(row)} className="grid gap-3">
+                    <dl className="grid grid-cols-3 gap-3">
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Type
+                        </dt>
+                        <dd className="mt-1">
+                          <DefinitionTypeCell definition={row.definition} />
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Meaning
+                        </dt>
+                        <dd className="mt-1">
+                          <DefinitionMeaningCell definition={row.definition} />
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Next review
+                        </dt>
+                        <dd className="mt-1 text-muted-foreground">
+                          <DefinitionNextReviewCell definition={row.definition} />
+                        </dd>
+                      </div>
+                    </dl>
+                    {row.definition ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => onEdit(row.word, row.definition)}
+                      >
+                        Edit
+                      </Button>
+                    ) : null}
+                  </div>
                 ))}
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => onEdit(word)}
-                >
-                  Edit
-                </Button>
+              <div className="mt-4 border-t border-border pt-4">
                 <Button
                   type="button"
                   variant="secondary"
@@ -89,14 +90,15 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden min-w-[720px] w-full border-collapse text-left text-sm md:table">
+      <table className="hidden min-w-[760px] w-full border-collapse text-left text-sm md:table">
         <thead className="border-b border-border bg-muted">
           <tr>
             <th className="px-4 py-3 font-semibold">Word</th>
             <th className="px-4 py-3 font-semibold">Type</th>
             <th className="px-4 py-3 font-semibold">Meaning</th>
             <th className="px-4 py-3 font-semibold">Next review</th>
-            <th className="px-4 py-3 font-semibold">Actions</th>
+            <th className="px-4 py-3 font-semibold">Edit</th>
+            <th className="px-4 py-3 font-semibold">Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -122,27 +124,31 @@ export function VocabularyTable({
               <td className="px-4 py-3 align-top text-muted-foreground">
                 <DefinitionNextReviewCell definition={row.definition} />
               </td>
+              <td className="px-4 py-3 align-top">
+                {row.definition ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => onEdit(row.word, row.definition)}
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
+              </td>
               {row.isFirstInWord ? (
                 <td className="px-4 py-3 align-top" rowSpan={row.definitionCount}>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => onEdit(row.word)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={deletingWordId === row.word.id}
-                      onClick={() => onDelete(row.word)}
-                    >
-                      {deletingWordId === row.word.id
-                        ? "Deleting..."
-                        : "Delete"}
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={deletingWordId === row.word.id}
+                    onClick={() => onDelete(row.word)}
+                  >
+                    {deletingWordId === row.word.id
+                      ? "Deleting..."
+                      : "Delete"}
+                  </Button>
                 </td>
               ) : null}
             </tr>

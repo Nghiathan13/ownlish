@@ -115,7 +115,7 @@ describe("vocab word form mappers", () => {
     });
   });
 
-  it("uses the same mapping for update input", () => {
+  it("includes definitionId in update input", () => {
     expect(
       toUpdateVocabWordInput(
         makeValues({
@@ -124,34 +124,39 @@ describe("vocab word form mappers", () => {
           type: "",
           meaningVi: " sửa ",
         }),
+        "definition-id",
       ),
     ).toEqual({
       word: "edited",
       ipa: "/e/",
       type: undefined,
       meaningVi: "sửa",
+      definitionId: "definition-id",
     });
   });
 
-  it("maps nullable API word fields to editable form values", () => {
+  it("maps the selected definition to editable form values", () => {
     expect(
       toVocabWordFormValues(
         makeWord({
           word: "sample",
           definitions: [
             makeDefinition({
+              id: "definition-id",
               ipaUk: null,
+              ipaUs: "/sæmpəl/",
               type: "noun",
-              meaningVi: null,
+              meaningVi: "mau",
             }),
           ],
         }),
+        "definition-id",
       ),
     ).toEqual({
       word: "sample",
-      ipa: "",
+      ipa: "/sæmpəl/",
       type: "noun",
-      meaningVi: "",
+      meaningVi: "mau",
     });
   });
 });
