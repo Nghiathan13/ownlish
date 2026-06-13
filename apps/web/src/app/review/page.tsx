@@ -27,9 +27,7 @@ function ReviewPageContent() {
     isEmpty,
     isLoading,
     isSubmittingGrade,
-    remainingWords,
     reload,
-    totalWords,
   } = useReviewQueue({
     accessToken,
     clearSession,
@@ -84,20 +82,6 @@ function ReviewPageContent() {
   return (
     <PageShell>
       <Panel>
-        <div className="mb-8">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Review
-          </p>
-          <h1 className="mb-3 text-3xl font-bold leading-tight">
-            Review due words
-          </h1>
-          <p className="text-muted-foreground">
-            {totalWords
-              ? `${remainingWords}/${totalWords} words remaining`
-              : "Practice words that are ready today."}
-          </p>
-        </div>
-
         {isLoading || error || isEmpty || !currentWord ? (
           <ReviewStateBlock
             error={error}

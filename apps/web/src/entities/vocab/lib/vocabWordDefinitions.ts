@@ -40,14 +40,6 @@ export function getVocabWordTypeText(word: VocabWord) {
   return types.length > 0 ? types.join("; ") : null;
 }
 
-export function getVocabWordLevelText(word: VocabWord) {
-  const levels = Array.from(
-    new Set(getDisplayVocabDefinitions(word).map((definition) => definition.level)),
-  ).sort((left, right) => left - right);
-
-  return levels.length > 0 ? levels.join(", ") : "-";
-}
-
 export function getVocabWordNextReviewText(word: VocabWord) {
   const definitions = getDisplayVocabDefinitions(word);
 

@@ -65,19 +65,7 @@ function VocabularyPageContent() {
   return (
     <PageShell>
       <Panel>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Vocabulary
-            </p>
-            <h1 className="mb-3 text-3xl font-bold leading-tight">
-              Your vocabulary
-            </h1>
-            <p className="text-muted-foreground">
-              {user?.email}
-              {totalWords ? ` · ${totalWords} words` : ""}
-            </p>
-          </div>
+        <div className="flex justify-end">
           <Button type="button" onClick={() => setIsAddWordOpen(true)}>
             Add word
           </Button>

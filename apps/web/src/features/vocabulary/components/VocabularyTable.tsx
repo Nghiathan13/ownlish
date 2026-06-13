@@ -1,9 +1,7 @@
 import type { VocabWord } from "@/entities/vocab/api/vocab";
 import {
   getDisplayVocabDefinitions,
-  getVocabWordLevelText,
   getVocabWordNextReviewText,
-  getVocabWordTypeText,
 } from "@/entities/vocab/lib/vocabWordDefinitions";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
@@ -29,16 +27,8 @@ export function VocabularyTable({
             key={word.id}
             className="rounded-lg border border-border bg-background p-4"
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base font-semibold">{word.word}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {getVocabWordTypeText(word) || "-"}
-                </p>
-              </div>
-              <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-                Level {getVocabWordLevelText(word)}
-              </span>
+            <div className="mb-3">
+              <h2 className="text-base font-semibold">{word.word}</h2>
             </div>
 
             <dl className="grid gap-3 text-sm">
@@ -81,13 +71,11 @@ export function VocabularyTable({
         ))}
       </div>
 
-      <table className="hidden min-w-[760px] w-full border-collapse text-left text-sm md:table">
+      <table className="hidden min-w-[640px] w-full border-collapse text-left text-sm md:table">
         <thead className="border-b border-border bg-muted">
           <tr>
             <th className="px-4 py-3 font-semibold">Word</th>
-            <th className="px-4 py-3 font-semibold">Type</th>
             <th className="px-4 py-3 font-semibold">Meaning</th>
-            <th className="px-4 py-3 font-semibold">Level</th>
             <th className="px-4 py-3 font-semibold">Next review</th>
             <th className="px-4 py-3 font-semibold">Actions</th>
           </tr>
@@ -96,13 +84,9 @@ export function VocabularyTable({
           {words.map((word) => (
             <tr key={word.id} className="border-b border-border">
               <td className="px-4 py-3 font-semibold">{word.word}</td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {getVocabWordTypeText(word) || "-"}
-              </td>
               <td className="px-4 py-3">
                 <VocabDefinitionSummary word={word} />
               </td>
-              <td className="px-4 py-3">{getVocabWordLevelText(word)}</td>
               <td className="px-4 py-3 text-muted-foreground">
                 {getVocabWordNextReviewText(word)}
               </td>
@@ -158,7 +142,7 @@ function VocabDefinitionSummary({ word }: { word: VocabWord }) {
           </div>
           <p>{definition.meaningVi || definition.definition || "-"}</p>
           <p className="text-xs text-muted-foreground">
-            Level {definition.level} · {formatDisplayDate(definition.nextReview)}
+            {formatDisplayDate(definition.nextReview)}
           </p>
         </div>
       ))}

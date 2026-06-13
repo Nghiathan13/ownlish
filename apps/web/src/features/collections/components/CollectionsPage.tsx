@@ -38,19 +38,6 @@ export function CollectionsPage() {
   return (
     <PageShell>
       <Panel>
-        <div className="mb-8">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Collections
-          </p>
-          <h1 className="mb-3 text-3xl font-bold leading-tight">
-            Built-in word sets
-          </h1>
-          <p className="text-muted-foreground">
-            Browse curated Oxford, TOEIC, and IELTS sets before importing words
-            into your vocabulary.
-          </p>
-        </div>
-
         <div className="mb-6 flex flex-wrap gap-2">
           {collectionCategoryTabs.map((tab) => (
             <button

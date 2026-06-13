@@ -64,18 +64,6 @@ export function HomeDashboard() {
     <PageShell>
       <Panel>
         <div className="flex flex-col gap-6">
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Dashboard
-            </p>
-            <h1 className="mb-3 text-3xl font-bold leading-tight">
-              Your vocabulary overview
-            </h1>
-            <p className="text-muted-foreground">
-              {user?.email}
-            </p>
-          </div>
-
           {isLoading ? (
             <DashboardMessage>Loading your dashboard...</DashboardMessage>
           ) : error ? (

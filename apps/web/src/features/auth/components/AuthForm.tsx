@@ -82,19 +82,9 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
 
   return (
     <Panel className="w-[min(420px,100%)]" aria-labelledby="auth-title">
-      <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          EngVocab
-        </p>
-        <h1 id="auth-title" className="mb-3 text-3xl font-bold leading-tight">
-          {isRegister ? "Create account" : "Sign in"}
-        </h1>
-        <p className="text-muted-foreground">
-          {isRegister
-            ? "Create an account to sync your vocabulary."
-            : "Sign in to manage your vocabulary."}
-        </p>
-      </div>
+      <h1 id="auth-title" className="text-3xl font-bold leading-tight">
+        {isRegister ? "Create account" : "Sign in"}
+      </h1>
 
       <div className="my-6 flex gap-3" aria-label="Auth mode">
         <Button
