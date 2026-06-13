@@ -45,14 +45,7 @@ export function CollectionsPage() {
       return words;
     }
 
-    return words.filter((word) => {
-      return (
-        word.word.toLowerCase().includes(search) ||
-        word.definitions.some((definition) =>
-          (definition.meaningVi ?? "").toLowerCase().includes(search),
-        )
-      );
-    });
+    return words.filter((word) => word.word.toLowerCase().includes(search));
   }, [collectionDetail, wordSearch]);
   const previewWords = filteredWords.slice(0, previewLimit);
 
@@ -176,7 +169,7 @@ export function CollectionsPage() {
                     <TextInput
                       id="collection-word-search"
                       onChange={(event) => setWordSearch(event.target.value)}
-                      placeholder="Search word or meaning..."
+                      placeholder="Search English word..."
                       value={wordSearch}
                     />
                     <p className="text-sm text-muted-foreground">
