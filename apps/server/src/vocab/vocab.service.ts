@@ -288,7 +288,7 @@ export class VocabService {
   private async findActiveWordOrThrow(
     userId: string,
     id: string,
-  ): Promise<Awaited<VocabWordResult>> {
+  ): Promise<NonNullable<Awaited<VocabWordResult>>> {
     const word = await this.prisma.vocabWord.findFirst({
       where: {
         id,
