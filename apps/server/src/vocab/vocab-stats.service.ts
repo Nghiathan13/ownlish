@@ -36,10 +36,15 @@ export class VocabStatsService {
     const now = new Date();
     const [stats] = await this.prisma.$queryRaw<RawVocabStatsRow[]>`
       WITH active AS (
-        SELECT "level", "wrong_count", "next_review"
-        FROM "vocab_words"
-        WHERE "user_id" = ${userId}
-          AND "deleted_at" IS NULL
+        SELECT
+          "definition"."level",
+          "definition"."wrong_count",
+          "definition"."next_review"
+        FROM "vocab_word_definitions" AS "definition"
+        INNER JOIN "vocab_words" AS "word"
+          ON "word"."id" = "definition"."vocab_word_id"
+        WHERE "word"."user_id" = ${userId}
+          AND "definition"."deleted_at" IS NULL
       ),
       summary AS (
         SELECT

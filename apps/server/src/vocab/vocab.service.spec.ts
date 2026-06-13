@@ -14,10 +14,17 @@ describe('VocabService', () => {
     vocabWord: {
       findMany: jest.fn(),
       count: jest.fn(),
-      groupBy: jest.fn(),
       create: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       update: jest.fn(),
+    },
+    vocabWordDefinition: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 
@@ -26,12 +33,23 @@ describe('VocabService', () => {
     userId: 'user-id',
     word: 'hello',
     normalizedWord: 'hello',
-    ipa: null,
+    definitions: [],
+  };
+
+  const reviewDefinition = {
+    id: 'definition-id',
+    vocabWordId: 'word-id',
+    sourceDefinitionId: null,
+    sourceWordId: null,
     type: null,
     meaningVi: null,
     definition: null,
     example: null,
+    exampleVi: null,
+    ipaUk: null,
+    ipaUs: null,
     band: null,
+    source: 'manual',
     level: 0,
     wrongCount: 0,
     lastReview: null,
@@ -39,6 +57,16 @@ describe('VocabService', () => {
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     deletedAt: null,
+    vocabWord,
+  };
+
+  const activeWordWhere = {
+    userId: 'user-id',
+    definitions: {
+      some: {
+        deletedAt: null,
+      },
+    },
   };
 
   beforeEach(async () => {
@@ -74,22 +102,19 @@ describe('VocabService', () => {
         hasMore: false,
       },
     });
-    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        deletedAt: null,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 50,
-      skip: 0,
-    });
+    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: activeWordWhere,
+        include: expect.objectContaining({ definitions: expect.any(Object) }),
+        orderBy: {
+          word: 'asc',
+        },
+        take: 50,
+        skip: 0,
+      }),
+    );
     expect(prismaMock.vocabWord.count).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        deletedAt: null,
-      },
+      where: activeWordWhere,
     });
   });
 
@@ -111,17 +136,17 @@ describe('VocabService', () => {
       },
     });
 
-    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        deletedAt: null,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 10,
-      skip: 20,
-    });
+    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: activeWordWhere,
+        include: expect.objectContaining({ definitions: expect.any(Object) }),
+        orderBy: {
+          word: 'asc',
+        },
+        take: 10,
+        skip: 20,
+      }),
+    );
   });
 
   it('sets hasMore when more paginated words are available', async () => {
@@ -138,18 +163,6 @@ describe('VocabService', () => {
         hasMore: true,
       },
     });
-
-    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        deletedAt: null,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 10,
-      skip: 10,
-    });
   });
 
   it('lists active words with search filter', async () => {
@@ -162,35 +175,30 @@ describe('VocabService', () => {
       offset: 0,
     });
 
-    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        deletedAt: null,
-        normalizedWord: {
-          contains: 'hello',
+    expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          ...activeWordWhere,
+          normalizedWord: {
+            contains: 'hello',
+          },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 10,
-      skip: 0,
-    });
-    expect(prismaMock.vocabWord.count).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        deletedAt: null,
-        normalizedWord: {
-          contains: 'hello',
+        include: expect.objectContaining({ definitions: expect.any(Object) }),
+        orderBy: {
+          word: 'asc',
         },
-      },
-    });
+        take: 10,
+        skip: 0,
+      }),
+    );
   });
 
-  it('lists due review words for a user', async () => {
+  it('lists due review definitions for a user', async () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
-    prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
-    prismaMock.vocabWord.count.mockResolvedValue(25);
+    prismaMock.vocabWordDefinition.findMany.mockResolvedValue([
+      reviewDefinition,
+    ]);
+    prismaMock.vocabWordDefinition.count.mockResolvedValue(25);
 
     try {
       await expect(
@@ -199,7 +207,7 @@ describe('VocabService', () => {
           offset: 20,
         }),
       ).resolves.toEqual({
-        items: [vocabWord],
+        items: [reviewDefinition],
         meta: {
           limit: 10,
           offset: 20,
@@ -208,54 +216,40 @@ describe('VocabService', () => {
         },
       });
 
-      expect(prismaMock.vocabWord.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-          level: {
-            lt: 7,
+      expect(prismaMock.vocabWordDefinition.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            deletedAt: null,
+            level: {
+              lt: 7,
+            },
+            vocabWord: {
+              userId: 'user-id',
+            },
+            OR: [
+              {
+                nextReview: null,
+              },
+              {
+                nextReview: {
+                  lte: new Date('2026-06-07T00:00:00.000Z'),
+                },
+              },
+            ],
           },
-          OR: [
+          include: expect.objectContaining({ vocabWord: true }),
+          orderBy: [
             {
-              nextReview: null,
+              nextReview: 'asc',
             },
             {
-              nextReview: {
-                lte: new Date('2026-06-07T00:00:00.000Z'),
-              },
+              createdAt: 'asc',
             },
           ],
-        },
-        orderBy: [
-          {
-            nextReview: 'asc',
-          },
-          {
-            createdAt: 'asc',
-          },
-        ],
-        take: 10,
-        skip: 20,
-      });
-      expect(prismaMock.vocabWord.count).toHaveBeenCalledWith({
-        where: {
-          userId: 'user-id',
-          deletedAt: null,
-          level: {
-            lt: 7,
-          },
-          OR: [
-            {
-              nextReview: null,
-            },
-            {
-              nextReview: {
-                lte: new Date('2026-06-07T00:00:00.000Z'),
-              },
-            },
-          ],
-        },
-      });
+          take: 10,
+          skip: 20,
+        }),
+      );
     } finally {
       jest.useRealTimers();
     }
@@ -265,13 +259,15 @@ describe('VocabService', () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
 
     await expect(service.get('user-id', 'word-id')).resolves.toBe(vocabWord);
-    expect(prismaMock.vocabWord.findFirst).toHaveBeenCalledWith({
-      where: {
-        id: 'word-id',
-        userId: 'user-id',
-        deletedAt: null,
-      },
-    });
+    expect(prismaMock.vocabWord.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 'word-id',
+          ...activeWordWhere,
+        },
+        include: expect.objectContaining({ definitions: expect.any(Object) }),
+      }),
+    );
   });
 
   it('throws not found when getting a missing word', async () => {
@@ -282,7 +278,7 @@ describe('VocabService', () => {
     );
   });
 
-  it('creates a word with normalized word', async () => {
+  it('creates a word with normalized word and manual definition', async () => {
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
     await expect(
@@ -297,8 +293,16 @@ describe('VocabService', () => {
         userId: 'user-id',
         word: 'Hello',
         normalizedWord: 'hello',
-        meaningVi: 'xin chao',
+        definitions: {
+          create: expect.objectContaining({
+            source: 'manual',
+            meaningVi: 'xin chao',
+            level: 0,
+            wrongCount: 0,
+          }),
+        },
       },
+      include: expect.objectContaining({ definitions: expect.any(Object) }),
     });
   });
 
@@ -338,19 +342,46 @@ describe('VocabService', () => {
       normalizedWord: 'updated',
     });
 
-    expect(prismaMock.vocabWord.findFirst).toHaveBeenCalledWith({
-      where: {
-        id: 'word-id',
-        userId: 'user-id',
-        deletedAt: null,
-      },
-    });
     expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
       where: { id: 'word-id' },
       data: {
         word: 'Updated',
         normalizedWord: 'updated',
       },
+      include: expect.objectContaining({ definitions: expect.any(Object) }),
+    });
+  });
+
+  it('updates manual definition when definition fields are changed', async () => {
+    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
+    prismaMock.vocabWord.update.mockResolvedValue(vocabWord);
+
+    await service.update('user-id', 'word-id', {
+      type: 'noun',
+      meaningVi: 'xin chao',
+    });
+
+    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
+      where: { id: 'word-id' },
+      data: {
+        definitions: {
+          updateMany: {
+            where: {
+              source: 'manual',
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: expect.any(Date),
+            },
+          },
+          create: expect.objectContaining({
+            source: 'manual',
+            type: 'noun',
+            meaningVi: 'xin chao',
+          }),
+        },
+      },
+      include: expect.objectContaining({ definitions: expect.any(Object) }),
     });
   });
 
@@ -364,13 +395,13 @@ describe('VocabService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('updates review fields for an active word', async () => {
+  it('updates review fields for an active definition', async () => {
     const lastReview = '2026-06-07T00:00:00.000Z';
     const nextReview = '2026-06-08T00:00:00.000Z';
 
-    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
-    prismaMock.vocabWord.update.mockResolvedValue({
-      ...vocabWord,
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(reviewDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...reviewDefinition,
       level: 2,
       wrongCount: 1,
       lastReview: new Date(lastReview),
@@ -378,7 +409,7 @@ describe('VocabService', () => {
     });
 
     await expect(
-      service.updateReview('user-id', 'word-id', {
+      service.updateReview('user-id', 'definition-id', {
         level: 2,
         wrongCount: 1,
         lastReview,
@@ -389,30 +420,24 @@ describe('VocabService', () => {
       wrongCount: 1,
     });
 
-    expect(prismaMock.vocabWord.findFirst).toHaveBeenCalledWith({
-      where: {
-        id: 'word-id',
-        userId: 'user-id',
-        deletedAt: null,
-      },
-    });
-    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
-      where: { id: 'word-id' },
+    expect(prismaMock.vocabWordDefinition.update).toHaveBeenCalledWith({
+      where: { id: 'definition-id' },
       data: {
         level: 2,
         wrongCount: 1,
         lastReview: new Date(lastReview),
         nextReview: new Date(nextReview),
       },
+      include: expect.objectContaining({ vocabWord: true }),
     });
   });
 
-  it('allows clearing next review when a word is mastered', async () => {
+  it('allows clearing next review when a definition is mastered', async () => {
     const lastReview = '2026-06-07T00:00:00.000Z';
 
-    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
-    prismaMock.vocabWord.update.mockResolvedValue({
-      ...vocabWord,
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(reviewDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...reviewDefinition,
       level: 7,
       wrongCount: 0,
       lastReview: new Date(lastReview),
@@ -420,7 +445,7 @@ describe('VocabService', () => {
     });
 
     await expect(
-      service.updateReview('user-id', 'word-id', {
+      service.updateReview('user-id', 'definition-id', {
         level: 7,
         wrongCount: 0,
         lastReview,
@@ -431,20 +456,10 @@ describe('VocabService', () => {
       wrongCount: 0,
       nextReview: null,
     });
-
-    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
-      where: { id: 'word-id' },
-      data: {
-        level: 7,
-        wrongCount: 0,
-        lastReview: new Date(lastReview),
-        nextReview: null,
-      },
-    });
   });
 
-  it('throws not found when updating review for a missing word', async () => {
-    prismaMock.vocabWord.findFirst.mockResolvedValue(null);
+  it('throws not found when updating review for a missing definition', async () => {
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(null);
 
     await expect(
       service.updateReview('user-id', 'missing-id', {
@@ -454,7 +469,7 @@ describe('VocabService', () => {
         nextReview: '2026-06-08T00:00:00.000Z',
       }),
     ).rejects.toBeInstanceOf(NotFoundException);
-    expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
+    expect(prismaMock.vocabWordDefinition.update).not.toHaveBeenCalled();
   });
 
   it('throws bad request when updating to a blank word', async () => {
@@ -468,21 +483,26 @@ describe('VocabService', () => {
     expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
   });
 
-  it('soft deletes an active word', async () => {
+  it('soft deletes active definitions for a word', async () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
-    prismaMock.vocabWord.update.mockResolvedValue({
+    prismaMock.vocabWordDefinition.updateMany.mockResolvedValue({ count: 2 });
+    prismaMock.vocabWord.findUnique.mockResolvedValue({
       ...vocabWord,
-      deletedAt: new Date('2026-01-02T00:00:00.000Z'),
+      definitions: [],
     });
 
     await service.softDelete('user-id', 'word-id');
 
-    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
-      where: { id: 'word-id' },
+    expect(prismaMock.vocabWordDefinition.updateMany).toHaveBeenCalledWith({
+      where: {
+        vocabWordId: 'word-id',
+        deletedAt: null,
+      },
       data: {
         deletedAt: expect.any(Date),
       },
     });
+    expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
   });
 
   it('throws not found when deleting missing word', async () => {

@@ -13,14 +13,38 @@ import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
 import { normalizeWord } from './lib/normalize-word';
 import { MAX_VOCAB_LEVEL } from './vocab.constants';
 
+const activeDefinitionsInclude = {
+  definitions: {
+    where: {
+      deletedAt: null,
+    },
+    orderBy: [
+      { source: 'asc' as const },
+      { type: 'asc' as const },
+      { createdAt: 'asc' as const },
+    ],
+  },
+};
+
+const reviewDefinitionInclude = {
+  vocabWord: true,
+};
+
 type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
 type VocabWordList = Awaited<
   ReturnType<PrismaService['vocabWord']['findMany']>
 >;
 type CreatedVocabWordResult = ReturnType<PrismaService['vocabWord']['create']>;
 type UpdatedVocabWordResult = ReturnType<PrismaService['vocabWord']['update']>;
-type VocabWordListResponse = {
-  items: VocabWordList;
+type ReviewDefinitionResult = ReturnType<
+  PrismaService['vocabWordDefinition']['findFirst']
+>;
+type ActiveReviewDefinitionResult = NonNullable<Awaited<ReviewDefinitionResult>>;
+type ReviewDefinitionList = Awaited<
+  ReturnType<PrismaService['vocabWordDefinition']['findMany']>
+>;
+type ListResponse<TItems> = {
+  items: TItems;
   meta: {
     limit: number;
     offset: number;
@@ -28,12 +52,15 @@ type VocabWordListResponse = {
     hasMore: boolean;
   };
 };
-function buildListResponse(
-  items: VocabWordList,
+type VocabWordListResponse = ListResponse<VocabWordList>;
+type ReviewDefinitionListResponse = ListResponse<ReviewDefinitionList>;
+
+function buildListResponse<TItems extends { length: number }>(
+  items: TItems,
   limit: number,
   offset: number,
   total: number,
-): VocabWordListResponse {
+): ListResponse<TItems> {
   return {
     items,
     meta: {
@@ -58,7 +85,11 @@ export class VocabService {
     const offset = query.offset ?? 0;
     const where = {
       userId,
-      deletedAt: null,
+      definitions: {
+        some: {
+          deletedAt: null,
+        },
+      },
       ...(search
         ? {
             normalizedWord: {
@@ -71,8 +102,9 @@ export class VocabService {
     const [items, total] = await Promise.all([
       this.prisma.vocabWord.findMany({
         where,
+        include: activeDefinitionsInclude,
         orderBy: {
-          createdAt: 'desc',
+          word: 'asc',
         },
         take: limit,
         skip: offset,
@@ -88,14 +120,16 @@ export class VocabService {
   async listDueReviewWords(
     userId: string,
     query: ListDueReviewWordsDto = {},
-  ): Promise<VocabWordListResponse> {
+  ): Promise<ReviewDefinitionListResponse> {
     const limit = query.limit ?? 500;
     const offset = query.offset ?? 0;
     const where = {
-      userId,
       deletedAt: null,
       level: {
         lt: MAX_VOCAB_LEVEL,
+      },
+      vocabWord: {
+        userId,
       },
       OR: [
         {
@@ -110,8 +144,9 @@ export class VocabService {
     };
 
     const [items, total] = await Promise.all([
-      this.prisma.vocabWord.findMany({
+      this.prisma.vocabWordDefinition.findMany({
         where,
+        include: reviewDefinitionInclude,
         orderBy: [
           {
             nextReview: 'asc',
@@ -123,7 +158,7 @@ export class VocabService {
         take: limit,
         skip: offset,
       }),
-      this.prisma.vocabWord.count({
+      this.prisma.vocabWordDefinition.count({
         where,
       }),
     ]);
@@ -145,15 +180,18 @@ export class VocabService {
     try {
       return await this.prisma.vocabWord.create({
         data: {
-          ...dto,
           userId,
           normalizedWord,
           word,
+          definitions: {
+            create: this.buildManualDefinitionData(dto),
+          },
         },
+        include: activeDefinitionsInclude,
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Word already exists');
+        return this.createDefinitionForExistingWord(userId, normalizedWord, dto);
       }
 
       throw error;
@@ -168,14 +206,15 @@ export class VocabService {
     await this.findActiveWordOrThrow(userId, id);
 
     const data = {
-      ...dto,
       ...this.buildWordUpdateData(dto.word),
+      ...this.buildManualDefinitionUpdateRelation(dto),
     };
 
     try {
       return await this.prisma.vocabWord.update({
         where: { id },
         data,
+        include: activeDefinitionsInclude,
       });
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
@@ -190,17 +229,18 @@ export class VocabService {
     userId: string,
     id: string,
     dto: UpdateVocabReviewDto,
-  ): Promise<Awaited<UpdatedVocabWordResult>> {
-    await this.findActiveWordOrThrow(userId, id);
+  ): Promise<Awaited<ReviewDefinitionResult>> {
+    const definition = await this.findActiveDefinitionOrThrow(userId, id);
 
-    return this.prisma.vocabWord.update({
-      where: { id },
+    return this.prisma.vocabWordDefinition.update({
+      where: { id: definition.id },
       data: {
         level: dto.level,
         wrongCount: dto.wrongCount,
         lastReview: new Date(dto.lastReview),
         nextReview: dto.nextReview ? new Date(dto.nextReview) : null,
       },
+      include: reviewDefinitionInclude,
     });
   }
 
@@ -210,12 +250,26 @@ export class VocabService {
   ): Promise<Awaited<UpdatedVocabWordResult>> {
     await this.findActiveWordOrThrow(userId, id);
 
-    return this.prisma.vocabWord.update({
-      where: { id },
+    await this.prisma.vocabWordDefinition.updateMany({
+      where: {
+        vocabWordId: id,
+        deletedAt: null,
+      },
       data: {
         deletedAt: new Date(),
       },
     });
+
+    const word = await this.prisma.vocabWord.findUnique({
+      where: { id },
+      include: activeDefinitionsInclude,
+    });
+
+    if (!word) {
+      throw new NotFoundException('Word not found');
+    }
+
+    return word;
   }
 
   private async findActiveWordOrThrow(
@@ -226,8 +280,13 @@ export class VocabService {
       where: {
         id,
         userId,
-        deletedAt: null,
+        definitions: {
+          some: {
+            deletedAt: null,
+          },
+        },
       },
+      include: activeDefinitionsInclude,
     });
 
     if (!word) {
@@ -235,6 +294,80 @@ export class VocabService {
     }
 
     return word;
+  }
+
+  private async findActiveDefinitionOrThrow(
+    userId: string,
+    id: string,
+  ): Promise<ActiveReviewDefinitionResult> {
+    const definition = await this.prisma.vocabWordDefinition.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+        vocabWord: {
+          userId,
+        },
+      },
+      include: reviewDefinitionInclude,
+    });
+
+    if (definition) {
+      return definition;
+    }
+
+    const legacyWordDefinition = await this.prisma.vocabWordDefinition.findFirst({
+      where: {
+        deletedAt: null,
+        vocabWord: {
+          id,
+          userId,
+        },
+      },
+      include: reviewDefinitionInclude,
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    if (!legacyWordDefinition) {
+      throw new NotFoundException('Word not found');
+    }
+
+    return legacyWordDefinition;
+  }
+
+
+  private async createDefinitionForExistingWord(
+    userId: string,
+    normalizedWord: string,
+    dto: CreateVocabWordDto,
+  ): Promise<Awaited<UpdatedVocabWordResult>> {
+    const existingWord = await this.prisma.vocabWord.findFirst({
+      where: {
+        userId,
+        normalizedWord,
+      },
+      include: activeDefinitionsInclude,
+    });
+
+    if (!existingWord) {
+      throw new ConflictException('Word already exists');
+    }
+
+    if (existingWord.definitions.length > 0) {
+      throw new ConflictException('Word already exists');
+    }
+
+    return this.prisma.vocabWord.update({
+      where: { id: existingWord.id },
+      data: {
+        word: this.normalizeRequiredWord(dto.word),
+        definitions: {
+          create: this.buildManualDefinitionData(dto),
+        },
+      },
+      include: activeDefinitionsInclude,
+    });
   }
 
   private normalizeRequiredWord(word: string) {
@@ -260,6 +393,56 @@ export class VocabService {
     };
   }
 
+  private buildManualDefinitionUpdateRelation(input: UpdateVocabWordDto) {
+    if (!this.hasDefinitionInput(input)) {
+      return {};
+    }
+
+    return {
+      definitions: {
+        updateMany: {
+          where: {
+            source: 'manual',
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+          },
+        },
+        create: this.buildManualDefinitionData(input),
+      },
+    };
+  }
+
+  private buildManualDefinitionData(
+    input: CreateVocabWordDto | UpdateVocabWordDto,
+  ) {
+    return {
+      source: 'manual',
+      type: normalizeOptionalText(input.type),
+      meaningVi: normalizeOptionalText(input.meaningVi),
+      definition: normalizeOptionalText(input.definition),
+      example: normalizeOptionalText(input.example),
+      ipaUk: normalizeOptionalText(input.ipa),
+      band: normalizeOptionalText(input.band),
+      level: input.level ?? 0,
+      wrongCount: input.wrongCount ?? 0,
+    };
+  }
+
+  private hasDefinitionInput(input: CreateVocabWordDto | UpdateVocabWordDto) {
+    return (
+      input.type !== undefined ||
+      input.meaningVi !== undefined ||
+      input.definition !== undefined ||
+      input.example !== undefined ||
+      input.ipa !== undefined ||
+      input.band !== undefined ||
+      input.level !== undefined ||
+      input.wrongCount !== undefined
+    );
+  }
+
   private isUniqueConstraintError(error: unknown): boolean {
     return (
       typeof error === 'object' &&
@@ -268,4 +451,10 @@ export class VocabService {
       error.code === 'P2002'
     );
   }
+}
+
+function normalizeOptionalText(value?: string) {
+  const trimmedValue = value?.trim();
+
+  return trimmedValue || null;
 }

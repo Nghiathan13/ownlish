@@ -43,32 +43,50 @@ model RefreshSession {
 }
 
 model VocabWord {
-  id             String    @id @default(uuid())
-  userId         String    @map("user_id")
+  id             String @id @default(uuid())
+  userId         String @map("user_id")
   word           String
-  normalizedWord String    @map("normalized_word")
-  ipa            String?
-  type           String?
-  meaningVi      String?   @map("meaning_vi")
-  definition     String?
-  example        String?
-  band           String?
-  level          Int       @default(0)
-  wrongCount     Int       @default(0) @map("wrong_count")
-  lastReview     DateTime? @map("last_review")
-  nextReview     DateTime? @map("next_review")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  deletedAt      DateTime? @map("deleted_at")
+  normalizedWord String @map("normalized_word")
 
   collectionItems CollectionUserWordItem[]
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  definitions     VocabWordDefinition[]
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, normalizedWord])
   @@index([userId])
-  @@index([userId, deletedAt])
-  @@index([userId, normalizedWord])
-  @@index([userId, deletedAt, level, nextReview])
   @@map("vocab_words")
+}
+
+model VocabWordDefinition {
+  id                 String    @id @default(uuid())
+  vocabWordId        String    @map("vocab_word_id")
+  sourceDefinitionId Int?      @map("source_definition_id")
+  sourceWordId       Int?      @map("source_word_id")
+  type               String?
+  meaningVi          String?   @map("meaning_vi")
+  definition         String?
+  example            String?
+  exampleVi          String?   @map("example_vi")
+  ipaUk              String?   @map("ipa_uk")
+  ipaUs              String?   @map("ipa_us")
+  band               String?
+  source             String    @default("manual")
+  level              Int       @default(0)
+  wrongCount         Int       @default(0) @map("wrong_count")
+  lastReview         DateTime? @map("last_review")
+  nextReview         DateTime? @map("next_review")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+
+  vocabWord VocabWord @relation(fields: [vocabWordId], references: [id], onDelete: Cascade)
+
+  @@unique([vocabWordId, source, sourceDefinitionId])
+  @@index([vocabWordId])
+  @@index([vocabWordId, deletedAt])
+  @@index([deletedAt, level, nextReview])
+  @@index([source, sourceDefinitionId])
+  @@map("vocab_word_definitions")
 }
 
 enum WordCollectionKind {

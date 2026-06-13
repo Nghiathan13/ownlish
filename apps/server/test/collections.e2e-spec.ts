@@ -143,6 +143,7 @@ describe('CollectionsController (e2e)', () => {
       .expect((response) => {
         expect(response.body).toEqual({
           imported: 1,
+          updated: 0,
           skipped: 0,
         });
       });
@@ -154,6 +155,7 @@ describe('CollectionsController (e2e)', () => {
       .expect((response) => {
         expect(response.body).toEqual({
           imported: 0,
+          updated: 0,
           skipped: 1,
         });
       });

@@ -70,9 +70,13 @@ describe('VocabController (e2e)', () => {
       userId,
       word: 'Hello',
       normalizedWord: 'hello',
-      meaningVi: 'xin chao',
-      level: 1,
-      deletedAt: null,
+      definitions: [
+        expect.objectContaining({
+          meaningVi: 'xin chao',
+          level: 1,
+          deletedAt: null,
+        }),
+      ],
     });
 
     const wordId = createResponse.body.id;
@@ -121,12 +125,21 @@ describe('VocabController (e2e)', () => {
           id: wordId,
           word: 'Updated',
           normalizedWord: 'updated',
-          wrongCount: 2,
+          definitions: [
+            expect.objectContaining({
+              wrongCount: 2,
+            }),
+          ],
         });
       });
 
+    const updatedDefinitionId = (await request(app.getHttpServer())
+      .get(`/vocab/${wordId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)).body.definitions[0].id;
+
     await request(app.getHttpServer())
-      .patch(`/vocab/${wordId}/review`)
+      .patch(`/vocab/${updatedDefinitionId}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 3,
@@ -137,7 +150,7 @@ describe('VocabController (e2e)', () => {
       .expect(200)
       .expect((response) => {
         expect(response.body).toMatchObject({
-          id: wordId,
+          id: updatedDefinitionId,
           level: 3,
           wrongCount: 1,
           lastReview: '2026-06-07T00:00:00.000Z',
@@ -151,7 +164,7 @@ describe('VocabController (e2e)', () => {
       .expect(200)
       .expect((response) => {
         expect(response.body.id).toBe(wordId);
-        expect(response.body.deletedAt).toEqual(expect.any(String));
+        expect(response.body.definitions).toEqual([]);
       });
 
     await request(app.getHttpServer())
@@ -358,10 +371,10 @@ describe('VocabController (e2e)', () => {
       .expect((response) => {
         const ids = response.body.items.map((word: { id: string }) => word.id);
 
-        expect(ids).toContain(newWordResponse.body.id);
-        expect(ids).toContain(dueWordResponse.body.id);
-        expect(ids).not.toContain(futureWordResponse.body.id);
-        expect(ids).not.toContain(masteredWordResponse.body.id);
+        expect(ids).toContain(newWordResponse.body.definitions[0].id);
+        expect(ids).toContain(dueWordResponse.body.definitions[0].id);
+        expect(ids).not.toContain(futureWordResponse.body.definitions[0].id);
+        expect(ids).not.toContain(masteredWordResponse.body.definitions[0].id);
         expect(response.body.meta).toMatchObject({
           limit: 10,
           offset: 0,
@@ -458,11 +471,11 @@ describe('VocabController (e2e)', () => {
       .send(payload)
       .expect(201);
 
-    expect(reAddResponse.body.id).not.toBe(createResponse.body.id);
+    expect(reAddResponse.body.id).toBe(createResponse.body.id);
     expect(reAddResponse.body).toMatchObject({
       word: 'hello',
       normalizedWord: 'hello',
-      deletedAt: null,
+      definitions: [expect.objectContaining({ deletedAt: null })],
     });
 
     await request(app.getHttpServer())

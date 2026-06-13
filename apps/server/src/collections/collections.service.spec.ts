@@ -23,6 +23,10 @@ describe('CollectionsService', () => {
       createMany: jest.fn(),
       findMany: jest.fn(),
     },
+    vocabWordDefinition: {
+      createMany: jest.fn(),
+      findMany: jest.fn(),
+    },
     wordCollection: {
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -68,7 +72,7 @@ describe('CollectionsService', () => {
     );
   });
 
-  it('imports system collection words and skips duplicates', async () => {
+  it('imports new words and merges definitions into existing words', async () => {
     prisma.wordCollection.findFirst.mockResolvedValue(collection);
     prisma.collectionCatalogItem.findMany.mockResolvedValue([
       {
@@ -79,6 +83,8 @@ describe('CollectionsService', () => {
           definitions: [
             {
               id: 'definition-1',
+              sourceDefinitionId: 1001,
+              sourceWordId: 101,
               type: 'adverb',
               meaningVi: 'khoảng',
               definition: null,
@@ -91,6 +97,8 @@ describe('CollectionsService', () => {
             },
             {
               id: 'definition-2',
+              sourceDefinitionId: 1002,
+              sourceWordId: 101,
               type: 'preposition',
               meaningVi: 'về',
               definition: null,
@@ -105,28 +113,105 @@ describe('CollectionsService', () => {
         },
       },
     ]);
+    prisma.vocabWord.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'vocab-word-id',
+          normalizedWord: 'about',
+        },
+      ]);
+    prisma.vocabWord.createMany.mockResolvedValue({ count: 1 });
+    prisma.vocabWordDefinition.findMany.mockResolvedValue([]);
+    prisma.vocabWordDefinition.createMany.mockResolvedValue({ count: 2 });
+
+    await expect(
+      service.importToVocabulary('user-id', 'collection-id'),
+    ).resolves.toEqual({
+      imported: 1,
+      updated: 0,
+      skipped: 0,
+    });
+    expect(prisma.vocabWord.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          normalizedWord: 'about',
+          userId: 'user-id',
+          word: 'about',
+        },
+      ],
+      skipDuplicates: true,
+    });
+    expect(prisma.vocabWordDefinition.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          vocabWordId: 'vocab-word-id',
+          sourceDefinitionId: 1001,
+          type: 'adverb',
+          meaningVi: 'khoảng',
+        }),
+        expect.objectContaining({
+          vocabWordId: 'vocab-word-id',
+          sourceDefinitionId: 1002,
+          type: 'preposition',
+          meaningVi: 'về',
+        }),
+      ],
+      skipDuplicates: true,
+    });
+  });
+
+
+  it('updates existing words when collection adds new definitions', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValue(collection);
+    prisma.collectionCatalogItem.findMany.mockResolvedValue([
+      {
+        catalogWord: {
+          id: 'catalog-word-id',
+          word: 'account',
+          normalizedWord: 'account',
+          definitions: [
+            {
+              id: 'definition-1',
+              sourceDefinitionId: 2001,
+              sourceWordId: 201,
+              type: 'noun',
+              meaningVi: 'tài khoản',
+              definition: null,
+              example: null,
+              exampleVi: null,
+              ipaUk: null,
+              ipaUs: null,
+              band: 'B2',
+              source: 'oxford_5000',
+            },
+          ],
+        },
+      },
+    ]);
+    prisma.vocabWord.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'existing-word-id',
+          normalizedWord: 'account',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'existing-word-id',
+          normalizedWord: 'account',
+        },
+      ]);
     prisma.vocabWord.createMany.mockResolvedValue({ count: 0 });
+    prisma.vocabWordDefinition.findMany.mockResolvedValue([]);
+    prisma.vocabWordDefinition.createMany.mockResolvedValue({ count: 1 });
 
     await expect(
       service.importToVocabulary('user-id', 'collection-id'),
     ).resolves.toEqual({
       imported: 0,
-      skipped: 1,
-    });
-    expect(prisma.vocabWord.createMany).toHaveBeenCalledWith({
-      data: [
-        expect.objectContaining({
-          band: 'A1',
-          example: 'There were about twenty people there.',
-          ipa: '/əˈbaʊt/',
-          meaningVi: 'khoảng; về',
-          normalizedWord: 'about',
-          type: 'adverb; preposition',
-          userId: 'user-id',
-          word: 'about',
-        }),
-      ],
-      skipDuplicates: true,
+      updated: 1,
+      skipped: 0,
     });
   });
 

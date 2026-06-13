@@ -23,6 +23,8 @@ type CollectionSummary = {
 
 type CatalogDefinitionResult = {
   id: string;
+  sourceDefinitionId: number;
+  sourceWordId: number;
   type: string;
   meaningVi: string | null;
   definition: string | null;
@@ -48,6 +50,7 @@ type CollectionDetail = CollectionSummary & {
 
 type ImportCollectionResult = {
   imported: number;
+  updated: number;
   skipped: number;
 };
 
@@ -128,25 +131,132 @@ export class CollectionsService {
       collection.id,
       collection.cefrLevel,
     );
-    const data = catalogWords.map((catalogWord) =>
-      this.toImportedVocabWord(userId, collection.cefrLevel, catalogWord),
-    );
 
-    if (data.length === 0) {
+    if (catalogWords.length === 0) {
       return {
         imported: 0,
+        updated: 0,
         skipped: 0,
       };
     }
 
-    const result = await this.prisma.vocabWord.createMany({
-      data,
+    const normalizedWords = catalogWords.map((catalogWord) =>
+      normalizeWord(catalogWord.word),
+    );
+    const existingWords = await this.prisma.vocabWord.findMany({
+      where: {
+        userId,
+        normalizedWord: {
+          in: normalizedWords,
+        },
+      },
+      select: {
+        id: true,
+        normalizedWord: true,
+      },
+    });
+    const existingWordByNormalizedWord = new Map(
+      existingWords.map((word) => [word.normalizedWord, word]),
+    );
+    const newWords = catalogWords.filter(
+      (catalogWord) =>
+        !existingWordByNormalizedWord.has(normalizeWord(catalogWord.word)),
+    );
+    const createWordsResult = await this.prisma.vocabWord.createMany({
+      data: newWords.map((catalogWord) =>
+        this.toImportedVocabWord(userId, catalogWord),
+      ),
       skipDuplicates: true,
     });
+    const allWords = await this.prisma.vocabWord.findMany({
+      where: {
+        userId,
+        normalizedWord: {
+          in: normalizedWords,
+        },
+      },
+      select: {
+        id: true,
+        normalizedWord: true,
+      },
+    });
+    const wordByNormalizedWord = new Map(
+      allWords.map((word) => [word.normalizedWord, word]),
+    );
+    const existingDefinitionByKey = await this.getExistingDefinitionByKey(
+      existingWords.map((word) => word.id),
+    );
+    const updatedWordIds = new Set<string>();
+    const definitionsToRestore: ReturnType<typeof this.toImportedDefinition>[] = [];
+    const definitionData = catalogWords.flatMap((catalogWord) => {
+      const normalizedWord = normalizeWord(catalogWord.word);
+      const vocabWord = wordByNormalizedWord.get(normalizedWord);
+
+      if (!vocabWord) {
+        return [];
+      }
+
+      return catalogWord.definitions.flatMap((definition) => {
+        const key = this.getDefinitionKey(
+          vocabWord.id,
+          definition.source,
+          definition.sourceDefinitionId,
+        );
+        const existingDefinition = existingDefinitionByKey.get(key);
+        const importedDefinition = this.toImportedDefinition(
+          vocabWord.id,
+          definition,
+        );
+
+        if (existingDefinition) {
+          if (existingDefinition.deletedAt) {
+            definitionsToRestore.push(importedDefinition);
+            updatedWordIds.add(vocabWord.id);
+          }
+
+          return [];
+        }
+
+        if (existingWordByNormalizedWord.has(normalizedWord)) {
+          updatedWordIds.add(vocabWord.id);
+        }
+
+        return [importedDefinition];
+      });
+    });
+
+    if (definitionsToRestore.length > 0) {
+      await Promise.all(
+        definitionsToRestore.map((definition) =>
+          this.prisma.vocabWordDefinition.updateMany({
+            where: {
+              vocabWordId: definition.vocabWordId,
+              source: definition.source,
+              sourceDefinitionId: definition.sourceDefinitionId,
+            },
+            data: {
+              ...this.toRestoredDefinitionData(definition),
+              deletedAt: null,
+            },
+          }),
+        ),
+      );
+    }
+
+    if (definitionData.length > 0) {
+      await this.prisma.vocabWordDefinition.createMany({
+        data: definitionData,
+        skipDuplicates: true,
+      });
+    }
+
+    const imported = createWordsResult.count;
+    const updated = updatedWordIds.size;
 
     return {
-      imported: result.count,
-      skipped: data.length - result.count,
+      imported,
+      updated,
+      skipped: Math.max(0, catalogWords.length - imported - updated),
     };
   }
 
@@ -226,7 +336,23 @@ export class CollectionsService {
             collectionId,
           },
         },
-        deletedAt: null,
+        definitions: {
+          some: {
+            deletedAt: null,
+          },
+        },
+      },
+      include: {
+        definitions: {
+          where: {
+            deletedAt: null,
+          },
+          orderBy: [
+            { source: 'asc' },
+            { type: 'asc' },
+            { createdAt: 'asc' },
+          ],
+        },
       },
       orderBy: {
         word: 'asc',
@@ -234,30 +360,94 @@ export class CollectionsService {
     });
   }
 
+  private async getExistingDefinitionByKey(vocabWordIds: string[]) {
+    if (vocabWordIds.length === 0) {
+      return new Map<string, { deletedAt: Date | null }>();
+    }
+
+    const definitions = await this.prisma.vocabWordDefinition.findMany({
+      where: {
+        vocabWordId: {
+          in: vocabWordIds,
+        },
+        sourceDefinitionId: {
+          not: null,
+        },
+      },
+      select: {
+        vocabWordId: true,
+        source: true,
+        sourceDefinitionId: true,
+        deletedAt: true,
+      },
+    });
+
+    return new Map(
+      definitions.map((definition) => [
+        this.getDefinitionKey(
+          definition.vocabWordId,
+          definition.source,
+          definition.sourceDefinitionId,
+        ),
+        { deletedAt: definition.deletedAt },
+      ]),
+    );
+  }
+
+  private getDefinitionKey(
+    vocabWordId: string,
+    source: string,
+    sourceDefinitionId: number | null,
+  ) {
+    return `${vocabWordId}:${source}:${sourceDefinitionId ?? ''}`;
+  }
+
   private toImportedVocabWord(
     userId: string,
-    band: string | null,
     catalogWord: CatalogWordResult,
   ) {
-    const definitions = catalogWord.definitions;
-    const firstDefinition = definitions[0];
-
     return {
       userId,
       word: catalogWord.word,
       normalizedWord: normalizeWord(catalogWord.word),
-      ipa:
-        firstNonEmpty(definitions.map((definition) => definition.ipaUk)) ??
-        firstNonEmpty(definitions.map((definition) => definition.ipaUs)),
-      type: joinUnique(definitions.map((definition) => definition.type)),
-      meaningVi: joinUnique(
-        definitions.map((definition) => definition.meaningVi),
-      ),
-      definition: firstNonEmpty(
-        definitions.map((definition) => definition.definition),
-      ),
-      example: firstDefinition?.example ?? null,
-      band,
+    };
+  }
+
+  private toImportedDefinition(
+    vocabWordId: string,
+    definition: CatalogDefinitionResult,
+  ) {
+    return {
+      vocabWordId,
+      sourceDefinitionId: definition.sourceDefinitionId,
+      sourceWordId: definition.sourceWordId,
+      type: definition.type,
+      meaningVi: definition.meaningVi,
+      definition: definition.definition,
+      example: definition.example,
+      exampleVi: definition.exampleVi,
+      ipaUk: definition.ipaUk,
+      ipaUs: definition.ipaUs,
+      band: definition.band,
+      source: definition.source,
+    };
+  }
+
+
+  private toRestoredDefinitionData(
+    definition: ReturnType<typeof this.toImportedDefinition>,
+  ) {
+    return {
+      sourceWordId: definition.sourceWordId,
+      type: definition.type,
+      meaningVi: definition.meaningVi,
+      definition: definition.definition,
+      example: definition.example,
+      exampleVi: definition.exampleVi,
+      ipaUk: definition.ipaUk,
+      ipaUs: definition.ipaUs,
+      band: definition.band,
+      source: definition.source,
     };
   }
 
@@ -284,16 +474,4 @@ export class CollectionsService {
       updatedAt: collection.updatedAt,
     };
   }
-}
-
-function firstNonEmpty(values: Array<string | null>) {
-  return values.find((value) => value && value.trim()) ?? null;
-}
-
-function joinUnique(values: Array<string | null>) {
-  const uniqueValues = Array.from(
-    new Set(values.filter((value): value is string => Boolean(value?.trim()))),
-  );
-
-  return uniqueValues.length ? uniqueValues.join('; ') : null;
 }
