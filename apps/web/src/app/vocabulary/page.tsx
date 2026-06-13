@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
+import { useMemo, useState } from "react";
+import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import {
@@ -23,6 +23,8 @@ import { Button } from "@/shared/ui/Button";
 import { Modal } from "@/shared/ui/Modal";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
+
+const EMPTY_DEFINITION_SELECTION = new Set<string>();
 
 export default function VocabularyPage() {
   return (
@@ -69,10 +71,35 @@ function VocabularyPageContent() {
   const [editingTarget, setEditingTarget] = useState<EditingTarget | null>(
     null,
   );
-  const [selectedDefinitionIds, setSelectedDefinitionIds] = useState<
-    Set<string>
-  >(() => new Set());
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const selectionScope = `${debouncedSearch}:${offset}`;
+  const [selectionByScope, setSelectionByScope] = useState<{
+    scope: string;
+    ids: Set<string>;
+  }>(() => ({
+    scope: selectionScope,
+    ids: new Set(),
+  }));
+  const selectedDefinitionIds =
+    selectionByScope.scope === selectionScope
+      ? selectionByScope.ids
+      : EMPTY_DEFINITION_SELECTION;
+
+  function updateSelection(
+    updater: (currentIds: Set<string>) => Set<string>,
+  ) {
+    setSelectionByScope((current) => {
+      const currentIds =
+        current.scope === selectionScope
+          ? current.ids
+          : EMPTY_DEFINITION_SELECTION;
+
+      return {
+        scope: selectionScope,
+        ids: updater(currentIds),
+      };
+    });
+  }
 
   const selectableDefinitions = useMemo(
     () => getSelectableDefinitions(words),
@@ -91,12 +118,8 @@ function VocabularyPageContent() {
     selectedDefinitionIds.has(item.definition.id),
   );
 
-  useEffect(() => {
-    setSelectedDefinitionIds(new Set());
-  }, [debouncedSearch, offset]);
-
   function toggleDefinition(definitionId: string) {
-    setSelectedDefinitionIds((currentIds) => {
+    updateSelection((currentIds) => {
       const nextIds = new Set(currentIds);
 
       if (nextIds.has(definitionId)) {
@@ -110,7 +133,7 @@ function VocabularyPageContent() {
   }
 
   function toggleAllDefinitions() {
-    setSelectedDefinitionIds((currentIds) => {
+    updateSelection((currentIds) => {
       const allIds = selectableDefinitions.map((item) => item.definition.id);
       const allSelected =
         allIds.length > 0 && allIds.every((id) => currentIds.has(id));
@@ -125,7 +148,7 @@ function VocabularyPageContent() {
 
   async function handleBulkDelete() {
     await deleteDefinitions(selectedDefinitions);
-    setSelectedDefinitionIds(new Set());
+    updateSelection(() => new Set());
     setIsBulkDeleteOpen(false);
   }
 
