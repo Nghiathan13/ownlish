@@ -33,6 +33,29 @@ type UseDeleteVocabularyDefinitionParams = {
   words: VocabWord[];
 };
 
+type DeleteMutationInput =
+  | DeleteVocabularyDefinitionTarget
+  | DeleteVocabularyDefinitionTarget[];
+
+function normalizeDeleteTargets(
+  input: DeleteMutationInput,
+): DeleteVocabularyDefinitionTarget[] {
+  return Array.isArray(input) ? input : [input];
+}
+
+function countRemovedWords(
+  words: VocabWord[],
+  definitionIds: ReadonlySet<string>,
+) {
+  return words.filter((word) => {
+    const activeDefinitions = word.definitions.filter(
+      (definition) => !definitionIds.has(definition.id),
+    );
+
+    return word.definitions.length > 0 && activeDefinitions.length === 0;
+  }).length;
+}
+
 export function useDeleteVocabularyDefinition({
   accessToken,
   clearSession,
@@ -44,21 +67,31 @@ export function useDeleteVocabularyDefinition({
   words,
 }: UseDeleteVocabularyDefinitionParams) {
   const {
-    mutateAsync: deleteDefinitionMutation,
-    isPending: isDeletingDefinition,
-    variables: deleteMutationVariables,
+    mutateAsync: deleteDefinitionsMutation,
+    isPending: isDeletingDefinitions,
   } = useMutation({
-    mutationFn: ({ definition }: DeleteVocabularyDefinitionTarget) => {
-      return runAuthenticatedRequest<DeleteVocabDefinitionResult>({
-        accessToken,
-        clearSession,
-        request: (token) => deleteVocabDefinition(token, definition.id),
-      });
+    mutationFn: (input: DeleteMutationInput) => {
+      const targets = normalizeDeleteTargets(input);
+
+      return Promise.all(
+        targets.map((target) =>
+          runAuthenticatedRequest<DeleteVocabDefinitionResult>({
+            accessToken,
+            clearSession,
+            request: (token) =>
+              deleteVocabDefinition(token, target.definition.id),
+          }),
+        ),
+      );
     },
-    onMutate: async ({ word, definition }) => {
+    onMutate: async (input) => {
+      const targets = normalizeDeleteTargets(input);
+      const definitionIds = new Set(
+        targets.map((target) => target.definition.id),
+      );
       const offsetAtStart = pageState.offset;
       const wordCountAtStart = words.length;
-      const removesWordFromList = word.definitions.length === 1;
+      const removedWordCount = countRemovedWords(words, definitionIds);
 
       await queryClient.cancelQueries({ queryKey });
       const previousVocab =
@@ -68,20 +101,12 @@ export function useDeleteVocabularyDefinition({
         if (!oldData) return oldData;
 
         const nextItems = oldData.items
-          .map((item) => {
-            if (item.id !== word.id) {
-              return item;
-            }
-
-            const nextDefinitions = item.definitions.filter(
-              (itemDefinition) => itemDefinition.id !== definition.id,
-            );
-
-            return {
-              ...item,
-              definitions: nextDefinitions,
-            };
-          })
+          .map((item) => ({
+            ...item,
+            definitions: item.definitions.filter(
+              (definition) => !definitionIds.has(definition.id),
+            ),
+          }))
           .filter((item) => item.definitions.length > 0);
 
         return {
@@ -89,17 +114,19 @@ export function useDeleteVocabularyDefinition({
           items: nextItems,
           meta: {
             ...oldData.meta,
-            total: removesWordFromList
-              ? Math.max(0, oldData.meta.total - 1)
-              : oldData.meta.total,
+            total: Math.max(0, oldData.meta.total - removedWordCount),
           },
         };
       });
 
-      const previousReviewQueue = await optimisticallyRemoveFromReviewQueue(
-        queryClient,
-        userId,
-        definition.id,
+      const previousReviewQueues = await Promise.all(
+        targets.map((target) =>
+          optimisticallyRemoveFromReviewQueue(
+            queryClient,
+            userId,
+            target.definition.id,
+          ),
+        ),
       );
 
       return {
@@ -107,22 +134,29 @@ export function useDeleteVocabularyDefinition({
         queryKey,
         offsetAtStart,
         wordCountAtStart,
-        previousReviewQueue,
-        removesWordFromList,
+        previousReviewQueues,
+        removedWordCount,
       };
     },
-    onError: (_error, _target, context) => {
+    onError: (_error, _input, context) => {
       if (context?.previousVocab && context.queryKey) {
         queryClient.setQueryData(context.queryKey, context.previousVocab);
       }
-      restoreReviewQueue(queryClient, userId, context?.previousReviewQueue);
+
+      restoreReviewQueue(
+        queryClient,
+        userId,
+        context?.previousReviewQueues[0],
+      );
     },
-    onSuccess: (_result, _target, context) => {
+    onSuccess: (_result, _input, context) => {
       const stillOnSamePage = pageState.offset === context?.offsetAtStart;
       const isLastWordOnPage = context?.wordCountAtStart === 1;
+      const removedEntirePage =
+        (context?.removedWordCount ?? 0) >= (context?.wordCountAtStart ?? 0);
 
       if (
-        context?.removesWordFromList &&
+        removedEntirePage &&
         isLastWordOnPage &&
         (context?.offsetAtStart ?? 0) > 0 &&
         stillOnSamePage
@@ -141,15 +175,25 @@ export function useDeleteVocabularyDefinition({
 
   const deleteDefinition = useCallback(
     async (target: DeleteVocabularyDefinitionTarget) => {
-      await deleteDefinitionMutation(target);
+      await deleteDefinitionsMutation(target);
     },
-    [deleteDefinitionMutation],
+    [deleteDefinitionsMutation],
+  );
+
+  const deleteDefinitions = useCallback(
+    async (targets: DeleteVocabularyDefinitionTarget[]) => {
+      if (targets.length === 0) {
+        return;
+      }
+
+      await deleteDefinitionsMutation(targets);
+    },
+    [deleteDefinitionsMutation],
   );
 
   return {
     deleteDefinition,
-    deletingDefinitionId: isDeletingDefinition
-      ? deleteMutationVariables?.definition.id ?? null
-      : null,
+    deleteDefinitions,
+    isDeletingDefinitions,
   };
 }

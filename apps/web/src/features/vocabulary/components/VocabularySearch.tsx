@@ -10,15 +10,10 @@ export function VocabularySearch({
   search,
 }: VocabularySearchProps) {
   return (
-    <div className="grid min-w-0 flex-1 gap-2 sm:max-w-md">
-      <label
-        htmlFor="vocabulary-search"
-        className="text-sm font-semibold text-foreground"
-      >
-        Search
-      </label>
+    <div className="min-w-0 flex-1 sm:max-w-md">
       <TextInput
         id="vocabulary-search"
+        aria-label="Search by word"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search by word"

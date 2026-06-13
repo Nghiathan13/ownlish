@@ -1,22 +1,37 @@
+import { forwardRef, useEffect, useRef } from "react";
 import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
 import { expandWordsToDefinitionRows } from "@/features/vocabulary/lib/vocabularyTableRows";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
 
 type VocabularyTableProps = {
-  deletingDefinitionId: string | null;
-  onDelete: (word: VocabWord, definition: VocabWordDefinition) => void;
+  allDefinitionsSelected: boolean;
   onEdit: (word: VocabWord, definition: VocabWordDefinition | null) => void;
+  onToggleAllDefinitions: () => void;
+  onToggleDefinition: (definitionId: string) => void;
+  selectedDefinitionIds: ReadonlySet<string>;
+  someDefinitionsSelected: boolean;
   words: VocabWord[];
 };
 
 export function VocabularyTable({
-  deletingDefinitionId,
-  onDelete,
+  allDefinitionsSelected,
   onEdit,
+  onToggleAllDefinitions,
+  onToggleDefinition,
+  selectedDefinitionIds,
+  someDefinitionsSelected,
   words,
 }: VocabularyTableProps) {
   const rows = expandWordsToDefinitionRows(words);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate =
+        someDefinitionsSelected && !allDefinitionsSelected;
+    }
+  }, [allDefinitionsSelected, someDefinitionsSelected]);
 
   return (
     <>
@@ -39,6 +54,13 @@ export function VocabularyTable({
 
                   return (
                     <div key={getDefinitionRowKey(row)} className="grid gap-3">
+                      {definition ? (
+                        <DefinitionSelectCheckbox
+                          checked={selectedDefinitionIds.has(definition.id)}
+                          label={`Select ${word.word}`}
+                          onChange={() => onToggleDefinition(definition.id)}
+                        />
+                      ) : null}
                       <dl className="grid grid-cols-3 gap-3">
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -66,12 +88,13 @@ export function VocabularyTable({
                         </div>
                       </dl>
                       {definition ? (
-                        <DefinitionActionsCell
-                          definition={definition}
-                          deletingDefinitionId={deletingDefinitionId}
-                          onDelete={() => onDelete(row.word, definition)}
-                          onEdit={() => onEdit(row.word, definition)}
-                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => onEdit(row.word, definition)}
+                        >
+                          Edit
+                        </Button>
                       ) : null}
                     </div>
                   );
@@ -82,9 +105,17 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden min-w-[680px] w-full border-collapse text-left text-sm md:table">
+      <table className="hidden min-w-[720px] w-full border-collapse text-left text-sm md:table">
         <thead className="border-b border-border bg-muted">
           <tr>
+            <th className="w-12 px-3 py-3">
+              <DefinitionSelectCheckbox
+                ref={selectAllRef}
+                checked={allDefinitionsSelected}
+                label="Select all definitions on this page"
+                onChange={onToggleAllDefinitions}
+              />
+            </th>
             <th className="px-4 py-3 font-semibold">Word</th>
             <th className="px-4 py-3 font-semibold">Type</th>
             <th className="px-4 py-3 font-semibold">Meaning</th>
@@ -101,6 +132,15 @@ export function VocabularyTable({
                 key={getDefinitionRowKey(row)}
                 className={row.isLastInWord ? "border-b border-border" : undefined}
               >
+                <td className="px-3 py-3 align-middle">
+                  {definition ? (
+                    <DefinitionSelectCheckbox
+                      checked={selectedDefinitionIds.has(definition.id)}
+                      label={`Select ${row.word.word}`}
+                      onChange={() => onToggleDefinition(definition.id)}
+                    />
+                  ) : null}
+                </td>
                 {row.isFirstInWord ? (
                   <td
                     className="px-4 py-3 align-middle font-semibold"
@@ -120,12 +160,13 @@ export function VocabularyTable({
                 </td>
                 <td className="px-4 py-3 align-middle">
                   {definition ? (
-                    <DefinitionActionsCell
-                      definition={definition}
-                      deletingDefinitionId={deletingDefinitionId}
-                      onDelete={() => onDelete(row.word, definition)}
-                      onEdit={() => onEdit(row.word, definition)}
-                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => onEdit(row.word, definition)}
+                    >
+                      Edit
+                    </Button>
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
@@ -147,33 +188,25 @@ function getDefinitionRowKey(row: {
   return `${row.word.id}-${row.definition?.id ?? "empty"}-${row.definitionIndex}`;
 }
 
-function DefinitionActionsCell({
-  definition,
-  deletingDefinitionId,
-  onDelete,
-  onEdit,
-}: {
-  definition: VocabWordDefinition;
-  deletingDefinitionId: string | null;
-  onDelete: () => void;
-  onEdit: () => void;
-}) {
+const DefinitionSelectCheckbox = forwardRef<
+  HTMLInputElement,
+  {
+    checked: boolean;
+    label: string;
+    onChange: () => void;
+  }
+>(function DefinitionSelectCheckbox({ checked, label, onChange }, ref) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button type="button" variant="secondary" onClick={onEdit}>
-        Edit
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        disabled={deletingDefinitionId === definition.id}
-        onClick={onDelete}
-      >
-        {deletingDefinitionId === definition.id ? "Deleting..." : "Delete"}
-      </Button>
-    </div>
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={checked}
+      aria-label={label}
+      className="size-4 accent-foreground"
+      onChange={onChange}
+    />
   );
-}
+});
 
 function DefinitionTypeCell({
   definition,

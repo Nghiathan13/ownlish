@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import {
   AddWordForm,
-  DeleteDefinitionConfirm,
+  DeleteDefinitionsConfirm,
   EditWordPanel,
   VocabularyPagination,
   VocabularySearch,
@@ -14,6 +14,10 @@ import {
   VocabularyTable,
 } from "@/features/vocabulary/components";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
+import {
+  getSelectableDefinitions,
+  getSelectedDefinitions,
+} from "@/features/vocabulary/lib/vocabularySelection";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui/Button";
 import { Modal } from "@/shared/ui/Modal";
@@ -41,8 +45,8 @@ function VocabularyPageContent() {
     canGoNext,
     canGoPrevious,
     createWord,
-    deleteDefinition,
-    deletingDefinitionId,
+    deleteDefinitions,
+    isDeletingDefinitions,
     isInitialLoading,
     isRefreshing,
     loadError,
@@ -65,15 +69,70 @@ function VocabularyPageContent() {
   const [editingTarget, setEditingTarget] = useState<EditingTarget | null>(
     null,
   );
-  const [definitionPendingDelete, setDefinitionPendingDelete] = useState<{
-    word: VocabWord;
-    definition: VocabWordDefinition;
-  } | null>(null);
+  const [selectedDefinitionIds, setSelectedDefinitionIds] = useState<
+    Set<string>
+  >(() => new Set());
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
+  const selectableDefinitions = useMemo(
+    () => getSelectableDefinitions(words),
+    [words],
+  );
+  const selectedDefinitions = useMemo(
+    () => getSelectedDefinitions(words, selectedDefinitionIds),
+    [selectedDefinitionIds, words],
+  );
+  const allDefinitionsSelected =
+    selectableDefinitions.length > 0 &&
+    selectableDefinitions.every((item) =>
+      selectedDefinitionIds.has(item.definition.id),
+    );
+  const someDefinitionsSelected = selectableDefinitions.some((item) =>
+    selectedDefinitionIds.has(item.definition.id),
+  );
+
+  useEffect(() => {
+    setSelectedDefinitionIds(new Set());
+  }, [debouncedSearch, offset]);
+
+  function toggleDefinition(definitionId: string) {
+    setSelectedDefinitionIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+
+      if (nextIds.has(definitionId)) {
+        nextIds.delete(definitionId);
+      } else {
+        nextIds.add(definitionId);
+      }
+
+      return nextIds;
+    });
+  }
+
+  function toggleAllDefinitions() {
+    setSelectedDefinitionIds((currentIds) => {
+      const allIds = selectableDefinitions.map((item) => item.definition.id);
+      const allSelected =
+        allIds.length > 0 && allIds.every((id) => currentIds.has(id));
+
+      if (allSelected) {
+        return new Set();
+      }
+
+      return new Set(allIds);
+    });
+  }
+
+  async function handleBulkDelete() {
+    await deleteDefinitions(selectedDefinitions);
+    setSelectedDefinitionIds(new Set());
+    setIsBulkDeleteOpen(false);
+  }
 
   return (
     <PageShell>
       <Panel>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             type="button"
             className="w-fit shrink-0"
@@ -82,6 +141,15 @@ function VocabularyPageContent() {
             Add word
           </Button>
           <VocabularySearch search={search} onSearchChange={setSearch} />
+          {selectedDefinitions.length > 0 ? (
+            <Button
+              type="button"
+              className="w-fit shrink-0 sm:ml-auto"
+              onClick={() => setIsBulkDeleteOpen(true)}
+            >
+              Delete ({selectedDefinitions.length})
+            </Button>
+          ) : null}
         </div>
 
         {isAddWordOpen ? (
@@ -116,28 +184,22 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        {definitionPendingDelete ? (
+        {isBulkDeleteOpen ? (
           <Modal
-            title="Delete definition"
-            description="This action removes the selected definition from your vocabulary."
-            onClose={() => setDefinitionPendingDelete(null)}
+            title="Delete definitions"
+            description="This action removes the selected definitions from your vocabulary."
+            onClose={() => setIsBulkDeleteOpen(false)}
           >
-            <DeleteDefinitionConfirm
-              definition={definitionPendingDelete.definition}
-              isDeleting={
-                deletingDefinitionId === definitionPendingDelete.definition.id
-              }
-              onCancel={() => setDefinitionPendingDelete(null)}
-              onConfirm={async (word, definition) => {
-                await deleteDefinition({ word, definition });
-                setDefinitionPendingDelete(null);
-              }}
-              word={definitionPendingDelete.word}
+            <DeleteDefinitionsConfirm
+              count={selectedDefinitions.length}
+              isDeleting={isDeletingDefinitions}
+              onCancel={() => setIsBulkDeleteOpen(false)}
+              onConfirm={handleBulkDelete}
             />
           </Modal>
         ) : null}
 
-        <div className="mt-8 overflow-hidden rounded-xl border border-border md:overflow-x-auto">
+        <div className="mt-6 overflow-hidden rounded-xl border border-border md:overflow-x-auto">
           {isInitialLoading || loadError || words.length === 0 ? (
             <VocabularyStateBlock
               error={loadError}
@@ -153,10 +215,7 @@ function VocabularyPageContent() {
               }`}
             >
               <VocabularyTable
-                deletingDefinitionId={deletingDefinitionId}
-                onDelete={(word, definition) => {
-                  setDefinitionPendingDelete({ word, definition });
-                }}
+                allDefinitionsSelected={allDefinitionsSelected}
                 onEdit={(word, definition) => {
                   if (definition) {
                     setEditingTarget({
@@ -165,6 +224,10 @@ function VocabularyPageContent() {
                     });
                   }
                 }}
+                onToggleAllDefinitions={toggleAllDefinitions}
+                onToggleDefinition={toggleDefinition}
+                selectedDefinitionIds={selectedDefinitionIds}
+                someDefinitionsSelected={someDefinitionsSelected}
                 words={words}
               />
             </div>
@@ -180,7 +243,6 @@ function VocabularyPageContent() {
           onPrevious={previousPage}
           total={totalWords}
         />
-
       </Panel>
     </PageShell>
   );

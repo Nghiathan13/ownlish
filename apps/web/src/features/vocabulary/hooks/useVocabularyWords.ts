@@ -73,7 +73,7 @@ export function useVocabularyWords({
     userId,
   });
 
-  const { deleteDefinition, deletingDefinitionId } =
+  const { deleteDefinition, deleteDefinitions, isDeletingDefinitions } =
     useDeleteVocabularyDefinition({
     accessToken,
     clearSession,
@@ -90,7 +90,8 @@ export function useVocabularyWords({
     canGoPrevious: pageState.offset > 0,
     createWord,
     deleteDefinition,
-    deletingDefinitionId,
+    deleteDefinitions,
+    isDeletingDefinitions,
     isInitialLoading,
     isLoadingWords,
     isRefreshing,

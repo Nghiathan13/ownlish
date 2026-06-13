@@ -17,7 +17,7 @@ export function PageShell({
     <main
       className={classNames(
         APP_CONTAINER_CLASS,
-        "py-16",
+        "py-6 sm:py-8",
         centered && "flex-1 grid place-items-center",
         className,
       )}
