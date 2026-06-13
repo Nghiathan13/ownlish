@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getCollection,
@@ -20,11 +19,15 @@ type UseCollectionsParams = {
   userId: string | null;
 };
 
-function getCollectionsQueryKey(userId: string | null) {
+type UseCollectionDetailParams = UseCollectionsParams & {
+  collectionId: string | null;
+};
+
+export function getCollectionsQueryKey(userId: string | null) {
   return ["collections", { userId }] as const;
 }
 
-function getCollectionDetailQueryKey(
+export function getCollectionDetailQueryKey(
   userId: string | null,
   collectionId: string | null,
 ) {
@@ -35,19 +38,12 @@ function toErrorMessage(error: unknown, fallback: string) {
   return error instanceof ApiError ? error.message : error ? fallback : null;
 }
 
-export function useCollections({
+export function useCollectionsList({
   accessToken,
   clearSession,
   isAuthenticated,
   userId,
 }: UseCollectionsParams) {
-  const queryClient = useQueryClient();
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
-    null,
-  );
-  const [importResultMessage, setImportResultMessage] = useState<string | null>(
-    null,
-  );
   const collectionsQuery = useQuery({
     queryKey: getCollectionsQueryKey(userId),
     queryFn: ({ signal }) =>
@@ -58,17 +54,33 @@ export function useCollections({
       }),
     enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
   });
-  const selectedCollectionIdOrFirst = useMemo(() => {
-    return selectedCollectionId ?? collectionsQuery.data?.[0]?.id ?? null;
-  }, [collectionsQuery.data, selectedCollectionId]);
+
+  return {
+    collections: collectionsQuery.data ?? [],
+    collectionsError: toErrorMessage(
+      collectionsQuery.error,
+      "Cannot load collections.",
+    ),
+    isLoadingCollections: collectionsQuery.isLoading,
+    reloadCollections: collectionsQuery.refetch,
+  };
+}
+
+export function useCollectionDetail({
+  accessToken,
+  clearSession,
+  collectionId,
+  isAuthenticated,
+  userId,
+}: UseCollectionDetailParams) {
   const collectionDetailQuery = useQuery({
-    queryKey: getCollectionDetailQueryKey(userId, selectedCollectionIdOrFirst),
+    queryKey: getCollectionDetailQueryKey(userId, collectionId),
     queryFn: ({ signal }) =>
       runAuthenticatedRequest({
         accessToken,
         clearSession,
         request: (token) =>
-          getCollection(token, selectedCollectionIdOrFirst as string, {
+          getCollection(token, collectionId as string, {
             signal,
           }),
       }),
@@ -76,8 +88,26 @@ export function useCollections({
       isAuthenticated &&
       Boolean(accessToken) &&
       Boolean(userId) &&
-      Boolean(selectedCollectionIdOrFirst),
+      Boolean(collectionId),
   });
+
+  return {
+    collectionDetail: collectionDetailQuery.data ?? null,
+    collectionDetailError: toErrorMessage(
+      collectionDetailQuery.error,
+      "Cannot load collection.",
+    ),
+    isLoadingCollectionDetail: collectionDetailQuery.isLoading,
+    reloadCollectionDetail: collectionDetailQuery.refetch,
+  };
+}
+
+export function useImportCollection({
+  accessToken,
+  clearSession,
+  userId,
+}: Pick<UseCollectionsParams, "accessToken" | "clearSession" | "userId">) {
+  const queryClient = useQueryClient();
   const importMutation = useMutation({
     mutationFn: (collectionId: string) =>
       runAuthenticatedRequest({
@@ -85,10 +115,7 @@ export function useCollections({
         clearSession,
         request: (token) => importCollection(token, collectionId),
       }),
-    onSuccess: (result) => {
-      setImportResultMessage(
-        `Imported ${result.imported} words. Skipped ${result.skipped} existing words.`,
-      );
+    onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: getVocabUserQueryKey(userId),
       });
@@ -102,33 +129,11 @@ export function useCollections({
       });
     },
   });
-  const resetImportState = () => {
-    setImportResultMessage(null);
-    importMutation.reset();
-  };
 
   return {
-    collectionDetail: collectionDetailQuery.data ?? null,
-    collectionDetailError: toErrorMessage(
-      collectionDetailQuery.error,
-      "Cannot load collection.",
-    ),
-    collections: collectionsQuery.data ?? [],
-    collectionsError: toErrorMessage(
-      collectionsQuery.error,
-      "Cannot load collections.",
-    ),
     importCollection: importMutation.mutateAsync,
     importError: toErrorMessage(importMutation.error, "Cannot import collection."),
-    importResultMessage,
     isImporting: importMutation.isPending,
-    isLoadingCollectionDetail: collectionDetailQuery.isLoading,
-    isLoadingCollections: collectionsQuery.isLoading,
-    reloadCollectionDetail: collectionDetailQuery.refetch,
-    reloadCollections: collectionsQuery.refetch,
-    resetImportState,
-    selectedCollectionId: selectedCollectionIdOrFirst,
-    setImportResultMessage,
-    setSelectedCollectionId,
+    resetImportState: importMutation.reset,
   };
 }

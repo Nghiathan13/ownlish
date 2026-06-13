@@ -2,52 +2,38 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import {
+  collectionCategoryTabs,
+  getCollectionCategory,
+  getCollectionSlug,
+  type CollectionCategory,
+} from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { useCollections } from "@/features/collections/hooks/useCollections";
+import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
-import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
-import { TextInput } from "@/shared/ui/TextInput";
-
-const previewLimit = 24;
+import { Panel } from "@/shared/ui/Panel";
 
 export function CollectionsPage() {
   const { accessToken, clearSession, status, user } = useAuthSession();
-  const [wordSearch, setWordSearch] = useState("");
-  const {
-    collectionDetail,
-    collectionDetailError,
-    collections,
-    collectionsError,
-    importCollection,
-    importError,
-    importResultMessage,
-    isImporting,
-    isLoadingCollectionDetail,
-    isLoadingCollections,
-    reloadCollectionDetail,
-    reloadCollections,
-    resetImportState,
-    selectedCollectionId,
-    setSelectedCollectionId,
-  } = useCollections({
-    accessToken,
-    clearSession,
-    isAuthenticated: status === "authenticated",
-    userId: user?.id ?? null,
-  });
-  const filteredWords = useMemo(() => {
-    const words = collectionDetail?.catalogWords ?? [];
-    const search = wordSearch.trim().toLowerCase();
-
-    if (!search) {
-      return words;
-    }
-
-    return words.filter((word) => word.word.toLowerCase().includes(search));
-  }, [collectionDetail, wordSearch]);
-  const previewWords = filteredWords.slice(0, previewLimit);
+  const [activeCategory, setActiveCategory] =
+    useState<CollectionCategory>("oxford");
+  const { collections, collectionsError, isLoadingCollections, reloadCollections } =
+    useCollectionsList({
+      accessToken,
+      clearSession,
+      isAuthenticated: status === "authenticated",
+      userId: user?.id ?? null,
+    });
+  const activeCollections = useMemo(() => {
+    return collections.filter(
+      (collection) => getCollectionCategory(collection) === activeCategory,
+    );
+  }, [activeCategory, collections]);
+  const activeTabLabel =
+    collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
+    "Collections";
 
   return (
     <PageShell>
@@ -60,178 +46,81 @@ export function CollectionsPage() {
             Built-in word sets
           </h1>
           <p className="text-muted-foreground">
-            Start from Oxford A1-C1 collections, then import the set you want to
-            review into your vocabulary.
+            Browse curated Oxford, TOEIC, and IELTS sets before importing words
+            into your vocabulary.
           </p>
+        </div>
+
+        <div className="mb-6 flex flex-wrap gap-2">
+          {collectionCategoryTabs.map((tab) => (
+            <button
+              className={classNames(
+                "rounded-lg border px-3.5 py-2 text-sm font-semibold transition",
+                activeCategory === tab.key
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
+              key={tab.key}
+              onClick={() => setActiveCategory(tab.key)}
+              type="button"
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {isLoadingCollections ? (
           <p className="text-muted-foreground">Loading collections...</p>
         ) : collectionsError ? (
           <StateMessage message={collectionsError} onRetry={reloadCollections} />
-        ) : collections.length === 0 ? (
-          <StateMessage
-            message="No collections found. Seed the Oxford catalog first."
-            onRetry={reloadCollections}
-          />
+        ) : activeCollections.length === 0 ? (
+          <div className="rounded-xl border border-border p-6">
+            <h2 className="mb-2 text-xl font-semibold">
+              No {activeTabLabel} collections yet.
+            </h2>
+            <p className="text-muted-foreground">
+              This category is ready for future word sets.
+            </p>
+          </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-            <div className="grid gap-3 self-start">
-              {collections.map((collection) => {
-                const isSelected = collection.id === selectedCollectionId;
-
-                return (
-                  <button
-                    className={classNames(
-                      "rounded-xl border p-4 text-left transition hover:bg-muted",
-                      isSelected
-                        ? "border-foreground bg-muted"
-                        : "border-border bg-transparent",
-                    )}
-                    key={collection.id}
-                    onClick={() => {
-                      resetImportState();
-                      setWordSearch("");
-                      setSelectedCollectionId(collection.id);
-                    }}
-                    type="button"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h2 className="font-semibold">{collection.name}</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {collection.itemCount} words
-                        </p>
-                      </div>
-                      {collection.cefrLevel ? (
-                        <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-                          {collection.cefrLevel}
-                        </span>
-                      ) : null}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="rounded-xl border border-border p-4 sm:p-5">
-              {isLoadingCollectionDetail ? (
-                <p className="text-muted-foreground">Loading collection...</p>
-              ) : collectionDetailError ? (
-                <StateMessage
-                  message={collectionDetailError}
-                  onRetry={reloadCollectionDetail}
-                />
-              ) : collectionDetail ? (
-                <div className="grid gap-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        {collectionDetail.cefrLevel ?? collectionDetail.source}
-                      </p>
-                      <h2 className="text-2xl font-bold">
-                        {collectionDetail.name}
-                      </h2>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {collectionDetail.description}
-                      </p>
-                    </div>
-                    <Button
-                      disabled={isImporting}
-                      onClick={() => {
-                        resetImportState();
-                        void importCollection(collectionDetail.id);
-                      }}
-                      type="button"
-                    >
-                      {isImporting ? "Importing..." : "Import set"}
-                    </Button>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {activeCollections.map((collection) => (
+              <article
+                className="rounded-xl border border-border p-5 transition hover:bg-muted"
+                key={collection.id}
+              >
+                <div className="mb-5 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {collection.source ?? activeTabLabel}
+                    </p>
+                    <h2 className="text-xl font-bold">{collection.name}</h2>
                   </div>
-
-                  {importResultMessage ? (
-                    <p className="rounded-lg border border-border bg-muted p-3 text-sm">
-                      {importResultMessage}
-                    </p>
+                  {collection.cefrLevel ? (
+                    <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
+                      {collection.cefrLevel}
+                    </span>
                   ) : null}
-                  {importError ? (
-                    <p className="rounded-lg border border-border p-3 text-sm text-danger">
-                      {importError}
-                    </p>
-                  ) : null}
+                </div>
 
-                  <div className="grid gap-2">
-                    <label
-                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
-                      htmlFor="collection-word-search"
-                    >
-                      Search this set
-                    </label>
-                    <TextInput
-                      id="collection-word-search"
-                      onChange={(event) => setWordSearch(event.target.value)}
-                      placeholder="Search English word..."
-                      value={wordSearch}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      {filteredWords.length} of {collectionDetail.itemCount} words
-                    </p>
-                  </div>
+                <p className="mb-5 min-h-12 text-sm text-muted-foreground">
+                  {collection.description ??
+                    `Review ${collection.itemCount} words in this collection.`}
+                </p>
 
-                  <div className="grid gap-3">
-                    {previewWords.map((word) => {
-                      const firstDefinition = word.definitions[0];
-
-                      return (
-                        <article
-                          className="rounded-lg border border-border p-4"
-                          key={word.id}
-                        >
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                              <h3 className="font-semibold">{word.word}</h3>
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {firstDefinition?.type ?? "-"}
-                              </p>
-                            </div>
-                            {firstDefinition?.ipaUk ? (
-                              <p className="text-sm text-muted-foreground">
-                                {firstDefinition.ipaUk}
-                              </p>
-                            ) : null}
-                          </div>
-                          <p className="mt-3 text-sm">
-                            {firstDefinition?.meaningVi ?? "No meaning added."}
-                          </p>
-                          {firstDefinition?.example ? (
-                            <p className="mt-2 text-sm text-muted-foreground">
-                              {firstDefinition.example}
-                            </p>
-                          ) : null}
-                        </article>
-                      );
-                    })}
-                  </div>
-
-                  {filteredWords.length > previewLimit ? (
-                    <p className="text-sm text-muted-foreground">
-                      Showing {previewLimit} of {filteredWords.length} matching
-                      words. Import adds the full set to your vocabulary.
-                    </p>
-                  ) : filteredWords.length === 0 ? (
-                    <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
-                      No words match this search.
-                    </p>
-                  ) : null}
-
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold">
+                    {collection.itemCount} words
+                  </p>
                   <Link
-                    className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-                    href="/vocabulary"
+                    className="inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-background"
+                    href={`/collections/${getCollectionSlug(collection)}`}
                   >
-                    View your vocabulary
+                    View words
                   </Link>
                 </div>
-              ) : null}
-            </div>
+              </article>
+            ))}
           </div>
         )}
       </Panel>
