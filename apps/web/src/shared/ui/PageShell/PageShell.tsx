@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { classNames } from "@/shared/lib/classNames";
+import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 type PageShellProps = {
   centered?: boolean;
@@ -15,7 +16,8 @@ export function PageShell({
   return (
     <main
       className={classNames(
-        "mx-auto w-full max-w-[992px] px-4 py-16",
+        APP_CONTAINER_CLASS,
+        "py-16",
         centered && "flex-1 grid place-items-center",
         className,
       )}

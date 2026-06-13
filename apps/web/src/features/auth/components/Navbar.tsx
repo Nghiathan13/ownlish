@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { classNames } from "@/shared/lib/classNames";
+import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -21,7 +23,12 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[992px] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:flex-nowrap">
+      <div
+        className={classNames(
+          APP_CONTAINER_CLASS,
+          "flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-3 sm:flex-nowrap",
+        )}
+      >
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
           <Link href="/" className="shrink-0 text-base font-bold hover:opacity-80">
             EngVocab
