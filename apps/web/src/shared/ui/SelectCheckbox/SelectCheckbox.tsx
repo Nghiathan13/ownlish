@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { classNames } from "@/shared/lib/classNames";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
+import { RemoveIcon } from "@/shared/ui/icons/RemoveIcon";
 
 type SelectCheckboxProps = {
   checked: boolean;
@@ -39,7 +40,7 @@ export function SelectCheckbox({
         aria-hidden
         className={classNames(
           "flex size-4 items-center justify-center rounded border transition-colors duration-200",
-          checked
+          checked || indeterminate
             ? "border-foreground bg-foreground"
             : "border-border bg-muted hover:border-foreground",
         )}
@@ -47,7 +48,7 @@ export function SelectCheckbox({
         {checked ? (
           <CheckIcon className="text-background" />
         ) : indeterminate ? (
-          <span className="h-0.5 w-2.5 rounded-full bg-foreground" />
+          <RemoveIcon className="text-background" />
         ) : null}
       </span>
     </label>
