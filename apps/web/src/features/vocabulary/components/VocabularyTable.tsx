@@ -100,19 +100,21 @@ export function VocabularyTable({
       <table className="hidden min-w-[720px] w-full border-collapse text-left text-sm md:table">
         <thead className="border-b border-border bg-muted">
           <tr>
-            <th className="w-12 px-3 py-3">
-              <SelectCheckbox
-                checked={allDefinitionsSelected}
-                indeterminate={someDefinitionsSelected && !allDefinitionsSelected}
-                label="Select all definitions on this page"
-                onChange={onToggleAllDefinitions}
-              />
+            <th className="w-12 px-3 py-3 align-middle">
+              <div className="flex h-5 items-center">
+                <SelectCheckbox
+                  checked={allDefinitionsSelected}
+                  indeterminate={someDefinitionsSelected && !allDefinitionsSelected}
+                  label="Select all definitions on this page"
+                  onChange={onToggleAllDefinitions}
+                />
+              </div>
             </th>
-            <th className="px-4 py-3 font-semibold">Word</th>
-            <th className="px-4 py-3 font-semibold">Type</th>
-            <th className="px-4 py-3 font-semibold">Meaning</th>
-            <th className="px-4 py-3 font-semibold">Next review</th>
-            <th className="px-4 py-3 font-semibold">Actions</th>
+            <th className="px-4 py-3 align-middle font-semibold">Word</th>
+            <th className="px-4 py-3 align-middle font-semibold">Type</th>
+            <th className="px-4 py-3 align-middle font-semibold">Meaning</th>
+            <th className="px-4 py-3 align-middle font-semibold">Next review</th>
+            <th className="px-4 py-3 align-middle font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -126,11 +128,13 @@ export function VocabularyTable({
               >
                 <td className="px-3 py-3 align-middle">
                   {definition ? (
-                    <SelectCheckbox
-                      checked={selectedDefinitionIds.has(definition.id)}
-                      label={`Select ${row.word.word}`}
-                      onChange={() => onToggleDefinition(definition.id)}
-                    />
+                    <div className="flex h-5 items-center">
+                      <SelectCheckbox
+                        checked={selectedDefinitionIds.has(definition.id)}
+                        label={`Select ${row.word.word}`}
+                        onChange={() => onToggleDefinition(definition.id)}
+                      />
+                    </div>
                   ) : null}
                 </td>
                 {row.isFirstInWord ? (

@@ -27,7 +27,7 @@ export function SelectCheckbox({
   }, [indeterminate]);
 
   return (
-    <label className="inline-flex cursor-pointer items-center justify-center">
+    <label className="relative flex size-4 shrink-0 cursor-pointer items-center justify-center">
       <input
         ref={inputRef}
         type="checkbox"
@@ -39,17 +39,19 @@ export function SelectCheckbox({
       <span
         aria-hidden
         className={classNames(
-          "flex size-4 items-center justify-center rounded border transition-colors duration-200",
+          "flex size-4 shrink-0 items-center justify-center rounded border transition-colors duration-200",
           checked || indeterminate
             ? "border-foreground bg-foreground"
             : "border-border bg-muted hover:border-foreground",
         )}
       >
         {checked ? (
-          <CheckIcon className="text-background" />
+          <CheckIcon className="block size-3.5 shrink-0 text-background" />
         ) : indeterminate ? (
-          <RemoveIcon className="text-background" />
-        ) : null}
+          <RemoveIcon className="block size-3.5 shrink-0 text-background" />
+        ) : (
+          <span className="block size-3.5 shrink-0" aria-hidden />
+        )}
       </span>
     </label>
   );

@@ -10,7 +10,7 @@ export function RemoveIcon({ className, ...props }: RemoveIconProps) {
       viewBox="0 -960 960 960"
       fill="currentColor"
       aria-hidden
-      className={classNames("size-3.5", className)}
+      className={classNames("block size-3.5 shrink-0", className)}
       {...props}
     >
       <path d="M220-450v-60h520v60H220Z" />
