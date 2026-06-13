@@ -205,17 +205,28 @@ export class VocabService {
   ): Promise<Awaited<UpdatedVocabWordResult>> {
     await this.findActiveWordOrThrow(userId, id);
 
-    const data = {
-      ...this.buildWordUpdateData(dto.word),
-      ...this.buildManualDefinitionUpdateRelation(dto),
-    };
+    const wordUpdateData = this.buildWordUpdateData(dto.word);
 
     try {
-      return await this.prisma.vocabWord.update({
-        where: { id },
-        data,
-        include: activeDefinitionsInclude,
-      });
+      if (Object.keys(wordUpdateData).length > 0) {
+        await this.prisma.vocabWord.update({
+          where: { id },
+          data: wordUpdateData,
+        });
+      }
+
+      if (this.hasDefinitionInput(dto)) {
+        const definition = await this.resolveDefinitionForUpdate(
+          userId,
+          id,
+          dto.definitionId,
+        );
+
+        await this.prisma.vocabWordDefinition.update({
+          where: { id: definition.id },
+          data: this.buildDefinitionUpdateData(dto),
+        });
+      }
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
         throw new ConflictException('Word already exists');
@@ -223,6 +234,8 @@ export class VocabService {
 
       throw error;
     }
+
+    return this.findActiveWordOrThrow(userId, id);
   }
 
   async updateReview(
@@ -393,24 +406,73 @@ export class VocabService {
     };
   }
 
-  private buildManualDefinitionUpdateRelation(input: UpdateVocabWordDto) {
-    if (!this.hasDefinitionInput(input)) {
-      return {};
-    }
-
-    return {
-      definitions: {
-        updateMany: {
-          where: {
-            source: 'manual',
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
+  private async resolveDefinitionForUpdate(
+    userId: string,
+    vocabWordId: string,
+    definitionId?: string,
+  ) {
+    if (definitionId) {
+      const definition = await this.prisma.vocabWordDefinition.findFirst({
+        where: {
+          id: definitionId,
+          deletedAt: null,
+          vocabWordId,
+          vocabWord: {
+            userId,
           },
         },
-        create: this.buildManualDefinitionData(input),
+      });
+
+      if (!definition) {
+        throw new NotFoundException('Word not found');
+      }
+
+      return definition;
+    }
+
+    const word = await this.prisma.vocabWord.findFirst({
+      where: {
+        id: vocabWordId,
+        userId,
       },
+      include: activeDefinitionsInclude,
+    });
+
+    if (!word || word.definitions.length === 0) {
+      throw new NotFoundException('Word not found');
+    }
+
+    const manualDefinition = word.definitions.find(
+      (definition) => definition.source === 'manual',
+    );
+
+    return manualDefinition ?? word.definitions[0];
+  }
+
+  private buildDefinitionUpdateData(input: UpdateVocabWordDto) {
+    return {
+      ...(input.type !== undefined
+        ? { type: normalizeOptionalText(input.type) }
+        : {}),
+      ...(input.meaningVi !== undefined
+        ? { meaningVi: normalizeOptionalText(input.meaningVi) }
+        : {}),
+      ...(input.definition !== undefined
+        ? { definition: normalizeOptionalText(input.definition) }
+        : {}),
+      ...(input.example !== undefined
+        ? { example: normalizeOptionalText(input.example) }
+        : {}),
+      ...(input.band !== undefined
+        ? { band: normalizeOptionalText(input.band) }
+        : {}),
+      ...(input.ipa !== undefined
+        ? { ipaUk: normalizeOptionalText(input.ipa) }
+        : {}),
+      ...(input.level !== undefined ? { level: input.level } : {}),
+      ...(input.wrongCount !== undefined
+        ? { wrongCount: input.wrongCount }
+        : {}),
     };
   }
 

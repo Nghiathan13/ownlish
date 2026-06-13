@@ -117,6 +117,7 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         word: 'Updated',
+        definitionId: createResponse.body.definitions[0].id,
         wrongCount: 2,
       })
       .expect(200)

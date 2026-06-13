@@ -326,7 +326,13 @@ describe('VocabService', () => {
   });
 
   it('updates an active word and normalizes changed word', async () => {
-    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
+    prismaMock.vocabWord.findFirst
+      .mockResolvedValueOnce(vocabWord)
+      .mockResolvedValueOnce({
+        ...vocabWord,
+        word: 'updated',
+        normalizedWord: 'updated',
+      });
     prismaMock.vocabWord.update.mockResolvedValue({
       ...vocabWord,
       word: 'updated',
@@ -348,41 +354,88 @@ describe('VocabService', () => {
         word: 'Updated',
         normalizedWord: 'updated',
       },
-      include: expect.objectContaining({ definitions: expect.any(Object) }),
     });
+    expect(prismaMock.vocabWordDefinition.update).not.toHaveBeenCalled();
   });
 
-  it('updates manual definition when definition fields are changed', async () => {
-    prismaMock.vocabWord.findFirst.mockResolvedValue(vocabWord);
-    prismaMock.vocabWord.update.mockResolvedValue(vocabWord);
+  it('updates a definition in place when definition fields are changed', async () => {
+    const wordWithDefinition = {
+      ...vocabWord,
+      definitions: [reviewDefinition],
+    };
 
-    await service.update('user-id', 'word-id', {
+    prismaMock.vocabWord.findFirst
+      .mockResolvedValueOnce(wordWithDefinition)
+      .mockResolvedValueOnce(wordWithDefinition);
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(reviewDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...reviewDefinition,
       type: 'noun',
       meaningVi: 'xin chao',
     });
 
-    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
-      where: { id: 'word-id' },
-      data: {
-        definitions: {
-          updateMany: {
-            where: {
-              source: 'manual',
-              deletedAt: null,
-            },
-            data: {
-              deletedAt: expect.any(Date),
-            },
-          },
-          create: expect.objectContaining({
-            source: 'manual',
-            type: 'noun',
-            meaningVi: 'xin chao',
-          }),
-        },
-      },
-      include: expect.objectContaining({ definitions: expect.any(Object) }),
+    await service.update('user-id', 'word-id', {
+      definitionId: 'definition-id',
+      type: 'noun',
+      meaningVi: 'xin chao',
     });
+
+    expect(prismaMock.vocabWordDefinition.update).toHaveBeenCalledWith({
+      where: { id: 'definition-id' },
+      data: {
+        type: 'noun',
+        meaningVi: 'xin chao',
+      },
+    });
+    expect(prismaMock.vocabWord.update).not.toHaveBeenCalled();
+  });
+
+  it('updates an Oxford definition in place without changing source metadata', async () => {
+    const oxfordDefinition = {
+      ...reviewDefinition,
+      id: 'oxford-definition-id',
+      source: 'oxford_3000',
+      sourceDefinitionId: 42,
+      sourceWordId: 7,
+      example: 'An example sentence.',
+      exampleVi: 'Mot cau vi du.',
+      ipaUs: '/test/',
+      band: 'A1',
+      level: 2,
+      wrongCount: 1,
+    };
+    const wordWithDefinition = {
+      ...vocabWord,
+      definitions: [oxfordDefinition],
+    };
+
+    prismaMock.vocabWord.findFirst
+      .mockResolvedValueOnce(wordWithDefinition)
+      .mockResolvedValueOnce(wordWithDefinition);
+    prismaMock.vocabWordDefinition.findFirst.mockResolvedValue(oxfordDefinition);
+    prismaMock.vocabWordDefinition.update.mockResolvedValue({
+      ...oxfordDefinition,
+      meaningVi: 'nghia moi',
+    });
+
+    await service.update('user-id', 'word-id', {
+      definitionId: 'oxford-definition-id',
+      meaningVi: 'nghia moi',
+    });
+
+    expect(prismaMock.vocabWordDefinition.update).toHaveBeenCalledWith({
+      where: { id: 'oxford-definition-id' },
+      data: {
+        meaningVi: 'nghia moi',
+      },
+    });
+    expect(prismaMock.vocabWordDefinition.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          source: 'manual',
+        }),
+      }),
+    );
   });
 
   it('throws not found when updating missing word', async () => {

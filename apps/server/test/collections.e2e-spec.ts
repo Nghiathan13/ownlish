@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -21,6 +21,13 @@ describe('CollectionsController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     prisma = app.get(PrismaService);
 
     await prisma.user.deleteMany({
@@ -145,6 +152,48 @@ describe('CollectionsController (e2e)', () => {
           imported: 1,
           updated: 0,
           skipped: 0,
+        });
+      });
+
+    await request(app.getHttpServer())
+      .post(`/collections/${collectionId}/import`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(201)
+      .expect((response) => {
+        expect(response.body).toEqual({
+          imported: 0,
+          updated: 0,
+          skipped: 1,
+        });
+      });
+
+    const vocabListResponse = await request(app.getHttpServer())
+      .get('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const importedWord = vocabListResponse.body.items[0];
+    const importedDefinition = importedWord.definitions[0];
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${importedWord.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        definitionId: importedDefinition.id,
+        meaningVi: 'nghia da sua',
+      })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.definitions).toHaveLength(1);
+        expect(response.body.definitions[0]).toMatchObject({
+          id: importedDefinition.id,
+          source: 'oxford_3000',
+          sourceDefinitionId: 999001,
+          sourceWordId: 999001,
+          example: 'This is an e2e catalog word.',
+          band: 'A1',
+          meaningVi: 'nghia da sua',
+          type: 'noun',
         });
       });
 
