@@ -13,7 +13,7 @@ export function CheckIcon({ className, ...props }: CheckIconProps) {
       className={classNames("block size-3.5 shrink-0", className)}
       {...props}
     >
-      <path d="M382-253.85 168.62-467.23 211.38-510 382-339.38 748.62-706l42.76 42.77L382-253.85Z" />
+      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
     </svg>
   );
 }

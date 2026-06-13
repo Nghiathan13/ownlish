@@ -13,7 +13,7 @@ export function RemoveIcon({ className, ...props }: RemoveIconProps) {
       className={classNames("block size-3.5 shrink-0", className)}
       {...props}
     >
-      <path d="M220-450v-60h520v60H220Z" />
+      <path d="M200-440v-80h560v80H200Z"/>
     </svg>
   );
 }
