@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { CatalogWord } from "@/entities/collection/api/collections";
+import type { CatalogDefinition, CatalogWord } from "@/entities/collection/api/collections";
 import { findCollectionBySlug } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import {
@@ -184,76 +184,89 @@ function CollectionWordsTable({ words }: { words: CatalogWord[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
       <div className="grid gap-3 p-3 md:hidden">
-        {words.map((word) => {
-          const firstDefinition = word.definitions[0];
-
-          return (
-            <article
-              className="rounded-lg border border-border bg-background p-4"
-              key={word.id}
-            >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold">{word.word}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {firstDefinition?.type || "-"}
-                  </p>
-                </div>
-                {firstDefinition?.ipaUk ? (
-                  <span className="text-sm text-muted-foreground">
-                    {firstDefinition.ipaUk}
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-sm">
-                {firstDefinition?.meaningVi || "No meaning added."}
-              </p>
-              {firstDefinition?.example ? (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {firstDefinition.example}
-                </p>
+        {words.map((word) => (
+          <article
+            className="rounded-lg border border-border bg-background p-4"
+            key={word.id}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <h2 className="text-base font-semibold">{word.word}</h2>
+              {getFirstIpa(word.definitions) ? (
+                <span className="text-sm text-muted-foreground">
+                  {getFirstIpa(word.definitions)}
+                </span>
               ) : null}
-            </article>
-          );
-        })}
+            </div>
+            <DefinitionList definitions={word.definitions} />
+          </article>
+        ))}
       </div>
 
       <table className="hidden min-w-[880px] w-full border-collapse text-left text-sm md:table">
         <thead className="border-b border-border bg-muted">
           <tr>
-            <th className="px-4 py-3 font-semibold">Word</th>
-            <th className="px-4 py-3 font-semibold">Type</th>
-            <th className="px-4 py-3 font-semibold">IPA</th>
-            <th className="px-4 py-3 font-semibold">Meaning</th>
-            <th className="px-4 py-3 font-semibold">Example</th>
+            <th className="w-[180px] px-4 py-3 font-semibold">Word</th>
+            <th className="w-[140px] px-4 py-3 font-semibold">IPA</th>
+            <th className="px-4 py-3 font-semibold">Type and meaning</th>
           </tr>
         </thead>
         <tbody>
-          {words.map((word) => {
-            const firstDefinition = word.definitions[0];
-
-            return (
-              <tr className="border-b border-border" key={word.id}>
-                <td className="px-4 py-3 font-semibold">{word.word}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {firstDefinition?.type || "-"}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {firstDefinition?.ipaUk || firstDefinition?.ipaUs || "-"}
-                </td>
-                <td className="px-4 py-3">
-                  {firstDefinition?.meaningVi || "-"}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {firstDefinition?.example || "-"}
-                </td>
-              </tr>
-            );
-          })}
+          {words.map((word) => (
+            <tr className="border-b border-border align-top" key={word.id}>
+              <td className="px-4 py-4 font-semibold">{word.word}</td>
+              <td className="px-4 py-4 text-muted-foreground">
+                {getFirstIpa(word.definitions) || "-"}
+              </td>
+              <td className="px-4 py-4">
+                <DefinitionList definitions={word.definitions} />
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   );
+}
+
+function DefinitionList({
+  definitions,
+}: {
+  definitions: CatalogDefinition[];
+}) {
+  if (definitions.length === 0) {
+    return <p className="text-sm text-muted-foreground">No meaning added.</p>;
+  }
+
+  return (
+    <div className="grid gap-3">
+      {definitions.map((definition) => (
+        <div className="grid gap-1" key={definition.id}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
+              {definition.type || "-"}
+            </span>
+            {definition.band ? (
+              <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                {definition.band}
+              </span>
+            ) : null}
+          </div>
+          <p className="text-sm">{definition.meaningVi || "No meaning added."}</p>
+          {definition.example ? (
+            <p className="text-sm text-muted-foreground">{definition.example}</p>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function getFirstIpa(definitions: CatalogDefinition[]) {
+  const definitionWithIpa = definitions.find(
+    (definition) => definition.ipaUk || definition.ipaUs,
+  );
+
+  return definitionWithIpa?.ipaUk ?? definitionWithIpa?.ipaUs ?? null;
 }
 
 function StateMessage({
