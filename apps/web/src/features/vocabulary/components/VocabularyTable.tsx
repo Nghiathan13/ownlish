@@ -1,8 +1,5 @@
 import type { VocabWord } from "@/entities/vocab/api/vocab";
-import {
-  getDisplayVocabDefinitions,
-  getVocabWordNextReviewText,
-} from "@/entities/vocab/lib/vocabWordDefinitions";
+import { getDisplayVocabDefinitions } from "@/entities/vocab/lib/vocabWordDefinitions";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
 
@@ -45,7 +42,7 @@ export function VocabularyTable({
                   Next review
                 </dt>
                 <dd className="mt-1 text-muted-foreground">
-                  {getVocabWordNextReviewText(word)}
+                  <VocabDefinitionReviewDates word={word} />
                 </dd>
               </div>
             </dl>
@@ -88,7 +85,7 @@ export function VocabularyTable({
                 <VocabDefinitionSummary word={word} />
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {getVocabWordNextReviewText(word)}
+                <VocabDefinitionReviewDates word={word} />
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-2">
@@ -141,10 +138,26 @@ function VocabDefinitionSummary({ word }: { word: VocabWord }) {
             ) : null}
           </div>
           <p>{definition.meaningVi || definition.definition || "-"}</p>
-          <p className="text-xs text-muted-foreground">
-            {formatDisplayDate(definition.nextReview)}
-          </p>
         </div>
+      ))}
+    </div>
+  );
+}
+
+
+function VocabDefinitionReviewDates({ word }: { word: VocabWord }) {
+  const definitions = getDisplayVocabDefinitions(word);
+
+  if (definitions.length === 0) {
+    return <span>-</span>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      {definitions.map((definition, index) => (
+        <p key={`${definition.id}-${index}`}>
+          {formatDisplayDate(definition.nextReview)}
+        </p>
       ))}
     </div>
   );

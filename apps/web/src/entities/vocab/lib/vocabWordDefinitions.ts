@@ -3,6 +3,7 @@ import { formatDisplayDate } from "@/shared/lib/date";
 
 type DisplayVocabDefinition = Pick<
   VocabWordDefinition,
+  | "id"
   | "type"
   | "meaningVi"
   | "definition"
