@@ -6,21 +6,36 @@ import type {
 } from "@/entities/vocab/api/vocab";
 
 export type VocabWordFormValues = {
-  ipa: string;
+  band: string;
+  definition: string;
+  example: string;
+  exampleVi: string;
+  ipaUk: string;
+  ipaUs: string;
   meaningVi: string;
   type: string;
   word: string;
 };
 
 export const VOCAB_WORD_FORM_LIMITS = {
-  ipa: 120,
+  band: 40,
+  definition: 1000,
+  example: 1000,
+  exampleVi: 1000,
+  ipaUk: 120,
+  ipaUs: 120,
   meaningVi: 500,
   type: 80,
   word: 120,
 } as const;
 
 export const EMPTY_VOCAB_WORD_FORM_VALUES: VocabWordFormValues = {
-  ipa: "",
+  band: "",
+  definition: "",
+  example: "",
+  exampleVi: "",
+  ipaUk: "",
+  ipaUs: "",
   meaningVi: "",
   type: "",
   word: "",
@@ -39,6 +54,18 @@ export function getVocabWordDefinition(
   return word.definitions.find((definition) => definition.id === definitionId);
 }
 
+function validateMaxLength(
+  value: string,
+  limit: number,
+  label: string,
+): string | null {
+  if (value.trim().length > limit) {
+    return `${label} must be at most ${limit} characters.`;
+  }
+
+  return null;
+}
+
 export function getVocabWordFormError(values: VocabWordFormValues) {
   const trimmedWord = values.word.trim();
 
@@ -46,23 +73,42 @@ export function getVocabWordFormError(values: VocabWordFormValues) {
     return "Word is required.";
   }
 
-  if (trimmedWord.length > VOCAB_WORD_FORM_LIMITS.word) {
-    return `Word must be at most ${VOCAB_WORD_FORM_LIMITS.word} characters.`;
-  }
+  const fieldChecks: Array<[string, number, string]> = [
+    [values.word, VOCAB_WORD_FORM_LIMITS.word, "Word"],
+    [values.type, VOCAB_WORD_FORM_LIMITS.type, "Type"],
+    [values.ipaUk, VOCAB_WORD_FORM_LIMITS.ipaUk, "IPA UK"],
+    [values.ipaUs, VOCAB_WORD_FORM_LIMITS.ipaUs, "IPA US"],
+    [values.band, VOCAB_WORD_FORM_LIMITS.band, "Band"],
+    [values.meaningVi, VOCAB_WORD_FORM_LIMITS.meaningVi, "Vietnamese meaning"],
+    [values.definition, VOCAB_WORD_FORM_LIMITS.definition, "Definition"],
+    [values.example, VOCAB_WORD_FORM_LIMITS.example, "Example"],
+    [values.exampleVi, VOCAB_WORD_FORM_LIMITS.exampleVi, "Vietnamese example"],
+  ];
 
-  if (values.ipa.trim().length > VOCAB_WORD_FORM_LIMITS.ipa) {
-    return `IPA must be at most ${VOCAB_WORD_FORM_LIMITS.ipa} characters.`;
-  }
+  for (const [value, limit, label] of fieldChecks) {
+    const error = validateMaxLength(value, limit, label);
 
-  if (values.type.trim().length > VOCAB_WORD_FORM_LIMITS.type) {
-    return `Type must be at most ${VOCAB_WORD_FORM_LIMITS.type} characters.`;
-  }
-
-  if (values.meaningVi.trim().length > VOCAB_WORD_FORM_LIMITS.meaningVi) {
-    return `Vietnamese meaning must be at most ${VOCAB_WORD_FORM_LIMITS.meaningVi} characters.`;
+    if (error) {
+      return error;
+    }
   }
 
   return null;
+}
+
+function toDefinitionInputFields(
+  values: VocabWordFormValues,
+): Omit<CreateVocabWordInput, "word"> {
+  return {
+    band: optionalValue(values.band),
+    definition: optionalValue(values.definition),
+    example: optionalValue(values.example),
+    exampleVi: optionalValue(values.exampleVi),
+    ipaUk: optionalValue(values.ipaUk),
+    ipaUs: optionalValue(values.ipaUs),
+    meaningVi: optionalValue(values.meaningVi),
+    type: optionalValue(values.type),
+  };
 }
 
 export function toCreateVocabWordInput(
@@ -70,9 +116,7 @@ export function toCreateVocabWordInput(
 ): CreateVocabWordInput {
   return {
     word: values.word.trim(),
-    ipa: optionalValue(values.ipa),
-    type: optionalValue(values.type),
-    meaningVi: optionalValue(values.meaningVi),
+    ...toDefinitionInputFields(values),
   };
 }
 
@@ -88,14 +132,21 @@ export function toUpdateVocabWordInput(
 
 export function toVocabWordFormValues(
   word: VocabWord,
-  definitionId: string,
+  definitionId?: string,
 ): VocabWordFormValues {
-  const definition = getVocabWordDefinition(word, definitionId);
+  const definition = definitionId
+    ? getVocabWordDefinition(word, definitionId)
+    : undefined;
 
   return {
     word: word.word,
-    ipa: definition?.ipaUk ?? definition?.ipaUs ?? "",
     type: definition?.type ?? "",
+    ipaUk: definition?.ipaUk ?? "",
+    ipaUs: definition?.ipaUs ?? "",
+    band: definition?.band ?? "",
     meaningVi: definition?.meaningVi ?? "",
+    definition: definition?.definition ?? "",
+    example: definition?.example ?? "",
+    exampleVi: definition?.exampleVi ?? "",
   };
 }

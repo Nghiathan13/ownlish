@@ -14,8 +14,13 @@ function makeValues(
   return {
     word: "example",
     type: "",
-    ipa: "",
+    ipaUk: "",
+    ipaUs: "",
+    band: "",
     meaningVi: "",
+    definition: "",
+    example: "",
+    exampleVi: "",
     ...overrides,
   };
 }
@@ -35,17 +40,17 @@ function makeDefinition(overrides = {}) {
   return {
     id: "definition-id",
     vocabWordId: "word-id",
-    sourceDefinitionId: null,
-    sourceWordId: null,
-    type: null,
-    meaningVi: null,
-    definition: null,
-    example: null,
-    exampleVi: null,
-    ipaUk: null,
-    ipaUs: null,
-    band: null,
-    source: "manual",
+    sourceDefinitionId: 42,
+    sourceWordId: 7,
+    type: "noun",
+    meaningVi: "mau",
+    definition: "a sample",
+    example: "This is an example.",
+    exampleVi: "Day la vi du.",
+    ipaUk: "/ɪɡˈzɑːmpl/",
+    ipaUs: "/ɪɡˈzæmpl/",
+    band: "A1",
+    source: "oxford_3000",
     level: 0,
     wrongCount: 0,
     lastReview: null,
@@ -70,16 +75,12 @@ describe("getVocabWordFormError", () => {
     ).toBe("Word must be at most 120 characters.");
 
     expect(
-      getVocabWordFormError(makeValues({ ipa: ` ${"a".repeat(121)} ` })),
-    ).toBe("IPA must be at most 120 characters.");
+      getVocabWordFormError(makeValues({ ipaUk: ` ${"a".repeat(121)} ` })),
+    ).toBe("IPA UK must be at most 120 characters.");
 
     expect(
-      getVocabWordFormError(makeValues({ type: ` ${"a".repeat(81)} ` })),
-    ).toBe("Type must be at most 80 characters.");
-
-    expect(
-      getVocabWordFormError(makeValues({ meaningVi: ` ${"a".repeat(501)} ` })),
-    ).toBe("Vietnamese meaning must be at most 500 characters.");
+      getVocabWordFormError(makeValues({ definition: ` ${"a".repeat(1001)} ` })),
+    ).toBe("Definition must be at most 1000 characters.");
   });
 
   it("accepts valid values", () => {
@@ -87,7 +88,7 @@ describe("getVocabWordFormError", () => {
       getVocabWordFormError(
         makeValues({
           word: " example ",
-          ipa: " /ɪɡˈzæmpəl/ ",
+          ipaUk: " /ɪɡˈzæmpəl/ ",
           type: " noun ",
           meaningVi: " ví dụ ",
         }),
@@ -102,16 +103,26 @@ describe("vocab word form mappers", () => {
       toCreateVocabWordInput(
         makeValues({
           word: " example ",
-          ipa: " ",
+          ipaUk: " ",
+          ipaUs: "/us/",
           type: " noun ",
           meaningVi: "",
+          definition: " sample ",
+          example: "",
+          exampleVi: " vi du ",
+          band: " A1 ",
         }),
       ),
     ).toEqual({
       word: "example",
-      ipa: undefined,
+      ipaUk: undefined,
+      ipaUs: "/us/",
       type: "noun",
       meaningVi: undefined,
+      definition: "sample",
+      example: undefined,
+      exampleVi: "vi du",
+      band: "A1",
     });
   });
 
@@ -120,17 +131,24 @@ describe("vocab word form mappers", () => {
       toUpdateVocabWordInput(
         makeValues({
           word: " edited ",
-          ipa: " /e/ ",
+          ipaUk: " /uk/ ",
+          ipaUs: " /us/ ",
           type: "",
           meaningVi: " sửa ",
+          exampleVi: " vi du sua ",
         }),
         "definition-id",
       ),
     ).toEqual({
       word: "edited",
-      ipa: "/e/",
+      ipaUk: "/uk/",
+      ipaUs: "/us/",
       type: undefined,
       meaningVi: "sửa",
+      definition: undefined,
+      example: undefined,
+      exampleVi: "vi du sua",
+      band: undefined,
       definitionId: "definition-id",
     });
   });
@@ -140,23 +158,20 @@ describe("vocab word form mappers", () => {
       toVocabWordFormValues(
         makeWord({
           word: "sample",
-          definitions: [
-            makeDefinition({
-              id: "definition-id",
-              ipaUk: null,
-              ipaUs: "/sæmpəl/",
-              type: "noun",
-              meaningVi: "mau",
-            }),
-          ],
+          definitions: [makeDefinition({ id: "definition-id" })],
         }),
         "definition-id",
       ),
     ).toEqual({
       word: "sample",
-      ipa: "/sæmpəl/",
       type: "noun",
+      ipaUk: "/ɪɡˈzɑːmpl/",
+      ipaUs: "/ɪɡˈzæmpl/",
+      band: "A1",
       meaningVi: "mau",
+      definition: "a sample",
+      example: "This is an example.",
+      exampleVi: "Day la vi du.",
     });
   });
 });

@@ -2,17 +2,15 @@
 
 import { FormEvent, useState } from "react";
 import type { CreateVocabWordInput } from "@/entities/vocab/api/vocab";
+import { VocabWordFormFields } from "@/features/vocabulary/components/VocabWordFormFields";
 import {
   EMPTY_VOCAB_WORD_FORM_VALUES,
   getVocabWordFormError,
   toCreateVocabWordInput,
-  VOCAB_WORD_FORM_LIMITS,
   type VocabWordFormValues,
 } from "@/features/vocabulary/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
 import { Button } from "@/shared/ui/Button";
-import { Field } from "@/shared/ui/Field";
-import { TextInput } from "@/shared/ui/TextInput";
 
 type AddWordFormProps = {
   onCreate: (input: CreateVocabWordInput) => Promise<void>;
@@ -76,46 +74,11 @@ export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
       noValidate
       aria-busy={isSubmitting}
     >
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Word">
-          <TextInput
-            value={values.word}
-            onChange={(event) => updateValue("word", event.target.value)}
-            maxLength={VOCAB_WORD_FORM_LIMITS.word}
-            required
-            disabled={isSubmitting}
-          />
-        </Field>
-
-        <Field label="Type">
-          <TextInput
-            value={values.type}
-            onChange={(event) => updateValue("type", event.target.value)}
-            maxLength={VOCAB_WORD_FORM_LIMITS.type}
-            placeholder="noun, verb..."
-            disabled={isSubmitting}
-          />
-        </Field>
-
-        <Field label="IPA">
-          <TextInput
-            value={values.ipa}
-            onChange={(event) => updateValue("ipa", event.target.value)}
-            maxLength={VOCAB_WORD_FORM_LIMITS.ipa}
-            placeholder="/wɜːd/"
-            disabled={isSubmitting}
-          />
-        </Field>
-
-        <Field label="Vietnamese meaning">
-          <TextInput
-            value={values.meaningVi}
-            onChange={(event) => updateValue("meaningVi", event.target.value)}
-            maxLength={VOCAB_WORD_FORM_LIMITS.meaningVi}
-            disabled={isSubmitting}
-          />
-        </Field>
-      </div>
+      <VocabWordFormFields
+        disabled={isSubmitting}
+        onChange={updateValue}
+        values={values}
+      />
 
       {error ? (
         <p className="text-sm text-danger" role="alert">

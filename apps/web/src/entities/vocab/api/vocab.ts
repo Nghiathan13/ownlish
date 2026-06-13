@@ -74,7 +74,9 @@ export type CreateVocabWordInput = {
   band?: string;
   definition?: string;
   example?: string;
-  ipa?: string;
+  exampleVi?: string;
+  ipaUk?: string;
+  ipaUs?: string;
   level?: number;
   meaningVi?: string;
   type?: string;
