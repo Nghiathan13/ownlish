@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { useCollections } from "@/features/collections/hooks/useCollections";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
+import { TextInput } from "@/shared/ui/TextInput";
 
-const previewLimit = 12;
+const previewLimit = 24;
 
 export function CollectionsPage() {
   const { accessToken, clearSession, status, user } = useAuthSession();
+  const [wordSearch, setWordSearch] = useState("");
   const {
     collectionDetail,
     collectionDetailError,
@@ -34,7 +37,24 @@ export function CollectionsPage() {
     isAuthenticated: status === "authenticated",
     userId: user?.id ?? null,
   });
-  const previewWords = collectionDetail?.catalogWords.slice(0, previewLimit) ?? [];
+  const filteredWords = useMemo(() => {
+    const words = collectionDetail?.catalogWords ?? [];
+    const search = wordSearch.trim().toLowerCase();
+
+    if (!search) {
+      return words;
+    }
+
+    return words.filter((word) => {
+      return (
+        word.word.toLowerCase().includes(search) ||
+        word.definitions.some((definition) =>
+          (definition.meaningVi ?? "").toLowerCase().includes(search),
+        )
+      );
+    });
+  }, [collectionDetail, wordSearch]);
+  const previewWords = filteredWords.slice(0, previewLimit);
 
   return (
     <PageShell>
@@ -78,6 +98,7 @@ export function CollectionsPage() {
                     key={collection.id}
                     onClick={() => {
                       resetImportState();
+                      setWordSearch("");
                       setSelectedCollectionId(collection.id);
                     }}
                     type="button"
@@ -145,6 +166,24 @@ export function CollectionsPage() {
                     </p>
                   ) : null}
 
+                  <div className="grid gap-2">
+                    <label
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                      htmlFor="collection-word-search"
+                    >
+                      Search this set
+                    </label>
+                    <TextInput
+                      id="collection-word-search"
+                      onChange={(event) => setWordSearch(event.target.value)}
+                      placeholder="Search word or meaning..."
+                      value={wordSearch}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {filteredWords.length} of {collectionDetail.itemCount} words
+                    </p>
+                  </div>
+
                   <div className="grid gap-3">
                     {previewWords.map((word) => {
                       const firstDefinition = word.definitions[0];
@@ -180,10 +219,14 @@ export function CollectionsPage() {
                     })}
                   </div>
 
-                  {collectionDetail.catalogWords.length > previewLimit ? (
+                  {filteredWords.length > previewLimit ? (
                     <p className="text-sm text-muted-foreground">
-                      Showing {previewLimit} of {collectionDetail.itemCount} words.
-                      Import adds the full set to your vocabulary.
+                      Showing {previewLimit} of {filteredWords.length} matching
+                      words. Import adds the full set to your vocabulary.
+                    </p>
+                  ) : filteredWords.length === 0 ? (
+                    <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                      No words match this search.
                     </p>
                   ) : null}
 
