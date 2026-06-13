@@ -10,7 +10,7 @@ export function VocabularySearch({
   search,
 }: VocabularySearchProps) {
   return (
-    <div className="mt-8 grid gap-2">
+    <div className="grid min-w-0 flex-1 gap-2 sm:max-w-md">
       <label
         htmlFor="vocabulary-search"
         className="text-sm font-semibold text-foreground"

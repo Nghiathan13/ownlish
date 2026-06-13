@@ -73,10 +73,15 @@ function VocabularyPageContent() {
   return (
     <PageShell>
       <Panel>
-        <div className="flex justify-end">
-          <Button type="button" onClick={() => setIsAddWordOpen(true)}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <Button
+            type="button"
+            className="w-fit shrink-0"
+            onClick={() => setIsAddWordOpen(true)}
+          >
             Add word
           </Button>
+          <VocabularySearch search={search} onSearchChange={setSearch} />
         </div>
 
         {isAddWordOpen ? (
@@ -111,8 +116,6 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        <VocabularySearch search={search} onSearchChange={setSearch} />
-
         {definitionPendingDelete ? (
           <Modal
             title="Delete definition"
@@ -134,7 +137,7 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        <div className="mt-8 md:overflow-x-auto">
+        <div className="mt-8 overflow-hidden rounded-xl border border-border md:overflow-x-auto">
           {isInitialLoading || loadError || words.length === 0 ? (
             <VocabularyStateBlock
               error={loadError}
