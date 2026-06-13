@@ -1,8 +1,8 @@
-import { forwardRef, useEffect, useRef } from "react";
 import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
 import { expandWordsToDefinitionRows } from "@/features/vocabulary/lib/vocabularyTableRows";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
+import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type VocabularyTableProps = {
   allDefinitionsSelected: boolean;
@@ -24,14 +24,6 @@ export function VocabularyTable({
   words,
 }: VocabularyTableProps) {
   const rows = expandWordsToDefinitionRows(words);
-  const selectAllRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate =
-        someDefinitionsSelected && !allDefinitionsSelected;
-    }
-  }, [allDefinitionsSelected, someDefinitionsSelected]);
 
   return (
     <>
@@ -55,7 +47,7 @@ export function VocabularyTable({
                   return (
                     <div key={getDefinitionRowKey(row)} className="grid gap-3">
                       {definition ? (
-                        <DefinitionSelectCheckbox
+                        <SelectCheckbox
                           checked={selectedDefinitionIds.has(definition.id)}
                           label={`Select ${word.word}`}
                           onChange={() => onToggleDefinition(definition.id)}
@@ -109,9 +101,9 @@ export function VocabularyTable({
         <thead className="border-b border-border bg-muted">
           <tr>
             <th className="w-12 px-3 py-3">
-              <DefinitionSelectCheckbox
-                ref={selectAllRef}
+              <SelectCheckbox
                 checked={allDefinitionsSelected}
+                indeterminate={someDefinitionsSelected && !allDefinitionsSelected}
                 label="Select all definitions on this page"
                 onChange={onToggleAllDefinitions}
               />
@@ -134,7 +126,7 @@ export function VocabularyTable({
               >
                 <td className="px-3 py-3 align-middle">
                   {definition ? (
-                    <DefinitionSelectCheckbox
+                    <SelectCheckbox
                       checked={selectedDefinitionIds.has(definition.id)}
                       label={`Select ${row.word.word}`}
                       onChange={() => onToggleDefinition(definition.id)}
@@ -187,26 +179,6 @@ function getDefinitionRowKey(row: {
 }) {
   return `${row.word.id}-${row.definition?.id ?? "empty"}-${row.definitionIndex}`;
 }
-
-const DefinitionSelectCheckbox = forwardRef<
-  HTMLInputElement,
-  {
-    checked: boolean;
-    label: string;
-    onChange: () => void;
-  }
->(function DefinitionSelectCheckbox({ checked, label, onChange }, ref) {
-  return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={checked}
-      aria-label={label}
-      className="size-4 accent-foreground"
-      onChange={onChange}
-    />
-  );
-});
 
 function DefinitionTypeCell({
   definition,
