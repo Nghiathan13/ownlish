@@ -1,11 +1,13 @@
 import type {
   UpdateVocabReviewInput,
-  VocabWord,
+  VocabWordDefinition,
 } from "@/entities/vocab/api/vocab";
 
 const MAX_REVIEW_LEVEL = 7;
 
 export type ReviewGrade = "forgot" | "remember";
+
+type ReviewProgress = Pick<VocabWordDefinition, "level" | "wrongCount">;
 
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
@@ -34,23 +36,23 @@ export function getDaysForLevel(level: number) {
 }
 
 export function buildReviewUpdate(
-  word: VocabWord,
+  definition: ReviewProgress,
   grade: ReviewGrade,
   reviewedAt = new Date(),
 ): UpdateVocabReviewInput {
   if (grade === "forgot") {
-    const nextLevel = Math.max(0, word.level - 2);
+    const nextLevel = Math.max(0, definition.level - 2);
     const daysToAdd = nextLevel === 0 ? 1 : getDaysForLevel(nextLevel - 1);
 
     return {
       level: nextLevel,
-      wrongCount: word.wrongCount + 1,
+      wrongCount: definition.wrongCount + 1,
       lastReview: reviewedAt.toISOString(),
       nextReview: addDays(reviewedAt, daysToAdd).toISOString(),
     };
   }
 
-  const nextLevel = Math.min(MAX_REVIEW_LEVEL, word.level + 1);
+  const nextLevel = Math.min(MAX_REVIEW_LEVEL, definition.level + 1);
 
   return {
     level: nextLevel,
@@ -59,6 +61,6 @@ export function buildReviewUpdate(
     nextReview:
       nextLevel === MAX_REVIEW_LEVEL
         ? null
-        : addDays(reviewedAt, getDaysForLevel(word.level)).toISOString(),
+        : addDays(reviewedAt, getDaysForLevel(definition.level)).toISOString(),
   };
 }

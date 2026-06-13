@@ -1,4 +1,4 @@
-import type { VocabWord } from "@/entities/vocab/api/vocab";
+import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
 import { Button } from "@/shared/ui/Button";
 import type { ReviewGrade } from "../lib/reviewSchedule";
 
@@ -7,7 +7,7 @@ type ReviewCardProps = {
   onGrade: (grade: ReviewGrade) => void;
   onToggleMeaning: () => void;
   showMeaning: boolean;
-  word: VocabWord;
+  word: VocabReviewItem;
 };
 
 export function ReviewCard({
@@ -18,6 +18,7 @@ export function ReviewCard({
   word,
 }: ReviewCardProps) {
   const canGrade = showMeaning && !isSubmitting;
+  const ipa = word.ipaUk ?? word.ipaUs;
 
   return (
     <div className="grid gap-5 rounded-xl border border-border p-4 sm:gap-6 sm:p-6">
@@ -26,11 +27,9 @@ export function ReviewCard({
           Level {word.level} · Wrong {word.wrongCount}
         </p>
         <h2 className="break-words text-3xl font-bold leading-tight sm:text-4xl">
-          {word.word}
+          {word.vocabWord.word}
         </h2>
-        {word.ipa ? (
-          <p className="mt-2 text-muted-foreground">{word.ipa}</p>
-        ) : null}
+        {ipa ? <p className="mt-2 text-muted-foreground">{ipa}</p> : null}
         {word.type ? (
           <p className="mt-2 text-sm text-muted-foreground">{word.type}</p>
         ) : null}
@@ -38,14 +37,7 @@ export function ReviewCard({
 
       <div className="min-h-20 rounded-lg bg-muted p-4">
         {showMeaning ? (
-          <div className="grid gap-2">
-            <p className="font-semibold">
-              {word.meaningVi || word.definition || "No meaning added."}
-            </p>
-            {word.example ? (
-              <p className="text-sm text-muted-foreground">{word.example}</p>
-            ) : null}
-          </div>
+          <ReviewMeaning word={word} />
         ) : (
           <p className="text-muted-foreground">Hide meaning while reviewing.</p>
         )}
@@ -80,6 +72,19 @@ export function ReviewCard({
           Remember
         </Button>
       </div>
+    </div>
+  );
+}
+
+function ReviewMeaning({ word }: { word: VocabReviewItem }) {
+  return (
+    <div className="grid gap-1">
+      <p className="font-semibold">
+        {word.meaningVi || word.definition || "No meaning added."}
+      </p>
+      {word.example ? (
+        <p className="text-sm text-muted-foreground">{word.example}</p>
+      ) : null}
     </div>
   );
 }

@@ -48,6 +48,7 @@ export type CollectionDetail = CollectionSummary & {
 
 export type ImportCollectionResult = {
   imported: number;
+  updated: number;
   skipped: number;
 };
 
@@ -181,14 +182,19 @@ function parseCollectionDetail(body: unknown): CollectionDetail {
 function parseImportCollectionResult(body: unknown): ImportCollectionResult {
   if (!isRecord(body)) invalidApiResponse();
 
-  const { imported, skipped } = body;
+  const { imported, updated, skipped } = body;
 
-  if (!isNumber(imported) || !isNumber(skipped)) {
+  if (
+    !isNumber(imported) ||
+    !(updated === undefined || isNumber(updated)) ||
+    !isNumber(skipped)
+  ) {
     invalidApiResponse();
   }
 
   return {
     imported,
+    updated: updated ?? 0,
     skipped,
   };
 }

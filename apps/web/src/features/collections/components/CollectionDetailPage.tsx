@@ -71,7 +71,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
     try {
       const result = await importCollection(collectionSummary.id);
       setImportResultMessage(
-        `Imported ${result.imported} words. Skipped ${result.skipped} existing words.`,
+        `Imported ${result.imported} words. Updated ${result.updated} existing words. Skipped ${result.skipped} words.`,
       );
     } catch {
       // The mutation state renders the error message.

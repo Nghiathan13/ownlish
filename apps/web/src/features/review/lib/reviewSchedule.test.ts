@@ -1,21 +1,26 @@
 import { describe, expect, it } from "vitest";
-import type { VocabWord } from "@/entities/vocab/api/vocab";
+import type { VocabWordDefinition } from "@/entities/vocab/api/vocab";
 import { buildReviewUpdate, getDaysForLevel } from "./reviewSchedule";
 
 const REVIEWED_AT = new Date("2026-01-01T00:00:00.000Z");
 
-function makeWord(overrides: Partial<VocabWord> = {}): VocabWord {
+function makeDefinition(
+  overrides: Partial<VocabWordDefinition> = {},
+): VocabWordDefinition {
   return {
-    id: "word-id",
-    userId: "user-id",
-    word: "example",
-    normalizedWord: "example",
-    ipa: null,
+    id: "definition-id",
+    vocabWordId: "word-id",
+    sourceDefinitionId: null,
+    sourceWordId: null,
     type: null,
     meaningVi: null,
     definition: null,
     example: null,
+    exampleVi: null,
+    ipaUk: null,
+    ipaUs: null,
     band: null,
+    source: "manual",
     level: 0,
     wrongCount: 0,
     lastReview: null,
@@ -40,10 +45,10 @@ describe("getDaysForLevel", () => {
 });
 
 describe("buildReviewUpdate", () => {
-  it("moves a remembered word up one level and clears wrong count", () => {
+  it("moves a remembered definition up one level and clears wrong count", () => {
     expect(
       buildReviewUpdate(
-        makeWord({
+        makeDefinition({
           level: 2,
           wrongCount: 3,
         }),
@@ -58,10 +63,10 @@ describe("buildReviewUpdate", () => {
     });
   });
 
-  it("marks level 7 remembered words as mastered with no next review", () => {
+  it("marks level 7 remembered definitions as mastered with no next review", () => {
     expect(
       buildReviewUpdate(
-        makeWord({
+        makeDefinition({
           level: 6,
           wrongCount: 1,
         }),
@@ -76,10 +81,10 @@ describe("buildReviewUpdate", () => {
     });
   });
 
-  it("moves a forgotten word down two levels and increments wrong count", () => {
+  it("moves a forgotten definition down two levels and increments wrong count", () => {
     expect(
       buildReviewUpdate(
-        makeWord({
+        makeDefinition({
           level: 5,
           wrongCount: 2,
         }),
@@ -94,10 +99,10 @@ describe("buildReviewUpdate", () => {
     });
   });
 
-  it("keeps forgotten low-level words at level 0 and reviews them tomorrow", () => {
+  it("keeps forgotten low-level definitions at level 0 and reviews them tomorrow", () => {
     expect(
       buildReviewUpdate(
-        makeWord({
+        makeDefinition({
           level: 1,
           wrongCount: 0,
         }),

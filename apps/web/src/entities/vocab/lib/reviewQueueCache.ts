@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { VocabWordListResponse } from "@/entities/vocab/api/vocab";
+import type { VocabReviewListResponse } from "@/entities/vocab/api/vocab";
 
 export function getReviewQueueQueryKey(userId: string | null) {
   return ["review-queue", { userId }] as const;
@@ -8,7 +8,7 @@ export function getReviewQueueQueryKey(userId: string | null) {
 export async function optimisticallyRemoveFromReviewQueue(
   queryClient: QueryClient,
   userId: string | null,
-  wordId: string,
+  definitionId: string,
   { decrementTotal = true }: { decrementTotal?: boolean } = {},
 ) {
   const queryKey = getReviewQueueQueryKey(userId);
@@ -16,14 +16,14 @@ export async function optimisticallyRemoveFromReviewQueue(
   await queryClient.cancelQueries({ queryKey });
 
   const previousQueue =
-    queryClient.getQueryData<VocabWordListResponse>(queryKey);
+    queryClient.getQueryData<VocabReviewListResponse>(queryKey);
 
-  queryClient.setQueryData<VocabWordListResponse>(queryKey, (oldData) => {
+  queryClient.setQueryData<VocabReviewListResponse>(queryKey, (oldData) => {
     if (!oldData) {
       return oldData;
     }
 
-    const wasInQueue = oldData.items.some((word) => word.id === wordId);
+    const wasInQueue = oldData.items.some((item) => item.id === definitionId);
 
     if (!wasInQueue) {
       return oldData;
@@ -31,7 +31,7 @@ export async function optimisticallyRemoveFromReviewQueue(
 
     return {
       ...oldData,
-      items: oldData.items.filter((word) => word.id !== wordId),
+      items: oldData.items.filter((item) => item.id !== definitionId),
       meta: {
         ...oldData.meta,
         total: decrementTotal
@@ -47,7 +47,7 @@ export async function optimisticallyRemoveFromReviewQueue(
 export function restoreReviewQueue(
   queryClient: QueryClient,
   userId: string | null,
-  previousQueue: VocabWordListResponse | undefined,
+  previousQueue: VocabReviewListResponse | undefined,
 ) {
   if (previousQueue === undefined) {
     return;

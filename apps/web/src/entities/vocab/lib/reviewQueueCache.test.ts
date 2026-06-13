@@ -1,8 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 import type {
-  VocabWord,
-  VocabWordListResponse,
+  VocabReviewItem,
+  VocabReviewListResponse,
 } from "@/entities/vocab/api/vocab";
 import {
   getReviewQueueQueryKey,
@@ -20,18 +20,21 @@ function createQueryClient() {
   });
 }
 
-function makeWord(id: string): VocabWord {
+function makeItem(id: string): VocabReviewItem {
   return {
     id,
-    userId: "user-id",
-    word: id,
-    normalizedWord: id,
-    ipa: null,
+    vocabWordId: `word-${id}`,
+    sourceDefinitionId: null,
+    sourceWordId: null,
     type: null,
     meaningVi: null,
     definition: null,
     example: null,
+    exampleVi: null,
+    ipaUk: null,
+    ipaUs: null,
     band: null,
+    source: "manual",
     level: 0,
     wrongCount: 0,
     lastReview: null,
@@ -39,10 +42,16 @@ function makeWord(id: string): VocabWord {
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     deletedAt: null,
+    vocabWord: {
+      id: `word-${id}`,
+      userId: "user-id",
+      word: id,
+      normalizedWord: id,
+    },
   };
 }
 
-function makeQueue(items: VocabWord[]): VocabWordListResponse {
+function makeQueue(items: VocabReviewItem[]): VocabReviewListResponse {
   return {
     items,
     meta: {
@@ -64,10 +73,10 @@ describe("getReviewQueueQueryKey", () => {
 });
 
 describe("optimisticallyRemoveFromReviewQueue", () => {
-  it("removes a word and decrements total by default", async () => {
+  it("removes a definition and decrements total by default", async () => {
     const queryClient = createQueryClient();
     const queryKey = getReviewQueueQueryKey("user-id");
-    const queue = makeQueue([makeWord("one"), makeWord("two")]);
+    const queue = makeQueue([makeItem("one"), makeItem("two")]);
     queryClient.setQueryData(queryKey, queue);
 
     const previousQueue = await optimisticallyRemoveFromReviewQueue(
@@ -77,9 +86,9 @@ describe("optimisticallyRemoveFromReviewQueue", () => {
     );
 
     expect(previousQueue).toEqual(queue);
-    expect(queryClient.getQueryData<VocabWordListResponse>(queryKey)).toEqual({
+    expect(queryClient.getQueryData<VocabReviewListResponse>(queryKey)).toEqual({
       ...queue,
-      items: [makeWord("two")],
+      items: [makeItem("two")],
       meta: {
         ...queue.meta,
         total: 1,
@@ -87,27 +96,27 @@ describe("optimisticallyRemoveFromReviewQueue", () => {
     });
   });
 
-  it("can remove a word without decrementing total", async () => {
+  it("can remove a definition without decrementing total", async () => {
     const queryClient = createQueryClient();
     const queryKey = getReviewQueueQueryKey("user-id");
-    const queue = makeQueue([makeWord("one"), makeWord("two")]);
+    const queue = makeQueue([makeItem("one"), makeItem("two")]);
     queryClient.setQueryData(queryKey, queue);
 
     await optimisticallyRemoveFromReviewQueue(queryClient, "user-id", "one", {
       decrementTotal: false,
     });
 
-    expect(queryClient.getQueryData<VocabWordListResponse>(queryKey)).toEqual({
+    expect(queryClient.getQueryData<VocabReviewListResponse>(queryKey)).toEqual({
       ...queue,
-      items: [makeWord("two")],
+      items: [makeItem("two")],
       meta: queue.meta,
     });
   });
 
-  it("leaves queue unchanged when word is not in queue", async () => {
+  it("leaves queue unchanged when definition is not in queue", async () => {
     const queryClient = createQueryClient();
     const queryKey = getReviewQueueQueryKey("user-id");
-    const queue = makeQueue([makeWord("one")]);
+    const queue = makeQueue([makeItem("one")]);
     queryClient.setQueryData(queryKey, queue);
 
     const previousQueue = await optimisticallyRemoveFromReviewQueue(
@@ -133,7 +142,7 @@ describe("restoreReviewQueue", () => {
   it("restores a previous queue", () => {
     const queryClient = createQueryClient();
     const queryKey = getReviewQueueQueryKey("user-id");
-    const queue = makeQueue([makeWord("one")]);
+    const queue = makeQueue([makeItem("one")]);
 
     restoreReviewQueue(queryClient, "user-id", queue);
 
@@ -143,7 +152,7 @@ describe("restoreReviewQueue", () => {
   it("does nothing when previous queue is undefined", () => {
     const queryClient = createQueryClient();
     const queryKey = getReviewQueueQueryKey("user-id");
-    const queue = makeQueue([makeWord("one")]);
+    const queue = makeQueue([makeItem("one")]);
     queryClient.setQueryData(queryKey, queue);
 
     restoreReviewQueue(queryClient, "user-id", undefined);

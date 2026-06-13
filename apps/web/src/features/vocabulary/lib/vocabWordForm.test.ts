@@ -26,12 +26,26 @@ function makeWord(overrides: Partial<VocabWord> = {}): VocabWord {
     userId: "user-id",
     word: "example",
     normalizedWord: "example",
-    ipa: null,
+    definitions: [],
+    ...overrides,
+  };
+}
+
+function makeDefinition(overrides = {}) {
+  return {
+    id: "definition-id",
+    vocabWordId: "word-id",
+    sourceDefinitionId: null,
+    sourceWordId: null,
     type: null,
     meaningVi: null,
     definition: null,
     example: null,
+    exampleVi: null,
+    ipaUk: null,
+    ipaUs: null,
     band: null,
+    source: "manual",
     level: 0,
     wrongCount: 0,
     lastReview: null,
@@ -124,9 +138,13 @@ describe("vocab word form mappers", () => {
       toVocabWordFormValues(
         makeWord({
           word: "sample",
-          ipa: null,
-          type: "noun",
-          meaningVi: null,
+          definitions: [
+            makeDefinition({
+              ipaUk: null,
+              type: "noun",
+              meaningVi: null,
+            }),
+          ],
         }),
       ),
     ).toEqual({

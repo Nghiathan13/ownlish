@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listDueReviewWords,
   updateVocabReview,
-  type VocabWord,
+  type VocabReviewItem,
 } from "@/entities/vocab/api/vocab";
 import {
   getReviewQueueQueryKey,
@@ -49,8 +49,8 @@ export function useReviewQueue({
     enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
   });
 
-  const reviewWords = data?.items;
-  const currentWord = reviewWords?.[0] ?? null;
+  const reviewItems = data?.items;
+  const currentWord = reviewItems?.[0] ?? null;
   const totalWords = data?.meta.total ?? 0;
 
   const loadError = queryError
@@ -64,7 +64,7 @@ export function useReviewQueue({
     error: gradeError,
     isPending: isSubmittingGrade,
   } = useMutation({
-    mutationFn: ({ word, grade }: { word: VocabWord; grade: ReviewGrade }) => {
+    mutationFn: ({ word, grade }: { word: VocabReviewItem; grade: ReviewGrade }) => {
       return runAuthenticatedRequest({
         accessToken,
         clearSession,
@@ -113,10 +113,10 @@ export function useReviewQueue({
     currentWord,
     error: loadError || mutationError,
     gradeCurrentWord,
-    isEmpty: (reviewWords?.length ?? 0) === 0,
+    isEmpty: (reviewItems?.length ?? 0) === 0,
     isLoading,
     isSubmittingGrade,
-    remainingWords: reviewWords?.length ?? 0,
+    remainingWords: reviewItems?.length ?? 0,
     reload,
     totalWords,
   };

@@ -75,10 +75,14 @@ export function toUpdateVocabWordInput(
 }
 
 export function toVocabWordFormValues(word: VocabWord): VocabWordFormValues {
+  const definition =
+    word.definitions.find((item) => item.source === "manual") ??
+    word.definitions[0];
+
   return {
     word: word.word,
-    ipa: word.ipa ?? "",
-    type: word.type ?? "",
-    meaningVi: word.meaningVi ?? "",
+    ipa: definition?.ipaUk ?? definition?.ipaUs ?? "",
+    type: definition?.type ?? "",
+    meaningVi: definition?.meaningVi ?? "",
   };
 }

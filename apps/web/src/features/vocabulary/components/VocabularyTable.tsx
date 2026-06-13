@@ -1,4 +1,10 @@
 import type { VocabWord } from "@/entities/vocab/api/vocab";
+import {
+  getDisplayVocabDefinitions,
+  getVocabWordLevelText,
+  getVocabWordNextReviewText,
+  getVocabWordTypeText,
+} from "@/entities/vocab/lib/vocabWordDefinitions";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { Button } from "@/shared/ui/Button";
 
@@ -27,11 +33,11 @@ export function VocabularyTable({
               <div>
                 <h2 className="text-base font-semibold">{word.word}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {word.type || "-"}
+                  {getVocabWordTypeText(word) || "-"}
                 </p>
               </div>
               <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-                Level {word.level}
+                Level {getVocabWordLevelText(word)}
               </span>
             </div>
 
@@ -40,14 +46,16 @@ export function VocabularyTable({
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Meaning
                 </dt>
-                <dd className="mt-1">{word.meaningVi || "-"}</dd>
+                <dd className="mt-1">
+                  <VocabDefinitionSummary word={word} />
+                </dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Next review
                 </dt>
                 <dd className="mt-1 text-muted-foreground">
-                  {formatDisplayDate(word.nextReview)}
+                  {getVocabWordNextReviewText(word)}
                 </dd>
               </div>
             </dl>
@@ -89,12 +97,14 @@ export function VocabularyTable({
             <tr key={word.id} className="border-b border-border">
               <td className="px-4 py-3 font-semibold">{word.word}</td>
               <td className="px-4 py-3 text-muted-foreground">
-                {word.type || "-"}
+                {getVocabWordTypeText(word) || "-"}
               </td>
-              <td className="px-4 py-3">{word.meaningVi || "-"}</td>
-              <td className="px-4 py-3">{word.level}</td>
+              <td className="px-4 py-3">
+                <VocabDefinitionSummary word={word} />
+              </td>
+              <td className="px-4 py-3">{getVocabWordLevelText(word)}</td>
               <td className="px-4 py-3 text-muted-foreground">
-                {formatDisplayDate(word.nextReview)}
+                {getVocabWordNextReviewText(word)}
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-2">
@@ -120,5 +130,38 @@ export function VocabularyTable({
         </tbody>
       </table>
     </>
+  );
+}
+
+function VocabDefinitionSummary({ word }: { word: VocabWord }) {
+  const definitions = getDisplayVocabDefinitions(word);
+
+  if (definitions.length === 0) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      {definitions.map((definition, index) => (
+        <div className="grid gap-1" key={`${definition.type ?? "type"}-${index}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            {definition.type ? (
+              <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
+                {definition.type}
+              </span>
+            ) : null}
+            {definition.band ? (
+              <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                {definition.band}
+              </span>
+            ) : null}
+          </div>
+          <p>{definition.meaningVi || definition.definition || "-"}</p>
+          <p className="text-xs text-muted-foreground">
+            Level {definition.level} · {formatDisplayDate(definition.nextReview)}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
