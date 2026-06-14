@@ -160,7 +160,7 @@ function VocabularyPageContent() {
   return (
     <PageShell fillViewport>
       <Panel className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
           <Button
             type="button"
             className={classNames(
@@ -231,7 +231,7 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        <div className="mt-6 flex min-h-0 flex-1 flex-col">
+        <div className="mt-4 flex min-h-0 flex-1 flex-col">
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
             {isInitialLoading || loadError || words.length === 0 ? (
               <VocabularyStateBlock

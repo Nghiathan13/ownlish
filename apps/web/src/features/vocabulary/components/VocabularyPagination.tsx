@@ -37,7 +37,7 @@ export function VocabularyPagination({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <PaginationIconButton
         disabled={!canGoPrevious}
         label="Previous page"
@@ -58,7 +58,7 @@ export function VocabularyPagination({
         <ArrowForwardIcon className="size-3.5" />
       </PaginationIconButton>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
         <select
           aria-label="Words per page"
           className="page-size-select h-7 w-fit min-w-0 cursor-pointer appearance-none rounded-md border border-border bg-transparent px-2.5 text-sm text-foreground outline-none transition-[width,border-color] duration-200 [field-sizing:content] hover:border-foreground focus:border-foreground [@media(prefers-color-scheme:dark)]:color-scheme-dark"
