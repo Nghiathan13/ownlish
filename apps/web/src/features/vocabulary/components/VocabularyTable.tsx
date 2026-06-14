@@ -19,7 +19,7 @@ import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
   word: "w-[20%]",
   ipa: "w-[20%]",
-  meaning: "w-[20%)]",
+  meaning: "w-[20%]",
   example: "w-[40%]",
   type: "w-[8rem]",
   level: "w-[4rem]",
