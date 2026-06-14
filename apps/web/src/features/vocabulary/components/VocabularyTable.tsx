@@ -162,6 +162,17 @@ export function VocabularyTable({
       </div>
 
       <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-sm md:table">
+        <colgroup>
+          <col className="w-10" />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.word} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.ipa} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.type} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.meaning} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.level} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.example} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.nextReview} />
+          <col className={VOCABULARY_TABLE_COLUMN_WIDTH.actions} />
+        </colgroup>
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="bg-surface w-10 px-3 py-3 align-middle">
@@ -174,67 +185,28 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.word,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Word
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               IPA
             </th>
-            <th className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.type,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Type
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.meaning,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Meaning
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.level,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Level
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.example,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Example
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.nextReview,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Next review
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.actions,
-              )}
-            >
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
               Actions
             </th>
           </tr>
@@ -253,7 +225,7 @@ export function VocabularyTable({
               >
                 <td
                   className={classNames(
-                    "w-10 px-3 align-middle",
+                    "px-3 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -269,10 +241,7 @@ export function VocabularyTable({
                 </td>
                 {row.isFirstInWord ? (
                   <td
-                    className={classNames(
-                      "px-2 py-2 align-middle font-semibold",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.word,
-                    )}
+                    className="px-2 py-2 align-middle font-semibold"
                     rowSpan={row.definitionCount}
                   >
                     {row.word.word}
@@ -280,10 +249,7 @@ export function VocabularyTable({
                 ) : null}
                 {row.isFirstInWord && uniformIpa ? (
                   <td
-                    className={classNames(
-                      "px-2 py-2 align-middle",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
-                    )}
+                    className="px-2 py-2 align-middle"
                     rowSpan={row.definitionCount}
                   >
                     <DefinitionIpaCell
@@ -295,7 +261,6 @@ export function VocabularyTable({
                   <td
                     className={classNames(
                       "px-2 align-middle",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
                       getDefinitionRowPadding(row),
                     )}
                   >
@@ -305,7 +270,6 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
-                    VOCABULARY_TABLE_COLUMN_WIDTH.type,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -314,7 +278,6 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
-                    VOCABULARY_TABLE_COLUMN_WIDTH.meaning,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -323,7 +286,6 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
-                    VOCABULARY_TABLE_COLUMN_WIDTH.level,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -332,7 +294,6 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
-                    VOCABULARY_TABLE_COLUMN_WIDTH.example,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -341,7 +302,6 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle text-muted-foreground",
-                    VOCABULARY_TABLE_COLUMN_WIDTH.nextReview,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -350,7 +310,6 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
-                    VOCABULARY_TABLE_COLUMN_WIDTH.actions,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -380,10 +339,9 @@ function getDefinitionRowKey(row: {
   return `${row.word.id}-${row.definition?.id ?? "empty"}-${row.definitionIndex}`;
 }
 
-function getDefinitionRowPadding(row: Pick<
-  VocabularyDefinitionRow,
-  "isFirstInWord" | "isLastInWord"
->) {
+type DefinitionRowPaddingInput = Pick<VocabularyDefinitionRow, "isFirstInWord" | "isLastInWord">;
+
+function getDefinitionRowPadding(row: DefinitionRowPaddingInput): string {
   if (row.isFirstInWord && row.isLastInWord) {
     return "py-2";
   }
