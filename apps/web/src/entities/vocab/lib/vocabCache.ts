@@ -1,9 +1,11 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import type { VocabularyPageSize } from "./vocabPagination";
 import { getReviewQueueQueryKey } from "./reviewQueueCache";
 import { getVocabStatsQueryKey } from "./vocabStatsCache";
 
 export type VocabPageState = {
   offset: number;
+  pageSize: VocabularyPageSize;
   search: string;
 };
 
@@ -13,7 +15,12 @@ export function getVocabQueryKey(
 ) {
   return [
     "vocab",
-    { userId, search: pageState.search, offset: pageState.offset },
+    {
+      userId,
+      search: pageState.search,
+      offset: pageState.offset,
+      limit: pageState.pageSize,
+    },
   ] as const;
 }
 

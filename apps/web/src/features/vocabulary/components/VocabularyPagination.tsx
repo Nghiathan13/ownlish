@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
+import {
+  VOCABULARY_PAGE_SIZE_OPTIONS,
+  isVocabularyPageSize,
+  type VocabularyPageSize,
+} from "@/entities/vocab/lib/vocabPagination";
+import { classNames } from "@/shared/lib/classNames";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
-import { classNames } from "@/shared/lib/classNames";
 
 type VocabularyPaginationProps = {
   canGoNext: boolean;
@@ -9,8 +14,9 @@ type VocabularyPaginationProps = {
   itemCount: number;
   offset: number;
   onNext: () => void;
+  onPageSizeChange: (pageSize: VocabularyPageSize) => void;
   onPrevious: () => void;
-  pageSize: number;
+  pageSize: VocabularyPageSize;
   total: number;
 };
 
@@ -20,6 +26,7 @@ export function VocabularyPagination({
   itemCount,
   offset,
   onNext,
+  onPageSizeChange,
   onPrevious,
   pageSize,
   total,
@@ -53,9 +60,32 @@ export function VocabularyPagination({
         <ArrowForwardIcon className="size-3.5" />
       </PaginationIconButton>
 
-      <p className="text-sm text-muted-foreground">
-        {itemCount} words
-      </p>
+      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+        <label className="flex items-center gap-2">
+          <select
+            aria-label="Words per page"
+            className="rounded-md border border-border bg-muted px-2 py-1 text-foreground"
+            value={pageSize}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+
+              if (isVocabularyPageSize(value)) {
+                onPageSizeChange(value);
+              }
+            }}
+          >
+            {VOCABULARY_PAGE_SIZE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <span>words</span>
+        </label>
+        <span>
+          {itemCount} words of {total} words
+        </span>
+      </div>
     </div>
   );
 }

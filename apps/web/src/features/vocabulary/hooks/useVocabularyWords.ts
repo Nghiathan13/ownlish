@@ -7,8 +7,6 @@ import { useUpdateVocabularyWord } from "./useUpdateVocabularyWord";
 import { useVocabularyListQuery } from "./useVocabularyListQuery";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
-const VOCABULARY_PAGE_SIZE = 50;
-
 type UseVocabularyWordsParams = {
   accessToken: string | null;
   clearSession: () => void;
@@ -30,8 +28,8 @@ export function useVocabularyWords({
     pageState,
     previousPage,
     resetToFirstPage,
+    setPageSize,
   } = useVocabularyPageState({
-    pageSize: VOCABULARY_PAGE_SIZE,
     search,
   });
   const queryClient = useQueryClient();
@@ -49,7 +47,7 @@ export function useVocabularyWords({
     accessToken,
     clearSession,
     isAuthenticated,
-    pageSize: VOCABULARY_PAGE_SIZE,
+    pageSize: pageState.pageSize,
     pageState,
     userId,
   });
@@ -98,9 +96,10 @@ export function useVocabularyWords({
     loadError,
     nextPage,
     offset: pageState.offset,
-    pageSize: VOCABULARY_PAGE_SIZE,
+    pageSize: pageState.pageSize,
     previousPage,
     reload,
+    setPageSize,
     totalWords,
     updateWord,
     updatingDefinitionId,

@@ -7,6 +7,7 @@
   --foreground: #171717;
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
   --muted-foreground: color-mix(in srgb, var(--foreground) 64%, transparent);
+  --surface: color-mix(in srgb, var(--foreground) 6%, var(--background));
 }
 
 @theme inline {
@@ -16,6 +17,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-surface: var(--surface);
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 }

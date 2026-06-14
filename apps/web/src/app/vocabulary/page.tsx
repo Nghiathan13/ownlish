@@ -57,6 +57,7 @@ function VocabularyPageContent() {
     pageSize,
     previousPage,
     reload,
+    setPageSize,
     totalWords,
     updateWord,
     updatingDefinitionId,
@@ -73,7 +74,7 @@ function VocabularyPageContent() {
     null,
   );
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
-  const selectionScope = `${debouncedSearch}:${offset}`;
+  const selectionScope = `${debouncedSearch}:${offset}:${pageSize}`;
   const [selectionByScope, setSelectionByScope] = useState<{
     scope: string;
     ids: Set<string>;
@@ -267,6 +268,7 @@ function VocabularyPageContent() {
                 itemCount={words.length}
                 offset={offset}
                 onNext={nextPage}
+                onPageSizeChange={setPageSize}
                 onPrevious={previousPage}
                 pageSize={pageSize}
                 total={totalWords}
