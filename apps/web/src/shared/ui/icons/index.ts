@@ -2,6 +2,7 @@ export { AddIcon } from "./AddIcon";
 export { ArrowBackIcon } from "./ArrowBackIcon";
 export { ArrowForwardIcon } from "./ArrowForwardIcon";
 export { CheckIcon } from "./CheckIcon";
+export { DeleteIcon } from "./DeleteIcon";
 export { EditIcon } from "./EditIcon";
 export { RemoveIcon } from "./RemoveIcon";
 export { SearchIcon } from "./SearchIcon";

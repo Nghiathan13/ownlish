@@ -23,6 +23,7 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
+import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { Modal } from "@/shared/ui/Modal";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -176,9 +177,13 @@ function VocabularyPageContent() {
           {selectedDefinitions.length > 0 ? (
             <Button
               type="button"
-              className="w-fit shrink-0 sm:ml-auto"
+              className={classNames(
+                vocabularyToolbarControlClassName,
+                "w-fit shrink-0 cursor-pointer gap-3 px-3 sm:ml-auto",
+              )}
               onClick={() => setIsBulkDeleteOpen(true)}
             >
+              <DeleteIcon className="size-4" />
               Delete ({selectedDefinitions.length})
             </Button>
           ) : null}
