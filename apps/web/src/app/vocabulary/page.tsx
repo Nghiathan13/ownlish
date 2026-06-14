@@ -265,7 +265,6 @@ function VocabularyPageContent() {
               <VocabularyPagination
                 canGoNext={canGoNext}
                 canGoPrevious={canGoPrevious}
-                itemCount={words.length}
                 offset={offset}
                 onNext={nextPage}
                 onPageSizeChange={setPageSize}

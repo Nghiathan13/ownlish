@@ -11,7 +11,6 @@ import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 type VocabularyPaginationProps = {
   canGoNext: boolean;
   canGoPrevious: boolean;
-  itemCount: number;
   offset: number;
   onNext: () => void;
   onPageSizeChange: (pageSize: VocabularyPageSize) => void;
@@ -23,7 +22,6 @@ type VocabularyPaginationProps = {
 export function VocabularyPagination({
   canGoNext,
   canGoPrevious,
-  itemCount,
   offset,
   onNext,
   onPageSizeChange,
@@ -60,31 +58,26 @@ export function VocabularyPagination({
         <ArrowForwardIcon className="size-3.5" />
       </PaginationIconButton>
 
-      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <label className="flex items-center gap-2">
-          <select
-            aria-label="Words per page"
-            className="rounded-md border border-border bg-muted px-2 py-1 text-foreground"
-            value={pageSize}
-            onChange={(event) => {
-              const value = Number(event.target.value);
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <select
+          aria-label="Words per page"
+          className="cursor-pointer appearance-none rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-foreground outline-none transition focus:border-foreground"
+          value={pageSize}
+          onChange={(event) => {
+            const value = Number(event.target.value);
 
-              if (isVocabularyPageSize(value)) {
-                onPageSizeChange(value);
-              }
-            }}
-          >
-            {VOCABULARY_PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <span>words</span>
-        </label>
-        <span>
-          {itemCount} words of {total} words
-        </span>
+            if (isVocabularyPageSize(value)) {
+              onPageSizeChange(value);
+            }
+          }}
+        >
+          {VOCABULARY_PAGE_SIZE_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option} words
+            </option>
+          ))}
+        </select>
+        <span>of {total}</span>
       </div>
     </div>
   );
