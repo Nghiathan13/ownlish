@@ -17,6 +17,10 @@ import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
+  word: "w-[calc((100%-27.5rem)*0.2)]",
+  ipa: "w-[calc((100%-27.5rem)*0.2)]",
+  meaning: "w-[calc((100%-27.5rem)*0.2)]",
+  example: "w-[calc((100%-27.5rem)*0.4)]",
   type: "w-[8rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
@@ -59,7 +63,10 @@ export function VocabularyTable({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <h2 className="text-base font-semibold">{word.word}</h2>
                 {uniformIpa ? (
-                  <DefinitionIpaCell pair={getSharedIpaPair(word.definitions)} />
+                  <DefinitionIpaCell
+                    className="shrink-0 text-base"
+                    pair={getSharedIpaPair(word.definitions)}
+                  />
                 ) : null}
               </div>
 
@@ -167,8 +174,22 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">Word</th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">IPA</th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.word,
+              )}
+            >
+              Word
+            </th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+              )}
+            >
+              IPA
+            </th>
             <th className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
                 VOCABULARY_TABLE_COLUMN_WIDTH.type,
@@ -176,7 +197,14 @@ export function VocabularyTable({
             >
               Type
             </th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">Meaning</th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.meaning,
+              )}
+            >
+              Meaning
+            </th>
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -185,7 +213,12 @@ export function VocabularyTable({
             >
               Level
             </th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.example,
+              )}
+            >
               Example
             </th>
             <th
@@ -236,7 +269,10 @@ export function VocabularyTable({
                 </td>
                 {row.isFirstInWord ? (
                   <td
-                    className="px-2 py-2 align-middle font-semibold"
+                    className={classNames(
+                      "px-2 py-2 align-middle font-semibold",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.word,
+                    )}
                     rowSpan={row.definitionCount}
                   >
                     {row.word.word}
@@ -244,7 +280,10 @@ export function VocabularyTable({
                 ) : null}
                 {row.isFirstInWord && uniformIpa ? (
                   <td
-                    className="px-2 py-2 align-middle"
+                    className={classNames(
+                      "px-2 py-2 align-middle",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                    )}
                     rowSpan={row.definitionCount}
                   >
                     <DefinitionIpaCell
@@ -256,6 +295,7 @@ export function VocabularyTable({
                   <td
                     className={classNames(
                       "px-2 align-middle",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
                       getDefinitionRowPadding(row),
                     )}
                   >
@@ -274,6 +314,7 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
+                    VOCABULARY_TABLE_COLUMN_WIDTH.meaning,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -291,6 +332,7 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
+                    VOCABULARY_TABLE_COLUMN_WIDTH.example,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -445,13 +487,24 @@ function DefinitionExampleCell({
   return <p className="min-w-0 break-words">{example}</p>;
 }
 
-function DefinitionIpaCell({ pair }: { pair: DefinitionIpaPair }) {
+function DefinitionIpaCell({
+  className,
+  pair,
+}: {
+  className?: string;
+  pair: DefinitionIpaPair;
+}) {
   if (!hasIpaContent(pair)) {
     return <span className="text-muted-foreground">-</span>;
   }
 
   return (
-    <div className="grid gap-0.5 text-xs text-muted-foreground">
+    <div
+      className={classNames(
+        "grid gap-0.5 text-muted-foreground",
+        className,
+      )}
+    >
       {pair.uk ? (
         <p className="break-words">UK {formatIpaDisplay(pair.uk)}</p>
       ) : null}
