@@ -20,6 +20,7 @@ import {
 } from "@/features/vocabulary/lib/vocabularySelection";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui/Button";
+import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { Modal } from "@/shared/ui/Modal";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -160,9 +161,10 @@ function VocabularyPageContent() {
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             type="button"
-            className="w-fit shrink-0 py-2 text-sm"
+            className="h-7 w-fit shrink-0 gap-1.5 rounded-md px-2.5 py-0 text-sm"
             onClick={() => setIsAddWordOpen(true)}
           >
+            <AddIcon />
             Add word
           </Button>
           <VocabularySearch search={search} onSearchChange={setSearch} />
