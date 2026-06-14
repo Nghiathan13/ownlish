@@ -3,12 +3,20 @@ import {
   expandWordsToDefinitionRows,
   type VocabularyDefinitionRow,
 } from "@/features/vocabulary/lib/vocabularyTableRows";
+import {
+  type DefinitionIpaPair,
+  getDefinitionIpaPair,
+  getSharedIpaPair,
+  hasIpaContent,
+  hasUniformIpa,
+} from "@/features/vocabulary/lib/vocabularyIpa";
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
+  ipa: "w-[8rem]",
   type: "w-[8rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
@@ -41,14 +49,18 @@ export function VocabularyTable({
       <div className="grid gap-3 md:hidden">
         {words.map((word) => {
           const wordRows = expandWordsToDefinitionRows([word]);
+          const uniformIpa = hasUniformIpa(word.definitions);
 
           return (
             <article
               key={word.id}
               className="rounded-lg border border-border bg-background p-4"
             >
-              <div className="mb-3">
+              <div className="mb-3 flex items-start justify-between gap-3">
                 <h2 className="text-base font-semibold">{word.word}</h2>
+                {uniformIpa ? (
+                  <DefinitionIpaCell pair={getSharedIpaPair(word.definitions)} />
+                ) : null}
               </div>
 
               <div className="text-sm">
@@ -70,6 +82,20 @@ export function VocabularyTable({
                           label={`Select ${word.word}`}
                           onChange={() => onToggleDefinition(definition.id)}
                         />
+                      ) : null}
+                      {!uniformIpa ? (
+                        <dl className="grid grid-cols-1 gap-3">
+                          <div>
+                            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              IPA
+                            </dt>
+                            <dd className="mt-1">
+                              <DefinitionIpaCell
+                                pair={getDefinitionIpaPair(row.definition)}
+                              />
+                            </dd>
+                          </div>
+                        </dl>
                       ) : null}
                       <dl className="grid grid-cols-2 gap-3">
                         <div>
@@ -96,6 +122,14 @@ export function VocabularyTable({
                             <DefinitionLevelCell definition={row.definition} />
                           </dd>
                         </div>
+                        <div className="col-span-2">
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Example
+                          </dt>
+                          <dd className="mt-1">
+                            <DefinitionExampleCell definition={row.definition} />
+                          </dd>
+                        </div>
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Next review
@@ -120,7 +154,7 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden w-full min-w-[800px] table-fixed border-collapse text-left text-sm md:table">
+      <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-sm md:table">
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="bg-surface w-10 px-3 py-3 align-middle">
@@ -132,6 +166,14 @@ export function VocabularyTable({
                   onChange={onToggleAllDefinitions}
                 />
               </div>
+            </th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+              )}
+            >
+              IPA
             </th>
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Word</th>
             <th className={classNames(
@@ -149,6 +191,9 @@ export function VocabularyTable({
               )}
             >
               Level
+            </th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">
+              Example
             </th>
             <th
               className={classNames(
@@ -171,6 +216,7 @@ export function VocabularyTable({
         <tbody>
           {rows.map((row, rowIndex) => {
             const definition = row.definition;
+            const uniformIpa = hasUniformIpa(row.word.definitions);
             const showRowBorder =
               row.isLastInWord && rowIndex < rows.length - 1;
 
@@ -195,6 +241,30 @@ export function VocabularyTable({
                     </div>
                   ) : null}
                 </td>
+                {row.isFirstInWord && uniformIpa ? (
+                  <td
+                    className={classNames(
+                      "px-2 py-2 align-middle",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                    )}
+                    rowSpan={row.definitionCount}
+                  >
+                    <DefinitionIpaCell
+                      pair={getSharedIpaPair(row.word.definitions)}
+                    />
+                  </td>
+                ) : null}
+                {!uniformIpa ? (
+                  <td
+                    className={classNames(
+                      "px-2 align-middle",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                      getDefinitionRowPadding(row),
+                    )}
+                  >
+                    <DefinitionIpaCell pair={getDefinitionIpaPair(row.definition)} />
+                  </td>
+                ) : null}
                 {row.isFirstInWord ? (
                   <td
                     className="px-2 py-2 align-middle font-semibold"
@@ -228,6 +298,14 @@ export function VocabularyTable({
                   )}
                 >
                   <DefinitionLevelCell definition={row.definition} />
+                </td>
+                <td
+                  className={classNames(
+                    "px-2 align-middle",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
+                  <DefinitionExampleCell definition={row.definition} />
                 </td>
                 <td
                   className={classNames(
@@ -358,6 +436,37 @@ function DefinitionLevelCell({
   }
 
   return <span>{definition.level}</span>;
+}
+
+function DefinitionExampleCell({
+  definition,
+}: {
+  definition: VocabWordDefinition | null;
+}) {
+  if (!definition) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  const example = definition.example || definition.exampleVi;
+
+  if (!example) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  return <p className="min-w-0 break-words">{example}</p>;
+}
+
+function DefinitionIpaCell({ pair }: { pair: DefinitionIpaPair }) {
+  if (!hasIpaContent(pair)) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  return (
+    <div className="grid gap-0.5 text-xs text-muted-foreground">
+      {pair.uk ? <p className="break-words">UK {pair.uk}</p> : null}
+      {pair.us ? <p className="break-words">US {pair.us}</p> : null}
+    </div>
+  );
 }
 
 function DefinitionNextReviewCell({
