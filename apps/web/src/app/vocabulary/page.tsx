@@ -18,7 +18,9 @@ import {
   getSelectableDefinitions,
   getSelectedDefinitions,
 } from "@/features/vocabulary/lib/vocabularySelection";
+import { vocabularyToolbarControlClassName } from "@/features/vocabulary/lib/vocabularyToolbarStyles";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { Modal } from "@/shared/ui/Modal";
@@ -161,7 +163,10 @@ function VocabularyPageContent() {
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             type="button"
-            className="h-7 w-fit shrink-0 gap-1.5 rounded-md px-2.5 py-0 text-sm"
+            className={classNames(
+              "w-fit shrink-0 gap-1.5",
+              vocabularyToolbarControlClassName,
+            )}
             onClick={() => setIsAddWordOpen(true)}
           >
             <AddIcon />
