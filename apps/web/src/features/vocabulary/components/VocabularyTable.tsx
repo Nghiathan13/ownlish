@@ -163,10 +163,7 @@ export function VocabularyTable({
                 </td>
                 {row.isFirstInWord ? (
                   <td
-                    className={classNames(
-                      "px-2 align-middle font-semibold",
-                      getDefinitionRowPadding(row),
-                    )}
+                    className="px-2 py-2 align-middle font-semibold"
                     rowSpan={row.definitionCount}
                   >
                     {row.word.word}
