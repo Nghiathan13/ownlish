@@ -16,7 +16,6 @@ import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
-  ipa: "w-[8rem]",
   type: "w-[8rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
@@ -169,8 +168,7 @@ export function VocabularyTable({
             </th>
             <th
               className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                "bg-surface px-2 py-2 align-middle font-semibold"
               )}
             >
               IPA
@@ -244,8 +242,7 @@ export function VocabularyTable({
                 {row.isFirstInWord && uniformIpa ? (
                   <td
                     className={classNames(
-                      "px-2 py-2 align-middle",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                      "px-2 py-2 align-middle"
                     )}
                     rowSpan={row.definitionCount}
                   >
@@ -258,7 +255,6 @@ export function VocabularyTable({
                   <td
                     className={classNames(
                       "px-2 align-middle",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
                       getDefinitionRowPadding(row),
                     )}
                   >
