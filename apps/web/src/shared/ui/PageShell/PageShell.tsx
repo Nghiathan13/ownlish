@@ -6,19 +6,22 @@ type PageShellProps = {
   centered?: boolean;
   children: ReactNode;
   className?: string;
+  fillViewport?: boolean;
 };
 
 export function PageShell({
   centered = false,
   children,
   className,
+  fillViewport = false,
 }: PageShellProps) {
   return (
     <main
       className={classNames(
         APP_CONTAINER_CLASS,
-        "py-6 sm:py-8",
-        centered && "flex-1 grid place-items-center",
+        "flex min-h-0 flex-1 flex-col py-6 sm:py-8",
+        fillViewport ? "overflow-hidden" : "overflow-y-auto",
+        centered && "grid place-items-center",
         className,
       )}
     >

@@ -54,6 +54,7 @@ function VocabularyPageContent() {
     loadError,
     nextPage,
     offset,
+    pageSize,
     previousPage,
     reload,
     totalWords,
@@ -153,9 +154,9 @@ function VocabularyPageContent() {
   }
 
   return (
-    <PageShell>
-      <Panel>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <PageShell fillViewport>
+      <Panel className="flex min-h-0 flex-1 flex-col">
+        <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             type="button"
             className="w-fit shrink-0"
@@ -222,7 +223,7 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        <div className="mt-6 overflow-hidden rounded-xl border border-border md:overflow-x-auto">
+        <div className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
           {isInitialLoading || loadError || words.length === 0 ? (
             <VocabularyStateBlock
               error={loadError}
@@ -232,40 +233,45 @@ function VocabularyPageContent() {
               onRetry={reload}
             />
           ) : (
-            <div
-              className={`transition-opacity duration-200 ${
-                isRefreshing ? "opacity-50 pointer-events-none" : "opacity-100"
-              }`}
-            >
-              <VocabularyTable
-                allDefinitionsSelected={allDefinitionsSelected}
-                onEdit={(word, definition) => {
-                  if (definition) {
-                    setEditingTarget({
-                      word,
-                      definitionId: definition.id,
-                    });
-                  }
-                }}
-                onToggleAllDefinitions={toggleAllDefinitions}
-                onToggleDefinition={toggleDefinition}
-                selectedDefinitionIds={selectedDefinitionIds}
-                someDefinitionsSelected={someDefinitionsSelected}
-                words={words}
-              />
-            </div>
+            <>
+              <div
+                className={`min-h-0 flex-1 overflow-auto ${
+                  isRefreshing ? "opacity-50 pointer-events-none" : "opacity-100"
+                } transition-opacity duration-200`}
+              >
+                <VocabularyTable
+                  allDefinitionsSelected={allDefinitionsSelected}
+                  onEdit={(word, definition) => {
+                    if (definition) {
+                      setEditingTarget({
+                        word,
+                        definitionId: definition.id,
+                      });
+                    }
+                  }}
+                  onToggleAllDefinitions={toggleAllDefinitions}
+                  onToggleDefinition={toggleDefinition}
+                  selectedDefinitionIds={selectedDefinitionIds}
+                  someDefinitionsSelected={someDefinitionsSelected}
+                  words={words}
+                />
+              </div>
+
+              <div className="shrink-0 border-t border-border">
+                <VocabularyPagination
+                  canGoNext={canGoNext}
+                  canGoPrevious={canGoPrevious}
+                  itemCount={words.length}
+                  offset={offset}
+                  onNext={nextPage}
+                  onPrevious={previousPage}
+                  pageSize={pageSize}
+                  total={totalWords}
+                />
+              </div>
+            </>
           )}
         </div>
-
-        <VocabularyPagination
-          canGoNext={canGoNext}
-          canGoPrevious={canGoPrevious}
-          itemCount={words.length}
-          offset={offset}
-          onNext={nextPage}
-          onPrevious={previousPage}
-          total={totalWords}
-        />
       </Panel>
     </PageShell>
   );
