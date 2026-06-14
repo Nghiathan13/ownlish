@@ -9,6 +9,7 @@ import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
+  type: "w-[8rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
   actions: "w-[5rem]",
@@ -133,7 +134,13 @@ export function VocabularyTable({
               </div>
             </th>
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Word</th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">Type</th>
+            <th className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.type,
+              )}
+            >
+              Type
+            </th>
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Meaning</th>
             <th
               className={classNames(
@@ -199,6 +206,7 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
+                    VOCABULARY_TABLE_COLUMN_WIDTH.type,
                     getDefinitionRowPadding(row),
                   )}
                 >
