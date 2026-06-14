@@ -106,9 +106,9 @@ export function VocabularyTable({
       </div>
 
       <table className="hidden min-w-[720px] w-full border-collapse text-left text-sm md:table">
-        <thead className="relative sticky top-0 z-10 bg-surface after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border">
+        <thead className="sticky top-0 z-10">
           <tr>
-            <th className="w-12 bg-surface px-3 py-3 align-middle">
+            <th className="w-12 border-b border-border bg-surface px-3 py-3 align-middle">
               <div className="flex h-5 items-center">
                 <SelectCheckbox
                   checked={allDefinitionsSelected}
@@ -118,21 +118,23 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            <th className="bg-surface px-4 py-3 align-middle font-semibold">Word</th>
-            <th className="bg-surface px-4 py-3 align-middle font-semibold">Type</th>
-            <th className="bg-surface px-4 py-3 align-middle font-semibold">Meaning</th>
-            <th className="bg-surface px-4 py-3 align-middle font-semibold">Next review</th>
-            <th className="bg-surface px-4 py-3 align-middle font-semibold">Actions</th>
+            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Word</th>
+            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Type</th>
+            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Meaning</th>
+            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Next review</th>
+            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {rows.map((row, rowIndex) => {
             const definition = row.definition;
+            const showRowBorder =
+              row.isLastInWord && rowIndex < rows.length - 1;
 
             return (
               <tr
                 key={getDefinitionRowKey(row)}
-                className={row.isLastInWord ? "border-b border-border" : undefined}
+                className={showRowBorder ? "border-b border-border" : undefined}
               >
                 <td
                   className={classNames(
