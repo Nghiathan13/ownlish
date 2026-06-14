@@ -197,6 +197,55 @@ describe('CollectionsController (e2e)', () => {
         });
       });
 
+    const manualAddResponse = await request(app.getHttpServer())
+      .post('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        word: 'e2e catalog word',
+        type: 'verb',
+        meaningVi: 'nghia manual',
+      })
+      .expect(201);
+
+    expect(manualAddResponse.body.id).toBe(importedWord.id);
+    expect(manualAddResponse.body.definitions).toHaveLength(2);
+
+    const manualDefinition = manualAddResponse.body.definitions.find(
+      (definition: { source: string }) => definition.source === 'manual',
+    );
+
+    expect(manualDefinition).toMatchObject({
+      source: 'manual',
+      type: 'verb',
+      meaningVi: 'nghia manual',
+    });
+
+    await request(app.getHttpServer())
+      .patch(`/vocab/${importedWord.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        definitionId: manualDefinition.id,
+        meaningVi: 'nghia manual da sua',
+      })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.definitions).toHaveLength(2);
+        expect(response.body.definitions).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: importedDefinition.id,
+              source: 'oxford_3000',
+              meaningVi: 'nghia da sua',
+            }),
+            expect.objectContaining({
+              id: manualDefinition.id,
+              source: 'manual',
+              meaningVi: 'nghia manual da sua',
+            }),
+          ]),
+        );
+      });
+
     await request(app.getHttpServer())
       .post(`/collections/${collectionId}/import`)
       .set('Authorization', `Bearer ${accessToken}`)

@@ -543,22 +543,60 @@ describe('VocabController (e2e)', () => {
       .expect(400);
   });
 
-  it('rejects duplicate active words for the same user', async () => {
-    const payload = {
+  it('allows adding another manual definition for the same word', async () => {
+    const firstPayload = {
       word: 'hello',
+      type: 'noun',
+      meaningVi: 'xin chao',
+    };
+    const secondPayload = {
+      word: 'hello',
+      type: 'verb',
+      meaningVi: 'chay',
     };
 
-    await request(app.getHttpServer())
+    const firstResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(payload)
+      .send(firstPayload)
       .expect(201);
 
-    await request(app.getHttpServer())
+    const secondResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send(payload)
-      .expect(409);
+      .send(secondPayload)
+      .expect(201);
+
+    expect(secondResponse.body.id).toBe(firstResponse.body.id);
+    expect(secondResponse.body.definitions).toHaveLength(2);
+    expect(secondResponse.body.definitions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: 'manual',
+          type: 'noun',
+          meaningVi: 'xin chao',
+        }),
+        expect.objectContaining({
+          source: 'manual',
+          type: 'verb',
+          meaningVi: 'chay',
+        }),
+      ]),
+    );
+
+    await request(app.getHttpServer())
+      .get('/vocab')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.items).toHaveLength(1);
+        expect(response.body.items[0].id).toBe(firstResponse.body.id);
+        expect(response.body.items[0].definitions).toHaveLength(2);
+        expect(response.body.meta).toMatchObject({
+          total: 1,
+          hasMore: false,
+        });
+      });
   });
 
   it('allows creating the same word after soft delete', async () => {

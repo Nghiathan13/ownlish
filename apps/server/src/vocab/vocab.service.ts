@@ -178,26 +178,29 @@ export class VocabService {
   ): Promise<Awaited<CreatedVocabWordResult>> {
     const word = this.normalizeRequiredWord(dto.word);
     const normalizedWord = normalizeWord(word);
+    const existingWord = await this.prisma.vocabWord.findFirst({
+      where: {
+        userId,
+        normalizedWord,
+      },
+      include: activeDefinitionsInclude,
+    });
 
-    try {
-      return await this.prisma.vocabWord.create({
-        data: {
-          userId,
-          normalizedWord,
-          word,
-          definitions: {
-            create: this.buildManualDefinitionData(dto),
-          },
-        },
-        include: activeDefinitionsInclude,
-      });
-    } catch (error) {
-      if (this.isUniqueConstraintError(error)) {
-        return this.createDefinitionForExistingWord(userId, normalizedWord, dto);
-      }
-
-      throw error;
+    if (existingWord) {
+      return this.addManualDefinitionToExistingWord(existingWord, dto);
     }
+
+    return this.prisma.vocabWord.create({
+      data: {
+        userId,
+        normalizedWord,
+        word,
+        definitions: {
+          create: this.buildManualDefinitionData(dto),
+        },
+      },
+      include: activeDefinitionsInclude,
+    });
   }
 
   async update(
@@ -424,35 +427,32 @@ export class VocabService {
     return definition;
   }
 
-  private async createDefinitionForExistingWord(
-    userId: string,
-    normalizedWord: string,
+  private async addManualDefinitionToExistingWord(
+    existingWord: {
+      id: string;
+      definitions: Array<{ id: string }>;
+    },
     dto: CreateVocabWordDto,
   ): Promise<Awaited<UpdatedVocabWordResult>> {
-    const existingWord = await this.prisma.vocabWord.findFirst({
-      where: {
-        userId,
-        normalizedWord,
+    const word = this.normalizeRequiredWord(dto.word);
+    const data: {
+      word?: string;
+      definitions: {
+        create: ReturnType<VocabService['buildManualDefinitionData']>;
+      };
+    } = {
+      definitions: {
+        create: this.buildManualDefinitionData(dto),
       },
-      include: activeDefinitionsInclude,
-    });
+    };
 
-    if (!existingWord) {
-      throw new ConflictException('Word already exists');
-    }
-
-    if (existingWord.definitions.length > 0) {
-      throw new ConflictException('Word already exists');
+    if (existingWord.definitions.length === 0) {
+      data.word = word;
     }
 
     return this.prisma.vocabWord.update({
       where: { id: existingWord.id },
-      data: {
-        word: this.normalizeRequiredWord(dto.word),
-        definitions: {
-          create: this.buildManualDefinitionData(dto),
-        },
-      },
+      data,
       include: activeDefinitionsInclude,
     });
   }

@@ -279,6 +279,7 @@ describe('VocabService', () => {
   });
 
   it('creates a word with extended manual definition fields', async () => {
+    prismaMock.vocabWord.findFirst.mockResolvedValue(null);
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
     await service.create('user-id', {
@@ -317,6 +318,7 @@ describe('VocabService', () => {
   });
 
   it('creates a word with normalized word and manual definition', async () => {
+    prismaMock.vocabWord.findFirst.mockResolvedValue(null);
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
     await expect(
@@ -344,14 +346,82 @@ describe('VocabService', () => {
     });
   });
 
-  it('throws conflict when creating duplicate word', async () => {
-    prismaMock.vocabWord.create.mockRejectedValue({ code: 'P2002' });
+  it('adds a manual definition when the word already exists', async () => {
+    const existingWord = {
+      ...vocabWord,
+      definitions: [reviewDefinition],
+    };
+    const updatedWord = {
+      ...existingWord,
+      definitions: [
+        reviewDefinition,
+        {
+          ...reviewDefinition,
+          id: 'definition-id-2',
+          type: 'verb',
+          meaningVi: 'chay',
+        },
+      ],
+    };
+
+    prismaMock.vocabWord.findFirst.mockResolvedValue(existingWord);
+    prismaMock.vocabWord.update.mockResolvedValue(updatedWord);
 
     await expect(
       service.create('user-id', {
         word: 'hello',
+        type: 'verb',
+        meaningVi: 'chay',
       }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    ).resolves.toBe(updatedWord);
+
+    expect(prismaMock.vocabWord.create).not.toHaveBeenCalled();
+    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
+      where: { id: 'word-id' },
+      data: {
+        definitions: {
+          create: expect.objectContaining({
+            source: 'manual',
+            type: 'verb',
+            meaningVi: 'chay',
+          }),
+        },
+      },
+      include: expect.objectContaining({ definitions: expect.any(Object) }),
+    });
+  });
+
+  it('restores word text when adding a definition to a word without active definitions', async () => {
+    const existingWord = {
+      ...vocabWord,
+      definitions: [],
+    };
+
+    prismaMock.vocabWord.findFirst.mockResolvedValue(existingWord);
+    prismaMock.vocabWord.update.mockResolvedValue({
+      ...existingWord,
+      word: 'Hello',
+      definitions: [reviewDefinition],
+    });
+
+    await service.create('user-id', {
+      word: ' Hello ',
+      meaningVi: 'xin chao',
+    });
+
+    expect(prismaMock.vocabWord.update).toHaveBeenCalledWith({
+      where: { id: 'word-id' },
+      data: {
+        word: 'Hello',
+        definitions: {
+          create: expect.objectContaining({
+            source: 'manual',
+            meaningVi: 'xin chao',
+          }),
+        },
+      },
+      include: expect.objectContaining({ definitions: expect.any(Object) }),
+    });
   });
 
   it('throws bad request when creating a blank word', async () => {
