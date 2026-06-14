@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatIpaDisplay,
   getDefinitionIpaPair,
   getSharedIpaPair,
   hasUniformIpa,
@@ -81,5 +82,15 @@ describe("vocabularyIpa", () => {
       uk: null,
       us: null,
     });
+  });
+});
+
+describe("formatIpaDisplay", () => {
+  it("wraps ipa value with slashes", () => {
+    expect(formatIpaDisplay("əˈkaʊnt")).toBe("/əˈkaʊnt/");
+  });
+
+  it("normalizes values that already include slashes", () => {
+    expect(formatIpaDisplay("/əˈkaʊnt/")).toBe("/əˈkaʊnt/");
   });
 });

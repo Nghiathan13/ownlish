@@ -41,3 +41,15 @@ export function getSharedIpaPair(
 export function hasIpaContent(pair: DefinitionIpaPair) {
   return Boolean(pair.uk || pair.us);
 }
+
+export function formatIpaDisplay(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  const core = trimmed.replace(/^\/+|\/+$/g, "");
+
+  return `/${core}/`;
+}

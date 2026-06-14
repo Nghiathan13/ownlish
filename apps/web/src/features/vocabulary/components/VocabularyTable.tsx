@@ -5,6 +5,7 @@ import {
 } from "@/features/vocabulary/lib/vocabularyTableRows";
 import {
   type DefinitionIpaPair,
+  formatIpaDisplay,
   getDefinitionIpaPair,
   getSharedIpaPair,
   hasIpaContent,
@@ -166,14 +167,8 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold"
-              )}
-            >
-              IPA
-            </th>
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Word</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">IPA</th>
             <th className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
                 VOCABULARY_TABLE_COLUMN_WIDTH.type,
@@ -239,11 +234,17 @@ export function VocabularyTable({
                     </div>
                   ) : null}
                 </td>
+                {row.isFirstInWord ? (
+                  <td
+                    className="px-2 py-2 align-middle font-semibold"
+                    rowSpan={row.definitionCount}
+                  >
+                    {row.word.word}
+                  </td>
+                ) : null}
                 {row.isFirstInWord && uniformIpa ? (
                   <td
-                    className={classNames(
-                      "px-2 py-2 align-middle"
-                    )}
+                    className="px-2 py-2 align-middle"
                     rowSpan={row.definitionCount}
                   >
                     <DefinitionIpaCell
@@ -259,14 +260,6 @@ export function VocabularyTable({
                     )}
                   >
                     <DefinitionIpaCell pair={getDefinitionIpaPair(row.definition)} />
-                  </td>
-                ) : null}
-                {row.isFirstInWord ? (
-                  <td
-                    className="px-2 py-2 align-middle font-semibold"
-                    rowSpan={row.definitionCount}
-                  >
-                    {row.word.word}
                   </td>
                 ) : null}
                 <td
@@ -459,8 +452,12 @@ function DefinitionIpaCell({ pair }: { pair: DefinitionIpaPair }) {
 
   return (
     <div className="grid gap-0.5 text-xs text-muted-foreground">
-      {pair.uk ? <p className="break-words">UK {pair.uk}</p> : null}
-      {pair.us ? <p className="break-words">US {pair.us}</p> : null}
+      {pair.uk ? (
+        <p className="break-words">UK {formatIpaDisplay(pair.uk)}</p>
+      ) : null}
+      {pair.us ? (
+        <p className="break-words">US {formatIpaDisplay(pair.us)}</p>
+      ) : null}
     </div>
   );
 }
