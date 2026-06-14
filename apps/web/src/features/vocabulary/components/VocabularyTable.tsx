@@ -8,6 +8,12 @@ import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
+const VOCABULARY_TABLE_COLUMN_WIDTH = {
+  level: "w-[15rem]",
+  nextReview: "w-[30rem]",
+  actions: "w-[20rem]",
+} as const;
+
 type VocabularyTableProps = {
   allDefinitionsSelected: boolean;
   onEdit: (word: VocabWord, definition: VocabWordDefinition | null) => void;
@@ -113,7 +119,7 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden min-w-[800px] border-collapse w-full text-left text-sm md:table">
+      <table className="hidden w-full min-w-[800px] table-fixed border-collapse text-left text-sm md:table">
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="bg-surface w-10 px-3 py-3 align-middle">
@@ -129,9 +135,30 @@ export function VocabularyTable({
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Word</th>
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Type</th>
             <th className="bg-surface px-2 py-2 align-middle font-semibold">Meaning</th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">Level</th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">Next review</th>
-            <th className="bg-surface px-2 py-2 align-middle font-semibold">Actions</th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.level,
+              )}
+            >
+              Level
+            </th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.nextReview,
+              )}
+            >
+              Next review
+            </th>
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.actions,
+              )}
+            >
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -188,6 +215,7 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
+                    VOCABULARY_TABLE_COLUMN_WIDTH.level,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -196,6 +224,7 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle text-muted-foreground",
+                    VOCABULARY_TABLE_COLUMN_WIDTH.nextReview,
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -204,6 +233,7 @@ export function VocabularyTable({
                 <td
                   className={classNames(
                     "px-2 align-middle",
+                    VOCABULARY_TABLE_COLUMN_WIDTH.actions,
                     getDefinitionRowPadding(row),
                   )}
                 >
