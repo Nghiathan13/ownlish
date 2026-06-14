@@ -105,8 +105,8 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden min-w-[720px] w-full text-left text-sm md:table">
-        <thead className="sticky top-0 z-10 bg-surface border-b border-border">
+      <table className="hidden min-w-[720px] border-collapse w-full text-left text-sm md:table">
+        <thead className="sticky top-0 z-10 bg-surface shadow-[0_1px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="w-12 bg-surface px-3 py-3 align-middle">
               <div className="flex h-5 items-center">
@@ -118,11 +118,11 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Word</th>
-            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Type</th>
-            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Meaning</th>
-            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Next review</th>
-            <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Actions</th>
+            <th className="bg-surface px-4 py-3 align-middle font-semibold">Word</th>
+            <th className="bg-surface px-4 py-3 align-middle font-semibold">Type</th>
+            <th className="bg-surface px-4 py-3 align-middle font-semibold">Meaning</th>
+            <th className="bg-surface px-4 py-3 align-middle font-semibold">Next review</th>
+            <th className="bg-surface px-4 py-3 align-middle font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
