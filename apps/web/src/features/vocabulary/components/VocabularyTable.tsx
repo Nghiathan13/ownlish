@@ -126,12 +126,12 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            <th className="bg-surface px-3 py-3 align-middle font-semibold">Word</th>
-            <th className="bg-surface px-3 py-3 align-middle font-semibold">Type</th>
-            <th className="bg-surface px-3 py-3 align-middle font-semibold">Meaning</th>
-            <th className="bg-surface px-3 py-3 align-middle font-semibold">Level</th>
-            <th className="bg-surface px-3 py-3 align-middle font-semibold">Next review</th>
-            <th className="bg-surface px-3 py-3 align-middle font-semibold">Actions</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">Word</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">Type</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">Meaning</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">Level</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">Next review</th>
+            <th className="bg-surface px-2 py-2 align-middle font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
