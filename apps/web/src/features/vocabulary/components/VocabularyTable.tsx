@@ -17,9 +17,9 @@ import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
-  word: "w-[20%]",
-  ipa: "w-[20%]",
-  meaning: "w-[20%]",
+  word: "w-[17.5%]",
+  ipa: "w-[17.5%]",
+  meaning: "w-[25%]",
   example: "w-[40%]",
   type: "w-[8rem]",
   level: "w-[4rem]",
