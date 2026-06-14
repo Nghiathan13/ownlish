@@ -5,6 +5,7 @@
   --border: color-mix(in srgb, var(--foreground) 16%, transparent);
   --danger: #d92d20;
   --foreground: #171717;
+  --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
   --muted-foreground: color-mix(in srgb, var(--foreground) 64%, transparent);
   --surface: color-mix(in srgb, var(--foreground) 6%, var(--background));
@@ -15,6 +16,7 @@
   --color-border: var(--border);
   --color-danger: var(--danger);
   --color-foreground: var(--foreground);
+  --color-focus-ring: var(--focus-ring);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-surface: var(--surface);

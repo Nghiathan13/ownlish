@@ -266,7 +266,7 @@ function EditDefinitionButton({
     <button
       type="button"
       aria-label={label}
-      className="inline-flex cursor-pointer items-center justify-center p-1 text-muted-foreground transition-colors hover:text-foreground"
+      className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       onClick={onClick}
     >
       <EditIcon className="size-4" />

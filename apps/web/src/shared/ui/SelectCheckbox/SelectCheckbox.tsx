@@ -33,13 +33,13 @@ export function SelectCheckbox({
         type="checkbox"
         checked={checked}
         aria-label={label}
-        className="sr-only"
+        className="peer sr-only"
         onChange={onChange}
       />
       <span
         aria-hidden
         className={classNames(
-          "flex size-4 shrink-0 items-center justify-center rounded border transition-colors duration-200",
+          "flex size-4 shrink-0 items-center justify-center rounded border transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background",
           checked || indeterminate
             ? "border-foreground bg-foreground"
             : "border-border bg-muted hover:border-foreground",

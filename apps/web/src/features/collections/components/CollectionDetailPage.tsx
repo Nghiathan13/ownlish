@@ -203,11 +203,11 @@ function CollectionWordsTable({ words }: { words: CatalogWord[] }) {
       </div>
 
       <table className="hidden min-w-[880px] w-full border-collapse text-left text-sm md:table">
-        <thead className="border-b border-border bg-muted">
+        <thead className="bg-surface shadow-[0_0.5px_0_0_var(--border)]">
           <tr>
-            <th className="w-[180px] px-4 py-3 font-semibold">Word</th>
-            <th className="w-[140px] px-4 py-3 font-semibold">IPA</th>
-            <th className="px-4 py-3 font-semibold">Type and meaning</th>
+            <th className="w-[180px] bg-surface px-4 py-3 font-semibold">Word</th>
+            <th className="w-[140px] bg-surface px-4 py-3 font-semibold">IPA</th>
+            <th className="bg-surface px-4 py-3 font-semibold">Type and meaning</th>
           </tr>
         </thead>
         <tbody>
