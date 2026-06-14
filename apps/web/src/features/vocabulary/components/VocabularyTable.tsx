@@ -222,18 +222,18 @@ function getDefinitionRowPadding(row: Pick<
   "isFirstInWord" | "isLastInWord"
 >) {
   if (row.isFirstInWord && row.isLastInWord) {
-    return "py-3";
+    return "py-1";
   }
 
   if (row.isFirstInWord) {
-    return "pt-3 pb-1";
+    return "pt-1 pb-0.5";
   }
 
   if (row.isLastInWord) {
-    return "pt-1 pb-3";
+    return "pt-0.5 pb-1";
   }
 
-  return "py-1";
+  return "py-0.5";
 }
 
 function EditDefinitionButton({
