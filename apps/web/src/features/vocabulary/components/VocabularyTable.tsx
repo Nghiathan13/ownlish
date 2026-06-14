@@ -116,7 +116,7 @@ export function VocabularyTable({
       <table className="hidden min-w-[800px] border-collapse w-full text-left text-sm md:table">
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
-            <th className="bg-surface px-3 py-3 align-middle">
+            <th className="bg-surface w-10 px-3 py-3 align-middle">
               <div className="flex items-center">
                 <SelectCheckbox
                   checked={allDefinitionsSelected}
@@ -147,12 +147,12 @@ export function VocabularyTable({
               >
                 <td
                   className={classNames(
-                    "px-3 align-middle",
+                    "w-10 px-3 py-3 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
                   {definition ? (
-                    <div className="flex h-5 items-center">
+                    <div className="flex items-center">
                       <SelectCheckbox
                         checked={selectedDefinitionIds.has(definition.id)}
                         label={`Select ${row.word.word}`}
@@ -164,7 +164,7 @@ export function VocabularyTable({
                 {row.isFirstInWord ? (
                   <td
                     className={classNames(
-                      "px-4 align-middle font-semibold",
+                      "px-2 align-middle font-semibold",
                       getDefinitionRowPadding(row),
                     )}
                     rowSpan={row.definitionCount}
@@ -174,7 +174,7 @@ export function VocabularyTable({
                 ) : null}
                 <td
                   className={classNames(
-                    "px-4 align-middle",
+                    "px-2 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -182,7 +182,7 @@ export function VocabularyTable({
                 </td>
                 <td
                   className={classNames(
-                    "px-4 align-middle",
+                    "px-2 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -190,7 +190,7 @@ export function VocabularyTable({
                 </td>
                 <td
                   className={classNames(
-                    "px-4 align-middle",
+                    "px-2 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -198,7 +198,7 @@ export function VocabularyTable({
                 </td>
                 <td
                   className={classNames(
-                    "px-4 align-middle text-muted-foreground",
+                    "px-2 align-middle text-muted-foreground",
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -206,7 +206,7 @@ export function VocabularyTable({
                 </td>
                 <td
                   className={classNames(
-                    "px-4 align-middle",
+                    "px-2 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
