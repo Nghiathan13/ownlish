@@ -30,11 +30,9 @@ export function VocabularyPagination({
 
   const currentPage = Math.floor(offset / pageSize) + 1;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const start = offset + 1;
-  const end = offset + itemCount;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 px-4 py-2">
+    <div className="flex flex-wrap items-center gap-3">
       <PaginationIconButton
         disabled={!canGoPrevious}
         label="Previous page"
@@ -56,7 +54,7 @@ export function VocabularyPagination({
       </PaginationIconButton>
 
       <p className="text-sm text-muted-foreground">
-        {start}-{end} words of {total}
+        {itemCount} words
       </p>
     </div>
   );

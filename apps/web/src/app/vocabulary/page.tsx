@@ -223,17 +223,17 @@ function VocabularyPageContent() {
           </Modal>
         ) : null}
 
-        <div className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
-          {isInitialLoading || loadError || words.length === 0 ? (
-            <VocabularyStateBlock
-              error={loadError}
-              hasSearch={Boolean(debouncedSearch.trim())}
-              isEmpty={words.length === 0}
-              isLoading={isInitialLoading}
-              onRetry={reload}
-            />
-          ) : (
-            <>
+        <div className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+            {isInitialLoading || loadError || words.length === 0 ? (
+              <VocabularyStateBlock
+                error={loadError}
+                hasSearch={Boolean(debouncedSearch.trim())}
+                isEmpty={words.length === 0}
+                isLoading={isInitialLoading}
+                onRetry={reload}
+              />
+            ) : (
               <div
                 className={`min-h-0 flex-1 overflow-auto ${
                   isRefreshing ? "opacity-50 pointer-events-none" : "opacity-100"
@@ -256,21 +256,23 @@ function VocabularyPageContent() {
                   words={words}
                 />
               </div>
+            )}
+          </div>
 
-              <div className="shrink-0 border-t border-border">
-                <VocabularyPagination
-                  canGoNext={canGoNext}
-                  canGoPrevious={canGoPrevious}
-                  itemCount={words.length}
-                  offset={offset}
-                  onNext={nextPage}
-                  onPrevious={previousPage}
-                  pageSize={pageSize}
-                  total={totalWords}
-                />
-              </div>
-            </>
-          )}
+          {!isInitialLoading && !loadError && words.length > 0 ? (
+            <div className="mt-4 shrink-0">
+              <VocabularyPagination
+                canGoNext={canGoNext}
+                canGoPrevious={canGoPrevious}
+                itemCount={words.length}
+                offset={offset}
+                onNext={nextPage}
+                onPrevious={previousPage}
+                pageSize={pageSize}
+                total={totalWords}
+              />
+            </div>
+          ) : null}
         </div>
       </Panel>
     </PageShell>
