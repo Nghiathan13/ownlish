@@ -281,7 +281,7 @@ function DefinitionTypeCell({
   }
 
   return (
-    <span className="inline-flex rounded-full border border-border px-2 py-1 text-xs font-semibold">
+    <span className="inline-flex rounded-full border border-border px-2 py-1 text-xs">
       {definition.type}
     </span>
   );
