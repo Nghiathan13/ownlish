@@ -44,6 +44,20 @@ export function useCreateVocabularyWord({
           queryKey,
           (oldData) => {
             if (!oldData) return oldData;
+
+            const existingIndex = oldData.items.findIndex(
+              (word) => word.id === createdWord.id,
+            );
+
+            if (existingIndex >= 0) {
+              return {
+                ...oldData,
+                items: oldData.items.map((word) =>
+                  word.id === createdWord.id ? createdWord : word,
+                ),
+              };
+            }
+
             return {
               ...oldData,
               items: [createdWord, ...oldData.items],
