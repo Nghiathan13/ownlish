@@ -14,13 +14,13 @@ export function VocabularySearch({
 }: VocabularySearchProps) {
   return (
     <div className="relative min-w-0 flex-1 sm:max-w-md">
-      <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <TextInput
         id="vocabulary-search"
         aria-label="Search the word"
         className={classNames(
           vocabularyToolbarControlClassName,
-          "pl-9 pr-2.5",
+          "pl-8 pr-2.5",
         )}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}

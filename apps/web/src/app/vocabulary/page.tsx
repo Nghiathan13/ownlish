@@ -169,7 +169,7 @@ function VocabularyPageContent() {
             )}
             onClick={() => setIsAddWordOpen(true)}
           >
-            <AddIcon />
+            <AddIcon className="size-4" />
             Add word
           </Button>
           <VocabularySearch search={search} onSearchChange={setSearch} />
