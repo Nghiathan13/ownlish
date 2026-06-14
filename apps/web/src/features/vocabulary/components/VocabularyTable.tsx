@@ -1,7 +1,11 @@
 import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
-import { expandWordsToDefinitionRows } from "@/features/vocabulary/lib/vocabularyTableRows";
+import {
+  expandWordsToDefinitionRows,
+  type VocabularyDefinitionRow,
+} from "@/features/vocabulary/lib/vocabularyTableRows";
+import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
-import { Button } from "@/shared/ui/Button";
+import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type VocabularyTableProps = {
@@ -40,12 +44,19 @@ export function VocabularyTable({
                 <h2 className="text-base font-semibold">{word.word}</h2>
               </div>
 
-              <div className="grid gap-3 text-sm">
+              <div className="text-sm">
                 {wordRows.map((row) => {
                   const definition = row.definition;
 
                   return (
-                    <div key={getDefinitionRowKey(row)} className="grid gap-3">
+                    <div
+                      key={getDefinitionRowKey(row)}
+                      className={classNames(
+                        "grid gap-3",
+                        !row.isFirstInWord &&
+                          "mt-2 border-t border-border pt-2",
+                      )}
+                    >
                       {definition ? (
                         <SelectCheckbox
                           checked={selectedDefinitionIds.has(definition.id)}
@@ -80,13 +91,10 @@ export function VocabularyTable({
                         </div>
                       </dl>
                       {definition ? (
-                        <Button
-                          type="button"
-                          variant="secondary"
+                        <EditDefinitionButton
+                          label={`Edit ${word.word}`}
                           onClick={() => onEdit(row.word, definition)}
-                        >
-                          Edit
-                        </Button>
+                        />
                       ) : null}
                     </div>
                   );
@@ -126,7 +134,12 @@ export function VocabularyTable({
                 key={getDefinitionRowKey(row)}
                 className={row.isLastInWord ? "border-b border-border" : undefined}
               >
-                <td className="px-3 py-3 align-middle">
+                <td
+                  className={classNames(
+                    "px-3 align-middle",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
                   {definition ? (
                     <div className="flex h-5 items-center">
                       <SelectCheckbox
@@ -139,30 +152,50 @@ export function VocabularyTable({
                 </td>
                 {row.isFirstInWord ? (
                   <td
-                    className="px-4 py-3 align-middle font-semibold"
+                    className={classNames(
+                      "px-4 align-middle font-semibold",
+                      getDefinitionRowPadding(row),
+                    )}
                     rowSpan={row.definitionCount}
                   >
                     {row.word.word}
                   </td>
                 ) : null}
-                <td className="px-4 py-3 align-middle">
+                <td
+                  className={classNames(
+                    "px-4 align-middle",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
                   <DefinitionTypeCell definition={row.definition} />
                 </td>
-                <td className="px-4 py-3 align-middle">
+                <td
+                  className={classNames(
+                    "px-4 align-middle",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
                   <DefinitionMeaningCell definition={row.definition} />
                 </td>
-                <td className="px-4 py-3 align-middle text-muted-foreground">
+                <td
+                  className={classNames(
+                    "px-4 align-middle text-muted-foreground",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
                   <DefinitionNextReviewCell definition={row.definition} />
                 </td>
-                <td className="px-4 py-3 align-middle">
+                <td
+                  className={classNames(
+                    "px-4 align-middle",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
                   {definition ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
+                    <EditDefinitionButton
+                      label={`Edit ${row.word.word}`}
                       onClick={() => onEdit(row.word, definition)}
-                    >
-                      Edit
-                    </Button>
+                    />
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
@@ -182,6 +215,44 @@ function getDefinitionRowKey(row: {
   definitionIndex: number;
 }) {
   return `${row.word.id}-${row.definition?.id ?? "empty"}-${row.definitionIndex}`;
+}
+
+function getDefinitionRowPadding(row: Pick<
+  VocabularyDefinitionRow,
+  "isFirstInWord" | "isLastInWord"
+>) {
+  if (row.isFirstInWord && row.isLastInWord) {
+    return "py-3";
+  }
+
+  if (row.isFirstInWord) {
+    return "pt-3 pb-1";
+  }
+
+  if (row.isLastInWord) {
+    return "pt-1 pb-3";
+  }
+
+  return "py-1";
+}
+
+function EditDefinitionButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className="inline-flex size-8 cursor-pointer items-center justify-center rounded border border-border bg-muted text-foreground transition-colors duration-200 hover:border-foreground"
+      onClick={onClick}
+    >
+      <EditIcon className="size-4" />
+    </button>
+  );
 }
 
 function DefinitionTypeCell({
