@@ -106,7 +106,7 @@ export function VocabularyTable({
       </div>
 
       <table className="hidden min-w-[720px] w-full border-collapse text-left text-sm md:table">
-        <thead className="sticky top-0 z-10 bg-surface shadow-[0_1px_0_0_var(--border)]">
+        <thead className="sticky top-0 z-10 bg-surface">
           <tr>
             <th className="w-12 border-b border-border bg-surface px-3 py-3 align-middle">
               <div className="flex h-5 items-center">
@@ -125,19 +125,23 @@ export function VocabularyTable({
             <th className="border-b border-border bg-surface px-4 py-3 align-middle font-semibold">Actions</th>
           </tr>
         </thead>
-        <tbody>
-          {rows.map((row) => {
+        <tbody className="[&>tr:first-child]:border-t-0 [&>tr:first-child>td]:border-t-0">
+          {rows.map((row, rowIndex) => {
             const definition = row.definition;
 
             return (
               <tr
                 key={getDefinitionRowKey(row)}
-                className={row.isLastInWord ? "border-b border-border" : undefined}
+                className={classNames(
+                  row.isLastInWord ? "border-b border-border" : undefined,
+                  rowIndex === 0 ? "border-t-0" : undefined,
+                )}
               >
                 <td
                   className={classNames(
                     "px-3 align-middle",
                     getDefinitionRowPadding(row),
+                    rowIndex === 0 ? "border-t-0" : undefined,
                   )}
                 >
                   {definition ? (
@@ -155,6 +159,7 @@ export function VocabularyTable({
                     className={classNames(
                       "px-4 align-middle font-semibold",
                       getDefinitionRowPadding(row),
+                      rowIndex === 0 ? "border-t-0" : undefined,
                     )}
                     rowSpan={row.definitionCount}
                   >
@@ -165,6 +170,7 @@ export function VocabularyTable({
                   className={classNames(
                     "px-4 align-middle",
                     getDefinitionRowPadding(row),
+                    rowIndex === 0 ? "border-t-0" : undefined,
                   )}
                 >
                   <DefinitionTypeCell definition={row.definition} />
@@ -173,6 +179,7 @@ export function VocabularyTable({
                   className={classNames(
                     "px-4 align-middle",
                     getDefinitionRowPadding(row),
+                    rowIndex === 0 ? "border-t-0" : undefined,
                   )}
                 >
                   <DefinitionMeaningCell definition={row.definition} />
@@ -181,6 +188,7 @@ export function VocabularyTable({
                   className={classNames(
                     "px-4 align-middle text-muted-foreground",
                     getDefinitionRowPadding(row),
+                    rowIndex === 0 ? "border-t-0" : undefined,
                   )}
                 >
                   <DefinitionNextReviewCell definition={row.definition} />
@@ -189,6 +197,7 @@ export function VocabularyTable({
                   className={classNames(
                     "px-4 align-middle",
                     getDefinitionRowPadding(row),
+                    rowIndex === 0 ? "border-t-0" : undefined,
                   )}
                 >
                   {definition ? (

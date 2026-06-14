@@ -37,6 +37,12 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
+}
+
+.page-size-select option {
+  background-color: var(--surface);
+  color: var(--foreground);
 }
