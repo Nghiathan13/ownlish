@@ -247,10 +247,10 @@ function EditDefinitionButton({
     <button
       type="button"
       aria-label={label}
-      className="inline-flex size-8 cursor-pointer items-center justify-center rounded border border-border bg-muted text-foreground transition-colors duration-200 hover:border-foreground"
+      className="inline-flex size-7 cursor-pointer items-center justify-center rounded border-2 border-border bg-muted text-foreground transition-colors duration-200 hover:border-foreground"
       onClick={onClick}
     >
-      <EditIcon className="size-4" />
+      <EditIcon className="size-3.5" />
     </button>
   );
 }
