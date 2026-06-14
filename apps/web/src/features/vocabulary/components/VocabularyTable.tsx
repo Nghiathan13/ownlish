@@ -147,7 +147,7 @@ export function VocabularyTable({
               >
                 <td
                   className={classNames(
-                    "w-10 px-3 py-3 align-middle",
+                    "w-10 px-3 align-middle",
                     getDefinitionRowPadding(row),
                   )}
                 >
@@ -241,15 +241,15 @@ function getDefinitionRowPadding(row: Pick<
   "isFirstInWord" | "isLastInWord"
 >) {
   if (row.isFirstInWord && row.isLastInWord) {
-    return "py-1";
+    return "py-2";
   }
 
   if (row.isFirstInWord) {
-    return "pt-1 pb-0.5";
+    return "pt-2 pb-0.5";
   }
 
   if (row.isLastInWord) {
-    return "pt-0.5 pb-1";
+    return "pt-0.5 pb-2";
   }
 
   return "py-0.5";
@@ -284,7 +284,7 @@ function DefinitionTypeCell({
   }
 
   return (
-    <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
+    <span className="inline-flex rounded-full border border-border px-2 py-1 text-xs font-semibold">
       {definition.type}
     </span>
   );
