@@ -14,6 +14,7 @@ export function VocabularySearch({
       <TextInput
         id="vocabulary-search"
         aria-label="Search by word"
+        className="text-sm"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search by word"

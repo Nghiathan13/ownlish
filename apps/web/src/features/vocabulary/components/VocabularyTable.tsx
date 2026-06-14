@@ -64,7 +64,7 @@ export function VocabularyTable({
                           onChange={() => onToggleDefinition(definition.id)}
                         />
                       ) : null}
-                      <dl className="grid grid-cols-3 gap-3">
+                      <dl className="grid grid-cols-2 gap-3">
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Type
@@ -79,6 +79,14 @@ export function VocabularyTable({
                           </dt>
                           <dd className="mt-1">
                             <DefinitionMeaningCell definition={row.definition} />
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Level
+                          </dt>
+                          <dd className="mt-1">
+                            <DefinitionLevelCell definition={row.definition} />
                           </dd>
                         </div>
                         <div>
@@ -105,7 +113,7 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden min-w-[720px] border-collapse w-full text-left text-sm md:table">
+      <table className="hidden min-w-[800px] border-collapse w-full text-left text-sm md:table">
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="w-12 bg-surface px-3 py-3 align-middle">
@@ -121,6 +129,7 @@ export function VocabularyTable({
             <th className="bg-surface px-4 py-3 align-middle font-semibold">Word</th>
             <th className="bg-surface px-4 py-3 align-middle font-semibold">Type</th>
             <th className="bg-surface px-4 py-3 align-middle font-semibold">Meaning</th>
+            <th className="bg-surface px-4 py-3 align-middle font-semibold">Level</th>
             <th className="bg-surface px-4 py-3 align-middle font-semibold">Next review</th>
             <th className="bg-surface px-4 py-3 align-middle font-semibold">Actions</th>
           </tr>
@@ -178,6 +187,14 @@ export function VocabularyTable({
                   )}
                 >
                   <DefinitionMeaningCell definition={row.definition} />
+                </td>
+                <td
+                  className={classNames(
+                    "px-4 align-middle",
+                    getDefinitionRowPadding(row),
+                  )}
+                >
+                  <DefinitionLevelCell definition={row.definition} />
                 </td>
                 <td
                   className={classNames(
@@ -249,10 +266,10 @@ function EditDefinitionButton({
     <button
       type="button"
       aria-label={label}
-      className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-foreground transition-colors duration-200 hover:border-foreground"
+      className="inline-flex cursor-pointer items-center justify-center p-1 text-muted-foreground transition-colors hover:text-foreground"
       onClick={onClick}
     >
-      <EditIcon className="size-3.5" />
+      <EditIcon className="size-4" />
     </button>
   );
 }
@@ -294,6 +311,18 @@ function DefinitionMeaningCell({
       ) : null}
     </div>
   );
+}
+
+function DefinitionLevelCell({
+  definition,
+}: {
+  definition: VocabWordDefinition | null;
+}) {
+  if (!definition) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  return <span>{definition.level}</span>;
 }
 
 function DefinitionNextReviewCell({

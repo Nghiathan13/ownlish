@@ -160,7 +160,7 @@ function VocabularyPageContent() {
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             type="button"
-            className="w-fit shrink-0"
+            className="w-fit shrink-0 py-2 text-sm"
             onClick={() => setIsAddWordOpen(true)}
           >
             Add word
