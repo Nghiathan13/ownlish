@@ -9,9 +9,9 @@ import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 const VOCABULARY_TABLE_COLUMN_WIDTH = {
-  level: "w-[15ch]",
-  nextReview: "w-[30ch]",
-  actions: "w-[20ch]",
+  level: "w-[4rem]",
+  nextReview: "w-[8rem]",
+  actions: "w-[5rem]",
 } as const;
 
 type VocabularyTableProps = {
