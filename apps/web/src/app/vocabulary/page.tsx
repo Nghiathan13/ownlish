@@ -164,7 +164,7 @@ function VocabularyPageContent() {
           <Button
             type="button"
             className={classNames(
-              "w-fit shrink-0 gap-1.5",
+              "w-fit shrink-0 cursor-pointer gap-1.5",
               vocabularyToolbarControlClassName,
             )}
             onClick={() => setIsAddWordOpen(true)}

@@ -18,7 +18,10 @@ export function VocabularySearch({
       <TextInput
         id="vocabulary-search"
         aria-label="Search the word"
-        className={classNames("pl-8", vocabularyToolbarControlClassName)}
+        className={classNames(
+          vocabularyToolbarControlClassName,
+          "pl-9 pr-2.5",
+        )}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search the word"
