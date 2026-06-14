@@ -43,7 +43,7 @@ export function VocabularyPagination({
         label="Previous page"
         onClick={onPrevious}
       >
-        <ArrowBackIcon className="size-3.5" />
+        <ArrowBackIcon className="size-4" />
       </PaginationIconButton>
 
       <p className="text-sm text-muted-foreground">
@@ -55,7 +55,7 @@ export function VocabularyPagination({
         label="Next page"
         onClick={onNext}
       >
-        <ArrowForwardIcon className="size-3.5" />
+        <ArrowForwardIcon className="size-4" />
       </PaginationIconButton>
 
       <div className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
