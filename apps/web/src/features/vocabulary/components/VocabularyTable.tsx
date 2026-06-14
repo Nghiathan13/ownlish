@@ -106,7 +106,7 @@ export function VocabularyTable({
       </div>
 
       <table className="hidden min-w-[720px] w-full text-left text-sm md:table">
-        <thead className="sticky top-0 z-10 bg-surface">
+        <thead className="sticky top-0 z-10 bg-surface border-b border-border">
           <tr>
             <th className="w-12 bg-surface px-3 py-3 align-middle">
               <div className="flex h-5 items-center">
