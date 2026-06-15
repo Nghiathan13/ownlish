@@ -8,11 +8,13 @@ import {
   AddWordForm,
   DeleteDefinitionsConfirm,
   EditWordPanel,
+  VocabularyColumnPicker,
   VocabularyPagination,
   VocabularySearch,
   VocabularyStateBlock,
   VocabularyTable,
 } from "@/features/vocabulary/components";
+import { useVocabularyTableColumnVisibility } from "@/features/vocabulary/hooks/useVocabularyTableColumnVisibility";
 import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
 import {
   getSelectableDefinitions,
@@ -78,6 +80,8 @@ function VocabularyPageContent() {
     null,
   );
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const { columnVisibility, toggleColumn } =
+    useVocabularyTableColumnVisibility();
   const selectionScope = `${debouncedSearch}:${offset}:${pageSize}`;
   const [selectionByScope, setSelectionByScope] = useState<{
     scope: string;
@@ -173,7 +177,13 @@ function VocabularyPageContent() {
             <AddIcon className="size-4" />
             Add word
           </Button>
-          <VocabularySearch search={search} onSearchChange={setSearch} />
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <VocabularySearch search={search} onSearchChange={setSearch} />
+            <VocabularyColumnPicker
+              columnVisibility={columnVisibility}
+              onToggleColumn={toggleColumn}
+            />
+          </div>
           {selectedDefinitions.length > 0 ? (
             <Button
               type="button"
@@ -254,6 +264,7 @@ function VocabularyPageContent() {
               >
                 <VocabularyTable
                   allDefinitionsSelected={allDefinitionsSelected}
+                  columnVisibility={columnVisibility}
                   onEdit={(word, definition) => {
                     if (definition) {
                       setEditingTarget({

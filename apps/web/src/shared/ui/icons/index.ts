@@ -6,3 +6,4 @@ export { DeleteIcon } from "./DeleteIcon";
 export { EditIcon } from "./EditIcon";
 export { RemoveIcon } from "./RemoveIcon";
 export { SearchIcon } from "./SearchIcon";
+export { SwapColumnIcon } from "./SwapColumnIcon";

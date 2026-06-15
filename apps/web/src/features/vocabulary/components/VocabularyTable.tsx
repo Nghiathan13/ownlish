@@ -11,24 +11,20 @@ import {
   hasIpaContent,
   hasUniformIpa,
 } from "@/features/vocabulary/lib/vocabularyIpa";
+import {
+  isColumnVisible,
+  VOCABULARY_TABLE_COLUMN_WIDTH,
+  type VocabularyColumnVisibility,
+  type VocabularyToggleableColumnId,
+} from "@/features/vocabulary/lib/vocabularyTableColumns";
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
-const VOCABULARY_TABLE_COLUMN_WIDTH = {
-  word: "w-[17.5%]",
-  ipa: "w-[17.5%]",
-  meaning: "w-[25%]",
-  example: "w-[50%]",
-  type: "w-[8rem]",
-  level: "w-[4rem]",
-  nextReview: "w-[8rem]",
-  actions: "w-[5rem]",
-} as const;
-
 type VocabularyTableProps = {
   allDefinitionsSelected: boolean;
+  columnVisibility: VocabularyColumnVisibility;
   onEdit: (word: VocabWord, definition: VocabWordDefinition | null) => void;
   onToggleAllDefinitions: () => void;
   onToggleDefinition: (definitionId: string) => void;
@@ -39,6 +35,7 @@ type VocabularyTableProps = {
 
 export function VocabularyTable({
   allDefinitionsSelected,
+  columnVisibility,
   onEdit,
   onToggleAllDefinitions,
   onToggleDefinition,
@@ -47,6 +44,8 @@ export function VocabularyTable({
   words,
 }: VocabularyTableProps) {
   const rows = expandWordsToDefinitionRows(words);
+  const showColumn = (columnId: VocabularyToggleableColumnId) =>
+    isColumnVisible(columnVisibility, columnId);
 
   return (
     <>
@@ -60,15 +59,22 @@ export function VocabularyTable({
               key={word.id}
               className="rounded-lg border border-border bg-background p-4"
             >
+              {(showColumn("word") || (uniformIpa && showColumn("ipa"))) ? (
               <div className="mb-3 flex items-start justify-between gap-3">
-                <h2 className="text-base font-semibold">{word.word}</h2>
-                {uniformIpa ? (
+                {showColumn("word") ? (
+                  <h2 className="text-base font-semibold">{word.word}</h2>
+                ) : null}
+                {uniformIpa && showColumn("ipa") ? (
                   <DefinitionIpaCell
-                    className="shrink-0 text-base"
+                    className={classNames(
+                      "text-base",
+                      showColumn("word") ? "shrink-0" : undefined,
+                    )}
                     pair={getSharedIpaPair(word.definitions)}
                   />
                 ) : null}
               </div>
+              ) : null}
 
               <div className="text-sm">
                 {wordRows.map((row) => {
@@ -90,7 +96,7 @@ export function VocabularyTable({
                           onChange={() => onToggleDefinition(definition.id)}
                         />
                       ) : null}
-                      {!uniformIpa ? (
+                      {!uniformIpa && showColumn("ipa") ? (
                         <dl className="grid grid-cols-1 gap-3">
                           <div>
                             <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -105,6 +111,7 @@ export function VocabularyTable({
                         </dl>
                       ) : null}
                       <dl className="grid grid-cols-2 gap-3">
+                        {showColumn("type") ? (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Type
@@ -113,6 +120,8 @@ export function VocabularyTable({
                             <DefinitionTypeCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
+                        {showColumn("meaning") ? (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Meaning
@@ -121,6 +130,8 @@ export function VocabularyTable({
                             <DefinitionMeaningCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
+                        {showColumn("level") ? (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Level
@@ -129,6 +140,8 @@ export function VocabularyTable({
                             <DefinitionLevelCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
+                        {showColumn("example") ? (
                         <div className="col-span-2">
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Example
@@ -137,6 +150,8 @@ export function VocabularyTable({
                             <DefinitionExampleCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
+                        {showColumn("nextReview") ? (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Next review
@@ -145,6 +160,7 @@ export function VocabularyTable({
                             <DefinitionNextReviewCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
                       </dl>
                       {definition ? (
                         <EditDefinitionButton
@@ -174,6 +190,7 @@ export function VocabularyTable({
                 />
               </div>
             </th>
+            {showColumn("word") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -182,6 +199,8 @@ export function VocabularyTable({
             >
               Word
             </th>
+            ) : null}
+            {showColumn("ipa") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -190,6 +209,8 @@ export function VocabularyTable({
             >
               IPA
             </th>
+            ) : null}
+            {showColumn("type") ? (
             <th className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
                 VOCABULARY_TABLE_COLUMN_WIDTH.type,
@@ -197,6 +218,8 @@ export function VocabularyTable({
             >
               Type
             </th>
+            ) : null}
+            {showColumn("meaning") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -205,6 +228,8 @@ export function VocabularyTable({
             >
               Meaning
             </th>
+            ) : null}
+            {showColumn("level") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -213,6 +238,8 @@ export function VocabularyTable({
             >
               Level
             </th>
+            ) : null}
+            {showColumn("example") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -221,6 +248,8 @@ export function VocabularyTable({
             >
               Example
             </th>
+            ) : null}
+            {showColumn("nextReview") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -229,6 +258,7 @@ export function VocabularyTable({
             >
               Next review
             </th>
+            ) : null}
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -267,7 +297,7 @@ export function VocabularyTable({
                     </div>
                   ) : null}
                 </td>
-                {row.isFirstInWord ? (
+                {row.isFirstInWord && showColumn("word") ? (
                   <td
                     className={classNames(
                       "px-2 py-2 align-middle font-semibold",
@@ -278,7 +308,7 @@ export function VocabularyTable({
                     {row.word.word}
                   </td>
                 ) : null}
-                {row.isFirstInWord && uniformIpa ? (
+                {row.isFirstInWord && uniformIpa && showColumn("ipa") ? (
                   <td
                     className={classNames(
                       "px-2 py-2 align-middle",
@@ -291,7 +321,7 @@ export function VocabularyTable({
                     />
                   </td>
                 ) : null}
-                {!uniformIpa ? (
+                {!uniformIpa && showColumn("ipa") ? (
                   <td
                     className={classNames(
                       "px-2 align-middle",
@@ -302,6 +332,7 @@ export function VocabularyTable({
                     <DefinitionIpaCell pair={getDefinitionIpaPair(row.definition)} />
                   </td>
                 ) : null}
+                {showColumn("type") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -311,6 +342,8 @@ export function VocabularyTable({
                 >
                   <DefinitionTypeCell definition={row.definition} />
                 </td>
+                ) : null}
+                {showColumn("meaning") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -320,6 +353,8 @@ export function VocabularyTable({
                 >
                   <DefinitionMeaningCell definition={row.definition} />
                 </td>
+                ) : null}
+                {showColumn("level") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -329,6 +364,8 @@ export function VocabularyTable({
                 >
                   <DefinitionLevelCell definition={row.definition} />
                 </td>
+                ) : null}
+                {showColumn("example") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -338,6 +375,8 @@ export function VocabularyTable({
                 >
                   <DefinitionExampleCell definition={row.definition} />
                 </td>
+                ) : null}
+                {showColumn("nextReview") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle text-muted-foreground",
@@ -347,6 +386,7 @@ export function VocabularyTable({
                 >
                   <DefinitionNextReviewCell definition={row.definition} />
                 </td>
+                ) : null}
                 <td
                   className={classNames(
                     "px-2 align-middle",
