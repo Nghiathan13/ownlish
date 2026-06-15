@@ -17,10 +17,10 @@ export type VocabularyColumnVisibility = Record<
 >;
 
 export const VOCABULARY_TABLE_COLUMN_WIDTH = {
-  word: "w-[17.5%]",
-  ipa: "w-[17.5%]",
-  meaning: "w-[25%]",
-  example: "w-[40%]",
+  word: "w-[100%]",
+  ipa: "w-[100%]",
+  meaning: "w-[150%]",
+  example: "w-[250%]",
   type: "w-[8rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
