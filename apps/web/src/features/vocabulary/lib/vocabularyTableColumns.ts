@@ -1,5 +1,4 @@
 export const VOCABULARY_TOGGLEABLE_COLUMNS = [
-  { id: "word", label: "Word" },
   { id: "ipa", label: "IPA" },
   { id: "type", label: "Type" },
   { id: "meaning", label: "Meaning" },

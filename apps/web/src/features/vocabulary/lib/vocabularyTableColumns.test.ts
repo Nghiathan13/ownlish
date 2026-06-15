@@ -8,7 +8,6 @@ import {
 describe("vocabularyTableColumns", () => {
   it("creates default visibility with all columns enabled", () => {
     expect(createDefaultColumnVisibility()).toEqual({
-      word: true,
       ipa: true,
       type: true,
       meaning: true,
@@ -30,6 +29,20 @@ describe("vocabularyTableColumns", () => {
         JSON.stringify({
           meaning: false,
           unknown: false,
+        }),
+      ),
+    ).toEqual({
+      ...createDefaultColumnVisibility(),
+      meaning: false,
+    });
+  });
+
+  it("ignores legacy word key from stored visibility", () => {
+    expect(
+      parseColumnVisibility(
+        JSON.stringify({
+          word: false,
+          meaning: false,
         }),
       ),
     ).toEqual({

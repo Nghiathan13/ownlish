@@ -59,22 +59,15 @@ export function VocabularyTable({
               key={word.id}
               className="rounded-lg border border-border bg-background p-4"
             >
-              {(showColumn("word") || (uniformIpa && showColumn("ipa"))) ? (
               <div className="mb-3 flex items-start justify-between gap-3">
-                {showColumn("word") ? (
-                  <h2 className="text-base font-semibold">{word.word}</h2>
-                ) : null}
+                <h2 className="text-base font-semibold">{word.word}</h2>
                 {uniformIpa && showColumn("ipa") ? (
                   <DefinitionIpaCell
-                    className={classNames(
-                      "text-base",
-                      showColumn("word") ? "shrink-0" : undefined,
-                    )}
+                    className="shrink-0 text-base"
                     pair={getSharedIpaPair(word.definitions)}
                   />
                 ) : null}
               </div>
-              ) : null}
 
               <div className="text-sm">
                 {wordRows.map((row) => {
@@ -190,7 +183,6 @@ export function VocabularyTable({
                 />
               </div>
             </th>
-            {showColumn("word") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -199,7 +191,6 @@ export function VocabularyTable({
             >
               Word
             </th>
-            ) : null}
             {showColumn("ipa") ? (
             <th
               className={classNames(
@@ -297,7 +288,7 @@ export function VocabularyTable({
                     </div>
                   ) : null}
                 </td>
-                {row.isFirstInWord && showColumn("word") ? (
+                {row.isFirstInWord ? (
                   <td
                     className={classNames(
                       "px-2 py-2 align-middle font-semibold",
