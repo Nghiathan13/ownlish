@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   formatIpaDisplay,
   getDefinitionIpaPair,
-  getSharedIpaPair,
-  hasUniformIpa,
+  getSharedIpaUk,
+  getSharedIpaUs,
+  hasUniformIpaUk,
+  hasUniformIpaUs,
 } from "./vocabularyIpa";
 
 function makeDefinition(overrides: Partial<{ ipaUk: string | null; ipaUs: string | null }> = {}) {
@@ -29,59 +31,70 @@ describe("vocabularyIpa", () => {
     });
   });
 
-  it("treats all-null definitions as uniform", () => {
+  it("treats all-null ipa uk values as uniform", () => {
     expect(
-      hasUniformIpa([
+      hasUniformIpaUk([
         makeDefinition() as never,
         makeDefinition() as never,
       ]),
     ).toBe(true);
   });
 
-  it("returns true when all definitions share the same ipa pair", () => {
+  it("returns true when all definitions share the same ipa uk", () => {
     expect(
-      hasUniformIpa([
-        makeDefinition({ ipaUk: "/əˈkaʊnt/", ipaUs: "/əˈkaʊnt/" }) as never,
-        makeDefinition({ ipaUk: "/əˈkaʊnt/", ipaUs: "/əˈkaʊnt/" }) as never,
+      hasUniformIpaUk([
+        makeDefinition({ ipaUk: "/əˈkaʊnt/" }) as never,
+        makeDefinition({ ipaUk: "/əˈkaʊnt/", ipaUs: "/other/" }) as never,
       ]),
     ).toBe(true);
   });
 
-  it("returns false when ipaUk differs across definitions", () => {
+  it("returns false when ipa uk differs across definitions", () => {
     expect(
-      hasUniformIpa([
-        makeDefinition({ ipaUk: "/riːd/", ipaUs: "/riːd/" }) as never,
-        makeDefinition({ ipaUk: "/rɛd/", ipaUs: "/rɛd/" }) as never,
+      hasUniformIpaUk([
+        makeDefinition({ ipaUk: "/riːd/" }) as never,
+        makeDefinition({ ipaUk: "/rɛd/" }) as never,
       ]),
     ).toBe(false);
   });
 
-  it("returns false when only one definition has ipaUs", () => {
+  it("returns false when ipa us differs across definitions", () => {
     expect(
-      hasUniformIpa([
-        makeDefinition({ ipaUk: "/test/", ipaUs: null }) as never,
-        makeDefinition({ ipaUk: "/test/", ipaUs: "/test/" }) as never,
+      hasUniformIpaUs([
+        makeDefinition({ ipaUs: "/riːd/" }) as never,
+        makeDefinition({ ipaUs: "/rɛd/" }) as never,
       ]),
     ).toBe(false);
   });
 
-  it("returns shared ipa pair from the first definition", () => {
+  it("allows uk uniform while us differs", () => {
     expect(
-      getSharedIpaPair([
-        makeDefinition({ ipaUk: "/uk/", ipaUs: "/us/" }) as never,
-        makeDefinition({ ipaUk: "/other/", ipaUs: "/other/" }) as never,
+      hasUniformIpaUk([
+        makeDefinition({ ipaUk: "/test/", ipaUs: "/uk/" }) as never,
+        makeDefinition({ ipaUk: "/test/", ipaUs: "/us/" }) as never,
       ]),
-    ).toEqual({
-      uk: "/uk/",
-      us: "/us/",
-    });
+    ).toBe(true);
+    expect(
+      hasUniformIpaUs([
+        makeDefinition({ ipaUk: "/test/", ipaUs: "/uk/" }) as never,
+        makeDefinition({ ipaUk: "/test/", ipaUs: "/us/" }) as never,
+      ]),
+    ).toBe(false);
   });
 
-  it("returns null pair when definitions are empty", () => {
-    expect(getSharedIpaPair([])).toEqual({
-      uk: null,
-      us: null,
-    });
+  it("returns shared ipa values from the first definition", () => {
+    expect(
+      getSharedIpaUk([
+        makeDefinition({ ipaUk: "/uk/" }) as never,
+        makeDefinition({ ipaUk: "/other/" }) as never,
+      ]),
+    ).toBe("/uk/");
+    expect(
+      getSharedIpaUs([
+        makeDefinition({ ipaUs: "/us/" }) as never,
+        makeDefinition({ ipaUs: "/other/" }) as never,
+      ]),
+    ).toBe("/us/");
   });
 });
 

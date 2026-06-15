@@ -1,5 +1,6 @@
 export const VOCABULARY_TOGGLEABLE_COLUMNS = [
-  { id: "ipa", label: "IPA" },
+  { id: "ipaUk", label: "IPA UK" },
+  { id: "ipaUs", label: "IPA US" },
   { id: "type", label: "Type" },
   { id: "meaning", label: "Meaning" },
   { id: "level", label: "Level" },
@@ -17,7 +18,8 @@ export type VocabularyColumnVisibility = Record<
 
 export const VOCABULARY_TABLE_COLUMN_WIDTH = {
   word: "w-[100%]",
-  ipa: "w-[100%]",
+  ipaUk: "w-[100%]",
+  ipaUs: "w-[100%]",
   meaning: "w-[150%]",
   example: "w-[250%]",
   type: "w-[8rem]",
@@ -60,7 +62,17 @@ export function parseColumnVisibility(
     const next = { ...DEFAULT_COLUMN_VISIBILITY };
 
     for (const [key, value] of Object.entries(parsed)) {
-      if (isToggleableColumnId(key) && typeof value === "boolean") {
+      if (typeof value !== "boolean") {
+        continue;
+      }
+
+      if (key === "ipa") {
+        next.ipaUk = value;
+        next.ipaUs = value;
+        continue;
+      }
+
+      if (isToggleableColumnId(key)) {
         next[key] = value;
       }
     }

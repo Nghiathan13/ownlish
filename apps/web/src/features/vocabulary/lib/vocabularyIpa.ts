@@ -1,5 +1,7 @@
 import type { VocabWordDefinition } from "@/entities/vocab/api/vocab";
 
+export type IpaField = "uk" | "us";
+
 export type DefinitionIpaPair = {
   uk: string | null;
   us: string | null;
@@ -14,32 +16,50 @@ export function getDefinitionIpaPair(
   };
 }
 
-export function getIpaSignature(pair: DefinitionIpaPair) {
-  return `${pair.uk ?? ""}|${pair.us ?? ""}`;
+export function getIpaFieldValue(
+  definition: VocabWordDefinition | null,
+  field: IpaField,
+) {
+  const pair = getDefinitionIpaPair(definition);
+  return pair[field];
 }
 
-export function hasUniformIpa(definitions: VocabWordDefinition[]) {
+export function hasUniformIpaField(
+  definitions: VocabWordDefinition[],
+  field: IpaField,
+) {
   if (definitions.length === 0) {
     return true;
   }
 
-  const signatures = new Set(
-    definitions.map((definition) =>
-      getIpaSignature(getDefinitionIpaPair(definition)),
-    ),
+  const values = new Set(
+    definitions.map((definition) => getIpaFieldValue(definition, field) ?? ""),
   );
 
-  return signatures.size <= 1;
+  return values.size <= 1;
 }
 
-export function getSharedIpaPair(
+export function getSharedIpaField(
   definitions: VocabWordDefinition[],
-): DefinitionIpaPair {
-  return getDefinitionIpaPair(definitions[0] ?? null);
+  field: IpaField,
+) {
+  return getIpaFieldValue(definitions[0] ?? null, field);
 }
 
-export function hasIpaContent(pair: DefinitionIpaPair) {
-  return Boolean(pair.uk || pair.us);
+export function hasUniformIpaUk(definitions: VocabWordDefinition[]) {
+  return hasUniformIpaField(definitions, "uk");
+}
+
+export function hasUniformIpaUs(definitions: VocabWordDefinition[]) {
+  return hasUniformIpaField(definitions, "us");
+}
+
+export function getSharedIpaUk(definitions: VocabWordDefinition[]) {
+  return getSharedIpaField(definitions, "uk");
+}
+
+export function getSharedIpaUs(definitions: VocabWordDefinition[]) {
+  return getSharedIpaField(definitions, "us");
 }
 
 export function formatIpaDisplay(value: string) {

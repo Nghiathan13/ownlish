@@ -8,7 +8,8 @@ import {
 describe("vocabularyTableColumns", () => {
   it("creates default visibility with all columns enabled", () => {
     expect(createDefaultColumnVisibility()).toEqual({
-      ipa: true,
+      ipaUk: true,
+      ipaUs: true,
       type: true,
       meaning: true,
       level: true,
@@ -51,12 +52,26 @@ describe("vocabularyTableColumns", () => {
     });
   });
 
+  it("migrates legacy ipa key to ipaUk and ipaUs", () => {
+    expect(
+      parseColumnVisibility(
+        JSON.stringify({
+          ipa: false,
+        }),
+      ),
+    ).toEqual({
+      ...createDefaultColumnVisibility(),
+      ipaUk: false,
+      ipaUs: false,
+    });
+  });
+
   it("toggles a single column", () => {
     const visibility = createDefaultColumnVisibility();
 
-    expect(toggleColumnVisibility(visibility, "ipa")).toEqual({
+    expect(toggleColumnVisibility(visibility, "ipaUk")).toEqual({
       ...visibility,
-      ipa: false,
+      ipaUk: false,
     });
   });
 });

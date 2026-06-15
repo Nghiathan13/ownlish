@@ -4,12 +4,12 @@ import {
   type VocabularyDefinitionRow,
 } from "@/features/vocabulary/lib/vocabularyTableRows";
 import {
-  type DefinitionIpaPair,
   formatIpaDisplay,
-  getDefinitionIpaPair,
-  getSharedIpaPair,
-  hasIpaContent,
-  hasUniformIpa,
+  getIpaFieldValue,
+  getSharedIpaUk,
+  getSharedIpaUs,
+  hasUniformIpaUk,
+  hasUniformIpaUs,
 } from "@/features/vocabulary/lib/vocabularyIpa";
 import {
   isColumnVisible,
@@ -52,7 +52,11 @@ export function VocabularyTable({
       <div className="grid gap-3 md:hidden">
         {words.map((word) => {
           const wordRows = expandWordsToDefinitionRows([word]);
-          const uniformIpa = hasUniformIpa(word.definitions);
+          const uniformIpaUk = hasUniformIpaUk(word.definitions);
+          const uniformIpaUs = hasUniformIpaUs(word.definitions);
+          const showHeaderIpa =
+            (uniformIpaUk && showColumn("ipaUk")) ||
+            (uniformIpaUs && showColumn("ipaUs"));
 
           return (
             <article
@@ -61,11 +65,19 @@ export function VocabularyTable({
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <h2 className="text-base font-semibold">{word.word}</h2>
-                {uniformIpa && showColumn("ipa") ? (
-                  <DefinitionIpaCell
-                    className="shrink-0 text-base"
-                    pair={getSharedIpaPair(word.definitions)}
-                  />
+                {showHeaderIpa ? (
+                  <div className="grid shrink-0 gap-0.5 text-right text-base text-muted-foreground">
+                    {uniformIpaUk && showColumn("ipaUk") ? (
+                      <DefinitionIpaValueCell
+                        value={getSharedIpaUk(word.definitions)}
+                      />
+                    ) : null}
+                    {uniformIpaUs && showColumn("ipaUs") ? (
+                      <DefinitionIpaValueCell
+                        value={getSharedIpaUs(word.definitions)}
+                      />
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
 
@@ -89,15 +101,29 @@ export function VocabularyTable({
                           onChange={() => onToggleDefinition(definition.id)}
                         />
                       ) : null}
-                      {!uniformIpa && showColumn("ipa") ? (
+                      {!uniformIpaUk && showColumn("ipaUk") ? (
                         <dl className="grid grid-cols-1 gap-3">
                           <div>
                             <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              IPA
+                              IPA UK
                             </dt>
                             <dd className="mt-1">
-                              <DefinitionIpaCell
-                                pair={getDefinitionIpaPair(row.definition)}
+                              <DefinitionIpaValueCell
+                                value={getIpaFieldValue(row.definition, "uk")}
+                              />
+                            </dd>
+                          </div>
+                        </dl>
+                      ) : null}
+                      {!uniformIpaUs && showColumn("ipaUs") ? (
+                        <dl className="grid grid-cols-1 gap-3">
+                          <div>
+                            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              IPA US
+                            </dt>
+                            <dd className="mt-1">
+                              <DefinitionIpaValueCell
+                                value={getIpaFieldValue(row.definition, "us")}
                               />
                             </dd>
                           </div>
@@ -191,14 +217,24 @@ export function VocabularyTable({
             >
               Word
             </th>
-            {showColumn("ipa") ? (
+            {showColumn("ipaUk") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
-                VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                VOCABULARY_TABLE_COLUMN_WIDTH.ipaUk,
               )}
             >
-              IPA
+              IPA UK
+            </th>
+            ) : null}
+            {showColumn("ipaUs") ? (
+            <th
+              className={classNames(
+                "bg-surface px-2 py-2 align-middle font-semibold",
+                VOCABULARY_TABLE_COLUMN_WIDTH.ipaUs,
+              )}
+            >
+              IPA US
             </th>
             ) : null}
             {showColumn("type") ? (
@@ -263,7 +299,8 @@ export function VocabularyTable({
         <tbody>
           {rows.map((row, rowIndex) => {
             const definition = row.definition;
-            const uniformIpa = hasUniformIpa(row.word.definitions);
+            const uniformIpaUk = hasUniformIpaUk(row.word.definitions);
+            const uniformIpaUs = hasUniformIpaUs(row.word.definitions);
             const showRowBorder =
               row.isLastInWord && rowIndex < rows.length - 1;
 
@@ -299,28 +336,56 @@ export function VocabularyTable({
                     {row.word.word}
                   </td>
                 ) : null}
-                {row.isFirstInWord && uniformIpa && showColumn("ipa") ? (
+                {row.isFirstInWord && uniformIpaUk && showColumn("ipaUk") ? (
                   <td
                     className={classNames(
                       "px-2 py-2 align-middle",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipaUk,
                     )}
                     rowSpan={row.definitionCount}
                   >
-                    <DefinitionIpaCell
-                      pair={getSharedIpaPair(row.word.definitions)}
+                    <DefinitionIpaValueCell
+                      value={getSharedIpaUk(row.word.definitions)}
                     />
                   </td>
                 ) : null}
-                {!uniformIpa && showColumn("ipa") ? (
+                {!uniformIpaUk && showColumn("ipaUk") ? (
                   <td
                     className={classNames(
                       "px-2 align-middle",
-                      VOCABULARY_TABLE_COLUMN_WIDTH.ipa,
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipaUk,
                       getDefinitionRowPadding(row),
                     )}
                   >
-                    <DefinitionIpaCell pair={getDefinitionIpaPair(row.definition)} />
+                    <DefinitionIpaValueCell
+                      value={getIpaFieldValue(row.definition, "uk")}
+                    />
+                  </td>
+                ) : null}
+                {row.isFirstInWord && uniformIpaUs && showColumn("ipaUs") ? (
+                  <td
+                    className={classNames(
+                      "px-2 py-2 align-middle",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipaUs,
+                    )}
+                    rowSpan={row.definitionCount}
+                  >
+                    <DefinitionIpaValueCell
+                      value={getSharedIpaUs(row.word.definitions)}
+                    />
+                  </td>
+                ) : null}
+                {!uniformIpaUs && showColumn("ipaUs") ? (
+                  <td
+                    className={classNames(
+                      "px-2 align-middle",
+                      VOCABULARY_TABLE_COLUMN_WIDTH.ipaUs,
+                      getDefinitionRowPadding(row),
+                    )}
+                  >
+                    <DefinitionIpaValueCell
+                      value={getIpaFieldValue(row.definition, "us")}
+                    />
                   </td>
                 ) : null}
                 {showColumn("type") ? (
@@ -518,31 +583,13 @@ function DefinitionExampleCell({
   return <p className="min-w-0 break-words">{example}</p>;
 }
 
-function DefinitionIpaCell({
-  className,
-  pair,
-}: {
-  className?: string;
-  pair: DefinitionIpaPair;
-}) {
-  if (!hasIpaContent(pair)) {
+function DefinitionIpaValueCell({ value }: { value: string | null }) {
+  if (!value) {
     return <span className="text-muted-foreground">-</span>;
   }
 
   return (
-    <div
-      className={classNames(
-        "grid gap-0.5 text-muted-foreground",
-        className,
-      )}
-    >
-      {pair.uk ? (
-        <p className="break-words">UK {formatIpaDisplay(pair.uk)}</p>
-      ) : null}
-      {pair.us ? (
-        <p className="break-words">US {formatIpaDisplay(pair.us)}</p>
-      ) : null}
-    </div>
+    <p className="break-words text-muted-foreground">{formatIpaDisplay(value)}</p>
   );
 }
 
