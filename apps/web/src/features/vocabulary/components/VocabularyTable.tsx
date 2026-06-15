@@ -20,7 +20,7 @@ const VOCABULARY_TABLE_COLUMN_WIDTH = {
   word: "w-[17.5%]",
   ipa: "w-[17.5%]",
   meaning: "w-[25%]",
-  example: "w-[40%]",
+  example: "w-[50%]",
   type: "w-[8rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
