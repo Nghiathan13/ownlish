@@ -40,7 +40,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-question",
     showOptionTextBeforeAnswer: false,
     hideContextUntilGroupComplete: false,
-    contentLayout: "default",
+    contentLayout: "split-plain",
   },
   3: {
     leftPanel: "listening-group",
