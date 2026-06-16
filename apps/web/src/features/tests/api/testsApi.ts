@@ -1,0 +1,296 @@
+import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import {
+  isBoolean,
+  isNullableString,
+  isNumber,
+  isRecord,
+  isString,
+} from "@/shared/lib/parse";
+import type {
+  CompleteSessionResult,
+  PracticeSessionResult,
+  RefreshMediaGroup,
+  SubmitAnswerResult,
+  ToeicPartResponse,
+  ToeicQuestion,
+  ToeicQuestionGroup,
+  ToeicQuestionOptions,
+  ToeicTestSummary,
+} from "./types";
+
+function parseOptions(value: unknown): ToeicQuestionOptions | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  return {
+    A: isNullableString(value.A) ? value.A : null,
+    B: isNullableString(value.B) ? value.B : null,
+    C: isNullableString(value.C) ? value.C : null,
+    D: isNullableString(value.D) ? value.D : null,
+    A_vi: isNullableString(value.A_vi) ? value.A_vi : null,
+    B_vi: isNullableString(value.B_vi) ? value.B_vi : null,
+    C_vi: isNullableString(value.C_vi) ? value.C_vi : null,
+    D_vi: isNullableString(value.D_vi) ? value.D_vi : null,
+  };
+}
+
+function parseQuestion(value: unknown): ToeicQuestion | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const options = parseOptions(value.options);
+  if (
+    !isNumber(value.id) ||
+    !isNumber(value.questionNumber) ||
+    !options ||
+    !isNumber(value.optionCount)
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    questionNumber: value.questionNumber,
+    question: isNullableString(value.question) ? value.question : null,
+    questionVi: isNullableString(value.questionVi) ? value.questionVi : null,
+    options,
+    optionCount: value.optionCount,
+  };
+}
+
+function parseGroup(value: unknown): ToeicQuestionGroup | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  if (!isNumber(value.id) || !Array.isArray(value.questions)) {
+    return null;
+  }
+
+  const questions = value.questions
+    .map(parseQuestion)
+    .filter((question): question is ToeicQuestion => question !== null);
+
+  return {
+    id: value.id,
+    questionStart: isNumber(value.questionStart) ? value.questionStart : 0,
+    questionEnd: isNumber(value.questionEnd) ? value.questionEnd : 0,
+    groupType: isNullableString(value.groupType) ? value.groupType : null,
+    accent: isNullableString(value.accent) ? value.accent : null,
+    content: isNullableString(value.content) ? value.content : null,
+    contentVi: isNullableString(value.contentVi) ? value.contentVi : null,
+    audioUrl: isNullableString(value.audioUrl) ? value.audioUrl : null,
+    audioUrlExpiresAt: isNullableString(value.audioUrlExpiresAt)
+      ? value.audioUrlExpiresAt
+      : null,
+    imageUrl: isNullableString(value.imageUrl) ? value.imageUrl : null,
+    imageUrlExpiresAt: isNullableString(value.imageUrlExpiresAt)
+      ? value.imageUrlExpiresAt
+      : null,
+    questions,
+  };
+}
+
+function parseTestSummary(value: unknown): ToeicTestSummary | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  if (
+    !isNumber(value.id) ||
+    !isNumber(value.year) ||
+    !isNumber(value.testNumber) ||
+    !isString(value.label)
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    year: value.year,
+    testNumber: value.testNumber,
+    label: value.label,
+  };
+}
+
+export async function listTests(
+  token: string,
+  year = 2026,
+  init?: RequestInit,
+) {
+  const body = await apiRequest(`/tests?year=${year}`, {
+    ...init,
+    token,
+  });
+
+  if (!isRecord(body) || !Array.isArray(body.items)) {
+    invalidApiResponse();
+  }
+
+  return body.items
+    .map(parseTestSummary)
+    .filter((item): item is ToeicTestSummary => item !== null);
+}
+
+export async function getTestPart(
+  token: string,
+  testId: number,
+  partNumber: number,
+  init?: RequestInit,
+) {
+  const body = await apiRequest(`/tests/${testId}/parts/${partNumber}`, {
+    ...init,
+    token,
+  });
+
+  if (!isRecord(body) || !Array.isArray(body.groups)) {
+    invalidApiResponse();
+  }
+
+  const groups = body.groups
+    .map(parseGroup)
+    .filter((group): group is ToeicQuestionGroup => group !== null);
+
+  if (
+    !isNumber(body.testId) ||
+    !isNumber(body.partNumber) ||
+    (body.skill !== "listening" && body.skill !== "reading")
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    testId: body.testId,
+    partNumber: body.partNumber,
+    skill: body.skill,
+    groups,
+  } satisfies ToeicPartResponse;
+}
+
+export async function createPracticeSession(
+  token: string,
+  payload: {
+    testId: number;
+    partNumber: number;
+    mode?: "normal" | "wrong_questions";
+  },
+) {
+  const body = await apiRequest("/tests/practice/sessions", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+
+  if (!isRecord(body) || !isString(body.sessionId)) {
+    invalidApiResponse();
+  }
+
+  return { sessionId: body.sessionId } satisfies PracticeSessionResult;
+}
+
+export async function submitPracticeAnswer(
+  token: string,
+  sessionId: string,
+  payload: {
+    toeicQuestionId: number;
+    selectedKey: "A" | "B" | "C" | "D";
+  },
+) {
+  const body = await apiRequest(
+    `/tests/practice/sessions/${sessionId}/answers`,
+    {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    },
+  );
+
+  if (
+    !isRecord(body) ||
+    !isBoolean(body.isCorrect) ||
+    !isString(body.answerKey)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    isCorrect: body.isCorrect,
+    answerKey: body.answerKey as SubmitAnswerResult["answerKey"],
+    correctOptionEn: isNullableString(body.correctOptionEn)
+      ? body.correctOptionEn
+      : null,
+    correctOptionVi: isNullableString(body.correctOptionVi)
+      ? body.correctOptionVi
+      : null,
+  } satisfies SubmitAnswerResult;
+}
+
+export async function completePracticeSession(
+  token: string,
+  sessionId: string,
+) {
+  const body = await apiRequest(
+    `/tests/practice/sessions/${sessionId}/complete`,
+    {
+      method: "PATCH",
+      token,
+    },
+  );
+
+  if (
+    !isRecord(body) ||
+    !isNumber(body.correctCount) ||
+    !isNumber(body.wrongCount)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    correctCount: body.correctCount,
+    wrongCount: body.wrongCount,
+  } satisfies CompleteSessionResult;
+}
+
+function parseRefreshGroup(value: unknown): RefreshMediaGroup | null {
+  if (!isRecord(value) || !isNumber(value.id)) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    audioUrl: isNullableString(value.audioUrl) ? value.audioUrl : null,
+    audioUrlExpiresAt: isNullableString(value.audioUrlExpiresAt)
+      ? value.audioUrlExpiresAt
+      : null,
+    imageUrl: isNullableString(value.imageUrl) ? value.imageUrl : null,
+    imageUrlExpiresAt: isNullableString(value.imageUrlExpiresAt)
+      ? value.imageUrlExpiresAt
+      : null,
+  };
+}
+
+export async function refreshTestPartMedia(
+  token: string,
+  testId: number,
+  partNumber: number,
+  groupIds?: number[],
+) {
+  const body = await apiRequest(
+    `/tests/${testId}/parts/${partNumber}/refresh-media`,
+    {
+      method: "POST",
+      token,
+      body: JSON.stringify(groupIds?.length ? { groupIds } : {}),
+    },
+  );
+
+  if (!isRecord(body) || !Array.isArray(body.groups)) {
+    invalidApiResponse();
+  }
+
+  return body.groups
+    .map(parseRefreshGroup)
+    .filter((group): group is RefreshMediaGroup => group !== null);
+}

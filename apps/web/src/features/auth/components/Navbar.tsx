@@ -13,7 +13,9 @@ export function Navbar() {
   const isAuth = status === "authenticated";
 
   const linkClass = (href: string) => {
-    const isActive = pathname === href;
+    const isActive =
+      pathname === href ||
+      (href !== "/" && pathname.startsWith(`${href}/`));
     return `text-sm font-semibold transition-colors duration-200 ${
       isActive
         ? "text-foreground"
@@ -48,6 +50,9 @@ export function Navbar() {
             </Link>
             <Link href="/review" className={linkClass("/review")}>
               Review
+            </Link>
+            <Link href="/tests" className={linkClass("/tests")}>
+              Tests
             </Link>
           </div>
         ) : null}
