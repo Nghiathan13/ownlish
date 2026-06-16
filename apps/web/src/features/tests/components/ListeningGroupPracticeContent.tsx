@@ -406,11 +406,9 @@ export function ListeningGroupPracticeContent({
       partConfig.translationVariant === "content-question-options");
 
   const groupPassageTranslation = showGroupPassageTranslation ? (
-    <div className="rounded-xl border border-border bg-muted/40 p-4">
-      <h3 className="mb-3 text-base font-semibold text-foreground">Translations</h3>
-      <div className="text-base text-foreground select-text">
-        <p className="whitespace-pre-wrap">{currentGroup.group.contentVi}</p>
-      </div>
+    <div className="flex flex-col gap-4 text-base text-foreground select-text">
+      <p className="font-semibold">Translations</p>
+      <p className="whitespace-pre-wrap">{currentGroup.group.contentVi}</p>
     </div>
   ) : null;
 

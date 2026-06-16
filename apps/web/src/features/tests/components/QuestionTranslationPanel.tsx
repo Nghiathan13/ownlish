@@ -31,32 +31,26 @@ export function QuestionTranslationPanel({
     variant === "content-question-options";
 
   return (
-    <div className="rounded-xl border border-border bg-muted/40 p-4">
-      <h3 className="mb-3 text-base font-semibold text-foreground">Translations</h3>
-      <div className="flex flex-col gap-4 text-base text-foreground select-text">
-        {showQuestion && questionVi?.trim() ? (
-          <div>
-            <p>{questionVi}</p>
-          </div>
-        ) : null}
-        {showOptions ? (
-          <div className="flex flex-col gap-2">
-            {OPTION_KEYS.slice(0, optionCount).map((key) => {
-              const viKey = `${key}_vi` as keyof ToeicQuestionOptions;
-              const label = options[viKey];
-              if (!label) {
-                return null;
-              }
+    <div className="flex flex-col gap-4 text-base text-foreground select-text">
+      <p className="font-semibold">Translations</p>
+      {showQuestion && questionVi?.trim() ? <p>{questionVi}</p> : null}
+      {showOptions ? (
+        <div className="flex flex-col gap-2">
+          {OPTION_KEYS.slice(0, optionCount).map((key) => {
+            const viKey = `${key}_vi` as keyof ToeicQuestionOptions;
+            const label = options[viKey];
+            if (!label) {
+              return null;
+            }
 
-              return (
-                <p key={key}>
-                  {key}. {label}
-                </p>
-              );
-            })}
-          </div>
-        ) : null}
-      </div>
+            return (
+              <p key={key}>
+                {key}. {label}
+              </p>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
