@@ -18,6 +18,9 @@ import type {
   ToeicQuestionOptions,
   ToeicTestSummary,
   WrongQuestionItem,
+  TestAttemptDetail,
+  TestAttemptListResult,
+  TestAttemptSummary,
 } from "./types";
 
 function parseOptions(value: unknown): ToeicQuestionOptions | null {
@@ -459,4 +462,175 @@ export async function refreshTestPartMedia(
   return body.groups
     .map(parseRefreshGroup)
     .filter((group): group is RefreshMediaGroup => group !== null);
+}
+
+function parseAttemptPart(value: unknown) {
+  if (!isRecord(value) || !isNumber(value.partNumber)) {
+    return null;
+  }
+
+  if (
+    !isNumber(value.correctCount) ||
+    !isNumber(value.wrongCount) ||
+    !(isNullableString(value.completedAt) || value.completedAt === null)
+  ) {
+    return null;
+  }
+
+  return {
+    partNumber: value.partNumber,
+    correctCount: value.correctCount,
+    wrongCount: value.wrongCount,
+    completedAt: value.completedAt,
+  };
+}
+
+function parseAttemptDetail(value: unknown): TestAttemptDetail | null {
+  if (!isRecord(value) || !isString(value.attemptId)) {
+    return null;
+  }
+
+  const parts = Array.isArray(value.parts)
+    ? value.parts
+        .map(parseAttemptPart)
+        .filter((part): part is NonNullable<ReturnType<typeof parseAttemptPart>> => part !== null)
+    : [];
+
+  if (
+    !isNumber(value.testId) ||
+    !isString(value.testLabel) ||
+    !isNumber(value.year) ||
+    !isString(value.startedAt) ||
+    !(isNullableString(value.completedAt) || value.completedAt === null) ||
+    !isNumber(value.totalCorrect) ||
+    !isNumber(value.totalWrong) ||
+    !isNumber(value.currentPartNumber)
+  ) {
+    return null;
+  }
+
+  return {
+    attemptId: value.attemptId,
+    testId: value.testId,
+    testLabel: value.testLabel,
+    year: value.year,
+    startedAt: value.startedAt,
+    completedAt: value.completedAt,
+    totalCorrect: value.totalCorrect,
+    totalWrong: value.totalWrong,
+    currentPartNumber: value.currentPartNumber,
+    parts,
+  };
+}
+
+function parseAttemptSummary(value: unknown): TestAttemptSummary | null {
+  if (!isRecord(value) || !isString(value.attemptId)) {
+    return null;
+  }
+
+  if (
+    !isNumber(value.testId) ||
+    !isString(value.testLabel) ||
+    !isNumber(value.year) ||
+    !isString(value.startedAt) ||
+    !(isNullableString(value.completedAt) || value.completedAt === null) ||
+    !isNumber(value.totalCorrect) ||
+    !isNumber(value.totalWrong) ||
+    !isNumber(value.currentPartNumber)
+  ) {
+    return null;
+  }
+
+  return {
+    attemptId: value.attemptId,
+    testId: value.testId,
+    testLabel: value.testLabel,
+    year: value.year,
+    startedAt: value.startedAt,
+    completedAt: value.completedAt,
+    totalCorrect: value.totalCorrect,
+    totalWrong: value.totalWrong,
+    currentPartNumber: value.currentPartNumber,
+  };
+}
+
+export async function createTestAttempt(token: string, testId: number) {
+  const body = await apiRequest("/tests/attempts", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ testId }),
+  });
+
+  const attempt = parseAttemptDetail(body);
+  if (!attempt) {
+    invalidApiResponse();
+  }
+
+  return attempt;
+}
+
+export async function listTestAttempts(
+  token: string,
+  params?: { testId?: number; limit?: number; offset?: number },
+  init?: RequestInit,
+) {
+  const searchParams = new URLSearchParams();
+  if (params?.testId) {
+    searchParams.set("testId", String(params.testId));
+  }
+  if (params?.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+  if (params?.offset !== undefined) {
+    searchParams.set("offset", String(params.offset));
+  }
+
+  const query = searchParams.toString();
+  const body = await apiRequest(`/tests/attempts${query ? `?${query}` : ""}`, {
+    ...init,
+    token,
+  });
+
+  if (!isRecord(body) || !Array.isArray(body.items) || !isNumber(body.total)) {
+    invalidApiResponse();
+  }
+
+  const items = body.items
+    .map(parseAttemptSummary)
+    .filter((item): item is TestAttemptSummary => item !== null);
+
+  return { items, total: body.total } satisfies TestAttemptListResult;
+}
+
+export async function getTestAttempt(token: string, attemptId: string) {
+  const body = await apiRequest(`/tests/attempts/${attemptId}`, { token });
+  const attempt = parseAttemptDetail(body);
+  if (!attempt) {
+    invalidApiResponse();
+  }
+
+  return attempt;
+}
+
+export async function completeTestAttemptPart(
+  token: string,
+  attemptId: string,
+  partNumber: number,
+  payload: { correctCount: number; wrongCount: number },
+) {
+  const body = await apiRequest(
+    `/tests/attempts/${attemptId}/parts/${partNumber}/complete`,
+    {
+      method: "PATCH",
+      token,
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const attempt = parseAttemptDetail(body);
+  if (!attempt) {
+    invalidApiResponse();
+  }
+
+  return attempt;
 }

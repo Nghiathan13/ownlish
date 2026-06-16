@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createPracticeSession,
   submitPracticeAnswer,
+  completePracticeSession,
 } from "@/features/tests/api/testsApi";
 import type {
   PracticeMode,
@@ -139,6 +140,18 @@ export function usePracticeSession({
     ],
   );
 
+  const completeSession = useCallback(async () => {
+    if (!accessToken || !sessionId) {
+      return null;
+    }
+
+    return runAuthenticatedRequest({
+      accessToken,
+      clearSession,
+      request: (token) => completePracticeSession(token, sessionId),
+    });
+  }, [accessToken, clearSession, sessionId]);
+
   return {
     sessionId,
     correctCount: sessionData?.correctCount ?? 0,
@@ -152,5 +165,6 @@ export function usePracticeSession({
       : null,
     isSubmitting,
     submitAnswer,
+    completeSession,
   };
 }

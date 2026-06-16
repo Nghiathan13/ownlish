@@ -104,3 +104,40 @@ export type RefreshMediaGroup = {
   imageUrl: string | null;
   imageUrlExpiresAt: string | null;
 };
+
+export type TestAttemptPart = {
+  partNumber: number;
+  correctCount: number;
+  wrongCount: number;
+  completedAt: string | null;
+};
+
+export type TestAttemptDetail = {
+  attemptId: string;
+  testId: number;
+  testLabel: string;
+  year: number;
+  startedAt: string;
+  completedAt: string | null;
+  totalCorrect: number;
+  totalWrong: number;
+  currentPartNumber: number;
+  parts: TestAttemptPart[];
+};
+
+export type TestAttemptSummary = {
+  attemptId: string;
+  testId: number;
+  testLabel: string;
+  year: number;
+  startedAt: string;
+  completedAt: string | null;
+  totalCorrect: number;
+  totalWrong: number;
+  currentPartNumber: number;
+};
+
+export type TestAttemptListResult = {
+  items: TestAttemptSummary[];
+  total: number;
+};

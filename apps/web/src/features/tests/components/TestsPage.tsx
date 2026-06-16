@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
@@ -7,6 +8,7 @@ import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import {
   clearTestPracticeHistory,
+  createTestAttempt,
   getPracticeStats,
 } from "@/features/tests/api/testsApi";
 import type { PracticeMode } from "@/features/tests/api/types";
@@ -38,6 +40,9 @@ export function TestsPage() {
     null,
   );
   const [clearingTestId, setClearingTestId] = useState<number | null>(null);
+  const [startingFullTestId, setStartingFullTestId] = useState<number | null>(
+    null,
+  );
   const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
     accessToken,
     clearSession,
@@ -102,10 +107,34 @@ export function TestsPage() {
     }
   };
 
+  const handleFullTest = async (testId: number) => {
+    if (!accessToken) {
+      return;
+    }
+
+    setStartingFullTestId(testId);
+    try {
+      const attempt = await runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) => createTestAttempt(token, testId),
+      });
+
+      router.push(
+        `/tests/${testId}/attempt/${attempt.attemptId}/part/${Math.min(attempt.currentPartNumber, 7)}`,
+      );
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Cannot start full test."));
+    } finally {
+      setStartingFullTestId(null);
+    }
+  };
+
   return (
     <PageShell>
       <Panel>
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
           <button
             className="rounded-lg border border-foreground bg-foreground px-3.5 py-2 text-sm font-semibold text-background"
             type="button"
@@ -118,6 +147,12 @@ export function TestsPage() {
           >
             2026
           </button>
+          </div>
+          <Link href="/tests/attempts">
+            <Button type="button" variant="secondary">
+              Full test history
+            </Button>
+          </Link>
         </div>
 
         {isLoadingTests ? (
@@ -137,8 +172,10 @@ export function TestsPage() {
               <TestCard
                 isClearingHistory={clearingTestId === test.id}
                 isLoadingStats={statsQueries[index]?.isLoading ?? false}
+                isStartingFullTest={startingFullTestId === test.id}
                 key={test.id}
                 onClearHistory={() => void handleClearHistory(test.id)}
+                onFullTest={() => void handleFullTest(test.id)}
                 onPractice={() => setSelectedTest(test)}
                 stats={statsQueries[index]?.data ?? null}
                 test={test}

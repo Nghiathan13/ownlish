@@ -5,14 +5,20 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestPart } from "@/features/tests/api/testsApi";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
+import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
-import {
-  usePracticeSession,
-} from "@/features/tests/hooks/usePracticeSession";
+import { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
-import { useWrongQuestions, getWrongQuestionsQueryKey } from "@/features/tests/hooks/useWrongQuestions";
+import {
+  getWrongQuestionsQueryKey,
+  useWrongQuestions,
+} from "@/features/tests/hooks/useWrongQuestions";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
+import {
+  getPartPracticeConfig,
+  isSupportedPracticePart,
+} from "@/features/tests/lib/partPracticeConfig";
 import {
   syncPracticeProgressSession,
   writePracticeIndex,
@@ -23,20 +29,29 @@ import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
-type Part1Item = {
+type PracticeItem = {
   group: ToeicQuestionGroup;
   question: ToeicQuestionGroup["questions"][number];
 };
 
-type Part1PracticeViewProps = {
+export type FullTestContext = {
+  attemptId: string;
+  onPartComplete: (result: {
+    correctCount: number;
+    wrongCount: number;
+  }) => Promise<void>;
+};
+
+type PracticePartViewProps = {
   testId: number;
   partNumber: number;
   practiceMode: PracticeMode;
   accessToken: string | null;
   clearSession: () => void;
+  fullTestContext?: FullTestContext;
 };
 
-function flattenPart1Items(groups: ToeicQuestionGroup[]): Part1Item[] {
+function flattenPracticeItems(groups: ToeicQuestionGroup[]): PracticeItem[] {
   return groups.flatMap((group) =>
     group.questions.map((question) => ({ group, question })),
   );
@@ -46,19 +61,20 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-type Part1PracticeContentProps = {
+type PracticePartContentProps = {
   testId: number;
   partNumber: number;
   practiceMode: PracticeMode;
-  items: Part1Item[];
+  items: PracticeItem[];
   initialIndex: number;
   practice: ReturnType<typeof usePracticeSession>;
   accessToken: string | null;
   clearSession: () => void;
+  fullTestContext?: FullTestContext;
   onFinish: () => void;
 };
 
-function Part1PracticeContent({
+function PracticePartContent({
   testId,
   partNumber,
   practiceMode,
@@ -67,9 +83,12 @@ function Part1PracticeContent({
   practice,
   accessToken,
   clearSession,
+  fullTestContext,
   onFinish,
-}: Part1PracticeContentProps) {
+}: PracticePartContentProps) {
+  const partConfig = getPartPracticeConfig(partNumber);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isFinishing, setIsFinishing] = useState(false);
   const activeIndex =
     items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
   const currentItem = items[activeIndex] ?? null;
@@ -85,6 +104,7 @@ function Part1PracticeContent({
   const currentAnswer = currentItem
     ? practice.getAnswer(currentItem.question.id)
     : undefined;
+  const isAnswered = Boolean(currentAnswer);
 
   const goToIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, items.length - 1));
@@ -100,9 +120,31 @@ function Part1PracticeContent({
     await practice.submitAnswer(currentItem.question.id, key);
   };
 
+  const handleFinish = async () => {
+    if (isFinishing) {
+      return;
+    }
+
+    setIsFinishing(true);
+    try {
+      const result = await practice.completeSession();
+
+      if (fullTestContext && result) {
+        await fullTestContext.onPartComplete({
+          correctCount: result.correctCount,
+          wrongCount: result.wrongCount,
+        });
+      }
+
+      onFinish();
+    } finally {
+      setIsFinishing(false);
+    }
+  };
+
   const handleNext = () => {
     if (activeIndex >= items.length - 1) {
-      onFinish();
+      void handleFinish();
       return;
     }
 
@@ -113,11 +155,18 @@ function Part1PracticeContent({
     return null;
   }
 
+  const finishLabel = fullTestContext
+    ? partNumber >= 7
+      ? "Finish test"
+      : "Next part"
+    : "Finish";
+
   return (
     <>
       <div>
         <p className="text-sm text-muted-foreground">
-          Test {testId} · Part {partNumber}
+          Test {testId}
+          {fullTestContext ? " · Full test" : ""} · Part {partNumber}
           {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
         </p>
         <h1 className="text-xl font-semibold">
@@ -131,39 +180,32 @@ function Part1PracticeContent({
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-        <div className="space-y-4 rounded-xl border border-border p-4">
-          {signedMedia.audioUrl ? (
-            <audio
-              controls
-              className="w-full"
-              key={signedMedia.audioUrl}
-              onError={signedMedia.handleMediaError}
-              src={signedMedia.audioUrl}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">No audio available.</p>
-          )}
-          {signedMedia.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
-            <img
-              alt={`Question ${currentItem.question.questionNumber}`}
-              className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-              key={signedMedia.imageUrl}
-              onError={signedMedia.handleMediaError}
-              src={signedMedia.imageUrl}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">No image available.</p>
-          )}
-          {signedMedia.mediaError ? (
-            <p className="text-sm text-red-600">{signedMedia.mediaError}</p>
-          ) : null}
-        </div>
+        <PracticeLeftPanel
+          audioUrl={signedMedia.audioUrl}
+          group={currentItem.group}
+          imageUrl={signedMedia.imageUrl}
+          mediaError={signedMedia.mediaError}
+          onMediaError={signedMedia.handleMediaError}
+          partConfig={partConfig}
+          questionNumber={currentItem.question.questionNumber}
+          questionText={currentItem.question.question}
+          showTranslation={isAnswered}
+        />
 
         <div className="flex min-h-0 flex-col gap-4">
+          {partConfig.showQuestionInRightPanel &&
+          currentItem.question.question?.trim() ? (
+            <div className="rounded-xl border border-border p-4">
+              <h3 className="mb-2 text-sm font-semibold">Question</h3>
+              <p className="text-sm leading-relaxed select-text">
+                {currentItem.question.question}
+              </p>
+            </div>
+          ) : null}
+
           <QuestionOptions
             answerKey={currentAnswer?.answerKey ?? null}
-            isAnswered={Boolean(currentAnswer)}
+            isAnswered={isAnswered}
             isSubmitting={practice.isSubmitting}
             onSelect={handleSelect}
             optionCount={currentItem.question.optionCount}
@@ -171,16 +213,19 @@ function Part1PracticeContent({
             selectedKey={currentAnswer?.selectedKey ?? null}
           />
           <QuestionTranslationPanel
+            contentVi={currentItem.group.contentVi}
             optionCount={currentItem.question.optionCount}
             options={currentItem.question.options}
-            visible={Boolean(currentAnswer)}
+            questionVi={currentItem.question.questionVi}
+            variant={partConfig.translationVariant}
+            visible={isAnswered}
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <Button
-          disabled={activeIndex === 0}
+          disabled={activeIndex === 0 || isFinishing}
           onClick={() => goToIndex(activeIndex - 1)}
           type="button"
           variant="secondary"
@@ -189,27 +234,30 @@ function Part1PracticeContent({
         </Button>
         <Button
           className={classNames(activeIndex >= items.length - 1 && "min-w-32")}
-          disabled={practice.isSubmitting}
+          disabled={practice.isSubmitting || isFinishing}
           onClick={handleNext}
           type="button"
         >
-          {activeIndex >= items.length - 1 ? "Finish" : "Next"}
+          {activeIndex >= items.length - 1 ? finishLabel : "Next"}
         </Button>
       </div>
     </>
   );
 }
 
-export function Part1PracticeView({
+export function PracticePartView({
   testId,
   partNumber,
   practiceMode,
   accessToken,
   clearSession,
-}: Part1PracticeViewProps) {
+  fullTestContext,
+}: PracticePartViewProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isWrongMode = practiceMode === "wrong_questions";
+  const effectiveMode = fullTestContext ? "normal" : practiceMode;
+  const isSupportedPart = isSupportedPracticePart(partNumber);
 
   const partQuery = useQuery({
     queryKey: ["test-part", testId, partNumber],
@@ -219,11 +267,11 @@ export function Part1PracticeView({
         clearSession,
         request: (token) => getTestPart(token, testId, partNumber, { signal }),
       }),
-    enabled: Boolean(accessToken),
+    enabled: Boolean(accessToken) && isSupportedPart,
   });
 
   const allItems = useMemo(
-    () => flattenPart1Items(partQuery.data?.groups ?? []),
+    () => flattenPracticeItems(partQuery.data?.groups ?? []),
     [partQuery.data?.groups],
   );
 
@@ -233,7 +281,7 @@ export function Part1PracticeView({
       clearSession,
       testId,
       partNumber,
-      enabled: Boolean(partQuery.data) && isWrongMode,
+      enabled: Boolean(partQuery.data) && isWrongMode && !fullTestContext,
     });
 
   const practice = usePracticeSession({
@@ -241,22 +289,25 @@ export function Part1PracticeView({
     clearSession,
     testId,
     partNumber,
-    mode: practiceMode,
-    enabled: Boolean(partQuery.data) && (!isWrongMode || !isLoadingWrongQuestions),
+    mode: effectiveMode,
+    enabled:
+      isSupportedPart &&
+      Boolean(partQuery.data) &&
+      (!isWrongMode || !isLoadingWrongQuestions || Boolean(fullTestContext)),
   });
 
   const frozenWrongQuestionIds = useMemo(() => {
-    if (!isWrongMode || !practice.sessionId || wrongQuestions.length === 0) {
+    if (!isWrongMode || fullTestContext || !practice.sessionId || wrongQuestions.length === 0) {
       return null;
     }
 
     return wrongQuestions.map((item) => item.toeicQuestionId);
     // Freeze the review pool when a session starts; correct answers must not shrink it mid-session.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- wrongQuestions intentionally omitted
-  }, [isWrongMode, practice.sessionId]);
+  }, [fullTestContext, isWrongMode, practice.sessionId]);
 
   const items = useMemo(() => {
-    if (!isWrongMode) {
+    if (!isWrongMode || fullTestContext) {
       return allItems;
     }
 
@@ -266,16 +317,22 @@ export function Part1PracticeView({
 
     const frozenIds = new Set(frozenWrongQuestionIds);
     return allItems.filter((item) => frozenIds.has(item.question.id));
-  }, [allItems, frozenWrongQuestionIds, isWrongMode]);
+  }, [allItems, frozenWrongQuestionIds, fullTestContext, isWrongMode]);
 
   const handleFinish = () => {
-    if (isWrongMode) {
+    if (isWrongMode && !fullTestContext) {
       void queryClient.invalidateQueries({
         queryKey: getPracticeStatsQueryKey(testId),
       });
       void queryClient.invalidateQueries({
         queryKey: getWrongQuestionsQueryKey(testId, partNumber),
       });
+      router.push("/tests");
+      return;
+    }
+
+    if (fullTestContext) {
+      return;
     }
 
     router.push("/tests");
@@ -292,7 +349,21 @@ export function Part1PracticeView({
     );
   }, [items.length, partNumber, practice.sessionId, testId]);
 
-  if (partQuery.isLoading || practice.isStarting || (isWrongMode && isLoadingWrongQuestions)) {
+  if (!isSupportedPart) {
+    return (
+      <PageShell>
+        <Panel>
+          <p className="text-muted-foreground">This part is not supported.</p>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  if (
+    partQuery.isLoading ||
+    practice.isStarting ||
+    (isWrongMode && !fullTestContext && isLoadingWrongQuestions)
+  ) {
     return (
       <PageShell>
         <Panel>
@@ -322,7 +393,7 @@ export function Part1PracticeView({
     );
   }
 
-  if (isWrongMode && wrongQuestions.length === 0) {
+  if (isWrongMode && !fullTestContext && wrongQuestions.length === 0) {
     return (
       <PageShell>
         <Panel>
@@ -339,7 +410,7 @@ export function Part1PracticeView({
     );
   }
 
-  if (!isWrongMode && allItems.length === 0) {
+  if (allItems.length === 0) {
     return (
       <PageShell>
         <Panel>
@@ -363,9 +434,10 @@ export function Part1PracticeView({
   return (
     <PageShell fillViewport>
       <Panel className="flex min-h-0 flex-1 flex-col gap-4">
-        <Part1PracticeContent
+        <PracticePartContent
           accessToken={accessToken}
           clearSession={clearSession}
+          fullTestContext={fullTestContext}
           initialIndex={initialIndex}
           items={items}
           key={practice.sessionId}

@@ -4,8 +4,9 @@ import { use, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { Part1PracticeView } from "@/features/tests/components/Part1PracticeView";
+import { PracticePartView } from "@/features/tests/components/PracticePartView";
 import type { PracticeMode } from "@/features/tests/api/types";
+import { isSupportedPracticePart } from "@/features/tests/lib/partPracticeConfig";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -30,12 +31,12 @@ function PracticePartPageContent({
       ? "wrong_questions"
       : "normal";
 
-  if (partNumber !== 1) {
+  if (!isSupportedPracticePart(partNumber)) {
     return (
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
-            Part {partNumber} is not supported yet. Only Part 1 is available.
+            Part {partNumber} is not supported.
           </p>
         </Panel>
       </PageShell>
@@ -43,7 +44,7 @@ function PracticePartPageContent({
   }
 
   return (
-    <Part1PracticeView
+    <PracticePartView
       accessToken={accessToken}
       clearSession={clearSession}
       partNumber={partNumber}
