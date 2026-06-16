@@ -225,12 +225,10 @@ function PracticePartContent({
         showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
       />
       <QuestionTranslationPanel
-        answerKey={currentAnswer?.answerKey ?? null}
         contentVi={currentItem.group.contentVi}
         optionCount={currentItem.question.optionCount}
         options={currentItem.question.options}
         questionVi={currentItem.question.questionVi}
-        selectedKey={currentAnswer?.selectedKey ?? null}
         variant={partConfig.translationVariant}
         visible={isAnswered}
       />

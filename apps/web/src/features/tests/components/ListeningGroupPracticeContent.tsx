@@ -351,12 +351,10 @@ export function ListeningGroupPracticeContent({
         />
 
         <QuestionTranslationPanel
-          answerKey={answerKey}
           contentVi={currentGroup.group.contentVi}
           optionCount={question.optionCount}
           options={question.options}
           questionVi={question.questionVi}
-          selectedKey={selectedKey}
           variant={partConfig.translationVariant}
           visible={translationVisible}
         />
