@@ -2,21 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  clearTestPracticeHistory,
-  getTestPart,
-} from "@/features/tests/api/testsApi";
+import { useQuery } from "@tanstack/react-query";
+import { getTestPart } from "@/features/tests/api/testsApi";
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import {
-  getPracticeSessionQueryKey,
   usePracticeSession,
 } from "@/features/tests/hooks/usePracticeSession";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import {
-  clearAllPracticeProgressForTest,
   syncPracticeProgressSession,
   writePracticeIndex,
 } from "@/features/tests/lib/practiceStorage";
@@ -56,8 +51,6 @@ type Part1PracticeContentProps = {
   practice: ReturnType<typeof usePracticeSession>;
   accessToken: string | null;
   clearSession: () => void;
-  isClearingHistory: boolean;
-  onClearHistory: () => void;
   onFinish: () => void;
 };
 
@@ -69,8 +62,6 @@ function Part1PracticeContent({
   practice,
   accessToken,
   clearSession,
-  isClearingHistory,
-  onClearHistory,
   onFinish,
 }: Part1PracticeContentProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -117,26 +108,16 @@ function Part1PracticeContent({
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Test {testId} · Part {partNumber}
-          </p>
-          <h1 className="text-xl font-semibold">
-            Question {currentItem.question.questionNumber} / {items.length}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Correct {practice.correctCount} · Wrong {practice.wrongCount}
-          </p>
-        </div>
-        <Button
-          disabled={isClearingHistory || practice.isSubmitting}
-          onClick={() => void onClearHistory()}
-          type="button"
-          variant="secondary"
-        >
-          {isClearingHistory ? "Clearing..." : "Clear history"}
-        </Button>
+      <div>
+        <p className="text-sm text-muted-foreground">
+          Test {testId} · Part {partNumber}
+        </p>
+        <h1 className="text-xl font-semibold">
+          Question {currentItem.question.questionNumber} / {items.length}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Correct {practice.correctCount} · Wrong {practice.wrongCount}
+        </p>
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
@@ -216,8 +197,6 @@ export function Part1PracticeView({
   clearSession,
 }: Part1PracticeViewProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [isClearingHistory, setIsClearingHistory] = useState(false);
 
   const partQuery = useQuery({
     queryKey: ["test-part", testId, partNumber],
@@ -253,35 +232,6 @@ export function Part1PracticeView({
       items.length - 1,
     );
   }, [items.length, partNumber, practice.sessionId, testId]);
-
-  const handleClearHistory = async () => {
-    if (
-      !accessToken ||
-      !window.confirm(
-        "Clear all practice history for this test? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
-    setIsClearingHistory(true);
-    try {
-      await runAuthenticatedRequest({
-        accessToken,
-        clearSession,
-        request: (token) => clearTestPracticeHistory(token, testId),
-      });
-      clearAllPracticeProgressForTest(testId);
-      await queryClient.invalidateQueries({
-        queryKey: getPracticeSessionQueryKey(testId, partNumber),
-      });
-      router.push("/tests");
-    } catch (error) {
-      window.alert(getErrorMessage(error, "Cannot clear practice history."));
-    } finally {
-      setIsClearingHistory(false);
-    }
-  };
 
   if (partQuery.isLoading || practice.isStarting) {
     return (
@@ -341,10 +291,8 @@ export function Part1PracticeView({
           accessToken={accessToken}
           clearSession={clearSession}
           initialIndex={initialIndex}
-          isClearingHistory={isClearingHistory}
           items={items}
           key={practice.sessionId}
-          onClearHistory={handleClearHistory}
           onFinish={() => router.push("/tests")}
           partNumber={partNumber}
           practice={practice}
