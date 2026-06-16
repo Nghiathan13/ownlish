@@ -169,6 +169,10 @@ export async function getTestPart(
   } satisfies ToeicPartResponse;
 }
 
+function isOptionKey(value: string): value is "A" | "B" | "C" | "D" {
+  return value === "A" || value === "B" || value === "C" || value === "D";
+}
+
 export async function createPracticeSession(
   token: string,
   payload: {
@@ -187,7 +191,52 @@ export async function createPracticeSession(
     invalidApiResponse();
   }
 
-  return { sessionId: body.sessionId } satisfies PracticeSessionResult;
+  const answers = Array.isArray(body.answers)
+    ? body.answers.flatMap((value) => {
+        if (!isRecord(value)) {
+          return [];
+        }
+
+        const selectedKey = isString(value.selectedKey)
+          ? value.selectedKey.trim().toUpperCase()
+          : "";
+        const answerKey = isString(value.answerKey)
+          ? value.answerKey.trim().toUpperCase()
+          : "";
+
+        if (
+          !isNumber(value.toeicQuestionId) ||
+          !isBoolean(value.isCorrect) ||
+          !isOptionKey(selectedKey) ||
+          !isOptionKey(answerKey)
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            toeicQuestionId: value.toeicQuestionId,
+            selectedKey,
+            answerKey,
+            isCorrect: value.isCorrect,
+          },
+        ];
+      })
+    : [];
+
+  if (
+    !isNumber(body.correctCount) ||
+    !isNumber(body.wrongCount)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    sessionId: body.sessionId,
+    correctCount: body.correctCount,
+    wrongCount: body.wrongCount,
+    answers,
+  } satisfies PracticeSessionResult;
 }
 
 export async function submitPracticeAnswer(
@@ -251,6 +300,19 @@ export async function completePracticeSession(
     correctCount: body.correctCount,
     wrongCount: body.wrongCount,
   } satisfies CompleteSessionResult;
+}
+
+export async function clearTestPracticeHistory(token: string, testId: number) {
+  const body = await apiRequest(`/tests/${testId}/practice-history`, {
+    method: "DELETE",
+    token,
+  });
+
+  if (!isRecord(body) || !isNumber(body.deletedSessionCount)) {
+    invalidApiResponse();
+  }
+
+  return { deletedSessionCount: body.deletedSessionCount };
 }
 
 function parseRefreshGroup(value: unknown): RefreshMediaGroup | null {

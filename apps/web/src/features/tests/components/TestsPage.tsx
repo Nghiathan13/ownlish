@@ -52,9 +52,7 @@ export function TestsPage() {
             </Button>
           </div>
         ) : tests.length === 0 ? (
-          <p className="text-muted-foreground">
-            Chưa có test nào. Import dữ liệu TOEIC lên Supabase trước.
-          </p>
+          <p className="text-muted-foreground">No tests available yet.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {tests.map((test) => (

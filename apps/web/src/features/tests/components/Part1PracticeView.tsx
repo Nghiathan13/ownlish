@@ -2,13 +2,24 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { getTestPart } from "@/features/tests/api/testsApi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  clearTestPracticeHistory,
+  getTestPart,
+} from "@/features/tests/api/testsApi";
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
-import { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
+import {
+  getPracticeSessionQueryKey,
+  usePracticeSession,
+} from "@/features/tests/hooks/usePracticeSession";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
+import {
+  clearAllPracticeProgressForTest,
+  syncPracticeProgressSession,
+  writePracticeIndex,
+} from "@/features/tests/lib/practiceStorage";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
@@ -33,6 +44,171 @@ function flattenPart1Items(groups: ToeicQuestionGroup[]): Part1Item[] {
   );
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+type Part1PracticeContentProps = {
+  testId: number;
+  partNumber: number;
+  items: Part1Item[];
+  initialIndex: number;
+  practice: ReturnType<typeof usePracticeSession>;
+  accessToken: string | null;
+  clearSession: () => void;
+  isClearingHistory: boolean;
+  onClearHistory: () => void;
+  onFinish: () => void;
+};
+
+function Part1PracticeContent({
+  testId,
+  partNumber,
+  items,
+  initialIndex,
+  practice,
+  accessToken,
+  clearSession,
+  isClearingHistory,
+  onClearHistory,
+  onFinish,
+}: Part1PracticeContentProps) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const currentItem = items[currentIndex] ?? null;
+
+  const signedMedia = useSignedMedia({
+    testId,
+    partNumber,
+    group: currentItem?.group ?? null,
+    accessToken,
+    clearSession,
+  });
+
+  const currentAnswer = currentItem
+    ? practice.getAnswer(currentItem.question.id)
+    : undefined;
+
+  const goToIndex = (index: number) => {
+    const nextIndex = Math.max(0, Math.min(index, items.length - 1));
+    setCurrentIndex(nextIndex);
+    writePracticeIndex(testId, partNumber, nextIndex);
+  };
+
+  const handleSelect = async (key: "A" | "B" | "C" | "D") => {
+    if (!currentItem || currentAnswer || practice.isSubmitting) {
+      return;
+    }
+
+    await practice.submitAnswer(currentItem.question.id, key);
+  };
+
+  const handleNext = () => {
+    if (currentIndex >= items.length - 1) {
+      onFinish();
+      return;
+    }
+
+    goToIndex(currentIndex + 1);
+  };
+
+  if (!currentItem) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Test {testId} · Part {partNumber}
+          </p>
+          <h1 className="text-xl font-semibold">
+            Question {currentItem.question.questionNumber} / {items.length}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Correct {practice.correctCount} · Wrong {practice.wrongCount}
+          </p>
+        </div>
+        <Button
+          disabled={isClearingHistory || practice.isSubmitting}
+          onClick={() => void onClearHistory()}
+          type="button"
+          variant="secondary"
+        >
+          {isClearingHistory ? "Clearing..." : "Clear history"}
+        </Button>
+      </div>
+
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
+        <div className="space-y-4 rounded-xl border border-border p-4">
+          {signedMedia.audioUrl ? (
+            <audio
+              controls
+              className="w-full"
+              key={signedMedia.audioUrl}
+              onError={signedMedia.handleMediaError}
+              src={signedMedia.audioUrl}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">No audio available.</p>
+          )}
+          {signedMedia.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
+            <img
+              alt={`Question ${currentItem.question.questionNumber}`}
+              className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
+              key={signedMedia.imageUrl}
+              onError={signedMedia.handleMediaError}
+              src={signedMedia.imageUrl}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">No image available.</p>
+          )}
+          {signedMedia.mediaError ? (
+            <p className="text-sm text-red-600">{signedMedia.mediaError}</p>
+          ) : null}
+        </div>
+
+        <div className="flex min-h-0 flex-col gap-4">
+          <QuestionOptions
+            answerKey={currentAnswer?.answerKey ?? null}
+            isAnswered={Boolean(currentAnswer)}
+            isSubmitting={practice.isSubmitting}
+            onSelect={handleSelect}
+            optionCount={currentItem.question.optionCount}
+            options={currentItem.question.options}
+            selectedKey={currentAnswer?.selectedKey ?? null}
+          />
+          <QuestionTranslationPanel
+            optionCount={currentItem.question.optionCount}
+            options={currentItem.question.options}
+            visible={Boolean(currentAnswer)}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <Button
+          disabled={currentIndex === 0}
+          onClick={() => goToIndex(currentIndex - 1)}
+          type="button"
+          variant="secondary"
+        >
+          Prev
+        </Button>
+        <Button
+          className={classNames(currentIndex >= items.length - 1 && "min-w-32")}
+          disabled={practice.isSubmitting}
+          onClick={handleNext}
+          type="button"
+        >
+          {currentIndex >= items.length - 1 ? "Finish" : "Next"}
+        </Button>
+      </div>
+    </>
+  );
+}
+
 export function Part1PracticeView({
   testId,
   partNumber,
@@ -40,16 +216,8 @@ export function Part1PracticeView({
   clearSession,
 }: Part1PracticeViewProps) {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedKey, setSelectedKey] = useState<"A" | "B" | "C" | "D" | null>(
-    null,
-  );
-  const [answerKey, setAnswerKey] = useState<"A" | "B" | "C" | "D" | null>(
-    null,
-  );
-  const [revealedEnglish, setRevealedEnglish] = useState<
-    Partial<Record<"A" | "B" | "C" | "D", string | null>>
-  >({});
+  const queryClient = useQueryClient();
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
 
   const partQuery = useQuery({
     queryKey: ["test-part", testId, partNumber],
@@ -66,7 +234,6 @@ export function Part1PracticeView({
     () => flattenPart1Items(partQuery.data?.groups ?? []),
     [partQuery.data?.groups],
   );
-  const currentItem = items[currentIndex] ?? null;
 
   const practice = usePracticeSession({
     accessToken,
@@ -76,50 +243,44 @@ export function Part1PracticeView({
     enabled: Boolean(partQuery.data),
   });
 
-  const signedMedia = useSignedMedia({
-    testId,
-    partNumber,
-    group: currentItem?.group ?? null,
-    accessToken,
-    clearSession,
-  });
+  const initialIndex = useMemo(() => {
+    if (!practice.sessionId || items.length === 0) {
+      return 0;
+    }
 
-  const resetQuestionState = () => {
-    setSelectedKey(null);
-    setAnswerKey(null);
-    setRevealedEnglish({});
-  };
+    return Math.min(
+      syncPracticeProgressSession(testId, partNumber, practice.sessionId),
+      items.length - 1,
+    );
+  }, [items.length, partNumber, practice.sessionId, testId]);
 
-  const goToIndex = (index: number) => {
-    setCurrentIndex(index);
-    resetQuestionState();
-  };
-
-  const handleSelect = async (key: "A" | "B" | "C" | "D") => {
-    if (!currentItem || selectedKey || practice.isSubmitting) {
+  const handleClearHistory = async () => {
+    if (
+      !accessToken ||
+      !window.confirm(
+        "Clear all practice history for this test? This cannot be undone.",
+      )
+    ) {
       return;
     }
 
-    const result = await practice.submitAnswer(currentItem.question.id, key);
-    if (!result) {
-      return;
+    setIsClearingHistory(true);
+    try {
+      await runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) => clearTestPracticeHistory(token, testId),
+      });
+      clearAllPracticeProgressForTest(testId);
+      await queryClient.invalidateQueries({
+        queryKey: getPracticeSessionQueryKey(testId, partNumber),
+      });
+      router.push("/tests");
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Cannot clear practice history."));
+    } finally {
+      setIsClearingHistory(false);
     }
-
-    setSelectedKey(key);
-    setAnswerKey(result.answerKey);
-    setRevealedEnglish((current) => ({
-      ...current,
-      [key]: currentItem.question.options[key],
-    }));
-  };
-
-  const handleNext = async () => {
-    if (currentIndex >= items.length - 1) {
-      await practice.completeSession();
-      return;
-    }
-
-    goToIndex(currentIndex + 1);
   };
 
   if (partQuery.isLoading || practice.isStarting) {
@@ -132,30 +293,18 @@ export function Part1PracticeView({
     );
   }
 
-  if (partQuery.error || practice.startError || !currentItem) {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">
-            {practice.startError ?? "Cannot load this test part."}
-          </p>
-        </Panel>
-      </PageShell>
-    );
-  }
+  if (partQuery.error || practice.startError) {
+    const message =
+      practice.startError ??
+      getErrorMessage(partQuery.error, "Cannot load this test part.");
 
-  if (practice.completion) {
     return (
       <PageShell>
         <Panel>
-          <h1 className="mb-2 text-2xl font-semibold">Hoàn thành Part 1</h1>
-          <p className="mb-6 text-muted-foreground">
-            Đúng {practice.completion.correctCount} / Sai{" "}
-            {practice.completion.wrongCount}
-          </p>
-          <div className="flex gap-3">
-            <Button onClick={() => router.push("/tests")} type="button">
-              Về danh sách test
+          <p className="text-muted-foreground">{message}</p>
+          <div className="mt-4">
+            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+              Back to tests
             </Button>
           </div>
         </Panel>
@@ -163,87 +312,44 @@ export function Part1PracticeView({
     );
   }
 
+  if (items.length === 0) {
+    return (
+      <PageShell>
+        <Panel>
+          <p className="text-muted-foreground">
+            This part has no questions yet. Check that TOEIC data is imported for
+            this test.
+          </p>
+          <div className="mt-4">
+            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+              Back to tests
+            </Button>
+          </div>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  if (!practice.sessionId) {
+    return null;
+  }
+
   return (
     <PageShell fillViewport>
       <Panel className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Test {testId} · Part {partNumber}
-            </p>
-            <h1 className="text-xl font-semibold">
-              Câu {currentItem.question.questionNumber} / {items.length}
-            </h1>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Đúng {practice.correctCount} · Sai {practice.wrongCount}
-          </div>
-        </div>
-
-        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-          <div className="space-y-4 rounded-xl border border-border p-4">
-            {signedMedia.audioUrl ? (
-              <audio
-                controls
-                className="w-full"
-                key={signedMedia.audioUrl}
-                onError={signedMedia.handleMediaError}
-                src={signedMedia.audioUrl}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">Không có audio.</p>
-            )}
-            {signedMedia.imageUrl ? (
-              <img
-                alt={`Question ${currentItem.question.questionNumber}`}
-                className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-                key={signedMedia.imageUrl}
-                onError={signedMedia.handleMediaError}
-                src={signedMedia.imageUrl}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">Không có hình ảnh.</p>
-            )}
-            {signedMedia.mediaError ? (
-              <p className="text-sm text-red-600">{signedMedia.mediaError}</p>
-            ) : null}
-          </div>
-
-          <div className="flex min-h-0 flex-col gap-4">
-            <QuestionOptions
-              answerKey={answerKey}
-              disabled={Boolean(selectedKey) || practice.isSubmitting}
-              onSelect={handleSelect}
-              optionCount={currentItem.question.optionCount}
-              revealedEnglish={revealedEnglish}
-              selectedKey={selectedKey}
-            />
-          </div>
-        </div>
-
-        <QuestionTranslationPanel
-          optionCount={currentItem.question.optionCount}
-          options={currentItem.question.options}
+        <Part1PracticeContent
+          accessToken={accessToken}
+          clearSession={clearSession}
+          initialIndex={initialIndex}
+          isClearingHistory={isClearingHistory}
+          items={items}
+          key={practice.sessionId}
+          onClearHistory={handleClearHistory}
+          onFinish={() => router.push("/tests")}
+          partNumber={partNumber}
+          practice={practice}
+          testId={testId}
         />
-
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            disabled={currentIndex === 0}
-            onClick={() => goToIndex(currentIndex - 1)}
-            type="button"
-            variant="secondary"
-          >
-            Prev
-          </Button>
-          <Button
-            className={classNames(currentIndex >= items.length - 1 && "min-w-32")}
-            disabled={!selectedKey || practice.isSubmitting}
-            onClick={() => void handleNext()}
-            type="button"
-          >
-            {currentIndex >= items.length - 1 ? "Hoàn thành" : "Next"}
-          </Button>
-        </div>
       </Panel>
     </PageShell>
   );

@@ -54,8 +54,18 @@ export type SubmitAnswerResult = {
   correctOptionVi: string | null;
 };
 
+export type PracticeSessionAnswer = {
+  toeicQuestionId: number;
+  selectedKey: "A" | "B" | "C" | "D";
+  answerKey: "A" | "B" | "C" | "D";
+  isCorrect: boolean;
+};
+
 export type PracticeSessionResult = {
   sessionId: string;
+  correctCount: number;
+  wrongCount: number;
+  answers: PracticeSessionAnswer[];
 };
 
 export type CompleteSessionResult = {

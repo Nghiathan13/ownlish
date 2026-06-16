@@ -28,7 +28,7 @@ function PracticePartPageContent({
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
-            Part {partNumber} chưa hỗ trợ. Hiện chỉ có Part 1.
+            Part {partNumber} is not supported yet. Only Part 1 is available.
           </p>
         </Panel>
       </PageShell>

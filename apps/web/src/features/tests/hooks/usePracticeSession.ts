@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  completePracticeSession,
   createPracticeSession,
   submitPracticeAnswer,
 } from "@/features/tests/api/testsApi";
-import type { SubmitAnswerResult } from "@/features/tests/api/types";
+import type {
+  PracticeSessionAnswer,
+  PracticeSessionResult,
+  SubmitAnswerResult,
+} from "@/features/tests/api/types";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type UsePracticeSessionParams = {
@@ -25,6 +28,10 @@ export function getPracticeSessionQueryKey(
   return ["practice-session", testId, partNumber] as const;
 }
 
+function toAnswerMap(answers: PracticeSessionAnswer[]) {
+  return new Map(answers.map((answer) => [answer.toeicQuestionId, answer]));
+}
+
 export function usePracticeSession({
   accessToken,
   clearSession,
@@ -32,16 +39,12 @@ export function usePracticeSession({
   partNumber,
   enabled,
 }: UsePracticeSessionParams) {
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
+  const queryClient = useQueryClient();
+  const queryKey = getPracticeSessionQueryKey(testId, partNumber);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [completion, setCompletion] = useState<{
-    correctCount: number;
-    wrongCount: number;
-  } | null>(null);
 
   const sessionQuery = useQuery({
-    queryKey: getPracticeSessionQueryKey(testId, partNumber),
+    queryKey,
     queryFn: () =>
       runAuthenticatedRequest({
         accessToken,
@@ -58,14 +61,25 @@ export function usePracticeSession({
     retry: false,
   });
 
-  const sessionId = sessionQuery.data?.sessionId ?? null;
+  const sessionData = sessionQuery.data;
+  const sessionId = sessionData?.sessionId ?? null;
+
+  const answersByQuestionId = useMemo(
+    () => toAnswerMap(sessionData?.answers ?? []),
+    [sessionData?.answers],
+  );
+
+  const getAnswer = useCallback(
+    (toeicQuestionId: number) => answersByQuestionId.get(toeicQuestionId),
+    [answersByQuestionId],
+  );
 
   const submitAnswer = useCallback(
     async (
       toeicQuestionId: number,
       selectedKey: "A" | "B" | "C" | "D",
     ): Promise<SubmitAnswerResult | null> => {
-      if (!accessToken || !sessionId) {
+      if (!accessToken || !sessionId || answersByQuestionId.has(toeicQuestionId)) {
         return null;
       }
 
@@ -81,43 +95,54 @@ export function usePracticeSession({
             }),
         });
 
-        if (result.isCorrect) {
-          setCorrectCount((current) => current + 1);
-        } else {
-          setWrongCount((current) => current + 1);
-        }
+        queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+          if (!current) {
+            return current;
+          }
+
+          return {
+            ...current,
+            correctCount: current.correctCount + (result.isCorrect ? 1 : 0),
+            wrongCount: current.wrongCount + (result.isCorrect ? 0 : 1),
+            answers: [
+              ...current.answers,
+              {
+                toeicQuestionId,
+                selectedKey,
+                answerKey: result.answerKey,
+                isCorrect: result.isCorrect,
+              },
+            ],
+          };
+        });
 
         return result;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [accessToken, clearSession, sessionId],
-  );
-
-  const completeSession = useCallback(async () => {
-    if (!accessToken || !sessionId) {
-      return null;
-    }
-
-    const result = await runAuthenticatedRequest({
+    [
       accessToken,
+      answersByQuestionId,
       clearSession,
-      request: (token) => completePracticeSession(token, sessionId),
-    });
-    setCompletion(result);
-    return result;
-  }, [accessToken, clearSession, sessionId]);
+      queryClient,
+      queryKey,
+      sessionId,
+    ],
+  );
 
   return {
     sessionId,
-    correctCount,
-    wrongCount,
+    correctCount: sessionData?.correctCount ?? 0,
+    wrongCount: sessionData?.wrongCount ?? 0,
+    getAnswer,
     isStarting: sessionQuery.isLoading,
-    startError: sessionQuery.error ? "Cannot start practice session." : null,
+    startError: sessionQuery.error
+      ? sessionQuery.error instanceof Error
+        ? sessionQuery.error.message
+        : "Cannot start practice session."
+      : null,
     isSubmitting,
-    completion,
     submitAnswer,
-    completeSession,
   };
 }
