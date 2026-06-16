@@ -580,11 +580,7 @@ export function PracticePartView({
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
   return (
-    <PageShell
-      bleed={usesSplitPlainLayout}
-      fillViewport
-      className={usesSplitPlainLayout ? "py-0" : undefined}
-    >
+    <PageShell fillViewport>
       <Panel
         className={classNames(
           "flex min-h-0 flex-1 flex-col",
