@@ -101,19 +101,19 @@ describe('PracticeService', () => {
       testId: 1,
       wrongQuestionCount: 3,
       practiceCorrectCount: 4,
-      practiceWrongCount: 4,
+      practiceWrongCount: 3,
       parts: [
         {
           partNumber: 1,
           wrongQuestionCount: 2,
           practiceCorrectCount: 4,
-          practiceWrongCount: 1,
+          practiceWrongCount: 2,
         },
         {
           partNumber: 2,
           wrongQuestionCount: 1,
           practiceCorrectCount: 0,
-          practiceWrongCount: 3,
+          practiceWrongCount: 1,
         },
       ],
     });

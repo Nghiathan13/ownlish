@@ -46,6 +46,28 @@ export class PracticeService {
         ? ToeicPracticeMode.WRONG_QUESTIONS
         : ToeicPracticeMode.NORMAL;
 
+    if (mode === ToeicPracticeMode.WRONG_QUESTIONS) {
+      const session = await this.prisma.toeicPracticeSession.create({
+        data: {
+          userId,
+          toeicTestId: dto.testId,
+          partNumber: dto.partNumber,
+          mode,
+        },
+        include: {
+          answers: {
+            include: {
+              toeicQuestion: {
+                select: { answerKey: true },
+              },
+            },
+          },
+        },
+      });
+
+      return this.formatSessionResponse(session);
+    }
+
     const existingSession = await this.prisma.toeicPracticeSession.findFirst({
       where: {
         userId,
@@ -196,6 +218,7 @@ export class PracticeService {
     }
 
     const isCorrect = selectedKey === answerKey;
+    const isReviewMode = session.mode === ToeicPracticeMode.WRONG_QUESTIONS;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.toeicPracticeAnswer.create({
@@ -211,7 +234,8 @@ export class PracticeService {
         where: { id: session.id },
         data: {
           correctCount: isCorrect ? { increment: 1 } : undefined,
-          wrongCount: isCorrect ? undefined : { increment: 1 },
+          wrongCount:
+            !isReviewMode && !isCorrect ? { increment: 1 } : undefined,
         },
       });
 
@@ -222,7 +246,7 @@ export class PracticeService {
             toeicQuestionId: question.id,
           },
         });
-      } else {
+      } else if (!isReviewMode) {
         await tx.toeicWrongQuestion.upsert({
           where: {
             userId_toeicQuestionId: {
@@ -450,7 +474,7 @@ export class PracticeService {
       partNumber,
       wrongQuestionCount,
       practiceCorrectCount: aggregates._sum.correctCount ?? 0,
-      practiceWrongCount: aggregates._sum.wrongCount ?? 0,
+      practiceWrongCount: wrongQuestionCount,
     };
   }
 }
