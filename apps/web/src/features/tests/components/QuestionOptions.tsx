@@ -71,24 +71,24 @@ export function QuestionOptions({
         const isSelected = selectedKey === key;
         const isCorrect = showGrading && answerKey === key;
         const isWrong = showGrading && isSelected && answerKey !== null && !isCorrect;
-        const isSelectedPending = !locked && isSelected;
+        const isSelectedHighlight = !locked && isSelected;
         const englishText = getOptionEnglishText(key, options);
         const showEnglishText =
           Boolean(englishText) &&
-          (showEnglishTextBeforeAnswer || (locked && isSelected));
+          (showEnglishTextBeforeAnswer || locked);
 
         const className = classNames(
           "min-h-10 rounded-lg border px-3 py-2 text-left font-inherit transition select-text",
           locked && "cursor-text",
           isCorrect && "border-emerald-600 bg-emerald-50 text-emerald-900",
           isWrong && "border-red-600 bg-red-50 text-red-900",
-          isSelectedPending && "border-foreground bg-muted",
+          isSelectedHighlight && "border-foreground bg-muted",
           locked &&
             !isCorrect &&
             !isWrong &&
             "border-border bg-background",
           !locked &&
-            !isSelectedPending &&
+            !isSelectedHighlight &&
             "border-border bg-background hover:bg-muted",
           !locked && isSubmitting && "pointer-events-none opacity-70",
         );

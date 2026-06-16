@@ -20,7 +20,6 @@ import {
   getPartPracticeConfig,
   isSupportedPracticePart,
 } from "@/features/tests/lib/partPracticeConfig";
-import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import {
   syncPracticeProgressSession,
   writePracticeIndex,
@@ -106,7 +105,7 @@ function PracticePartContent({
   const currentAnswer = currentItem
     ? practice.getAnswer(currentItem.question.id)
     : undefined;
-  const isAnswered = isPracticeAnswerGraded(currentAnswer);
+  const isAnswered = Boolean(currentAnswer);
 
   const goToIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, items.length - 1));
@@ -115,7 +114,7 @@ function PracticePartContent({
   };
 
   const handleSelect = async (key: "A" | "B" | "C" | "D") => {
-    if (!currentItem || isAnswered || practice.isSubmitting) {
+    if (!currentItem || currentAnswer || practice.isSubmitting) {
       return;
     }
 
@@ -129,13 +128,13 @@ function PracticePartContent({
 
     setIsFinishing(true);
     try {
-      const result = await practice.completeSession();
-
-      if (fullTestContext && result) {
+      if (fullTestContext) {
         await fullTestContext.onPartComplete({
-          correctCount: result.correctCount,
-          wrongCount: result.wrongCount,
+          correctCount: practice.correctCount,
+          wrongCount: practice.wrongCount,
         });
+      } else if (practiceMode === "wrong_questions") {
+        await practice.completeSession();
       }
 
       onFinish();

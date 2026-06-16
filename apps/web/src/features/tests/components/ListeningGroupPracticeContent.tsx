@@ -92,12 +92,12 @@ export function ListeningGroupPracticeContent({
     writePracticeIndex(testId, partNumber, nextIndex);
   };
 
-  const handleSelect = (toeicQuestionId: number, key: OptionKey) => {
+  const handleSelect = async (toeicQuestionId: number, key: OptionKey) => {
     if (showGroupReveal || practice.isSubmitting) {
       return;
     }
 
-    void practice.submitAnswer(toeicQuestionId, key);
+    await practice.submitAnswer(toeicQuestionId, key);
   };
 
   const handleFinish = async () => {
@@ -107,13 +107,13 @@ export function ListeningGroupPracticeContent({
 
     setIsFinishing(true);
     try {
-      const result = await practice.completeSession();
-
-      if (fullTestContext && result) {
+      if (fullTestContext) {
         await fullTestContext.onPartComplete({
-          correctCount: result.correctCount,
-          wrongCount: result.wrongCount,
+          correctCount: practice.correctCount,
+          wrongCount: practice.wrongCount,
         });
+      } else if (practiceMode === "wrong_questions") {
+        await practice.completeSession();
       }
 
       onFinish();

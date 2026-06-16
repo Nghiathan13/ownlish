@@ -14,6 +14,7 @@ import type {
   SubmitAnswerResult,
 } from "@/features/tests/api/types";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type UsePracticeSessionParams = {
   accessToken: string | null;
@@ -68,6 +69,7 @@ export function usePracticeSession({
     enabled: enabled && Boolean(accessToken),
     staleTime: mode === "wrong_questions" ? 0 : Infinity,
     gcTime: mode === "wrong_questions" ? 0 : 5 * 60 * 1000,
+    refetchOnMount: "always",
     retry: false,
   });
 
