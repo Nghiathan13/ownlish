@@ -6,86 +6,6 @@ export function getPracticeSessionStorageKey(testId: number, partNumber: number)
   return `engvocab.toeicPractice.session.${testId}.${partNumber}`;
 }
 
-export function getPracticePendingSelectionsKey(sessionId: string) {
-  return `engvocab.toeicPractice.pending.${sessionId}`;
-}
-
-type OptionKey = "A" | "B" | "C" | "D";
-
-export type PendingSelectionsByGroup = Record<number, Record<number, OptionKey>>;
-
-export function readPendingSelections(
-  sessionId: string,
-): PendingSelectionsByGroup {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  const raw = window.localStorage.getItem(
-    getPracticePendingSelectionsKey(sessionId),
-  );
-  if (!raw) {
-    return {};
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Record<string, Record<string, string>>;
-    const result: PendingSelectionsByGroup = {};
-
-    for (const [groupId, questions] of Object.entries(parsed)) {
-      const numericGroupId = Number.parseInt(groupId, 10);
-      if (!Number.isInteger(numericGroupId)) {
-        continue;
-      }
-
-      result[numericGroupId] = {};
-      for (const [questionId, selectedKey] of Object.entries(questions)) {
-        const numericQuestionId = Number.parseInt(questionId, 10);
-        if (
-          Number.isInteger(numericQuestionId) &&
-          (selectedKey === "A" ||
-            selectedKey === "B" ||
-            selectedKey === "C" ||
-            selectedKey === "D")
-        ) {
-          result[numericGroupId][numericQuestionId] = selectedKey;
-        }
-      }
-    }
-
-    return result;
-  } catch {
-    return {};
-  }
-}
-
-export function writePendingSelections(
-  sessionId: string,
-  selections: PendingSelectionsByGroup,
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const serialized: Record<string, Record<string, string>> = {};
-  for (const [groupId, questions] of Object.entries(selections)) {
-    serialized[groupId] = questions;
-  }
-
-  window.localStorage.setItem(
-    getPracticePendingSelectionsKey(sessionId),
-    JSON.stringify(serialized),
-  );
-}
-
-export function clearPendingSelections(sessionId: string) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(getPracticePendingSelectionsKey(sessionId));
-}
-
 export function readPracticeIndex(testId: number, partNumber: number) {
   if (typeof window === "undefined") {
     return 0;
@@ -127,10 +47,6 @@ export function syncPracticeProgressSession(
   const savedSessionId = window.localStorage.getItem(sessionKey);
 
   if (savedSessionId !== sessionId) {
-    if (savedSessionId) {
-      clearPendingSelections(savedSessionId);
-    }
-
     window.localStorage.setItem(sessionKey, sessionId);
     writePracticeIndex(testId, partNumber, 0);
     return 0;

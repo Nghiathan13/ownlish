@@ -205,17 +205,22 @@ export async function createPracticeSession(
         const selectedKey = isString(value.selectedKey)
           ? value.selectedKey.trim().toUpperCase()
           : "";
+
+        if (!isNumber(value.toeicQuestionId) || !isOptionKey(selectedKey)) {
+          return [];
+        }
+
         const answerKey = isString(value.answerKey)
           ? value.answerKey.trim().toUpperCase()
           : "";
 
-        if (
-          !isNumber(value.toeicQuestionId) ||
-          !isBoolean(value.isCorrect) ||
-          !isOptionKey(selectedKey) ||
-          !isOptionKey(answerKey)
-        ) {
-          return [];
+        if (!isOptionKey(answerKey) || !isBoolean(value.isCorrect)) {
+          return [
+            {
+              toeicQuestionId: value.toeicQuestionId,
+              selectedKey,
+            },
+          ];
         }
 
         return [
@@ -261,15 +266,22 @@ export async function submitPracticeAnswer(
     },
   );
 
-  if (
-    !isRecord(body) ||
-    !isBoolean(body.isCorrect) ||
-    !isString(body.answerKey)
-  ) {
+  if (!isRecord(body) || !isBoolean(body.graded)) {
+    invalidApiResponse();
+  }
+
+  if (!body.graded) {
+    return {
+      graded: false,
+    } satisfies SubmitAnswerResult;
+  }
+
+  if (!isBoolean(body.isCorrect) || !isString(body.answerKey)) {
     invalidApiResponse();
   }
 
   return {
+    graded: true,
     isCorrect: body.isCorrect,
     answerKey: body.answerKey as SubmitAnswerResult["answerKey"],
     correctOptionEn: isNullableString(body.correctOptionEn)

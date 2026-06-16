@@ -20,6 +20,7 @@ import {
   getPartPracticeConfig,
   isSupportedPracticePart,
 } from "@/features/tests/lib/partPracticeConfig";
+import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import {
   syncPracticeProgressSession,
   writePracticeIndex,
@@ -105,7 +106,7 @@ function PracticePartContent({
   const currentAnswer = currentItem
     ? practice.getAnswer(currentItem.question.id)
     : undefined;
-  const isAnswered = Boolean(currentAnswer);
+  const isAnswered = isPracticeAnswerGraded(currentAnswer);
 
   const goToIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, items.length - 1));
@@ -114,7 +115,7 @@ function PracticePartContent({
   };
 
   const handleSelect = async (key: "A" | "B" | "C" | "D") => {
-    if (!currentItem || currentAnswer || practice.isSubmitting) {
+    if (!currentItem || isAnswered || practice.isSubmitting) {
       return;
     }
 

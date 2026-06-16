@@ -13,7 +13,7 @@ import type {
   PracticeSessionResult,
   SubmitAnswerResult,
 } from "@/features/tests/api/types";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 
 type UsePracticeSessionParams = {
   accessToken: string | null;
@@ -34,6 +34,10 @@ export function getPracticeSessionQueryKey(
 
 function toAnswerMap(answers: PracticeSessionAnswer[]) {
   return new Map(answers.map((answer) => [answer.toeicQuestionId, answer]));
+}
+
+function usesDeferredGroupGrading(partNumber: number) {
+  return partNumber === 3 || partNumber === 4;
 }
 
 export function usePracticeSession({
@@ -91,7 +95,11 @@ export function usePracticeSession({
       }
 
       const existingAnswer = answersByQuestionId.get(toeicQuestionId);
-      if (existingAnswer && !options?.replace) {
+      if (
+        existingAnswer &&
+        isPracticeAnswerGraded(existingAnswer) &&
+        !options?.replace
+      ) {
         return null;
       }
 
@@ -111,13 +119,44 @@ export function usePracticeSession({
             }),
         });
 
+        if (!result.graded) {
+          queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+            if (!current) {
+              return current;
+            }
+
+            if (existingAnswer) {
+              return {
+                ...current,
+                answers: current.answers.map((answer) =>
+                  answer.toeicQuestionId === toeicQuestionId
+                    ? { toeicQuestionId, selectedKey }
+                    : answer,
+                ),
+              };
+            }
+
+            return {
+              ...current,
+              answers: [...current.answers, { toeicQuestionId, selectedKey }],
+            };
+          });
+
+          return result;
+        }
+
+        if (usesDeferredGroupGrading(partNumber)) {
+          await queryClient.refetchQueries({ queryKey });
+          return result;
+        }
+
         queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
-          if (!current) {
+          if (!current || result.isCorrect === undefined || !result.answerKey) {
             return current;
           }
 
           if (existingAnswer) {
-            const wasCorrect = existingAnswer.isCorrect;
+            const wasCorrect = existingAnswer.isCorrect ?? false;
             const correctDelta = (result.isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
             const wrongDelta =
               mode === "normal"
@@ -172,6 +211,7 @@ export function usePracticeSession({
       queryKey,
       sessionId,
       mode,
+      partNumber,
     ],
   );
 

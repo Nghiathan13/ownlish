@@ -48,17 +48,18 @@ export type ToeicPartResponse = {
 };
 
 export type SubmitAnswerResult = {
-  isCorrect: boolean;
-  answerKey: "A" | "B" | "C" | "D";
-  correctOptionEn: string | null;
-  correctOptionVi: string | null;
+  graded: boolean;
+  isCorrect?: boolean;
+  answerKey?: "A" | "B" | "C" | "D";
+  correctOptionEn?: string | null;
+  correctOptionVi?: string | null;
 };
 
 export type PracticeSessionAnswer = {
   toeicQuestionId: number;
   selectedKey: "A" | "B" | "C" | "D";
-  answerKey: "A" | "B" | "C" | "D";
-  isCorrect: boolean;
+  answerKey?: "A" | "B" | "C" | "D";
+  isCorrect?: boolean;
 };
 
 export type PracticeSessionResult = {

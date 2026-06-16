@@ -7,15 +7,10 @@ import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
+import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
-import {
-  clearPendingSelections,
-  readPendingSelections,
-  writePendingSelections,
-  writePracticeIndex,
-  type PendingSelectionsByGroup,
-} from "@/features/tests/lib/practiceStorage";
+import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 
@@ -65,12 +60,6 @@ export function ListeningGroupPracticeContent({
   const partConfig = getPartPracticeConfig(partNumber);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
   const [isFinishing, setIsFinishing] = useState(false);
-  const [isCommittingGroup, setIsCommittingGroup] = useState(false);
-  const [pendingByGroupId, setPendingByGroupId] =
-    useState<PendingSelectionsByGroup>({});
-  const [hydratedSessionId, setHydratedSessionId] = useState<string | null>(
-    null,
-  );
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
   const currentGroup = groups[activeGroupIndex] ?? null;
@@ -83,60 +72,15 @@ export function ListeningGroupPracticeContent({
     clearSession,
   });
 
-  const sessionId = practice.sessionId;
-  if (sessionId && sessionId !== hydratedSessionId) {
-    setHydratedSessionId(sessionId);
-    setPendingByGroupId(readPendingSelections(sessionId));
-  }
-
-  const serverSelections: Record<number, OptionKey> = {};
-  if (currentGroup) {
-    for (const question of currentGroup.questions) {
-      const answer = practice.getAnswer(question.id);
-      if (answer) {
-        serverSelections[question.id] = answer.selectedKey;
-      }
-    }
-  }
-
-  const localSelections = currentGroup
-    ? (pendingByGroupId[currentGroup.group.id] ?? {})
-    : {};
-  const pendingSelections = { ...serverSelections, ...localSelections };
-
-  const updatePendingSelections = (
-    groupId: number,
-    updater: (current: Record<number, OptionKey>) => Record<number, OptionKey>,
-  ) => {
-    setPendingByGroupId((current) => {
-      const nextGroupSelections = updater(current[groupId] ?? {});
-      const next =
-        Object.keys(nextGroupSelections).length === 0
-          ? Object.fromEntries(
-              Object.entries(current).filter(([id]) => Number(id) !== groupId),
-            )
-          : {
-              ...current,
-              [groupId]: nextGroupSelections,
-            };
-
-      if (sessionId) {
-        writePendingSelections(sessionId, next);
-      }
-
-      return next;
-    });
-  };
-
   if (!currentGroup) {
     return null;
   }
 
-  const allGroupCommitted = currentGroup.questions.every((question) =>
-    Boolean(practice.getAnswer(question.id)),
+  const allGroupGraded = currentGroup.questions.every((question) =>
+    isPracticeAnswerGraded(practice.getAnswer(question.id)),
   );
   const showGroupReveal =
-    !partConfig.hideContextUntilGroupComplete || allGroupCommitted;
+    !partConfig.hideContextUntilGroupComplete || allGroupGraded;
   const totalQuestions = groups.reduce(
     (count, group) => count + group.questions.length,
     0,
@@ -148,61 +92,12 @@ export function ListeningGroupPracticeContent({
     writePracticeIndex(testId, partNumber, nextIndex);
   };
 
-  const commitGroupSelections = async (selections: Record<number, OptionKey>) => {
-    setIsCommittingGroup(true);
-    try {
-      await Promise.all(
-        currentGroup.questions.map(async (question) => {
-          const selectedKey = selections[question.id];
-          if (!selectedKey) {
-            return;
-          }
-
-          const existing = practice.getAnswer(question.id);
-          if (!existing) {
-            await practice.submitAnswer(question.id, selectedKey);
-            return;
-          }
-
-          if (existing.selectedKey !== selectedKey) {
-            await practice.submitAnswer(question.id, selectedKey, {
-              replace: true,
-            });
-          }
-        }),
-      );
-      updatePendingSelections(currentGroup.group.id, () => ({}));
-    } finally {
-      setIsCommittingGroup(false);
-    }
-  };
-
   const handleSelect = (toeicQuestionId: number, key: OptionKey) => {
-    if (
-      showGroupReveal ||
-      practice.isSubmitting ||
-      isCommittingGroup ||
-      allGroupCommitted
-    ) {
+    if (showGroupReveal || practice.isSubmitting) {
       return;
     }
 
-    const nextSelections = {
-      ...pendingSelections,
-      [toeicQuestionId]: key,
-    };
-    updatePendingSelections(currentGroup.group.id, (current) => ({
-      ...current,
-      [toeicQuestionId]: key,
-    }));
-
-    const allSelected = currentGroup.questions.every(
-      (question) => nextSelections[question.id],
-    );
-
-    if (allSelected) {
-      void commitGroupSelections(nextSelections);
-    }
+    void practice.submitAnswer(toeicQuestionId, key);
   };
 
   const handleFinish = async () => {
@@ -213,10 +108,6 @@ export function ListeningGroupPracticeContent({
     setIsFinishing(true);
     try {
       const result = await practice.completeSession();
-
-      if (sessionId) {
-        clearPendingSelections(sessionId);
-      }
 
       if (fullTestContext && result) {
         await fullTestContext.onPartComplete({
@@ -245,9 +136,6 @@ export function ListeningGroupPracticeContent({
       ? "Finish test"
       : "Next part"
     : "Finish";
-
-  const isInteractionDisabled =
-    practice.isSubmitting || isCommittingGroup || isFinishing;
 
   return (
     <>
@@ -285,8 +173,7 @@ export function ListeningGroupPracticeContent({
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
           {currentGroup.questions.map((question) => {
             const answer = practice.getAnswer(question.id);
-            const selectedKey =
-              pendingSelections[question.id] ?? answer?.selectedKey ?? null;
+            const graded = isPracticeAnswerGraded(answer);
 
             return (
               <section
@@ -309,13 +196,13 @@ export function ListeningGroupPracticeContent({
                 )}
 
                 <QuestionOptions
-                  answerKey={showGroupReveal ? (answer?.answerKey ?? null) : null}
+                  answerKey={graded ? (answer?.answerKey ?? null) : null}
                   isLocked={showGroupReveal}
-                  isSubmitting={isInteractionDisabled}
+                  isSubmitting={practice.isSubmitting || isFinishing}
                   onSelect={(key) => handleSelect(question.id, key)}
                   optionCount={question.optionCount}
                   options={question.options}
-                  selectedKey={selectedKey}
+                  selectedKey={answer?.selectedKey ?? null}
                   showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
                   showResult={showGroupReveal}
                 />
@@ -346,7 +233,7 @@ export function ListeningGroupPracticeContent({
           className={classNames(
             activeGroupIndex >= groups.length - 1 && "min-w-32",
           )}
-          disabled={isInteractionDisabled}
+          disabled={practice.isSubmitting || isFinishing}
           onClick={handleNext}
           type="button"
         >
