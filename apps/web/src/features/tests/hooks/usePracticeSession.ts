@@ -68,9 +68,9 @@ export function usePracticeSession({
           }),
       }),
     enabled: enabled && Boolean(accessToken),
-    staleTime: mode === "wrong_questions" ? 0 : Infinity,
+    staleTime: Infinity,
     gcTime: mode === "wrong_questions" ? 0 : 5 * 60 * 1000,
-    refetchOnMount: "always",
+    refetchOnMount: mode === "wrong_questions" ? false : "always",
     retry: false,
   });
 
@@ -292,7 +292,6 @@ export function usePracticeSession({
           };
         });
 
-        await queryClient.refetchQueries({ queryKey });
         await queryClient.invalidateQueries({
           queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
         });
