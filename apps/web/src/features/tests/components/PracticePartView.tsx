@@ -233,17 +233,15 @@ function PracticePartContent({
   if (partConfig.contentLayout === "split-plain") {
     return (
       <>
-        <div className="relative min-h-0 flex-1">
-          <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
-            <div className="min-h-0 overflow-y-auto pl-4 pr-4 lg:pr-6">
-              {leftPanel}
-            </div>
-            <div className="flex min-h-0 flex-col gap-4 overflow-y-auto pl-4 pr-4 lg:pl-6">
-              <p className="text-2xl font-bold tabular-nums">
-                {currentItem.question.questionNumber}
-              </p>
-              {optionsPanel}
-            </div>
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
+          <div className="min-h-0 overflow-y-auto p-4">
+            {leftPanel}
+          </div>
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-[4px]">
+            <p className="text-2xl font-bold tabular-nums">
+              {currentItem.question.questionNumber}
+            </p>
+            {optionsPanel}
           </div>
         </div>
         <div className="shrink-0 border-t border-border px-4 pt-4">
