@@ -3,9 +3,6 @@ import { classNames } from "@/shared/lib/classNames";
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
-const OPTION_LABEL_CLASS =
-  "text-base font-medium leading-snug tracking-normal";
-
 type QuestionOptionsProps = {
   optionCount: number;
   options: ToeicQuestionOptions;
@@ -42,7 +39,7 @@ type OptionLabelProps = {
 
 function OptionLabel({ optionKey, englishText, showEnglishText }: OptionLabelProps) {
   return (
-    <span className={OPTION_LABEL_CLASS}>
+    <span className="text-base font-normal leading-snug tracking-normal">
       {optionKey}
       {englishText ? (
         <span className={showEnglishText ? "" : "invisible"}>. {englishText}</span>
