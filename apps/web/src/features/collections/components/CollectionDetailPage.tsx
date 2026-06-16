@@ -82,7 +82,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
     <PageShell>
       <Panel>
         <Link
-          className="mb-6 inline-flex text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+          className="mb-4 inline-flex text-sm font-semibold text-muted-foreground transition hover:text-foreground"
           href="/collections"
         >
           Back to collections
