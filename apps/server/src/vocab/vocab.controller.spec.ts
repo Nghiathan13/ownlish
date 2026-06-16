@@ -117,9 +117,9 @@ describe('VocabController', () => {
     };
     vocabServiceMock.listDueReviewWords.mockResolvedValue(response);
 
-    await expect(controller.listDueReviewWords(request, query)).resolves.toEqual(
-      response,
-    );
+    await expect(
+      controller.listDueReviewWords(request, query),
+    ).resolves.toEqual(response);
     expect(vocabServiceMock.listDueReviewWords).toHaveBeenCalledWith(
       'user-id',
       query,

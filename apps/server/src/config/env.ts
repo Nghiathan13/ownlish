@@ -67,7 +67,9 @@ const optionalCookieSameSiteEnv = (fallback: 'lax' | 'none' | 'strict') => {
     return value;
   }
 
-  throw new Error('REFRESH_TOKEN_COOKIE_SAME_SITE must be lax, none, or strict');
+  throw new Error(
+    'REFRESH_TOKEN_COOKIE_SAME_SITE must be lax, none, or strict',
+  );
 };
 
 const defaultSecureCookie = process.env.NODE_ENV === 'production';

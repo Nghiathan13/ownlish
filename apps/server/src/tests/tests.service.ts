@@ -96,11 +96,7 @@ export class TestsService {
     };
   }
 
-  async refreshMedia(
-    testId: number,
-    partNumber: number,
-    dto: RefreshMediaDto,
-  ) {
+  async refreshMedia(testId: number, partNumber: number, dto: RefreshMediaDto) {
     const part = await this.prisma.toeicTestPart.findUnique({
       where: {
         testId_partNumber: {

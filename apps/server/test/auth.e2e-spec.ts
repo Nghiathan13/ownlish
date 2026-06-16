@@ -1,20 +1,17 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import type { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
-
-function getRefreshCookie(response: request.Response): string | undefined {
-  const setCookie = response.headers['set-cookie'];
-  const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
-
-  return cookies.find((cookie) => cookie?.startsWith('engvocab.refreshToken='));
-}
+import type { PublicUser } from '../src/auth/types/auth.types';
+import { getRefreshCookie, type ClientAuthBody } from './helpers/e2e-auth';
+import { getE2ePrisma } from './helpers/e2e-prisma';
+import { parseResponseBody } from './helpers/parse-response-body';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
-  let prisma: PrismaService;
+  let prisma: PrismaClient;
 
   const email = 'auth-e2e@example.com';
   const password = 'test123456';
@@ -25,7 +22,7 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    prisma = app.get(PrismaService);
+    prisma = getE2ePrisma(app);
 
     await prisma.user.deleteMany({
       where: { email },
@@ -52,14 +49,17 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    expect(registerResponse.body.accessToken).toEqual(expect.any(String));
-    expect(registerResponse.body).not.toHaveProperty('refreshToken');
-    expect(getRefreshCookie(registerResponse)).toEqual(expect.any(String));
-    expect(registerResponse.body.user).toMatchObject({
+    const registerBody = parseResponseBody<ClientAuthBody>(registerResponse);
+    expect(typeof registerBody.accessToken).toBe('string');
+    expect(registerBody).not.toHaveProperty('refreshToken');
+    expect(getRefreshCookie(registerResponse)).toEqual(
+      expect.stringContaining('engvocab.refreshToken='),
+    );
+    expect(registerBody.user).toMatchObject({
       email,
       name: 'Auth E2E',
     });
-    expect(registerResponse.body.user).not.toHaveProperty('passwordHash');
+    expect(registerBody.user).not.toHaveProperty('passwordHash');
 
     const loginResponse = await agent
       .post('/auth/login')
@@ -69,36 +69,43 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    expect(loginResponse.body.accessToken).toEqual(expect.any(String));
-    expect(loginResponse.body).not.toHaveProperty('refreshToken');
-    expect(getRefreshCookie(loginResponse)).toEqual(expect.any(String));
-    expect(loginResponse.body.user).not.toHaveProperty('passwordHash');
+    const loginBody = parseResponseBody<ClientAuthBody>(loginResponse);
+    expect(typeof loginBody.accessToken).toBe('string');
+    expect(loginBody).not.toHaveProperty('refreshToken');
+    expect(getRefreshCookie(loginResponse)).toEqual(
+      expect.stringContaining('engvocab.refreshToken='),
+    );
+    expect(loginBody.user).not.toHaveProperty('passwordHash');
 
     await request(app.getHttpServer())
       .get('/auth/me')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${loginBody.accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({
+        const meBody = parseResponseBody<PublicUser>(response);
+        expect(meBody).toMatchObject({
           email,
           name: 'Auth E2E',
         });
-        expect(response.body).not.toHaveProperty('passwordHash');
+        expect(meBody).not.toHaveProperty('passwordHash');
       });
 
-    const refreshResponse = await agent
-      .post('/auth/refresh')
-      .expect(201);
+    const refreshResponse = await agent.post('/auth/refresh').expect(201);
 
-    expect(refreshResponse.body.accessToken).toEqual(expect.any(String));
-    expect(refreshResponse.body).not.toHaveProperty('refreshToken');
-    expect(getRefreshCookie(refreshResponse)).toEqual(expect.any(String));
+    const refreshBody = parseResponseBody<ClientAuthBody>(refreshResponse);
+    expect(typeof refreshBody.accessToken).toBe('string');
+    expect(refreshBody).not.toHaveProperty('refreshToken');
+    expect(getRefreshCookie(refreshResponse)).toEqual(
+      expect.stringContaining('engvocab.refreshToken='),
+    );
 
     await agent
       .post('/auth/logout')
       .expect(201)
       .expect((response) => {
-        expect(response.body).toEqual({ success: true });
+        expect(parseResponseBody<{ success: boolean }>(response)).toEqual({
+          success: true,
+        });
       });
 
     await agent.post('/auth/refresh').expect(401);
@@ -145,9 +152,12 @@ describe('AuthController (e2e)', () => {
       .post('/auth/refresh')
       .expect(201)
       .expect((response) => {
-        expect(response.body.accessToken).toEqual(expect.any(String));
-        expect(response.body).not.toHaveProperty('refreshToken');
-        expect(getRefreshCookie(response)).toEqual(expect.any(String));
+        const refreshBody = parseResponseBody<ClientAuthBody>(response);
+        expect(typeof refreshBody.accessToken).toBe('string');
+        expect(refreshBody).not.toHaveProperty('refreshToken');
+        expect(getRefreshCookie(response)).toEqual(
+          expect.stringContaining('engvocab.refreshToken='),
+        );
       });
   });
 

@@ -134,8 +134,7 @@ export class AuthController {
     dto: RefreshTokenDto | undefined,
   ): string | undefined {
     return (
-      dto?.refreshToken ??
-      getCookieValue(request, env.refreshTokenCookie.name)
+      dto?.refreshToken ?? getCookieValue(request, env.refreshTokenCookie.name)
     );
   }
 

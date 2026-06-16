@@ -113,14 +113,12 @@ describe('CollectionsService', () => {
         },
       },
     ]);
-    prisma.vocabWord.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        {
-          id: 'vocab-word-id',
-          normalizedWord: 'about',
-        },
-      ]);
+    prisma.vocabWord.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        id: 'vocab-word-id',
+        normalizedWord: 'about',
+      },
+    ]);
     prisma.vocabWord.createMany.mockResolvedValue({ count: 1 });
     prisma.vocabWordDefinition.findMany.mockResolvedValue([]);
     prisma.vocabWordDefinition.createMany.mockResolvedValue({ count: 2 });
@@ -160,7 +158,6 @@ describe('CollectionsService', () => {
       skipDuplicates: true,
     });
   });
-
 
   it('updates existing words when collection adds new definitions', async () => {
     prisma.wordCollection.findFirst.mockResolvedValue(collection);

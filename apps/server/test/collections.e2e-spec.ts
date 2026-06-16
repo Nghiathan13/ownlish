@@ -1,13 +1,22 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import type { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { registerE2eUser } from './helpers/e2e-auth';
+import type {
+  CollectionCatalogBody,
+  CollectionImportBody,
+  CollectionSummaryBody,
+} from './helpers/e2e-collection-types';
+import { getE2ePrisma } from './helpers/e2e-prisma';
+import { parseResponseBody } from './helpers/parse-response-body';
+import type { VocabListBody, VocabWordBody } from './helpers/e2e-vocab-types';
 
 describe('CollectionsController (e2e)', () => {
   let app: INestApplication<App>;
-  let prisma: PrismaService;
+  let prisma: PrismaClient;
   let accessToken: string;
   let collectionId: string;
 
@@ -28,7 +37,7 @@ describe('CollectionsController (e2e)', () => {
         transform: true,
       }),
     );
-    prisma = app.get(PrismaService);
+    prisma = getE2ePrisma(app);
 
     await prisma.user.deleteMany({
       where: { email },
@@ -78,16 +87,12 @@ describe('CollectionsController (e2e)', () => {
         },
       },
     });
-    const registerResponse = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email,
-        password,
-        name: 'Collections E2E',
-      })
-      .expect(201);
-
-    accessToken = registerResponse.body.accessToken;
+    const auth = await registerE2eUser(app.getHttpServer(), {
+      email,
+      password,
+      name: 'Collections E2E',
+    });
+    accessToken = auth.accessToken;
     collectionId = collection.id;
   });
 
@@ -113,7 +118,9 @@ describe('CollectionsController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toEqual(
+        const collections =
+          parseResponseBody<CollectionSummaryBody[]>(response);
+        expect(collections).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               id: collectionId,
@@ -130,8 +137,10 @@ describe('CollectionsController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.catalogWords).toHaveLength(1);
-        expect(response.body.catalogWords[0]).toMatchObject({
+        const collectionDetail =
+          parseResponseBody<CollectionCatalogBody>(response);
+        expect(collectionDetail.catalogWords).toHaveLength(1);
+        expect(collectionDetail.catalogWords[0]).toMatchObject({
           word: 'e2e catalog word',
           definitions: [
             expect.objectContaining({
@@ -148,7 +157,7 @@ describe('CollectionsController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(201)
       .expect((response) => {
-        expect(response.body).toEqual({
+        expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
           imported: 1,
           updated: 0,
           skipped: 0,
@@ -160,7 +169,7 @@ describe('CollectionsController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(201)
       .expect((response) => {
-        expect(response.body).toEqual({
+        expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
           imported: 0,
           updated: 0,
           skipped: 1,
@@ -172,7 +181,8 @@ describe('CollectionsController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
-    const importedWord = vocabListResponse.body.items[0];
+    const vocabListBody = parseResponseBody<VocabListBody>(vocabListResponse);
+    const importedWord = vocabListBody.items[0];
     const importedDefinition = importedWord.definitions[0];
 
     await request(app.getHttpServer())
@@ -184,8 +194,9 @@ describe('CollectionsController (e2e)', () => {
       })
       .expect(200)
       .expect((response) => {
-        expect(response.body.definitions).toHaveLength(1);
-        expect(response.body.definitions[0]).toMatchObject({
+        const updatedWord = parseResponseBody<VocabWordBody>(response);
+        expect(updatedWord.definitions).toHaveLength(1);
+        expect(updatedWord.definitions[0]).toMatchObject({
           id: importedDefinition.id,
           source: 'oxford_3000',
           sourceDefinitionId: 999001,
@@ -207,12 +218,17 @@ describe('CollectionsController (e2e)', () => {
       })
       .expect(201);
 
-    expect(manualAddResponse.body.id).toBe(importedWord.id);
-    expect(manualAddResponse.body.definitions).toHaveLength(2);
+    const manualAddBody = parseResponseBody<VocabWordBody>(manualAddResponse);
 
-    const manualDefinition = manualAddResponse.body.definitions.find(
-      (definition: { source: string }) => definition.source === 'manual',
+    expect(manualAddBody.id).toBe(importedWord.id);
+    expect(manualAddBody.definitions).toHaveLength(2);
+
+    const manualDefinition = manualAddBody.definitions.find(
+      (definition) => definition.source === 'manual',
     );
+    if (!manualDefinition) {
+      throw new Error('Expected a manual definition');
+    }
 
     expect(manualDefinition).toMatchObject({
       source: 'manual',
@@ -229,8 +245,9 @@ describe('CollectionsController (e2e)', () => {
       })
       .expect(200)
       .expect((response) => {
-        expect(response.body.definitions).toHaveLength(2);
-        expect(response.body.definitions).toEqual(
+        const updatedWord = parseResponseBody<VocabWordBody>(response);
+        expect(updatedWord.definitions).toHaveLength(2);
+        expect(updatedWord.definitions).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               id: importedDefinition.id,
@@ -251,7 +268,7 @@ describe('CollectionsController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(201)
       .expect((response) => {
-        expect(response.body).toEqual({
+        expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
           imported: 0,
           updated: 0,
           skipped: 1,

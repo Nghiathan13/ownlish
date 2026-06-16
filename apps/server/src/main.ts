@@ -27,4 +27,4 @@ async function bootstrap() {
   logger.log(`Server is running on port ${env.port}`);
   logger.log(`CORS origin: ${env.corsOrigin}`);
 }
-bootstrap();
+void bootstrap();

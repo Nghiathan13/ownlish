@@ -187,7 +187,8 @@ export class CollectionsService {
       existingWords.map((word) => word.id),
     );
     const updatedWordIds = new Set<string>();
-    const definitionsToRestore: ReturnType<typeof this.toImportedDefinition>[] = [];
+    const definitionsToRestore: ReturnType<typeof this.toImportedDefinition>[] =
+      [];
     const definitionData = catalogWords.flatMap((catalogWord) => {
       const normalizedWord = normalizeWord(catalogWord.word);
       const vocabWord = wordByNormalizedWord.get(normalizedWord);
@@ -347,11 +348,7 @@ export class CollectionsService {
           where: {
             deletedAt: null,
           },
-          orderBy: [
-            { source: 'asc' },
-            { type: 'asc' },
-            { createdAt: 'asc' },
-          ],
+          orderBy: [{ source: 'asc' }, { type: 'asc' }, { createdAt: 'asc' }],
         },
       },
       orderBy: {
@@ -402,10 +399,7 @@ export class CollectionsService {
     return `${vocabWordId}:${source}:${sourceDefinitionId ?? ''}`;
   }
 
-  private toImportedVocabWord(
-    userId: string,
-    catalogWord: CatalogWordResult,
-  ) {
+  private toImportedVocabWord(userId: string, catalogWord: CatalogWordResult) {
     return {
       userId,
       word: catalogWord.word,
@@ -432,7 +426,6 @@ export class CollectionsService {
       source: definition.source,
     };
   }
-
 
   private toRestoredDefinitionData(
     definition: ReturnType<typeof this.toImportedDefinition>,

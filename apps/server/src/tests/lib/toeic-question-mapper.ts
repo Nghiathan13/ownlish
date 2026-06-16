@@ -46,8 +46,17 @@ export function getOptionViText(
   question: ToeicQuestion,
   key: ToeicQuestionOptionKey,
 ) {
-  const viKey = `${key}_vi` as 'A_vi' | 'B_vi' | 'C_vi' | 'D_vi';
-  return mapQuestionOptions(question)[viKey];
+  const options = mapQuestionOptions(question);
+  switch (key) {
+    case 'A':
+      return options.A_vi;
+    case 'B':
+      return options.B_vi;
+    case 'C':
+      return options.C_vi;
+    case 'D':
+      return options.D_vi;
+  }
 }
 
 export function countOptions(question: ToeicQuestion) {

@@ -40,7 +40,11 @@ export function partHasPerQuestionAudio(partNumber: number) {
   return partNumber === 1 || partNumber === 2;
 }
 
-export function partMayHaveImage(partNumber: number, questionStart: number, questionEnd: number) {
+export function partMayHaveImage(
+  partNumber: number,
+  questionStart: number,
+  questionEnd: number,
+) {
   if (partNumber === 1) {
     return true;
   }

@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { env } from '../config/env';
 
@@ -9,13 +9,12 @@ export type SignedMediaUrl = {
 
 @Injectable()
 export class TestsStorageService {
+  private readonly logger = new Logger(TestsStorageService.name);
   private client: SupabaseClient | null = null;
 
   private getClient() {
     if (!env.supabaseUrl || !env.supabaseServiceRoleKey) {
-      throw new ServiceUnavailableException(
-        'Supabase Storage is not configured.',
-      );
+      return null;
     }
 
     if (!this.client) {
@@ -36,14 +35,22 @@ export class TestsStorageService {
     }
 
     const client = this.getClient();
+    if (!client) {
+      this.logger.warn(
+        'Supabase Storage is not configured; skipping signed URL.',
+      );
+      return null;
+    }
+
     const { data, error } = await client.storage
       .from(env.toeicStorageBucket)
       .createSignedUrl(storagePath, env.toeicSignedUrlTtlSeconds);
 
     if (error || !data?.signedUrl) {
-      throw new ServiceUnavailableException(
-        `Failed to sign media URL for ${storagePath}.`,
+      this.logger.warn(
+        `Failed to sign media URL for ${storagePath}: ${error?.message ?? 'unknown error'}`,
       );
+      return null;
     }
 
     const expiresAt = new Date(

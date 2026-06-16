@@ -1,13 +1,24 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import type { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { registerE2eUser } from './helpers/e2e-auth';
+import { getE2ePrisma } from './helpers/e2e-prisma';
+import { parseResponseBody } from './helpers/parse-response-body';
+import type {
+  DeleteDefinitionBody,
+  DueReviewListBody,
+  ReviewDefinitionBody,
+  VocabListBody,
+  VocabStatsBody,
+  VocabWordBody,
+} from './helpers/e2e-vocab-types';
 
 describe('VocabController (e2e)', () => {
   let app: INestApplication<App>;
-  let prisma: PrismaService;
+  let prisma: PrismaClient;
   let accessToken: string;
   let userId: string;
 
@@ -27,7 +38,7 @@ describe('VocabController (e2e)', () => {
         transform: true,
       }),
     );
-    prisma = app.get(PrismaService);
+    prisma = getE2ePrisma(app);
 
     await prisma.user.deleteMany({
       where: { email },
@@ -35,17 +46,13 @@ describe('VocabController (e2e)', () => {
 
     await app.init();
 
-    const registerResponse = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email,
-        password,
-        name: 'Vocab E2E',
-      })
-      .expect(201);
-
-    accessToken = registerResponse.body.accessToken;
-    userId = registerResponse.body.user.id;
+    const auth = await registerE2eUser(app.getHttpServer(), {
+      email,
+      password,
+      name: 'Vocab E2E',
+    });
+    accessToken = auth.accessToken;
+    userId = auth.userId;
   });
 
   afterEach(async () => {
@@ -66,7 +73,9 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
-    expect(createResponse.body).toMatchObject({
+    const createBody = parseResponseBody<VocabWordBody>(createResponse);
+
+    expect(createBody).toMatchObject({
       userId,
       word: 'Hello',
       normalizedWord: 'hello',
@@ -79,14 +88,14 @@ describe('VocabController (e2e)', () => {
       ],
     });
 
-    const wordId = createResponse.body.id;
+    const wordId = createBody.id;
 
     await request(app.getHttpServer())
       .get(`/vocab/${wordId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({
+        expect(parseResponseBody<VocabWordBody>(response)).toMatchObject({
           id: wordId,
           word: 'Hello',
           normalizedWord: 'hello',
@@ -98,13 +107,14 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toHaveLength(1);
-        expect(response.body.items[0]).toMatchObject({
+        const listBody = parseResponseBody<VocabListBody>(response);
+        expect(listBody.items).toHaveLength(1);
+        expect(listBody.items[0]).toMatchObject({
           id: wordId,
           word: 'Hello',
           normalizedWord: 'hello',
         });
-        expect(response.body.meta).toMatchObject({
+        expect(listBody.meta).toMatchObject({
           limit: 50,
           offset: 0,
           total: 1,
@@ -117,12 +127,12 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         word: 'Updated',
-        definitionId: createResponse.body.definitions[0].id,
+        definitionId: createBody.definitions[0].id,
         wrongCount: 2,
       })
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({
+        expect(parseResponseBody<VocabWordBody>(response)).toMatchObject({
           id: wordId,
           word: 'Updated',
           normalizedWord: 'updated',
@@ -134,10 +144,12 @@ describe('VocabController (e2e)', () => {
         });
       });
 
-    const updatedDefinitionId = (await request(app.getHttpServer())
-      .get(`/vocab/${wordId}`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200)).body.definitions[0].id;
+    const updatedDefinitionId = parseResponseBody<VocabWordBody>(
+      await request(app.getHttpServer())
+        .get(`/vocab/${wordId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200),
+    ).definitions[0].id;
 
     await request(app.getHttpServer())
       .patch(`/vocab/${updatedDefinitionId}/review`)
@@ -150,13 +162,15 @@ describe('VocabController (e2e)', () => {
       })
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({
-          id: updatedDefinitionId,
-          level: 3,
-          wrongCount: 1,
-          lastReview: '2026-06-07T00:00:00.000Z',
-          nextReview: '2026-06-08T00:00:00.000Z',
-        });
+        expect(parseResponseBody<ReviewDefinitionBody>(response)).toMatchObject(
+          {
+            id: updatedDefinitionId,
+            level: 3,
+            wrongCount: 1,
+            lastReview: '2026-06-07T00:00:00.000Z',
+            nextReview: '2026-06-08T00:00:00.000Z',
+          },
+        );
       });
 
     await request(app.getHttpServer())
@@ -164,8 +178,9 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.id).toBe(wordId);
-        expect(response.body.definitions).toEqual([]);
+        const deletedWord = parseResponseBody<VocabWordBody>(response);
+        expect(deletedWord.id).toBe(wordId);
+        expect(deletedWord.definitions).toEqual([]);
       });
 
     await request(app.getHttpServer())
@@ -173,8 +188,9 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toEqual([]);
-        expect(response.body.meta).toMatchObject({
+        const listBody = parseResponseBody<VocabListBody>(response);
+        expect(listBody.items).toEqual([]);
+        expect(listBody.meta).toMatchObject({
           total: 0,
           hasMore: false,
         });
@@ -195,20 +211,22 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
-    const wordId = createResponse.body.id;
-    const definitionId = createResponse.body.definitions[0].id;
+    const createBody = parseResponseBody<VocabWordBody>(createResponse);
+    const wordId = createBody.id;
+    const definitionId = createBody.definitions[0].id;
 
     await request(app.getHttpServer())
       .delete(`/vocab/definitions/${definitionId}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toEqual({
+        const deleteBody = parseResponseBody<DeleteDefinitionBody>(response);
+        expect(deleteBody).toEqual({
           deletedDefinitionId: definitionId,
           vocabWordId: wordId,
           wordRemoved: true,
         });
-        expect(response.body.word).toBeUndefined();
+        expect(deleteBody.word).toBeUndefined();
       });
 
     await request(app.getHttpServer())
@@ -221,8 +239,9 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toEqual([]);
-        expect(response.body.meta.total).toBe(0);
+        const listBody = parseResponseBody<VocabListBody>(response);
+        expect(listBody.items).toEqual([]);
+        expect(listBody.meta.total).toBe(0);
       });
   });
 
@@ -236,7 +255,7 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
-    const wordId = createResponse.body.id;
+    const wordId = parseResponseBody<VocabWordBody>(createResponse).id;
 
     await request(app.getHttpServer())
       .delete(`/vocab/definitions/${wordId}`)
@@ -260,8 +279,9 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
-    const wordId = createResponse.body.id;
-    const firstDefinitionId = createResponse.body.definitions[0].id;
+    const createBody = parseResponseBody<VocabWordBody>(createResponse);
+    const wordId = createBody.id;
+    const firstDefinitionId = createBody.definitions[0].id;
 
     const secondDefinition = await prisma.vocabWordDefinition.create({
       data: {
@@ -277,13 +297,14 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({
+        const deleteBody = parseResponseBody<DeleteDefinitionBody>(response);
+        expect(deleteBody).toMatchObject({
           deletedDefinitionId: firstDefinitionId,
           vocabWordId: wordId,
           wordRemoved: false,
         });
-        expect(response.body.word.definitions).toHaveLength(1);
-        expect(response.body.word.definitions[0].id).toBe(secondDefinition.id);
+        expect(deleteBody.word?.definitions).toHaveLength(1);
+        expect(deleteBody.word?.definitions[0].id).toBe(secondDefinition.id);
       });
 
     await request(app.getHttpServer())
@@ -291,13 +312,14 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.definitions).toHaveLength(1);
-        expect(response.body.definitions[0].id).toBe(secondDefinition.id);
+        const wordBody = parseResponseBody<VocabWordBody>(response);
+        expect(wordBody.definitions).toHaveLength(1);
+        expect(wordBody.definitions[0].id).toBe(secondDefinition.id);
       });
   });
 
   it('searches vocabulary words', async () => {
-    const helloResponse = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
@@ -320,11 +342,12 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toHaveLength(2);
-        const words = response.body.items.map((item: { word: string }) => item.word);
+        const listBody = parseResponseBody<VocabListBody>(response);
+        expect(listBody.items).toHaveLength(2);
+        const words = listBody.items.map((item) => item.word);
         expect(words).toContain('hello');
         expect(words).toContain('shell');
-        expect(response.body.meta).toMatchObject({
+        expect(listBody.meta).toMatchObject({
           total: 2,
           hasMore: false,
         });
@@ -358,8 +381,11 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
+    const masteredBody = parseResponseBody<VocabWordBody>(masteredResponse);
+    const difficultBody = parseResponseBody<VocabWordBody>(difficultResponse);
+
     await request(app.getHttpServer())
-      .patch(`/vocab/${masteredResponse.body.id}/review`)
+      .patch(`/vocab/${masteredBody.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 7,
@@ -369,11 +395,13 @@ describe('VocabController (e2e)', () => {
       })
       .expect(200)
       .expect((response) => {
-        expect(response.body.nextReview).toBeNull();
+        expect(
+          parseResponseBody<ReviewDefinitionBody>(response).nextReview,
+        ).toBeNull();
       });
 
     await request(app.getHttpServer())
-      .patch(`/vocab/${difficultResponse.body.id}/review`)
+      .patch(`/vocab/${difficultBody.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 1,
@@ -388,22 +416,23 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({
+        const statsBody = parseResponseBody<VocabStatsBody>(response);
+        expect(statsBody).toMatchObject({
           total: 3,
           due: 1,
           mastered: 1,
           highWrongCount: 1,
         });
-        expect(response.body.levels).toHaveLength(8);
-        expect(response.body.levels).toContainEqual({
+        expect(statsBody.levels).toHaveLength(8);
+        expect(statsBody.levels).toContainEqual({
           level: 0,
           count: 1,
         });
-        expect(response.body.levels).toContainEqual({
+        expect(statsBody.levels).toContainEqual({
           level: 1,
           count: 1,
         });
-        expect(response.body.levels).toContainEqual({
+        expect(statsBody.levels).toContainEqual({
           level: 7,
           count: 1,
         });
@@ -443,8 +472,14 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
+    const newWordBody = parseResponseBody<VocabWordBody>(newWordResponse);
+    const dueWordBody = parseResponseBody<VocabWordBody>(dueWordResponse);
+    const futureWordBody = parseResponseBody<VocabWordBody>(futureWordResponse);
+    const masteredWordBody =
+      parseResponseBody<VocabWordBody>(masteredWordResponse);
+
     await request(app.getHttpServer())
-      .patch(`/vocab/${dueWordResponse.body.id}/review`)
+      .patch(`/vocab/${dueWordBody.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 1,
@@ -455,7 +490,7 @@ describe('VocabController (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
-      .patch(`/vocab/${futureWordResponse.body.id}/review`)
+      .patch(`/vocab/${futureWordBody.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 1,
@@ -466,7 +501,7 @@ describe('VocabController (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
-      .patch(`/vocab/${masteredWordResponse.body.id}/review`)
+      .patch(`/vocab/${masteredWordBody.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 7,
@@ -481,13 +516,14 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        const ids = response.body.items.map((word: { id: string }) => word.id);
+        const dueListBody = parseResponseBody<DueReviewListBody>(response);
+        const ids = dueListBody.items.map((word) => word.id);
 
-        expect(ids).toContain(newWordResponse.body.definitions[0].id);
-        expect(ids).toContain(dueWordResponse.body.definitions[0].id);
-        expect(ids).not.toContain(futureWordResponse.body.definitions[0].id);
-        expect(ids).not.toContain(masteredWordResponse.body.definitions[0].id);
-        expect(response.body.meta).toMatchObject({
+        expect(ids).toContain(newWordBody.definitions[0].id);
+        expect(ids).toContain(dueWordBody.definitions[0].id);
+        expect(ids).not.toContain(futureWordBody.definitions[0].id);
+        expect(ids).not.toContain(masteredWordBody.definitions[0].id);
+        expect(dueListBody.meta).toMatchObject({
           limit: 10,
           offset: 0,
           total: 2,
@@ -531,8 +567,11 @@ describe('VocabController (e2e)', () => {
       })
       .expect(201);
 
+    const invalidReviewWordId =
+      parseResponseBody<VocabWordBody>(createResponse).id;
+
     await request(app.getHttpServer())
-      .patch(`/vocab/${createResponse.body.id}/review`)
+      .patch(`/vocab/${invalidReviewWordId}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         level: 3,
@@ -567,9 +606,12 @@ describe('VocabController (e2e)', () => {
       .send(secondPayload)
       .expect(201);
 
-    expect(secondResponse.body.id).toBe(firstResponse.body.id);
-    expect(secondResponse.body.definitions).toHaveLength(2);
-    expect(secondResponse.body.definitions).toEqual(
+    const firstBody = parseResponseBody<VocabWordBody>(firstResponse);
+    const secondBody = parseResponseBody<VocabWordBody>(secondResponse);
+
+    expect(secondBody.id).toBe(firstBody.id);
+    expect(secondBody.definitions).toHaveLength(2);
+    expect(secondBody.definitions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           source: 'manual',
@@ -589,10 +631,11 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toHaveLength(1);
-        expect(response.body.items[0].id).toBe(firstResponse.body.id);
-        expect(response.body.items[0].definitions).toHaveLength(2);
-        expect(response.body.meta).toMatchObject({
+        const listBody = parseResponseBody<VocabListBody>(response);
+        expect(listBody.items).toHaveLength(1);
+        expect(listBody.items[0].id).toBe(firstBody.id);
+        expect(listBody.items[0].definitions).toHaveLength(2);
+        expect(listBody.meta).toMatchObject({
           total: 1,
           hasMore: false,
         });
@@ -610,8 +653,10 @@ describe('VocabController (e2e)', () => {
       .send(payload)
       .expect(201);
 
+    const createdBody = parseResponseBody<VocabWordBody>(createResponse);
+
     await request(app.getHttpServer())
-      .delete(`/vocab/${createResponse.body.id}`)
+      .delete(`/vocab/${createdBody.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
@@ -621,8 +666,10 @@ describe('VocabController (e2e)', () => {
       .send(payload)
       .expect(201);
 
-    expect(reAddResponse.body.id).toBe(createResponse.body.id);
-    expect(reAddResponse.body).toMatchObject({
+    const reAddBody = parseResponseBody<VocabWordBody>(reAddResponse);
+
+    expect(reAddBody.id).toBe(createdBody.id);
+    expect(reAddBody).toMatchObject({
       word: 'hello',
       normalizedWord: 'hello',
       definitions: [expect.objectContaining({ deletedAt: null })],
@@ -633,9 +680,10 @@ describe('VocabController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
-        expect(response.body.items).toHaveLength(1);
-        expect(response.body.items[0].id).toBe(reAddResponse.body.id);
-        expect(response.body.meta).toMatchObject({
+        const listBody = parseResponseBody<VocabListBody>(response);
+        expect(listBody.items).toHaveLength(1);
+        expect(listBody.items[0].id).toBe(reAddBody.id);
+        expect(listBody.meta).toMatchObject({
           total: 1,
           hasMore: false,
         });

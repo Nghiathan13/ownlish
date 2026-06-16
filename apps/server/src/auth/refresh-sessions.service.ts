@@ -26,9 +26,7 @@ export class RefreshSessionsService {
     });
   }
 
-  findByTokenHash(
-    tokenHash: string,
-  ): Promise<RefreshSessionWithUser | null> {
+  findByTokenHash(tokenHash: string): Promise<RefreshSessionWithUser | null> {
     return this.prisma.refreshSession.findUnique({
       where: { tokenHash },
       include: {

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -47,11 +48,7 @@ export class TestsController {
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
     @Body() dto: SubmitPracticeAnswerDto,
   ) {
-    return this.practiceService.submitAnswer(
-      request.user.id,
-      sessionId,
-      dto,
-    );
+    return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
   }
 
   @Patch('practice/sessions/:sessionId/complete')
@@ -60,6 +57,14 @@ export class TestsController {
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
   ) {
     return this.practiceService.completeSession(request.user.id, sessionId);
+  }
+
+  @Delete(':testId/practice-history')
+  clearPracticeHistory(
+    @Req() request: AuthRequest,
+    @Param('testId', ParseIntPipe) testId: number,
+  ) {
+    return this.practiceService.clearTestHistory(request.user.id, testId);
   }
 
   @Get(':testId/parts/:partNumber')

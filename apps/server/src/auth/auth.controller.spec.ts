@@ -111,12 +111,12 @@ describe('AuthController', () => {
     };
     authServiceMock.login.mockResolvedValue(response);
 
-    await expect(controller.login(dto, responseMock as Response)).resolves.toEqual(
-      {
-        accessToken: response.accessToken,
-        user: response.user,
-      },
-    );
+    await expect(
+      controller.login(dto, responseMock as Response),
+    ).resolves.toEqual({
+      accessToken: response.accessToken,
+      user: response.user,
+    });
     expect(authServiceMock.login).toHaveBeenCalledWith(dto);
     expect(responseMock.cookie).toHaveBeenCalledWith(
       env.refreshTokenCookie.name,
@@ -143,7 +143,11 @@ describe('AuthController', () => {
     authServiceMock.refresh.mockResolvedValue(response);
 
     await expect(
-      controller.refresh({ headers: {} } as Request, dto, responseMock as Response),
+      controller.refresh(
+        { headers: {} } as Request,
+        dto,
+        responseMock as Response,
+      ),
     ).resolves.toEqual({
       accessToken: response.accessToken,
       user: response.user,
@@ -197,7 +201,11 @@ describe('AuthController', () => {
     authServiceMock.logout.mockResolvedValue(response);
 
     await expect(
-      controller.logout({ headers: {} } as Request, dto, responseMock as Response),
+      controller.logout(
+        { headers: {} } as Request,
+        dto,
+        responseMock as Response,
+      ),
     ).resolves.toBe(response);
     expect(authServiceMock.logout).toHaveBeenCalledWith(dto);
     expect(responseMock.clearCookie).toHaveBeenCalledWith(

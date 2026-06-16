@@ -14,23 +14,10 @@ import type { DeleteVocabDefinitionResponse } from './types/delete-vocab-definit
 import { OXFORD_DEFINITION_SOURCES } from '../collections/collections.constants';
 import { normalizeWord } from './lib/normalize-word';
 import { MAX_VOCAB_LEVEL } from './vocab.constants';
-
-const activeDefinitionsInclude = {
-  definitions: {
-    where: {
-      deletedAt: null,
-    },
-    orderBy: [
-      { source: 'asc' as const },
-      { type: 'asc' as const },
-      { createdAt: 'asc' as const },
-    ],
-  },
-};
-
-const reviewDefinitionInclude = {
-  vocabWord: true,
-};
+import {
+  activeDefinitionsInclude,
+  reviewDefinitionInclude,
+} from './vocab.prisma-includes';
 
 type VocabWordResult = ReturnType<PrismaService['vocabWord']['findFirst']>;
 type VocabWordList = Awaited<
@@ -41,7 +28,9 @@ type UpdatedVocabWordResult = ReturnType<PrismaService['vocabWord']['update']>;
 type ReviewDefinitionResult = ReturnType<
   PrismaService['vocabWordDefinition']['findFirst']
 >;
-type ActiveReviewDefinitionResult = NonNullable<Awaited<ReviewDefinitionResult>>;
+type ActiveReviewDefinitionResult = NonNullable<
+  Awaited<ReviewDefinitionResult>
+>;
 type ReviewDefinitionList = Awaited<
   ReturnType<PrismaService['vocabWordDefinition']['findMany']>
 >;
@@ -384,19 +373,20 @@ export class VocabService {
       return definition;
     }
 
-    const legacyWordDefinition = await this.prisma.vocabWordDefinition.findFirst({
-      where: {
-        deletedAt: null,
-        vocabWord: {
-          id,
-          userId,
+    const legacyWordDefinition =
+      await this.prisma.vocabWordDefinition.findFirst({
+        where: {
+          deletedAt: null,
+          vocabWord: {
+            id,
+            userId,
+          },
         },
-      },
-      include: reviewDefinitionInclude,
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+        include: reviewDefinitionInclude,
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
 
     if (!legacyWordDefinition) {
       throw new NotFoundException('Word not found');
@@ -590,9 +580,7 @@ export class VocabService {
   }
 
   private isOxfordDefinitionSource(source: string) {
-    return OXFORD_DEFINITION_SOURCES.includes(
-      source as (typeof OXFORD_DEFINITION_SOURCES)[number],
-    );
+    return OXFORD_DEFINITION_SOURCES.includes(source);
   }
 
   private isUniqueConstraintError(error: unknown): boolean {

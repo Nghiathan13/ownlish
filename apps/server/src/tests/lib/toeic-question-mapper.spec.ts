@@ -1,4 +1,7 @@
-import { isToeicQuestionOptionKey, parseAnswerKey } from './toeic-question-mapper';
+import {
+  isToeicQuestionOptionKey,
+  parseAnswerKey,
+} from './toeic-question-mapper';
 
 describe('toeic-question-mapper answer key', () => {
   it('parses valid answer keys', () => {
