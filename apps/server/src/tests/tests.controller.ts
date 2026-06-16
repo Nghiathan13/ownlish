@@ -15,7 +15,9 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
+import { GetPracticeStatsDto } from './dto/get-practice-stats.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
+import { ListWrongQuestionsDto } from './dto/list-wrong-questions.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
 import { PracticeService } from './practice.service';
@@ -40,6 +42,30 @@ export class TestsController {
     @Body() dto: CreatePracticeSessionDto,
   ) {
     return this.practiceService.createSession(request.user.id, dto);
+  }
+
+  @Get('practice/wrong-questions')
+  listWrongQuestions(
+    @Req() request: AuthRequest,
+    @Query() query: ListWrongQuestionsDto,
+  ) {
+    return this.practiceService.listWrongQuestions(
+      request.user.id,
+      query.testId,
+      query.partNumber,
+    );
+  }
+
+  @Get('practice/stats')
+  getPracticeStats(
+    @Req() request: AuthRequest,
+    @Query() query: GetPracticeStatsDto,
+  ) {
+    return this.practiceService.getPracticeStats(
+      request.user.id,
+      query.testId,
+      query.partNumber,
+    );
   }
 
   @Post('practice/sessions/:sessionId/answers')

@@ -284,13 +284,173 @@ export class PracticeService {
       throw new NotFoundException('Test not found.');
     }
 
-    const result = await this.prisma.toeicPracticeSession.deleteMany({
+    const [sessionResult] = await this.prisma.$transaction([
+      this.prisma.toeicPracticeSession.deleteMany({
+        where: {
+          userId,
+          toeicTestId: testId,
+        },
+      }),
+      this.prisma.toeicWrongQuestion.deleteMany({
+        where: {
+          userId,
+          toeicQuestion: {
+            group: {
+              testPart: {
+                testId,
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return { deletedSessionCount: sessionResult.count };
+  }
+
+  async listWrongQuestions(userId: string, testId: number, partNumber: number) {
+    await this.assertTestPartExists(testId, partNumber);
+
+    const items = await this.prisma.toeicWrongQuestion.findMany({
       where: {
         userId,
-        toeicTestId: testId,
+        toeicQuestion: {
+          group: {
+            testPart: {
+              testId,
+              partNumber,
+            },
+          },
+        },
+      },
+      include: {
+        toeicQuestion: {
+          select: {
+            id: true,
+            questionNumber: true,
+          },
+        },
+      },
+      orderBy: [{ lastWrongAt: 'desc' }, { toeicQuestionId: 'asc' }],
+    });
+
+    return {
+      items: items.map((item) => ({
+        toeicQuestionId: item.toeicQuestionId,
+        questionNumber: item.toeicQuestion.questionNumber,
+        wrongCount: item.wrongCount,
+        lastWrongAt: item.lastWrongAt.toISOString(),
+      })),
+    };
+  }
+
+  async getPracticeStats(userId: string, testId: number, partNumber?: number) {
+    const test = await this.prisma.toeicTest.findUnique({
+      where: { id: testId },
+    });
+
+    if (!test) {
+      throw new NotFoundException('Test not found.');
+    }
+
+    if (partNumber !== undefined) {
+      await this.assertTestPartExists(testId, partNumber);
+      const partStats = await this.getPracticeStatsForPart(
+        userId,
+        testId,
+        partNumber,
+      );
+
+      return {
+        testId,
+        wrongQuestionCount: partStats.wrongQuestionCount,
+        practiceCorrectCount: partStats.practiceCorrectCount,
+        practiceWrongCount: partStats.practiceWrongCount,
+        parts: [partStats],
+      };
+    }
+
+    const parts = await this.prisma.toeicTestPart.findMany({
+      where: { testId },
+      orderBy: { partNumber: 'asc' },
+      select: { partNumber: true },
+    });
+
+    const partStats = await Promise.all(
+      parts.map((part) =>
+        this.getPracticeStatsForPart(userId, testId, part.partNumber),
+      ),
+    );
+
+    return {
+      testId,
+      wrongQuestionCount: partStats.reduce(
+        (total, part) => total + part.wrongQuestionCount,
+        0,
+      ),
+      practiceCorrectCount: partStats.reduce(
+        (total, part) => total + part.practiceCorrectCount,
+        0,
+      ),
+      practiceWrongCount: partStats.reduce(
+        (total, part) => total + part.practiceWrongCount,
+        0,
+      ),
+      parts: partStats,
+    };
+  }
+
+  private async assertTestPartExists(testId: number, partNumber: number) {
+    const part = await this.prisma.toeicTestPart.findUnique({
+      where: {
+        testId_partNumber: {
+          testId,
+          partNumber,
+        },
       },
     });
 
-    return { deletedSessionCount: result.count };
+    if (!part) {
+      throw new NotFoundException('Test part not found.');
+    }
+  }
+
+  private async getPracticeStatsForPart(
+    userId: string,
+    testId: number,
+    partNumber: number,
+  ) {
+    const wrongQuestionCount = await this.prisma.toeicWrongQuestion.count({
+      where: {
+        userId,
+        toeicQuestion: {
+          group: {
+            testPart: {
+              testId,
+              partNumber,
+            },
+          },
+        },
+      },
+    });
+
+    const aggregates = await this.prisma.toeicPracticeSession.aggregate({
+      where: {
+        userId,
+        toeicTestId: testId,
+        partNumber,
+      },
+      _sum: {
+        correctCount: true,
+        wrongCount: true,
+      },
+    });
+
+    return {
+      partNumber,
+      wrongQuestionCount,
+      practiceCorrectCount: aggregates._sum.correctCount ?? 0,
+      practiceWrongCount: aggregates._sum.wrongCount ?? 0,
+    };
   }
 }
