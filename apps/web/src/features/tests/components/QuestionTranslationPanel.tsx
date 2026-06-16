@@ -36,8 +36,8 @@ export function QuestionTranslationPanel({
 
   return (
     <div className="rounded-xl border border-border bg-muted/40 p-4">
-      <h3 className="mb-3 text-sm font-semibold">Translations</h3>
-      <div className="space-y-3 text-sm text-muted-foreground select-text">
+      <h3 className="mb-3 text-base font-semibold">Translations</h3>
+      <div className="space-y-3 text-base text-muted-foreground select-text">
         {showContent && contentVi?.trim() ? (
           <div>
             <p className="mb-1 font-semibold text-foreground">Passage</p>

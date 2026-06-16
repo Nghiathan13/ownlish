@@ -4,7 +4,7 @@ import { classNames } from "@/shared/lib/classNames";
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
 const OPTION_LABEL_CLASS =
-  "text-sm font-medium leading-snug tracking-normal";
+  "text-base font-medium leading-snug tracking-normal";
 
 type QuestionOptionsProps = {
   optionCount: number;

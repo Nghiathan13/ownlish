@@ -22,8 +22,8 @@ export function PassagePanel({
     <div className="space-y-3">
       {hasContent ? (
         <>
-          <h3 className="text-sm font-semibold">{title}</h3>
-          <div className="max-h-[420px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed select-text">
+          <h3 className="text-base font-semibold">{title}</h3>
+          <div className="max-h-[420px] overflow-y-auto whitespace-pre-wrap text-base leading-relaxed select-text">
             {content}
           </div>
         </>
@@ -31,13 +31,13 @@ export function PassagePanel({
       {hasTranslation ? (
         <div className="rounded-lg border border-border bg-muted/40 p-3">
           {hasContent ? (
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Vietnamese
             </p>
           ) : (
-            <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+            <h3 className="mb-2 text-base font-semibold">{title}</h3>
           )}
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground select-text">
+          <div className="whitespace-pre-wrap text-base leading-relaxed text-muted-foreground select-text">
             {contentVi}
           </div>
         </div>

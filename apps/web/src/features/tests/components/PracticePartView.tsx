@@ -7,6 +7,7 @@ import { getTestPart } from "@/features/tests/api/testsApi";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import { ListeningGroupPracticeContent } from "@/features/tests/components/ListeningGroupPracticeContent";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
+import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import {
@@ -169,6 +170,7 @@ function PracticePartContent({
   const navigationBar = (
     <div className="flex items-center justify-between gap-3">
       <Button
+        className="text-base"
         disabled={activeIndex === 0 || isFinishing}
         onClick={() => goToIndex(activeIndex - 1)}
         type="button"
@@ -177,7 +179,10 @@ function PracticePartContent({
         Prev
       </Button>
       <Button
-        className={classNames(activeIndex >= items.length - 1 && "min-w-32")}
+        className={classNames(
+          "text-base",
+          activeIndex >= items.length - 1 && "min-w-32",
+        )}
         disabled={practice.isSubmitting || isFinishing}
         onClick={handleNext}
         type="button"
@@ -238,10 +243,12 @@ function PracticePartContent({
             {leftPanel}
           </div>
           <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
-            <p className="text-sm font-medium tabular-nums">
-              {currentItem.question.questionNumber}
-            </p>
-            {optionsPanel}
+            <div className="flex flex-col gap-4">
+              <PracticeQuestionPrompt
+                questionNumber={currentItem.question.questionNumber}
+              />
+              {optionsPanel}
+            </div>
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-4">
@@ -254,7 +261,7 @@ function PracticePartContent({
   return (
     <>
       <div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Test {testId}
           {fullTestContext ? " · Full test" : ""} · Part {partNumber}
           {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
@@ -262,7 +269,7 @@ function PracticePartContent({
         <h1 className="text-xl font-semibold">
           Question {currentItem.question.questionNumber} / {items.length}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           {practiceMode === "wrong_questions"
             ? `Fixed ${practice.correctCount} · ${items.length} questions`
             : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
@@ -276,8 +283,8 @@ function PracticePartContent({
           {partConfig.showQuestionInRightPanel &&
           currentItem.question.question?.trim() ? (
             <div className="rounded-xl border border-border p-4">
-              <h3 className="mb-2 text-sm font-semibold">Question</h3>
-              <p className="text-sm leading-relaxed select-text">
+              <h3 className="mb-2 text-base font-semibold">Question</h3>
+              <p className="text-base leading-relaxed select-text">
                 {currentItem.question.question}
               </p>
             </div>

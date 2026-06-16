@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
+import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
 import { PassagePanel } from "@/features/tests/components/PassagePanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
@@ -249,6 +250,7 @@ export function ListeningGroupPracticeContent({
   const navigationBar = (
     <div className="flex items-center justify-between gap-3">
       <Button
+        className="text-base"
         disabled={activeGroupIndex === 0 || isFinishing}
         onClick={() => goToGroupIndex(activeGroupIndex - 1)}
         type="button"
@@ -258,6 +260,7 @@ export function ListeningGroupPracticeContent({
       </Button>
       <Button
         className={classNames(
+          "text-base",
           activeGroupIndex >= groups.length - 1 && "min-w-32",
         )}
         disabled={practice.isSubmitting || isFinishing}
@@ -361,14 +364,12 @@ export function ListeningGroupPracticeContent({
     if (usesSplitPlainLayout) {
       return (
         <div className="flex flex-col gap-4" key={question.id}>
-          <p className="text-sm font-medium tabular-nums">
-            {question.questionNumber}
-          </p>
-          {partConfig.showQuestionInRightPanel && question.question?.trim() ? (
-            <p className="text-sm leading-relaxed select-text">
-              {question.question}
-            </p>
-          ) : null}
+          <PracticeQuestionPrompt
+            questionNumber={question.questionNumber}
+            questionText={
+              partConfig.showQuestionInRightPanel ? question.question : null
+            }
+          />
           {options}
         </div>
       );
@@ -381,15 +382,15 @@ export function ListeningGroupPracticeContent({
       >
         {partConfig.showQuestionInRightPanel && question.question?.trim() ? (
           <div>
-            <h3 className="mb-2 text-sm font-semibold">
+            <h3 className="mb-2 text-base font-semibold">
               Question {question.questionNumber}
             </h3>
-            <p className="text-sm leading-relaxed select-text">
+            <p className="text-base leading-relaxed select-text">
               {question.question}
             </p>
           </div>
         ) : (
-          <h3 className="text-sm font-semibold">
+          <h3 className="text-base font-semibold">
             Question {question.questionNumber}
           </h3>
         )}
@@ -433,7 +434,7 @@ export function ListeningGroupPracticeContent({
   return (
     <>
       <div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Test {testId}
           {fullTestContext ? " · Full test" : ""} · Part {partNumber}
           {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
@@ -442,7 +443,7 @@ export function ListeningGroupPracticeContent({
           Group {activeGroupIndex + 1} / {groups.length} ·{" "}
           {formatGroupLabel(currentGroup.group)}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           {practiceMode === "wrong_questions"
             ? `Fixed ${practice.correctCount} · ${totalQuestions} questions`
             : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}

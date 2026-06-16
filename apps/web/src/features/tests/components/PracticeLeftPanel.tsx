@@ -1,6 +1,6 @@
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
-import type { PartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import { PassagePanel } from "@/features/tests/components/PassagePanel";
+import type { PartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 
 type PracticeLeftPanelProps = {
   partConfig: PartPracticeConfig;
@@ -49,7 +49,7 @@ export function PracticeLeftPanel({
             src={audioUrl}
           />
         ) : (
-          <p className="text-sm text-muted-foreground">No audio available.</p>
+          <p className="text-base text-muted-foreground">No audio available.</p>
         )
       ) : null}
 
@@ -64,7 +64,7 @@ export function PracticeLeftPanel({
             src={imageUrl}
           />
         ) : partConfig.leftPanel === "audio-image" ? (
-          <p className="text-sm text-muted-foreground">No image available.</p>
+          <p className="text-base text-muted-foreground">No image available.</p>
         ) : null
       ) : null}
 
@@ -88,8 +88,8 @@ export function PracticeLeftPanel({
 
       {partConfig.leftPanel === "question" ? (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Question</h3>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed select-text">
+          <h3 className="text-base font-semibold">Question</h3>
+          <p className="whitespace-pre-wrap text-base leading-relaxed select-text">
             {questionText?.trim() || "No question text available."}
           </p>
         </div>
@@ -104,7 +104,7 @@ export function PracticeLeftPanel({
       ) : null}
 
       {mediaError ? (
-        <p className="text-sm text-red-600">{mediaError}</p>
+        <p className="text-base text-red-600">{mediaError}</p>
       ) : null}
     </>
   );
