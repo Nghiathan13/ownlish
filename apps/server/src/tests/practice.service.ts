@@ -17,6 +17,7 @@ import { SubmitReviewGroupAnswersDto } from './dto/submit-review-group-answers.d
 import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
 
 const DEFERRED_GROUP_GRADING_PARTS = new Set([3, 4]);
+const REVIEW_GROUP_BATCH_PARTS = new Set([3, 4, 6, 7]);
 
 type SubmitAnswerResponse = {
   graded: boolean;
@@ -190,7 +191,7 @@ export class PracticeService {
   ) {
     return (
       mode === ToeicPracticeMode.WRONG_QUESTIONS &&
-      DEFERRED_GROUP_GRADING_PARTS.has(partNumber)
+      REVIEW_GROUP_BATCH_PARTS.has(partNumber)
     );
   }
 
@@ -748,7 +749,7 @@ export class PracticeService {
 
     if (!this.usesReviewGroupBatchSubmit(session.partNumber, session.mode)) {
       throw new BadRequestException(
-        'Group answers are only supported for parts 3 and 4 in review mode.',
+        'Group answers are only supported for parts 3, 4, 6, and 7 in review mode.',
       );
     }
 
