@@ -58,7 +58,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
-    contentLayout: "default",
+    contentLayout: "split-plain",
   },
   5: {
     leftPanel: "question",
@@ -67,7 +67,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-question",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: false,
-    contentLayout: "default",
+    contentLayout: "split-plain",
   },
   6: {
     leftPanel: "passage",
@@ -76,7 +76,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
-    contentLayout: "default",
+    contentLayout: "split-plain",
   },
   7: {
     leftPanel: "passage",
@@ -85,7 +85,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
-    contentLayout: "default",
+    contentLayout: "split-plain",
   },
 };
 
