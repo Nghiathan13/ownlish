@@ -3,6 +3,9 @@ import { classNames } from "@/shared/lib/classNames";
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
+const OPTION_LABEL_CLASS =
+  "text-sm font-medium leading-snug tracking-normal";
+
 type QuestionOptionsProps = {
   optionCount: number;
   options: ToeicQuestionOptions;
@@ -29,6 +32,23 @@ function getOptionEnglishText(
   return text;
 }
 
+type OptionLabelProps = {
+  optionKey: (typeof OPTION_KEYS)[number];
+  englishText: string | null;
+  isAnswered: boolean;
+};
+
+function OptionLabel({ optionKey, englishText, isAnswered }: OptionLabelProps) {
+  return (
+    <span className={OPTION_LABEL_CLASS}>
+      {optionKey}
+      {englishText ? (
+        <span className={isAnswered ? "" : "invisible"}>. {englishText}</span>
+      ) : null}
+    </span>
+  );
+}
+
 export function QuestionOptions({
   optionCount,
   options,
@@ -47,7 +67,7 @@ export function QuestionOptions({
         const englishText = getOptionEnglishText(key, options);
 
         const className = classNames(
-          "min-h-10 rounded-lg border px-3 py-2 text-left text-sm font-medium transition select-text",
+          "min-h-10 rounded-lg border px-3 py-2 text-left font-inherit transition select-text",
           isAnswered && "cursor-text",
           isCorrect && "border-emerald-600 bg-emerald-50 text-emerald-900",
           isWrong && "border-red-600 bg-red-50 text-red-900",
@@ -62,15 +82,18 @@ export function QuestionOptions({
           !isAnswered && isSubmitting && "pointer-events-none opacity-70",
         );
 
+        const label = (
+          <OptionLabel
+            englishText={englishText}
+            isAnswered={isAnswered}
+            optionKey={key}
+          />
+        );
+
         if (isAnswered) {
           return (
             <div className={className} key={key}>
-              <span className="font-semibold">{key}</span>
-              {englishText ? (
-                <>
-                  <span className="font-semibold">.</span> {englishText}
-                </>
-              ) : null}
+              {label}
             </div>
           );
         }
@@ -83,7 +106,7 @@ export function QuestionOptions({
             onClick={() => onSelect(key)}
             type="button"
           >
-            <span className="font-semibold">{key}</span>
+            {label}
           </button>
         );
       })}
