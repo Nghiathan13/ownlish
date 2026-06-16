@@ -10,8 +10,8 @@ export function PracticeQuestionPrompt({
   const text = questionText?.trim();
 
   return (
-    <p className="text-base leading-relaxed select-text">
-      <span className="font-bold tabular-nums">{questionNumber}.</span>
+    <p className="text-base font-bold leading-relaxed select-text">
+      <span className="tabular-nums">{questionNumber}.</span>
       {text ? ` ${text}` : null}
     </p>
   );

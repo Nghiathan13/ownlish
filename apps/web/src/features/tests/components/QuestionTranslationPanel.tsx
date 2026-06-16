@@ -1,5 +1,6 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
 import type { PartTranslationVariant } from "@/features/tests/lib/partPracticeConfig";
+import { classNames } from "@/shared/lib/classNames";
 
 type QuestionTranslationPanelProps = {
   options: ToeicQuestionOptions;
@@ -8,6 +9,8 @@ type QuestionTranslationPanelProps = {
   variant?: PartTranslationVariant;
   questionVi?: string | null;
   contentVi?: string | null;
+  selectedKey?: "A" | "B" | "C" | "D" | null;
+  answerKey?: "A" | "B" | "C" | "D" | null;
 };
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
@@ -19,6 +22,8 @@ export function QuestionTranslationPanel({
   variant = "options",
   questionVi,
   contentVi,
+  selectedKey = null,
+  answerKey = null,
 }: QuestionTranslationPanelProps) {
   if (!visible) {
     return null;
@@ -33,20 +38,21 @@ export function QuestionTranslationPanel({
     variant === "question-options" ||
     variant === "content-options" ||
     variant === "content-question-options";
+  const showGrading = answerKey != null;
 
   return (
     <div className="rounded-xl border border-border bg-muted/40 p-4">
-      <h3 className="mb-3 text-base font-semibold">Translations</h3>
-      <div className="space-y-3 text-base text-muted-foreground select-text">
+      <h3 className="mb-3 text-base font-semibold text-foreground">Translations</h3>
+      <div className="space-y-3 text-base text-foreground select-text">
         {showContent && contentVi?.trim() ? (
           <div>
-            <p className="mb-1 font-semibold text-foreground">Passage</p>
+            <p className="mb-1 font-semibold">Passage</p>
             <p className="whitespace-pre-wrap">{contentVi}</p>
           </div>
         ) : null}
         {showQuestion && questionVi?.trim() ? (
           <div>
-            <p className="mb-1 font-semibold text-foreground">Question</p>
+            <p className="mb-1 font-semibold">Question</p>
             <p>{questionVi}</p>
           </div>
         ) : null}
@@ -59,10 +65,22 @@ export function QuestionTranslationPanel({
                 return null;
               }
 
+              const isCorrect = showGrading && answerKey === key;
+              const isWrong =
+                showGrading &&
+                selectedKey === key &&
+                answerKey !== null &&
+                !isCorrect;
+
               return (
-                <p key={key}>
-                  <span className="font-semibold text-foreground">{key}.</span>{" "}
-                  {label}
+                <p
+                  className={classNames(
+                    isCorrect && "text-emerald-900",
+                    isWrong && "text-red-900",
+                  )}
+                  key={key}
+                >
+                  {key}. {label}
                 </p>
               );
             })}
