@@ -69,7 +69,6 @@ function Part1PracticeContent({
   clearSession,
   onFinish,
 }: Part1PracticeContentProps) {
-  const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const activeIndex =
     items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
@@ -99,15 +98,6 @@ function Part1PracticeContent({
     }
 
     await practice.submitAnswer(currentItem.question.id, key);
-
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: getPracticeStatsQueryKey(testId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: getWrongQuestionsQueryKey(testId, partNumber),
-      }),
-    ]);
   };
 
   const handleNext = () => {
@@ -135,7 +125,7 @@ function Part1PracticeContent({
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {practiceMode === "wrong_questions"
-            ? `Fixed ${practice.correctCount} · Remaining ${items.length}`
+            ? `Fixed ${practice.correctCount} · ${items.length} questions`
             : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
         </p>
       </div>
@@ -218,6 +208,7 @@ export function Part1PracticeView({
   clearSession,
 }: Part1PracticeViewProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isWrongMode = practiceMode === "wrong_questions";
 
   const partQuery = useQuery({
@@ -245,19 +236,6 @@ export function Part1PracticeView({
       enabled: Boolean(partQuery.data) && isWrongMode,
     });
 
-  const wrongQuestionIds = useMemo(
-    () => new Set(wrongQuestions.map((item) => item.toeicQuestionId)),
-    [wrongQuestions],
-  );
-
-  const items = useMemo(() => {
-    if (!isWrongMode) {
-      return allItems;
-    }
-
-    return allItems.filter((item) => wrongQuestionIds.has(item.question.id));
-  }, [allItems, isWrongMode, wrongQuestionIds]);
-
   const practice = usePracticeSession({
     accessToken,
     clearSession,
@@ -266,6 +244,42 @@ export function Part1PracticeView({
     mode: practiceMode,
     enabled: Boolean(partQuery.data) && (!isWrongMode || !isLoadingWrongQuestions),
   });
+
+  const frozenWrongQuestionIds = useMemo(() => {
+    if (!isWrongMode || !practice.sessionId || wrongQuestions.length === 0) {
+      return null;
+    }
+
+    return wrongQuestions.map((item) => item.toeicQuestionId);
+    // Freeze the review pool when a session starts; correct answers must not shrink it mid-session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- wrongQuestions intentionally omitted
+  }, [isWrongMode, practice.sessionId]);
+
+  const items = useMemo(() => {
+    if (!isWrongMode) {
+      return allItems;
+    }
+
+    if (!frozenWrongQuestionIds) {
+      return [];
+    }
+
+    const frozenIds = new Set(frozenWrongQuestionIds);
+    return allItems.filter((item) => frozenIds.has(item.question.id));
+  }, [allItems, frozenWrongQuestionIds, isWrongMode]);
+
+  const handleFinish = () => {
+    if (isWrongMode) {
+      void queryClient.invalidateQueries({
+        queryKey: getPracticeStatsQueryKey(testId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getWrongQuestionsQueryKey(testId, partNumber),
+      });
+    }
+
+    router.push("/tests");
+  };
 
   const initialIndex = useMemo(() => {
     if (!practice.sessionId || items.length === 0) {
@@ -308,14 +322,12 @@ export function Part1PracticeView({
     );
   }
 
-  if (items.length === 0) {
+  if (isWrongMode && wrongQuestions.length === 0) {
     return (
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
-            {isWrongMode
-              ? "No wrong questions left to review for this part."
-              : "This part has no questions yet. Check that TOEIC data is imported for this test."}
+            No wrong questions left to review for this part.
           </p>
           <div className="mt-4">
             <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
@@ -327,7 +339,24 @@ export function Part1PracticeView({
     );
   }
 
-  if (!practice.sessionId) {
+  if (!isWrongMode && allItems.length === 0) {
+    return (
+      <PageShell>
+        <Panel>
+          <p className="text-muted-foreground">
+            This part has no questions yet. Check that TOEIC data is imported for this test.
+          </p>
+          <div className="mt-4">
+            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+              Back to tests
+            </Button>
+          </div>
+        </Panel>
+      </PageShell>
+    );
+  }
+
+  if (!practice.sessionId || items.length === 0) {
     return null;
   }
 
@@ -340,7 +369,7 @@ export function Part1PracticeView({
           initialIndex={initialIndex}
           items={items}
           key={practice.sessionId}
-          onFinish={() => router.push("/tests")}
+          onFinish={handleFinish}
           partNumber={partNumber}
           practice={practice}
           practiceMode={practiceMode}
