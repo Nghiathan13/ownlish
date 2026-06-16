@@ -238,7 +238,7 @@ function PracticePartContent({
             {leftPanel}
           </div>
           <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="text-sm font-medium tabular-nums">
               {currentItem.question.questionNumber}
             </p>
             {optionsPanel}
@@ -542,27 +542,36 @@ export function PracticePartView({
   }
 
   if (partConfig.navigationMode === "per-group") {
+    const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
+    const groupContent = (
+      <ListeningGroupPracticeContent
+        accessToken={accessToken}
+        clearSession={clearSession}
+        fullTestContext={fullTestContext}
+        groups={practiceGroups}
+        initialGroupIndex={initialGroupIndex}
+        key={practice.sessionId}
+        normalPractice={isWrongGroupReview ? normalPractice : undefined}
+        onFinish={handleFinish}
+        partNumber={partNumber}
+        practice={practice}
+        practiceMode={practiceMode}
+        testId={testId}
+        wrongQuestionCount={
+          isWrongGroupReview ? frozenWrongQuestionIds?.length : undefined
+        }
+      />
+    );
+
     return (
       <PageShell fillViewport>
-        <Panel className="flex min-h-0 flex-1 flex-col gap-4">
-          <ListeningGroupPracticeContent
-            accessToken={accessToken}
-            clearSession={clearSession}
-            fullTestContext={fullTestContext}
-            groups={practiceGroups}
-            initialGroupIndex={initialGroupIndex}
-            key={practice.sessionId}
-            normalPractice={isWrongGroupReview ? normalPractice : undefined}
-            onFinish={handleFinish}
-            partNumber={partNumber}
-            practice={practice}
-            practiceMode={practiceMode}
-            testId={testId}
-            wrongQuestionCount={
-              isWrongGroupReview ? frozenWrongQuestionIds?.length : undefined
-            }
-          />
-        </Panel>
+        {usesSplitPlainLayout ? (
+          groupContent
+        ) : (
+          <Panel className="flex min-h-0 flex-1 flex-col gap-4">
+            {groupContent}
+          </Panel>
+        )}
       </PageShell>
     );
   }

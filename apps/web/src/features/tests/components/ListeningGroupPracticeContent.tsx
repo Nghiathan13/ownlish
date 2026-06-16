@@ -244,6 +244,192 @@ export function ListeningGroupPracticeContent({
       : "Next part"
     : "Finish";
 
+  const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
+
+  const navigationBar = (
+    <div className="flex items-center justify-between gap-3">
+      <Button
+        disabled={activeGroupIndex === 0 || isFinishing}
+        onClick={() => goToGroupIndex(activeGroupIndex - 1)}
+        type="button"
+        variant="secondary"
+      >
+        Prev
+      </Button>
+      <Button
+        className={classNames(
+          activeGroupIndex >= groups.length - 1 && "min-w-32",
+        )}
+        disabled={practice.isSubmitting || isFinishing}
+        onClick={handleNext}
+        type="button"
+      >
+        {activeGroupIndex >= groups.length - 1 ? finishLabel : "Next"}
+      </Button>
+    </div>
+  );
+
+  const leftPanel = (
+    <PracticeLeftPanel
+      audioUrl={signedMedia.audioUrl}
+      group={currentGroup.group}
+      imageUrl={signedMedia.imageUrl}
+      mediaError={signedMedia.mediaError}
+      onMediaError={signedMedia.handleMediaError}
+      partConfig={partConfig}
+      plain={usesSplitPlainLayout}
+      questionNumber={currentGroup.group.questionStart}
+      questionText={null}
+      showContext={showPassageOnLeft}
+      showContextTranslation={false}
+    />
+  );
+
+  const questionBlocks = currentGroup.questions.map((question) => {
+    const reviewAnswer = practice.getAnswer(question.id);
+    const normalAnswer = normalPractice?.getAnswer(question.id);
+    const wasCorrectInNormal = normalAnswer?.isCorrect === true;
+    const questionGraded = isPracticeAnswerGraded(reviewAnswer);
+
+    let selectedKey: OptionKey | null;
+    let answerKey: OptionKey | null;
+    let isLocked: boolean;
+    let showResult: boolean;
+
+    if (isWrongGroupReview) {
+      selectedKey = wasCorrectInNormal
+        ? (normalAnswer?.selectedKey ?? null)
+        : isReviewGroupLocked
+          ? (reviewAnswer?.selectedKey ??
+            localSelections[question.id] ??
+            null)
+          : (localSelections[question.id] ??
+            reviewAnswer?.selectedKey ??
+            normalAnswer?.selectedKey ??
+            null);
+      answerKey = wasCorrectInNormal
+        ? (normalAnswer?.answerKey ?? null)
+        : isReviewGroupLocked
+          ? (reviewAnswer?.answerKey ?? null)
+          : null;
+      isLocked = wasCorrectInNormal || isReviewGroupLocked;
+      showResult = wasCorrectInNormal || isReviewGroupLocked;
+    } else if (usesDeferredGroupGrading) {
+      selectedKey = reviewAnswer?.selectedKey ?? null;
+      answerKey =
+        showGroupReveal && questionGraded
+          ? (reviewAnswer?.answerKey ?? null)
+          : null;
+      isLocked = showGroupReveal;
+      showResult = showGroupReveal;
+    } else {
+      selectedKey = reviewAnswer?.selectedKey ?? null;
+      answerKey = questionGraded
+        ? (reviewAnswer?.answerKey ?? null)
+        : null;
+      isLocked = questionGraded;
+      showResult = questionGraded;
+    }
+
+    const translationVisible = showGroupReveal;
+
+    const options = (
+      <>
+        <QuestionOptions
+          answerKey={answerKey}
+          isLocked={isLocked}
+          isSubmitting={practice.isSubmitting || isFinishing}
+          onSelect={(key) => handleSelect(question.id, key)}
+          optionCount={question.optionCount}
+          options={question.options}
+          selectedKey={selectedKey}
+          showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
+          showResult={showResult}
+        />
+
+        <QuestionTranslationPanel
+          contentVi={currentGroup.group.contentVi}
+          optionCount={question.optionCount}
+          options={question.options}
+          questionVi={question.questionVi}
+          variant={partConfig.translationVariant}
+          visible={translationVisible}
+        />
+      </>
+    );
+
+    if (usesSplitPlainLayout) {
+      return (
+        <div className="flex flex-col gap-4" key={question.id}>
+          <p className="text-sm font-medium tabular-nums">
+            {question.questionNumber}
+          </p>
+          {partConfig.showQuestionInRightPanel && question.question?.trim() ? (
+            <p className="text-sm leading-relaxed select-text">
+              {question.question}
+            </p>
+          ) : null}
+          {options}
+        </div>
+      );
+    }
+
+    return (
+      <section
+        className="space-y-3 rounded-xl border border-border p-4"
+        key={question.id}
+      >
+        {partConfig.showQuestionInRightPanel && question.question?.trim() ? (
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">
+              Question {question.questionNumber}
+            </h3>
+            <p className="text-sm leading-relaxed select-text">
+              {question.question}
+            </p>
+          </div>
+        ) : (
+          <h3 className="text-sm font-semibold">
+            Question {question.questionNumber}
+          </h3>
+        )}
+
+        {options}
+      </section>
+    );
+  });
+
+  const passageTranslation =
+    partConfig.leftPanel === "passage" &&
+    showGroupReveal &&
+    currentGroup.group.contentVi?.trim() ? (
+      <PassagePanel
+        content={null}
+        contentVi={currentGroup.group.contentVi}
+        showTranslation
+        title="Passage translation"
+      />
+    ) : null;
+
+  if (usesSplitPlainLayout) {
+    return (
+      <>
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
+            {leftPanel}
+          </div>
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
+            {questionBlocks}
+            {passageTranslation}
+          </div>
+        </div>
+        <div className="shrink-0 border-t border-border p-4">
+          {navigationBar}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div>
@@ -264,147 +450,15 @@ export function ListeningGroupPracticeContent({
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-        <PracticeLeftPanel
-          audioUrl={signedMedia.audioUrl}
-          group={currentGroup.group}
-          imageUrl={signedMedia.imageUrl}
-          mediaError={signedMedia.mediaError}
-          onMediaError={signedMedia.handleMediaError}
-          partConfig={partConfig}
-          questionNumber={currentGroup.group.questionStart}
-          questionText={null}
-          showContext={showPassageOnLeft}
-          showContextTranslation={false}
-        />
+        {leftPanel}
 
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
-          {currentGroup.questions.map((question) => {
-            const reviewAnswer = practice.getAnswer(question.id);
-            const normalAnswer = normalPractice?.getAnswer(question.id);
-            const wasCorrectInNormal = normalAnswer?.isCorrect === true;
-            const questionGraded = isPracticeAnswerGraded(reviewAnswer);
-
-            let selectedKey: OptionKey | null;
-            let answerKey: OptionKey | null;
-            let isLocked: boolean;
-            let showResult: boolean;
-
-            if (isWrongGroupReview) {
-              selectedKey = wasCorrectInNormal
-                ? (normalAnswer?.selectedKey ?? null)
-                : isReviewGroupLocked
-                  ? (reviewAnswer?.selectedKey ??
-                    localSelections[question.id] ??
-                    null)
-                  : (localSelections[question.id] ??
-                    reviewAnswer?.selectedKey ??
-                    normalAnswer?.selectedKey ??
-                    null);
-              answerKey = wasCorrectInNormal
-                ? (normalAnswer?.answerKey ?? null)
-                : isReviewGroupLocked
-                  ? (reviewAnswer?.answerKey ?? null)
-                  : null;
-              isLocked = wasCorrectInNormal || isReviewGroupLocked;
-              showResult = wasCorrectInNormal || isReviewGroupLocked;
-            } else if (usesDeferredGroupGrading) {
-              selectedKey = reviewAnswer?.selectedKey ?? null;
-              answerKey =
-                showGroupReveal && questionGraded
-                  ? (reviewAnswer?.answerKey ?? null)
-                  : null;
-              isLocked = showGroupReveal;
-              showResult = showGroupReveal;
-            } else {
-              selectedKey = reviewAnswer?.selectedKey ?? null;
-              answerKey = questionGraded
-                ? (reviewAnswer?.answerKey ?? null)
-                : null;
-              isLocked = questionGraded;
-              showResult = questionGraded;
-            }
-
-            const translationVisible = showGroupReveal;
-
-            return (
-              <section
-                className="space-y-3 rounded-xl border border-border p-4"
-                key={question.id}
-              >
-                {partConfig.showQuestionInRightPanel &&
-                question.question?.trim() ? (
-                  <div>
-                    <h3 className="mb-2 text-sm font-semibold">
-                      Question {question.questionNumber}
-                    </h3>
-                    <p className="text-sm leading-relaxed select-text">
-                      {question.question}
-                    </p>
-                  </div>
-                ) : (
-                  <h3 className="text-sm font-semibold">
-                    Question {question.questionNumber}
-                  </h3>
-                )}
-
-                <QuestionOptions
-                  answerKey={answerKey}
-                  isLocked={isLocked}
-                  isSubmitting={practice.isSubmitting || isFinishing}
-                  onSelect={(key) => handleSelect(question.id, key)}
-                  optionCount={question.optionCount}
-                  options={question.options}
-                  selectedKey={selectedKey}
-                  showEnglishTextBeforeAnswer={
-                    partConfig.showOptionTextBeforeAnswer
-                  }
-                  showResult={showResult}
-                />
-
-                <QuestionTranslationPanel
-                  optionCount={question.optionCount}
-                  options={question.options}
-                  questionVi={question.questionVi}
-                  variant={partConfig.translationVariant}
-                  visible={translationVisible}
-                />
-              </section>
-            );
-          })}
-
-          {partConfig.leftPanel === "passage" &&
-          showGroupReveal &&
-          currentGroup.group.contentVi?.trim() ? (
-            <PassagePanel
-              content={null}
-              contentVi={currentGroup.group.contentVi}
-              showTranslation
-              title="Passage translation"
-            />
-          ) : null}
+          {questionBlocks}
+          {passageTranslation}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <Button
-          disabled={activeGroupIndex === 0 || isFinishing}
-          onClick={() => goToGroupIndex(activeGroupIndex - 1)}
-          type="button"
-          variant="secondary"
-        >
-          Prev
-        </Button>
-        <Button
-          className={classNames(
-            activeGroupIndex >= groups.length - 1 && "min-w-32",
-          )}
-          disabled={practice.isSubmitting || isFinishing}
-          onClick={handleNext}
-          type="button"
-        >
-          {activeGroupIndex >= groups.length - 1 ? finishLabel : "Next"}
-        </Button>
-      </div>
+      {navigationBar}
     </>
   );
 }
