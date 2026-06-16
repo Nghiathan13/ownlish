@@ -37,12 +37,8 @@ export function PracticeLeftPanel({
     partConfig.leftPanel === "audio-image" ||
     partConfig.leftPanel === "listening-group";
 
-  return (
-    <div
-      className={
-        plain ? "flex flex-col gap-4" : "space-y-4 rounded-xl border border-border p-4"
-      }
-    >
+  const content = (
+    <>
       {showAudio ? (
         audioUrl ? (
           <audio
@@ -110,6 +106,16 @@ export function PracticeLeftPanel({
       {mediaError ? (
         <p className="text-sm text-red-600">{mediaError}</p>
       ) : null}
+    </>
+  );
+
+  if (plain) {
+    return content;
+  }
+
+  return (
+    <div className="space-y-4 rounded-xl border border-border p-4">
+      {content}
     </div>
   );
 }
