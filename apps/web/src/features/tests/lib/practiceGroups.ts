@@ -35,3 +35,20 @@ export function buildPracticeGroups(items: PracticeItem[]): PracticeGroup[] {
     }))
     .sort((left, right) => left.group.questionStart - right.group.questionStart);
 }
+
+export function buildWrongReviewGroups(
+  groups: ToeicQuestionGroup[],
+  wrongQuestionIds: number[],
+): PracticeGroup[] {
+  const wrongIds = new Set(wrongQuestionIds);
+
+  return groups
+    .filter((group) => group.questions.some((question) => wrongIds.has(question.id)))
+    .map((group) => ({
+      group,
+      questions: [...group.questions].sort(
+        (left, right) => left.questionNumber - right.questionNumber,
+      ),
+    }))
+    .sort((left, right) => left.group.questionStart - right.group.questionStart);
+}

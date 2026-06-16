@@ -293,6 +293,67 @@ export async function submitPracticeAnswer(
   } satisfies SubmitAnswerResult;
 }
 
+export async function submitReviewGroupAnswers(
+  token: string,
+  sessionId: string,
+  groupId: number,
+  payload: {
+    answers: Array<{
+      toeicQuestionId: number;
+      selectedKey: "A" | "B" | "C" | "D";
+    }>;
+  },
+) {
+  const body = await apiRequest(
+    `/tests/practice/sessions/${sessionId}/groups/${groupId}/answers`,
+    {
+      method: "POST",
+      token,
+      body: JSON.stringify(payload),
+    },
+  );
+
+  if (!isRecord(body) || !Array.isArray(body.results)) {
+    invalidApiResponse();
+  }
+
+  const results = body.results.flatMap((value) => {
+    if (!isRecord(value) || !isNumber(value.toeicQuestionId)) {
+      return [];
+    }
+
+    if (!isBoolean(value.graded) || !value.graded) {
+      return [];
+    }
+
+    if (!isBoolean(value.isCorrect) || !isString(value.answerKey)) {
+      return [];
+    }
+
+    const answerKey = value.answerKey.trim().toUpperCase();
+    if (!isOptionKey(answerKey)) {
+      return [];
+    }
+
+    return [
+      {
+        toeicQuestionId: value.toeicQuestionId,
+        graded: true as const,
+        isCorrect: value.isCorrect,
+        answerKey,
+        correctOptionEn: isNullableString(value.correctOptionEn)
+          ? value.correctOptionEn
+          : null,
+        correctOptionVi: isNullableString(value.correctOptionVi)
+          ? value.correctOptionVi
+          : null,
+      },
+    ];
+  });
+
+  return { results };
+}
+
 export async function completePracticeSession(
   token: string,
   sessionId: string,

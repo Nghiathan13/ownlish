@@ -9,7 +9,10 @@ import { ListeningGroupPracticeContent } from "@/features/tests/components/Liste
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
-import { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
+import {
+  getPracticeSessionQueryKey,
+  usePracticeSession,
+} from "@/features/tests/hooks/usePracticeSession";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import {
   getWrongQuestionsQueryKey,
@@ -32,6 +35,7 @@ import { Panel } from "@/shared/ui/Panel";
 
 import {
   buildPracticeGroups,
+  buildWrongReviewGroups,
   type PracticeItem,
 } from "@/features/tests/lib/practiceGroups";
 
@@ -303,6 +307,25 @@ export function PracticePartView({
       (!isWrongMode || !isLoadingWrongQuestions || Boolean(fullTestContext)),
   });
 
+  const partConfig = getPartPracticeConfig(partNumber);
+  const isWrongGroupReview =
+    isWrongMode &&
+    !fullTestContext &&
+    partConfig.navigationMode === "per-group";
+
+  const normalPractice = usePracticeSession({
+    accessToken,
+    clearSession,
+    testId,
+    partNumber,
+    mode: "normal",
+    enabled:
+      isSupportedPart &&
+      Boolean(partQuery.data) &&
+      isWrongGroupReview &&
+      Boolean(practice.sessionId),
+  });
+
   const frozenWrongQuestionIds = useMemo(() => {
     if (!isWrongMode || fullTestContext || !practice.sessionId || wrongQuestions.length === 0) {
       return null;
@@ -326,11 +349,16 @@ export function PracticePartView({
     return allItems.filter((item) => frozenIds.has(item.question.id));
   }, [allItems, frozenWrongQuestionIds, fullTestContext, isWrongMode]);
 
-  const partConfig = getPartPracticeConfig(partNumber);
-  const practiceGroups = useMemo(
-    () => buildPracticeGroups(items),
-    [items],
-  );
+  const practiceGroups = useMemo(() => {
+    if (isWrongGroupReview && frozenWrongQuestionIds && partQuery.data?.groups) {
+      return buildWrongReviewGroups(
+        partQuery.data.groups,
+        frozenWrongQuestionIds,
+      );
+    }
+
+    return buildPracticeGroups(items);
+  }, [frozenWrongQuestionIds, isWrongGroupReview, items, partQuery.data]);
 
   const initialIndex = useMemo(() => {
     if (!practice.sessionId || items.length === 0) {
@@ -372,6 +400,9 @@ export function PracticePartView({
       void queryClient.invalidateQueries({
         queryKey: getWrongQuestionsQueryKey(testId, partNumber),
       });
+      void queryClient.invalidateQueries({
+        queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+      });
       router.push("/tests");
       return;
     }
@@ -396,7 +427,8 @@ export function PracticePartView({
   if (
     partQuery.isLoading ||
     practice.isStarting ||
-    (isWrongMode && !fullTestContext && isLoadingWrongQuestions)
+    (isWrongMode && !fullTestContext && isLoadingWrongQuestions) ||
+    (isWrongGroupReview && normalPractice.isStarting)
   ) {
     return (
       <PageShell>
@@ -461,7 +493,15 @@ export function PracticePartView({
     );
   }
 
-  if (!practice.sessionId || items.length === 0) {
+  if (!practice.sessionId) {
+    return null;
+  }
+
+  if (!isWrongGroupReview && items.length === 0) {
+    return null;
+  }
+
+  if (isWrongGroupReview && practiceGroups.length === 0) {
     return null;
   }
 
@@ -476,15 +516,23 @@ export function PracticePartView({
             groups={practiceGroups}
             initialGroupIndex={initialGroupIndex}
             key={practice.sessionId}
+            normalPractice={isWrongGroupReview ? normalPractice : undefined}
             onFinish={handleFinish}
             partNumber={partNumber}
             practice={practice}
             practiceMode={practiceMode}
             testId={testId}
+            wrongQuestionCount={
+              isWrongGroupReview ? frozenWrongQuestionIds?.length : undefined
+            }
           />
         </Panel>
       </PageShell>
     );
+  }
+
+  if (items.length === 0) {
+    return null;
   }
 
   return (

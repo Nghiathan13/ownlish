@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
@@ -31,6 +31,8 @@ type ListeningGroupPracticeContentProps = {
   groups: PracticeGroup[];
   initialGroupIndex: number;
   practice: ReturnType<typeof usePracticeSession>;
+  normalPractice?: ReturnType<typeof usePracticeSession>;
+  wrongQuestionCount?: number;
   accessToken: string | null;
   clearSession: () => void;
   fullTestContext?: FullTestContext;
@@ -52,13 +54,20 @@ export function ListeningGroupPracticeContent({
   groups,
   initialGroupIndex,
   practice,
+  normalPractice,
+  wrongQuestionCount,
   accessToken,
   clearSession,
   fullTestContext,
   onFinish,
 }: ListeningGroupPracticeContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
+  const isWrongGroupReview =
+    practiceMode === "wrong_questions" && normalPractice != null;
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
+  const [localSelections, setLocalSelections] = useState<
+    Record<number, OptionKey>
+  >({});
   const [isFinishing, setIsFinishing] = useState(false);
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
@@ -72,6 +81,18 @@ export function ListeningGroupPracticeContent({
     clearSession,
   });
 
+  const editableQuestionIds = useMemo(() => {
+    if (!currentGroup || !isWrongGroupReview) {
+      return [];
+    }
+
+    return currentGroup.questions
+      .filter(
+        (question) => normalPractice.getAnswer(question.id)?.isCorrect !== true,
+      )
+      .map((question) => question.id);
+  }, [currentGroup, isWrongGroupReview, normalPractice]);
+
   if (!currentGroup) {
     return null;
   }
@@ -79,21 +100,59 @@ export function ListeningGroupPracticeContent({
   const allGroupGraded = currentGroup.questions.every((question) =>
     isPracticeAnswerGraded(practice.getAnswer(question.id)),
   );
-  const showGroupReveal =
-    !partConfig.hideContextUntilGroupComplete || allGroupGraded;
-  const totalQuestions = groups.reduce(
-    (count, group) => count + group.questions.length,
-    0,
+  const allEditableGraded = editableQuestionIds.every((questionId) =>
+    isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
+  const showGroupReveal = isWrongGroupReview
+    ? allEditableGraded
+    : !partConfig.hideContextUntilGroupComplete || allGroupGraded;
+  const totalQuestions =
+    isWrongGroupReview && wrongQuestionCount != null
+      ? wrongQuestionCount
+      : groups.reduce((count, group) => count + group.questions.length, 0);
 
   const goToGroupIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, groups.length - 1));
+    setLocalSelections({});
     setCurrentGroupIndex(nextIndex);
     writePracticeIndex(testId, partNumber, nextIndex);
   };
 
   const handleSelect = async (toeicQuestionId: number, key: OptionKey) => {
     if (showGroupReveal || practice.isSubmitting) {
+      return;
+    }
+
+    if (isWrongGroupReview) {
+      const wasCorrectInNormal =
+        normalPractice.getAnswer(toeicQuestionId)?.isCorrect === true;
+
+      if (wasCorrectInNormal) {
+        return;
+      }
+
+      const nextSelections = {
+        ...localSelections,
+        [toeicQuestionId]: key,
+      };
+      setLocalSelections(nextSelections);
+
+      const allEditableSelected = editableQuestionIds.every(
+        (questionId) => nextSelections[questionId] != null,
+      );
+
+      if (!allEditableSelected) {
+        return;
+      }
+
+      await practice.submitReviewGroupAnswersBatch(
+        currentGroup.group.id,
+        editableQuestionIds.map((questionId) => ({
+          toeicQuestionId: questionId,
+          selectedKey: nextSelections[questionId]!,
+        })),
+      );
+      setLocalSelections({});
       return;
     }
 
@@ -172,8 +231,26 @@ export function ListeningGroupPracticeContent({
 
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
           {currentGroup.questions.map((question) => {
-            const answer = practice.getAnswer(question.id);
-            const graded = isPracticeAnswerGraded(answer);
+            const reviewAnswer = practice.getAnswer(question.id);
+            const normalAnswer = normalPractice?.getAnswer(question.id);
+            const wasCorrectInNormal = normalAnswer?.isCorrect === true;
+            const selectedKey = wasCorrectInNormal
+              ? (normalAnswer?.selectedKey ?? null)
+              : showGroupReveal
+                ? (reviewAnswer?.selectedKey ??
+                  localSelections[question.id] ??
+                  null)
+                : (localSelections[question.id] ??
+                  reviewAnswer?.selectedKey ??
+                  normalAnswer?.selectedKey ??
+                  null);
+            const answerKey = wasCorrectInNormal
+              ? (normalAnswer?.answerKey ?? null)
+              : showGroupReveal
+                ? (reviewAnswer?.answerKey ?? null)
+                : null;
+            const isLocked = wasCorrectInNormal || showGroupReveal;
+            const showResult = wasCorrectInNormal || showGroupReveal;
 
             return (
               <section
@@ -196,15 +273,17 @@ export function ListeningGroupPracticeContent({
                 )}
 
                 <QuestionOptions
-                  answerKey={graded ? (answer?.answerKey ?? null) : null}
-                  isLocked={showGroupReveal}
+                  answerKey={answerKey}
+                  isLocked={isLocked}
                   isSubmitting={practice.isSubmitting || isFinishing}
                   onSelect={(key) => handleSelect(question.id, key)}
                   optionCount={question.optionCount}
                   options={question.options}
-                  selectedKey={answer?.selectedKey ?? null}
-                  showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
-                  showResult={showGroupReveal}
+                  selectedKey={selectedKey}
+                  showEnglishTextBeforeAnswer={
+                    partConfig.showOptionTextBeforeAnswer
+                  }
+                  showResult={showResult}
                 />
 
                 <QuestionTranslationPanel

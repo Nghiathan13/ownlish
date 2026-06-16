@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createPracticeSession,
   submitPracticeAnswer,
+  submitReviewGroupAnswers,
   completePracticeSession,
 } from "@/features/tests/api/testsApi";
 import type {
@@ -37,8 +38,8 @@ function toAnswerMap(answers: PracticeSessionAnswer[]) {
   return new Map(answers.map((answer) => [answer.toeicQuestionId, answer]));
 }
 
-function usesDeferredGroupGrading(partNumber: number) {
-  return partNumber === 3 || partNumber === 4;
+function usesDeferredGroupGrading(partNumber: number, mode: PracticeMode) {
+  return (partNumber === 3 || partNumber === 4) && mode === "normal";
 }
 
 export function usePracticeSession({
@@ -147,9 +148,15 @@ export function usePracticeSession({
           return result;
         }
 
-        if (usesDeferredGroupGrading(partNumber)) {
+        if (usesDeferredGroupGrading(partNumber, mode)) {
           await queryClient.refetchQueries({ queryKey });
           return result;
+        }
+
+        if (mode === "wrong_questions" && result.isCorrect) {
+          await queryClient.invalidateQueries({
+            queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+          });
         }
 
         queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
@@ -214,6 +221,49 @@ export function usePracticeSession({
       sessionId,
       mode,
       partNumber,
+      testId,
+    ],
+  );
+
+  const submitReviewGroupAnswersBatch = useCallback(
+    async (
+      groupId: number,
+      answers: Array<{
+        toeicQuestionId: number;
+        selectedKey: "A" | "B" | "C" | "D";
+      }>,
+    ) => {
+      if (!accessToken || !sessionId) {
+        return null;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const result = await runAuthenticatedRequest({
+          accessToken,
+          clearSession,
+          request: (token) =>
+            submitReviewGroupAnswers(token, sessionId, groupId, { answers }),
+        });
+
+        await queryClient.refetchQueries({ queryKey });
+        await queryClient.invalidateQueries({
+          queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+        });
+
+        return result;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      accessToken,
+      clearSession,
+      partNumber,
+      queryClient,
+      queryKey,
+      sessionId,
+      testId,
     ],
   );
 
@@ -243,6 +293,7 @@ export function usePracticeSession({
       : null,
     isSubmitting,
     submitAnswer,
+    submitReviewGroupAnswersBatch,
     completeSession,
   };
 }
