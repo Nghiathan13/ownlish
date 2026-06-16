@@ -36,7 +36,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthQueryReset />
             <Navbar />
-            {children}
+            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
           </QueryProvider>
         </AuthProvider>
       </body>

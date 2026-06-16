@@ -232,20 +232,26 @@ function PracticePartContent({
 
   if (partConfig.contentLayout === "split-plain") {
     return (
-      <div className="-mx-4 flex min-h-0 flex-1 flex-col">
-        <div className="grid min-h-0 flex-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
-          <div className="min-h-0 overflow-y-auto py-2 pl-4 pr-4 lg:py-4 lg:pr-6">
-            {leftPanel}
-          </div>
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto py-2 pl-4 pr-4 lg:py-4 lg:pl-6">
-            <p className="text-2xl font-bold tabular-nums">
-              {currentItem.question.questionNumber}
-            </p>
-            {optionsPanel}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="relative min-h-0 flex-1">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-border lg:block"
+          />
+          <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-2">
+            <div className="min-h-0 overflow-y-auto pl-4 pr-4 lg:pr-6">
+              {leftPanel}
+            </div>
+            <div className="flex min-h-0 flex-col gap-4 overflow-y-auto pl-4 pr-4 lg:pl-6">
+              <p className="text-2xl font-bold tabular-nums">
+                {currentItem.question.questionNumber}
+              </p>
+              {optionsPanel}
+            </div>
           </div>
         </div>
-        <div className="shrink-0 border-t border-border px-4 pt-4">
-          {navigationBar}
+        <div className="shrink-0 border-t border-border">
+          <div className="px-4 pt-4">{navigationBar}</div>
         </div>
       </div>
     );
@@ -571,9 +577,20 @@ export function PracticePartView({
     return null;
   }
 
+  const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
+
   return (
-    <PageShell fillViewport>
-      <Panel className="flex min-h-0 flex-1 flex-col gap-4">
+    <PageShell
+      bleed={usesSplitPlainLayout}
+      fillViewport
+      className={usesSplitPlainLayout ? "py-0" : undefined}
+    >
+      <Panel
+        className={classNames(
+          "flex min-h-0 flex-1 flex-col",
+          !usesSplitPlainLayout && "gap-4",
+        )}
+      >
         <PracticePartContent
           accessToken={accessToken}
           clearSession={clearSession}
