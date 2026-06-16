@@ -68,6 +68,30 @@ export type PracticeSessionResult = {
   answers: PracticeSessionAnswer[];
 };
 
+export type PracticeMode = "normal" | "wrong_questions";
+
+export type WrongQuestionItem = {
+  toeicQuestionId: number;
+  questionNumber: number;
+  wrongCount: number;
+  lastWrongAt: string;
+};
+
+export type PracticePartStats = {
+  partNumber: number;
+  wrongQuestionCount: number;
+  practiceCorrectCount: number;
+  practiceWrongCount: number;
+};
+
+export type PracticeStats = {
+  testId: number;
+  wrongQuestionCount: number;
+  practiceCorrectCount: number;
+  practiceWrongCount: number;
+  parts: PracticePartStats[];
+};
+
 export type CompleteSessionResult = {
   correctCount: number;
   wrongCount: number;

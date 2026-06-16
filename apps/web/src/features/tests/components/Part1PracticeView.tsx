@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestPart } from "@/features/tests/api/testsApi";
-import type { ToeicQuestionGroup } from "@/features/tests/api/types";
+import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import {
   usePracticeSession,
 } from "@/features/tests/hooks/usePracticeSession";
+import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
+import { useWrongQuestions, getWrongQuestionsQueryKey } from "@/features/tests/hooks/useWrongQuestions";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import {
   syncPracticeProgressSession,
@@ -29,6 +31,7 @@ type Part1Item = {
 type Part1PracticeViewProps = {
   testId: number;
   partNumber: number;
+  practiceMode: PracticeMode;
   accessToken: string | null;
   clearSession: () => void;
 };
@@ -46,6 +49,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 type Part1PracticeContentProps = {
   testId: number;
   partNumber: number;
+  practiceMode: PracticeMode;
   items: Part1Item[];
   initialIndex: number;
   practice: ReturnType<typeof usePracticeSession>;
@@ -57,6 +61,7 @@ type Part1PracticeContentProps = {
 function Part1PracticeContent({
   testId,
   partNumber,
+  practiceMode,
   items,
   initialIndex,
   practice,
@@ -64,6 +69,7 @@ function Part1PracticeContent({
   clearSession,
   onFinish,
 }: Part1PracticeContentProps) {
+  const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const currentItem = items[currentIndex] ?? null;
 
@@ -91,6 +97,15 @@ function Part1PracticeContent({
     }
 
     await practice.submitAnswer(currentItem.question.id, key);
+
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: getPracticeStatsQueryKey(testId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: getWrongQuestionsQueryKey(testId, partNumber),
+      }),
+    ]);
   };
 
   const handleNext = () => {
@@ -111,6 +126,7 @@ function Part1PracticeContent({
       <div>
         <p className="text-sm text-muted-foreground">
           Test {testId} · Part {partNumber}
+          {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
         </p>
         <h1 className="text-xl font-semibold">
           Question {currentItem.question.questionNumber} / {items.length}
@@ -193,10 +209,12 @@ function Part1PracticeContent({
 export function Part1PracticeView({
   testId,
   partNumber,
+  practiceMode,
   accessToken,
   clearSession,
 }: Part1PracticeViewProps) {
   const router = useRouter();
+  const isWrongMode = practiceMode === "wrong_questions";
 
   const partQuery = useQuery({
     queryKey: ["test-part", testId, partNumber],
@@ -209,17 +227,40 @@ export function Part1PracticeView({
     enabled: Boolean(accessToken),
   });
 
-  const items = useMemo(
+  const allItems = useMemo(
     () => flattenPart1Items(partQuery.data?.groups ?? []),
     [partQuery.data?.groups],
   );
+
+  const { wrongQuestions, isLoadingWrongQuestions, wrongQuestionsError } =
+    useWrongQuestions({
+      accessToken,
+      clearSession,
+      testId,
+      partNumber,
+      enabled: Boolean(partQuery.data) && isWrongMode,
+    });
+
+  const wrongQuestionIds = useMemo(
+    () => new Set(wrongQuestions.map((item) => item.toeicQuestionId)),
+    [wrongQuestions],
+  );
+
+  const items = useMemo(() => {
+    if (!isWrongMode) {
+      return allItems;
+    }
+
+    return allItems.filter((item) => wrongQuestionIds.has(item.question.id));
+  }, [allItems, isWrongMode, wrongQuestionIds]);
 
   const practice = usePracticeSession({
     accessToken,
     clearSession,
     testId,
     partNumber,
-    enabled: Boolean(partQuery.data),
+    mode: practiceMode,
+    enabled: Boolean(partQuery.data) && (!isWrongMode || !isLoadingWrongQuestions),
   });
 
   const initialIndex = useMemo(() => {
@@ -233,7 +274,7 @@ export function Part1PracticeView({
     );
   }, [items.length, partNumber, practice.sessionId, testId]);
 
-  if (partQuery.isLoading || practice.isStarting) {
+  if (partQuery.isLoading || practice.isStarting || (isWrongMode && isLoadingWrongQuestions)) {
     return (
       <PageShell>
         <Panel>
@@ -243,9 +284,10 @@ export function Part1PracticeView({
     );
   }
 
-  if (partQuery.error || practice.startError) {
+  if (partQuery.error || practice.startError || wrongQuestionsError) {
     const message =
       practice.startError ??
+      wrongQuestionsError ??
       getErrorMessage(partQuery.error, "Cannot load this test part.");
 
     return (
@@ -267,8 +309,9 @@ export function Part1PracticeView({
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
-            This part has no questions yet. Check that TOEIC data is imported for
-            this test.
+            {isWrongMode
+              ? "No wrong questions left to review for this part."
+              : "This part has no questions yet. Check that TOEIC data is imported for this test."}
           </p>
           <div className="mt-4">
             <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
@@ -296,6 +339,7 @@ export function Part1PracticeView({
           onFinish={() => router.push("/tests")}
           partNumber={partNumber}
           practice={practice}
+          practiceMode={practiceMode}
           testId={testId}
         />
       </Panel>

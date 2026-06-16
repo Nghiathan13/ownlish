@@ -1,10 +1,15 @@
 "use client";
 
 import { Button } from "@/shared/ui/Button";
-import type { ToeicTestSummary } from "@/features/tests/api/types";
+import type {
+  PracticeStats,
+  ToeicTestSummary,
+} from "@/features/tests/api/types";
 
 type TestCardProps = {
   test: ToeicTestSummary;
+  stats: PracticeStats | null;
+  isLoadingStats?: boolean;
   isClearingHistory?: boolean;
   onClearHistory: () => void;
   onPractice: () => void;
@@ -12,6 +17,8 @@ type TestCardProps = {
 
 export function TestCard({
   test,
+  stats,
+  isLoadingStats = false,
   isClearingHistory = false,
   onClearHistory,
   onPractice,
@@ -22,6 +29,17 @@ export function TestCard({
         <div>
           <h2 className="text-lg font-semibold">{test.label}</h2>
           <p className="text-sm text-muted-foreground">TOEIC {test.year}</p>
+          {isLoadingStats ? (
+            <p className="mt-2 text-sm text-muted-foreground">Loading stats...</p>
+          ) : stats ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Correct {stats.practiceCorrectCount} · Wrong{" "}
+              {stats.practiceWrongCount}
+              {stats.wrongQuestionCount > 0
+                ? ` · ${stats.wrongQuestionCount} to review`
+                : ""}
+            </p>
+          ) : null}
         </div>
         <Button
           disabled={isClearingHistory}

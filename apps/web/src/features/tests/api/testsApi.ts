@@ -9,6 +9,7 @@ import {
 import type {
   CompleteSessionResult,
   PracticeSessionResult,
+  PracticeStats,
   RefreshMediaGroup,
   SubmitAnswerResult,
   ToeicPartResponse,
@@ -16,6 +17,7 @@ import type {
   ToeicQuestionGroup,
   ToeicQuestionOptions,
   ToeicTestSummary,
+  WrongQuestionItem,
 } from "./types";
 
 function parseOptions(value: unknown): ToeicQuestionOptions | null {
@@ -313,6 +315,108 @@ export async function clearTestPracticeHistory(token: string, testId: number) {
   }
 
   return { deletedSessionCount: body.deletedSessionCount };
+}
+
+function parseWrongQuestionItem(value: unknown): WrongQuestionItem | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  if (
+    !isNumber(value.toeicQuestionId) ||
+    !isNumber(value.questionNumber) ||
+    !isNumber(value.wrongCount) ||
+    !isString(value.lastWrongAt)
+  ) {
+    return null;
+  }
+
+  return {
+    toeicQuestionId: value.toeicQuestionId,
+    questionNumber: value.questionNumber,
+    wrongCount: value.wrongCount,
+    lastWrongAt: value.lastWrongAt,
+  };
+}
+
+export async function listWrongQuestions(
+  token: string,
+  testId: number,
+  partNumber: number,
+  init?: RequestInit,
+) {
+  const body = await apiRequest(
+    `/tests/practice/wrong-questions?testId=${testId}&partNumber=${partNumber}`,
+    {
+      ...init,
+      token,
+    },
+  );
+
+  if (!isRecord(body) || !Array.isArray(body.items)) {
+    invalidApiResponse();
+  }
+
+  return body.items
+    .map(parseWrongQuestionItem)
+    .filter((item): item is WrongQuestionItem => item !== null);
+}
+
+function parsePracticePartStats(value: unknown) {
+  if (!isRecord(value) || !isNumber(value.partNumber)) {
+    return null;
+  }
+
+  if (
+    !isNumber(value.wrongQuestionCount) ||
+    !isNumber(value.practiceCorrectCount) ||
+    !isNumber(value.practiceWrongCount)
+  ) {
+    return null;
+  }
+
+  return {
+    partNumber: value.partNumber,
+    wrongQuestionCount: value.wrongQuestionCount,
+    practiceCorrectCount: value.practiceCorrectCount,
+    practiceWrongCount: value.practiceWrongCount,
+  };
+}
+
+export async function getPracticeStats(
+  token: string,
+  testId: number,
+  init?: RequestInit,
+) {
+  const body = await apiRequest(`/tests/practice/stats?testId=${testId}`, {
+    ...init,
+    token,
+  });
+
+  if (!isRecord(body) || !Array.isArray(body.parts)) {
+    invalidApiResponse();
+  }
+
+  const parts = body.parts
+    .map(parsePracticePartStats)
+    .filter((part): part is NonNullable<ReturnType<typeof parsePracticePartStats>> => part !== null);
+
+  if (
+    !isNumber(body.testId) ||
+    !isNumber(body.wrongQuestionCount) ||
+    !isNumber(body.practiceCorrectCount) ||
+    !isNumber(body.practiceWrongCount)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    testId: body.testId,
+    wrongQuestionCount: body.wrongQuestionCount,
+    practiceCorrectCount: body.practiceCorrectCount,
+    practiceWrongCount: body.practiceWrongCount,
+    parts,
+  } satisfies PracticeStats;
 }
 
 function parseRefreshGroup(value: unknown): RefreshMediaGroup | null {

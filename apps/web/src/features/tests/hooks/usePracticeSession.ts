@@ -7,6 +7,7 @@ import {
   submitPracticeAnswer,
 } from "@/features/tests/api/testsApi";
 import type {
+  PracticeMode,
   PracticeSessionAnswer,
   PracticeSessionResult,
   SubmitAnswerResult,
@@ -18,14 +19,16 @@ type UsePracticeSessionParams = {
   clearSession: () => void;
   testId: number;
   partNumber: number;
+  mode?: PracticeMode;
   enabled: boolean;
 };
 
 export function getPracticeSessionQueryKey(
   testId: number,
   partNumber: number,
+  mode: PracticeMode = "normal",
 ) {
-  return ["practice-session", testId, partNumber] as const;
+  return ["practice-session", testId, partNumber, mode] as const;
 }
 
 function toAnswerMap(answers: PracticeSessionAnswer[]) {
@@ -37,10 +40,11 @@ export function usePracticeSession({
   clearSession,
   testId,
   partNumber,
+  mode = "normal",
   enabled,
 }: UsePracticeSessionParams) {
   const queryClient = useQueryClient();
-  const queryKey = getPracticeSessionQueryKey(testId, partNumber);
+  const queryKey = getPracticeSessionQueryKey(testId, partNumber, mode);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sessionQuery = useQuery({
@@ -53,7 +57,7 @@ export function usePracticeSession({
           createPracticeSession(token, {
             testId,
             partNumber,
-            mode: "normal",
+            mode,
           }),
       }),
     enabled: enabled && Boolean(accessToken),

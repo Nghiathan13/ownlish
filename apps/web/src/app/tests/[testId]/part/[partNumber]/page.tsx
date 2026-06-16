@@ -1,9 +1,11 @@
 "use client";
 
-import { use } from "react";
+import { use, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { Part1PracticeView } from "@/features/tests/components/Part1PracticeView";
+import type { PracticeMode } from "@/features/tests/api/types";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -21,7 +23,12 @@ function PracticePartPageContent({
   testId: number;
   partNumber: number;
 }) {
+  const searchParams = useSearchParams();
   const { accessToken, clearSession } = useAuthSession();
+  const practiceMode: PracticeMode =
+    searchParams.get("mode") === "wrong_questions"
+      ? "wrong_questions"
+      : "normal";
 
   if (partNumber !== 1) {
     return (
@@ -40,6 +47,7 @@ function PracticePartPageContent({
       accessToken={accessToken}
       clearSession={clearSession}
       partNumber={partNumber}
+      practiceMode={practiceMode}
       testId={testId}
     />
   );
@@ -64,7 +72,17 @@ export default function PracticePartPage({ params }: PracticePartPageProps) {
 
   return (
     <RequireAuth>
-      <PracticePartPageContent partNumber={partNumber} testId={testId} />
+      <Suspense
+        fallback={
+          <PageShell>
+            <Panel>
+              <p className="text-muted-foreground">Loading practice...</p>
+            </Panel>
+          </PageShell>
+        }
+      >
+        <PracticePartPageContent partNumber={partNumber} testId={testId} />
+      </Suspense>
     </RequireAuth>
   );
 }

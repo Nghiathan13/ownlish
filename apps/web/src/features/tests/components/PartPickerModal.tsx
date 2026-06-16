@@ -4,11 +4,14 @@ import { useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
 import { classNames } from "@/shared/lib/classNames";
+import type { PracticeMode, PracticeStats } from "@/features/tests/api/types";
+import { getPartStats } from "@/features/tests/hooks/usePracticeStats";
 
 type PartPickerModalProps = {
   testLabel: string;
+  stats: PracticeStats | null;
   onClose: () => void;
-  onStart: (partNumber: number) => void;
+  onStart: (partNumber: number, mode: PracticeMode) => void;
 };
 
 const LISTENING_PARTS = [1, 2, 3, 4];
@@ -20,10 +23,14 @@ function isPartEnabled(partNumber: number) {
 
 export function PartPickerModal({
   testLabel,
+  stats,
   onClose,
   onStart,
 }: PartPickerModalProps) {
   const [selectedPart, setSelectedPart] = useState<number | null>(1);
+  const selectedPartStats =
+    selectedPart !== null ? getPartStats(stats, selectedPart) : null;
+  const wrongQuestionCount = selectedPartStats?.wrongQuestionCount ?? 0;
 
   return (
     <Modal
@@ -38,6 +45,7 @@ export function PartPickerModal({
             {LISTENING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
               const isSelected = selectedPart === partNumber;
+              const partStats = getPartStats(stats, partNumber);
 
               return (
                 <button
@@ -54,8 +62,22 @@ export function PartPickerModal({
                   onClick={() => enabled && setSelectedPart(partNumber)}
                   type="button"
                 >
-                  Part {partNumber}
-                  {!enabled ? " · Coming soon" : ""}
+                  <span className="block">Part {partNumber}</span>
+                  {enabled && partStats && partStats.wrongQuestionCount > 0 ? (
+                    <span
+                      className={classNames(
+                        "mt-1 block text-xs",
+                        isSelected
+                          ? "text-background/80"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {partStats.wrongQuestionCount} wrong to review
+                    </span>
+                  ) : null}
+                  {!enabled ? (
+                    <span className="mt-1 block text-xs">Coming soon</span>
+                  ) : null}
                 </button>
               );
             })}
@@ -78,15 +100,31 @@ export function PartPickerModal({
           </div>
         </section>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button onClick={onClose} type="button" variant="secondary">
             Cancel
+          </Button>
+          <Button
+            disabled={
+              selectedPart === null ||
+              !isPartEnabled(selectedPart) ||
+              wrongQuestionCount === 0
+            }
+            onClick={() => {
+              if (selectedPart !== null) {
+                onStart(selectedPart, "wrong_questions");
+              }
+            }}
+            type="button"
+            variant="secondary"
+          >
+            Review wrong{wrongQuestionCount > 0 ? ` (${wrongQuestionCount})` : ""}
           </Button>
           <Button
             disabled={selectedPart === null || !isPartEnabled(selectedPart)}
             onClick={() => {
               if (selectedPart !== null) {
-                onStart(selectedPart);
+                onStart(selectedPart, "normal");
               }
             }}
             type="button"
