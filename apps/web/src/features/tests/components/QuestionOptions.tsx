@@ -11,8 +11,8 @@ type QuestionOptionsProps = {
   options: ToeicQuestionOptions;
   selectedKey: "A" | "B" | "C" | "D" | null;
   answerKey: "A" | "B" | "C" | "D" | null;
-  isAnswered: boolean;
   isSubmitting?: boolean;
+  isLocked?: boolean;
   showEnglishTextBeforeAnswer?: boolean;
   showResult?: boolean;
   onSelect: (key: "A" | "B" | "C" | "D") => void;
@@ -37,22 +37,10 @@ function getOptionEnglishText(
 type OptionLabelProps = {
   optionKey: (typeof OPTION_KEYS)[number];
   englishText: string | null;
-  isAnswered: boolean;
-  showEnglishTextBeforeAnswer: boolean;
-  showResult: boolean;
+  showEnglishText: boolean;
 };
 
-function OptionLabel({
-  optionKey,
-  englishText,
-  isAnswered,
-  showEnglishTextBeforeAnswer,
-  showResult,
-}: OptionLabelProps) {
-  const showEnglishText =
-    Boolean(englishText) &&
-    (showEnglishTextBeforeAnswer || (isAnswered && showResult));
-
+function OptionLabel({ optionKey, englishText, showEnglishText }: OptionLabelProps) {
   return (
     <span className={OPTION_LABEL_CLASS}>
       {optionKey}
@@ -68,51 +56,52 @@ export function QuestionOptions({
   options,
   selectedKey,
   answerKey,
-  isAnswered,
   isSubmitting = false,
+  isLocked = false,
   showEnglishTextBeforeAnswer = false,
   showResult = true,
   onSelect,
 }: QuestionOptionsProps) {
+  const locked = isLocked;
+  const showGrading = showResult && locked;
+
   return (
     <div className="grid gap-2">
       {OPTION_KEYS.slice(0, optionCount).map((key) => {
         const isSelected = selectedKey === key;
-        const showGrading = isAnswered && showResult;
         const isCorrect = showGrading && answerKey === key;
         const isWrong = showGrading && isSelected && answerKey !== null && !isCorrect;
-        const isSelectedPending = isAnswered && !showResult && isSelected;
+        const isSelectedPending = !locked && isSelected;
         const englishText = getOptionEnglishText(key, options);
+        const showEnglishText =
+          Boolean(englishText) &&
+          (showEnglishTextBeforeAnswer || (locked && isSelected));
 
         const className = classNames(
           "min-h-10 rounded-lg border px-3 py-2 text-left font-inherit transition select-text",
-          isAnswered && "cursor-text",
+          locked && "cursor-text",
           isCorrect && "border-emerald-600 bg-emerald-50 text-emerald-900",
           isWrong && "border-red-600 bg-red-50 text-red-900",
           isSelectedPending && "border-foreground bg-muted",
-          showGrading &&
+          locked &&
             !isCorrect &&
             !isWrong &&
             "border-border bg-background",
-          !isAnswered &&
-            !isCorrect &&
-            !isWrong &&
+          !locked &&
             !isSelectedPending &&
             "border-border bg-background hover:bg-muted",
-          !isAnswered && isSubmitting && "pointer-events-none opacity-70",
+          !locked && isSubmitting && "pointer-events-none opacity-70",
         );
 
         const label = (
           <OptionLabel
             englishText={englishText}
-            isAnswered={isAnswered}
             optionKey={key}
-            showEnglishTextBeforeAnswer={showEnglishTextBeforeAnswer}
-            showResult={showResult}
+            showEnglishText={showEnglishText}
           />
         );
 
-        if (isAnswered) {
+        if (locked) {
           return (
             <div className={className} key={key}>
               {label}

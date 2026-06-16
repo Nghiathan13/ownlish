@@ -84,8 +84,18 @@ export function usePracticeSession({
     async (
       toeicQuestionId: number,
       selectedKey: "A" | "B" | "C" | "D",
+      options?: { replace?: boolean },
     ): Promise<SubmitAnswerResult | null> => {
-      if (!accessToken || !sessionId || answersByQuestionId.has(toeicQuestionId)) {
+      if (!accessToken || !sessionId) {
+        return null;
+      }
+
+      const existingAnswer = answersByQuestionId.get(toeicQuestionId);
+      if (existingAnswer && !options?.replace) {
+        return null;
+      }
+
+      if (existingAnswer?.selectedKey === selectedKey) {
         return null;
       }
 
@@ -104,6 +114,31 @@ export function usePracticeSession({
         queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
           if (!current) {
             return current;
+          }
+
+          if (existingAnswer) {
+            const wasCorrect = existingAnswer.isCorrect;
+            const correctDelta = (result.isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
+            const wrongDelta =
+              mode === "normal"
+                ? (result.isCorrect ? 0 : 1) - (wasCorrect ? 0 : 1)
+                : 0;
+
+            return {
+              ...current,
+              correctCount: current.correctCount + correctDelta,
+              wrongCount: current.wrongCount + wrongDelta,
+              answers: current.answers.map((answer) =>
+                answer.toeicQuestionId === toeicQuestionId
+                  ? {
+                      toeicQuestionId,
+                      selectedKey,
+                      answerKey: result.answerKey,
+                      isCorrect: result.isCorrect,
+                    }
+                  : answer,
+              ),
+            };
           }
 
           return {
@@ -154,6 +189,7 @@ export function usePracticeSession({
 
   return {
     sessionId,
+    answers: sessionData?.answers ?? [],
     correctCount: sessionData?.correctCount ?? 0,
     wrongCount: sessionData?.wrongCount ?? 0,
     getAnswer,

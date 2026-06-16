@@ -211,7 +211,7 @@ function PracticePartContent({
 
           <QuestionOptions
             answerKey={currentAnswer?.answerKey ?? null}
-            isAnswered={isAnswered}
+            isLocked={isAnswered}
             isSubmitting={practice.isSubmitting}
             onSelect={handleSelect}
             optionCount={currentItem.question.optionCount}
