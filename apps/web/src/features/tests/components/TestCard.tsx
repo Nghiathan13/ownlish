@@ -34,10 +34,7 @@ export function TestCard({
           ) : stats ? (
             <p className="mt-2 text-sm text-muted-foreground">
               Correct {stats.practiceCorrectCount} · Wrong{" "}
-              {stats.practiceWrongCount}
-              {stats.wrongQuestionCount > 0
-                ? ` · ${stats.wrongQuestionCount} to review`
-                : ""}
+              {stats.wrongQuestionCount}
             </p>
           ) : null}
         </div>

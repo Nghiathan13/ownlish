@@ -71,7 +71,9 @@ function Part1PracticeContent({
 }: Part1PracticeContentProps) {
   const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const currentItem = items[currentIndex] ?? null;
+  const activeIndex =
+    items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
+  const currentItem = items[activeIndex] ?? null;
 
   const signedMedia = useSignedMedia({
     testId,
@@ -109,12 +111,12 @@ function Part1PracticeContent({
   };
 
   const handleNext = () => {
-    if (currentIndex >= items.length - 1) {
+    if (activeIndex >= items.length - 1) {
       onFinish();
       return;
     }
 
-    goToIndex(currentIndex + 1);
+    goToIndex(activeIndex + 1);
   };
 
   if (!currentItem) {
@@ -132,7 +134,9 @@ function Part1PracticeContent({
           Question {currentItem.question.questionNumber} / {items.length}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Correct {practice.correctCount} · Wrong {practice.wrongCount}
+          {practiceMode === "wrong_questions"
+            ? `Fixed ${practice.correctCount} · Remaining ${items.length}`
+            : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
         </p>
       </div>
 
@@ -186,20 +190,20 @@ function Part1PracticeContent({
 
       <div className="flex items-center justify-between gap-3">
         <Button
-          disabled={currentIndex === 0}
-          onClick={() => goToIndex(currentIndex - 1)}
+          disabled={activeIndex === 0}
+          onClick={() => goToIndex(activeIndex - 1)}
           type="button"
           variant="secondary"
         >
           Prev
         </Button>
         <Button
-          className={classNames(currentIndex >= items.length - 1 && "min-w-32")}
+          className={classNames(activeIndex >= items.length - 1 && "min-w-32")}
           disabled={practice.isSubmitting}
           onClick={handleNext}
           type="button"
         >
-          {currentIndex >= items.length - 1 ? "Finish" : "Next"}
+          {activeIndex >= items.length - 1 ? "Finish" : "Next"}
         </Button>
       </div>
     </>

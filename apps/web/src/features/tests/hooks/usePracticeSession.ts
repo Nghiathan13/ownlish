@@ -61,7 +61,8 @@ export function usePracticeSession({
           }),
       }),
     enabled: enabled && Boolean(accessToken),
-    staleTime: Infinity,
+    staleTime: mode === "wrong_questions" ? 0 : Infinity,
+    gcTime: mode === "wrong_questions" ? 0 : 5 * 60 * 1000,
     retry: false,
   });
 
@@ -107,7 +108,9 @@ export function usePracticeSession({
           return {
             ...current,
             correctCount: current.correctCount + (result.isCorrect ? 1 : 0),
-            wrongCount: current.wrongCount + (result.isCorrect ? 0 : 1),
+            wrongCount:
+              current.wrongCount +
+              (mode === "normal" && !result.isCorrect ? 1 : 0),
             answers: [
               ...current.answers,
               {
@@ -132,6 +135,7 @@ export function usePracticeSession({
       queryClient,
       queryKey,
       sessionId,
+      mode,
     ],
   );
 
