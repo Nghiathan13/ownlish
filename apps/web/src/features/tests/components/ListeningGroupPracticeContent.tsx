@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
+import { PassagePanel } from "@/features/tests/components/PassagePanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
@@ -108,16 +109,17 @@ export function ListeningGroupPracticeContent({
   );
   const usesDeferredGroupGrading = partConfig.hideContextUntilGroupComplete;
   const usesReviewBatchSubmit =
-    isWrongGroupReview && usesDeferredGroupGrading;
+    isWrongGroupReview && (partNumber === 3 || partNumber === 4);
   const isReviewGroupLocked =
     usesReviewBatchSubmit &&
     (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);
-  const showPassageReveal = usesReviewBatchSubmit
+  const showGroupReveal = usesReviewBatchSubmit
     ? isReviewGroupLocked
-    : !usesDeferredGroupGrading || allGroupGraded;
-  const anyQuestionAnsweredInGroup = currentGroup.questions.some((question) =>
-    isPracticeAnswerGraded(practice.getAnswer(question.id)),
-  );
+    : isWrongGroupReview
+      ? allEditableGraded
+      : !usesDeferredGroupGrading || allGroupGraded;
+  const showPassageOnLeft =
+    partConfig.leftPanel === "passage" ? true : showGroupReveal;
   const totalQuestions =
     isWrongGroupReview && wrongQuestionCount != null
       ? wrongQuestionCount
@@ -192,7 +194,22 @@ export function ListeningGroupPracticeContent({
       return;
     }
 
-    if (usesDeferredGroupGrading && showPassageReveal) {
+    if (usesDeferredGroupGrading) {
+      if (showGroupReveal) {
+        return;
+      }
+
+      const existing = practice.getAnswer(toeicQuestionId);
+      if (existing?.selectedKey === key) {
+        return;
+      }
+
+      const replace = Boolean(existing && isPracticeAnswerGraded(existing));
+      await practice.submitAnswer(
+        toeicQuestionId,
+        key,
+        replace ? { replace: true } : undefined,
+      );
       return;
     }
 
@@ -269,12 +286,8 @@ export function ListeningGroupPracticeContent({
           partConfig={partConfig}
           questionNumber={currentGroup.group.questionStart}
           questionText={null}
-          showContext={showPassageReveal}
-          showContextTranslation={
-            partConfig.leftPanel === "passage"
-              ? anyQuestionAnsweredInGroup
-              : showPassageReveal
-          }
+          showContext={showPassageOnLeft}
+          showContextTranslation={false}
         />
 
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
@@ -321,11 +334,11 @@ export function ListeningGroupPracticeContent({
             } else if (usesDeferredGroupGrading) {
               selectedKey = reviewAnswer?.selectedKey ?? null;
               answerKey =
-                showPassageReveal && questionGraded
+                showGroupReveal && questionGraded
                   ? (reviewAnswer?.answerKey ?? null)
                   : null;
-              isLocked = showPassageReveal;
-              showResult = showPassageReveal;
+              isLocked = showGroupReveal;
+              showResult = showGroupReveal;
             } else {
               selectedKey = reviewAnswer?.selectedKey ?? null;
               answerKey = questionGraded
@@ -338,7 +351,7 @@ export function ListeningGroupPracticeContent({
             const translationVisible =
               usesReviewBatchSubmit && isWrongGroupReview
                 ? isReviewGroupLocked
-                : questionGraded;
+                : showGroupReveal;
 
             return (
               <section
@@ -376,7 +389,6 @@ export function ListeningGroupPracticeContent({
                 />
 
                 <QuestionTranslationPanel
-                  contentVi={currentGroup.group.contentVi}
                   optionCount={question.optionCount}
                   options={question.options}
                   questionVi={question.questionVi}
@@ -386,6 +398,17 @@ export function ListeningGroupPracticeContent({
               </section>
             );
           })}
+
+          {partConfig.leftPanel === "passage" &&
+          showGroupReveal &&
+          currentGroup.group.contentVi?.trim() ? (
+            <PassagePanel
+              content={null}
+              contentVi={currentGroup.group.contentVi}
+              showTranslation
+              title="Passage translation"
+            />
+          ) : null}
         </div>
       </div>
 

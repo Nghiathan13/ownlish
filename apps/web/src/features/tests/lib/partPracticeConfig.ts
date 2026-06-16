@@ -63,19 +63,19 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
   },
   6: {
     leftPanel: "passage",
-    translationVariant: "content-options",
+    translationVariant: "options",
     showQuestionInRightPanel: false,
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
-    hideContextUntilGroupComplete: false,
+    hideContextUntilGroupComplete: true,
   },
   7: {
     leftPanel: "passage",
-    translationVariant: "content-question-options",
+    translationVariant: "question-options",
     showQuestionInRightPanel: true,
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
-    hideContextUntilGroupComplete: false,
+    hideContextUntilGroupComplete: true,
   },
 };
 
