@@ -232,13 +232,9 @@ function PracticePartContent({
 
   if (partConfig.contentLayout === "split-plain") {
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <>
         <div className="relative min-h-0 flex-1">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-border lg:block"
-          />
-          <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-2">
+          <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
             <div className="min-h-0 overflow-y-auto pl-4 pr-4 lg:pr-6">
               {leftPanel}
             </div>
@@ -250,10 +246,10 @@ function PracticePartContent({
             </div>
           </div>
         </div>
-        <div className="shrink-0 border-t border-border">
-          <div className="px-4 pt-4">{navigationBar}</div>
+        <div className="shrink-0 border-t border-border px-4 pt-4">
+          {navigationBar}
         </div>
-      </div>
+      </>
     );
   }
 
@@ -579,14 +575,29 @@ export function PracticePartView({
 
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
+  if (usesSplitPlainLayout) {
+    return (
+      <PageShell fillViewport>
+        <PracticePartContent
+          accessToken={accessToken}
+          clearSession={clearSession}
+          fullTestContext={fullTestContext}
+          initialIndex={initialIndex}
+          items={items}
+          key={practice.sessionId}
+          onFinish={handleFinish}
+          partNumber={partNumber}
+          practice={practice}
+          practiceMode={practiceMode}
+          testId={testId}
+        />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell fillViewport>
-      <Panel
-        className={classNames(
-          "flex min-h-0 flex-1 flex-col",
-          !usesSplitPlainLayout && "gap-4",
-        )}
-      >
+      <Panel className="flex min-h-0 flex-1 flex-col gap-4">
         <PracticePartContent
           accessToken={accessToken}
           clearSession={clearSession}
