@@ -19,11 +19,11 @@ export function PassagePanel({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-4">
       {hasContent ? (
         <>
           <h3 className="text-base font-semibold">{title}</h3>
-          <div className="max-h-[420px] overflow-y-auto whitespace-pre-wrap text-base leading-relaxed select-text">
+          <div className="whitespace-pre-wrap text-base leading-relaxed select-text">
             {content}
           </div>
         </>
