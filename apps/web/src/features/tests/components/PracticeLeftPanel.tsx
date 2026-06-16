@@ -13,6 +13,7 @@ type PracticeLeftPanelProps = {
   onMediaError: () => void;
   showContext?: boolean;
   showContextTranslation?: boolean;
+  plain?: boolean;
 };
 
 export function PracticeLeftPanel({
@@ -26,6 +27,7 @@ export function PracticeLeftPanel({
   onMediaError,
   showContext = true,
   showContextTranslation = false,
+  plain = false,
 }: PracticeLeftPanelProps) {
   const showAudio =
     partConfig.leftPanel === "audio-image" ||
@@ -36,7 +38,11 @@ export function PracticeLeftPanel({
     partConfig.leftPanel === "listening-group";
 
   return (
-    <div className="space-y-4 rounded-xl border border-border p-4">
+    <div
+      className={
+        plain ? "flex flex-col gap-4" : "space-y-4 rounded-xl border border-border p-4"
+      }
+    >
       {showAudio ? (
         audioUrl ? (
           <audio

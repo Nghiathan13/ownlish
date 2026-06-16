@@ -166,6 +166,104 @@ function PracticePartContent({
       : "Next part"
     : "Finish";
 
+  const navigationBar = (
+    <div className="flex items-center justify-between gap-3">
+      <Button
+        disabled={activeIndex === 0 || isFinishing}
+        onClick={() => goToIndex(activeIndex - 1)}
+        type="button"
+        variant="secondary"
+      >
+        Prev
+      </Button>
+      <Button
+        className={classNames(activeIndex >= items.length - 1 && "min-w-32")}
+        disabled={practice.isSubmitting || isFinishing}
+        onClick={handleNext}
+        type="button"
+      >
+        {activeIndex >= items.length - 1 ? finishLabel : "Next"}
+      </Button>
+    </div>
+  );
+
+  const leftPanel = (
+    <PracticeLeftPanel
+      audioUrl={signedMedia.audioUrl}
+      group={currentItem.group}
+      imageUrl={signedMedia.imageUrl}
+      mediaError={signedMedia.mediaError}
+      onMediaError={signedMedia.handleMediaError}
+      partConfig={partConfig}
+      plain={partConfig.contentLayout === "split-plain"}
+      questionNumber={currentItem.question.questionNumber}
+      questionText={currentItem.question.question}
+      showContext={
+        partConfig.leftPanel !== "listening-group" ||
+        !partConfig.hideContextUntilGroupComplete ||
+        isAnswered
+      }
+      showContextTranslation={isAnswered}
+    />
+  );
+
+  const optionsPanel = (
+    <>
+      <QuestionOptions
+        answerKey={currentAnswer?.answerKey ?? null}
+        isLocked={isAnswered}
+        isSubmitting={practice.isSubmitting}
+        onSelect={handleSelect}
+        optionCount={currentItem.question.optionCount}
+        options={currentItem.question.options}
+        selectedKey={currentAnswer?.selectedKey ?? null}
+        showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
+      />
+      <QuestionTranslationPanel
+        contentVi={currentItem.group.contentVi}
+        optionCount={currentItem.question.optionCount}
+        options={currentItem.question.options}
+        questionVi={currentItem.question.questionVi}
+        variant={partConfig.translationVariant}
+        visible={isAnswered}
+      />
+    </>
+  );
+
+  if (partConfig.contentLayout === "split-plain") {
+    return (
+      <>
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Test {testId}
+            {fullTestContext ? " · Full test" : ""} · Part {partNumber}
+            {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {practiceMode === "wrong_questions"
+              ? `Fixed ${practice.correctCount} · ${items.length} questions`
+              : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
+          </p>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="grid min-h-0 flex-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
+            <div className="min-h-0 overflow-y-auto py-2 pr-4 lg:py-4 lg:pr-6">
+              {leftPanel}
+            </div>
+            <div className="flex min-h-0 flex-col gap-4 overflow-y-auto py-2 pl-4 lg:py-4 lg:pl-6">
+              <p className="text-2xl font-semibold tabular-nums">
+                {currentItem.question.questionNumber}
+              </p>
+              {optionsPanel}
+            </div>
+          </div>
+          <div className="shrink-0 border-t border-border pt-4">{navigationBar}</div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div>
@@ -185,22 +283,7 @@ function PracticePartContent({
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-        <PracticeLeftPanel
-          audioUrl={signedMedia.audioUrl}
-          group={currentItem.group}
-          imageUrl={signedMedia.imageUrl}
-          mediaError={signedMedia.mediaError}
-          onMediaError={signedMedia.handleMediaError}
-          partConfig={partConfig}
-          questionNumber={currentItem.question.questionNumber}
-          questionText={currentItem.question.question}
-          showContext={
-            partConfig.leftPanel !== "listening-group" ||
-            !partConfig.hideContextUntilGroupComplete ||
-            isAnswered
-          }
-          showContextTranslation={isAnswered}
-        />
+        {leftPanel}
 
         <div className="flex min-h-0 flex-col gap-4">
           {partConfig.showQuestionInRightPanel &&
@@ -213,45 +296,11 @@ function PracticePartContent({
             </div>
           ) : null}
 
-          <QuestionOptions
-            answerKey={currentAnswer?.answerKey ?? null}
-            isLocked={isAnswered}
-            isSubmitting={practice.isSubmitting}
-            onSelect={handleSelect}
-            optionCount={currentItem.question.optionCount}
-            options={currentItem.question.options}
-            selectedKey={currentAnswer?.selectedKey ?? null}
-            showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
-          />
-          <QuestionTranslationPanel
-            contentVi={currentItem.group.contentVi}
-            optionCount={currentItem.question.optionCount}
-            options={currentItem.question.options}
-            questionVi={currentItem.question.questionVi}
-            variant={partConfig.translationVariant}
-            visible={isAnswered}
-          />
+          {optionsPanel}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <Button
-          disabled={activeIndex === 0 || isFinishing}
-          onClick={() => goToIndex(activeIndex - 1)}
-          type="button"
-          variant="secondary"
-        >
-          Prev
-        </Button>
-        <Button
-          className={classNames(activeIndex >= items.length - 1 && "min-w-32")}
-          disabled={practice.isSubmitting || isFinishing}
-          onClick={handleNext}
-          type="button"
-        >
-          {activeIndex >= items.length - 1 ? finishLabel : "Next"}
-        </Button>
-      </div>
+      {navigationBar}
     </>
   );
 }

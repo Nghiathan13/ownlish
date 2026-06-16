@@ -11,6 +11,8 @@ export type PartTranslationVariant =
   | "content-options"
   | "content-question-options";
 
+export type PartContentLayout = "default" | "split-plain";
+
 export type PartPracticeConfig = {
   leftPanel: PartLeftPanel;
   translationVariant: PartTranslationVariant;
@@ -18,6 +20,7 @@ export type PartPracticeConfig = {
   navigationMode: "per-question" | "per-group";
   showOptionTextBeforeAnswer: boolean;
   hideContextUntilGroupComplete: boolean;
+  contentLayout: PartContentLayout;
 };
 
 export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
@@ -28,6 +31,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-question",
     showOptionTextBeforeAnswer: false,
     hideContextUntilGroupComplete: false,
+    contentLayout: "split-plain",
   },
   2: {
     leftPanel: "audio",
@@ -36,6 +40,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-question",
     showOptionTextBeforeAnswer: false,
     hideContextUntilGroupComplete: false,
+    contentLayout: "default",
   },
   3: {
     leftPanel: "listening-group",
@@ -44,6 +49,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
+    contentLayout: "default",
   },
   4: {
     leftPanel: "listening-group",
@@ -52,6 +58,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
+    contentLayout: "default",
   },
   5: {
     leftPanel: "question",
@@ -60,6 +67,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-question",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: false,
+    contentLayout: "default",
   },
   6: {
     leftPanel: "passage",
@@ -68,6 +76,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
+    contentLayout: "default",
   },
   7: {
     leftPanel: "passage",
@@ -76,6 +85,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     navigationMode: "per-group",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
+    contentLayout: "default",
   },
 };
 
@@ -88,6 +98,7 @@ export function getPartPracticeConfig(partNumber: number): PartPracticeConfig {
       navigationMode: "per-question",
       showOptionTextBeforeAnswer: false,
       hideContextUntilGroupComplete: false,
+      contentLayout: "default",
     }
   );
 }
