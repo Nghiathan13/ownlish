@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ToeicPracticeMode } from '@prisma/client';
+import { Prisma, ToeicPracticeMode, type ToeicQuestion } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getOptionText,
@@ -178,17 +178,7 @@ export class PracticeService {
   }
 
   private buildGradedResponse(
-    question: {
-      answerKey: string | null;
-      optionA: string | null;
-      optionB: string | null;
-      optionC: string | null;
-      optionD: string | null;
-      optionAVi: string | null;
-      optionBVi: string | null;
-      optionCVi: string | null;
-      optionDVi: string | null;
-    },
+    question: ToeicQuestion,
     answerKey: 'A' | 'B' | 'C' | 'D',
     isCorrect: boolean,
   ): SubmitAnswerResponse {
