@@ -15,12 +15,16 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
+import { CreateAttemptDto } from './dto/create-attempt.dto';
+import { CompleteAttemptPartDto } from './dto/complete-attempt-part.dto';
 import { GetPracticeStatsDto } from './dto/get-practice-stats.dto';
+import { ListAttemptsDto } from './dto/list-attempts.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
 import { ListWrongQuestionsDto } from './dto/list-wrong-questions.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
 import { PracticeService } from './practice.service';
+import { AttemptService } from './attempt.service';
 import { TestsService } from './tests.service';
 
 @Controller('tests')
@@ -29,6 +33,7 @@ export class TestsController {
   constructor(
     private readonly testsService: TestsService,
     private readonly practiceService: PracticeService,
+    private readonly attemptService: AttemptService,
   ) {}
 
   @Get()
@@ -91,6 +96,52 @@ export class TestsController {
     @Param('testId', ParseIntPipe) testId: number,
   ) {
     return this.practiceService.clearTestHistory(request.user.id, testId);
+  }
+
+  @Post('attempts')
+  createAttempt(@Req() request: AuthRequest, @Body() dto: CreateAttemptDto) {
+    return this.attemptService.createAttempt(request.user.id, dto);
+  }
+
+  @Get('attempts')
+  listAttempts(@Req() request: AuthRequest, @Query() query: ListAttemptsDto) {
+    return this.attemptService.listAttempts(
+      request.user.id,
+      query.testId,
+      query.limit,
+      query.offset,
+    );
+  }
+
+  @Get('attempts/:attemptId')
+  getAttempt(
+    @Req() request: AuthRequest,
+    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
+  ) {
+    return this.attemptService.getAttempt(request.user.id, attemptId);
+  }
+
+  @Patch('attempts/:attemptId/parts/:partNumber/complete')
+  completeAttemptPart(
+    @Req() request: AuthRequest,
+    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
+    @Param('partNumber', ParseIntPipe) partNumber: number,
+    @Body() dto: CompleteAttemptPartDto,
+  ) {
+    return this.attemptService.completeAttemptPart(
+      request.user.id,
+      attemptId,
+      partNumber,
+      dto,
+    );
+  }
+
+  @Patch('attempts/:attemptId/complete')
+  completeAttempt(
+    @Req() request: AuthRequest,
+    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
+  ) {
+    return this.attemptService.completeAttempt(request.user.id, attemptId);
   }
 
   @Get(':testId/parts/:partNumber')

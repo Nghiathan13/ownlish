@@ -196,6 +196,7 @@ model ToeicTest {
   createdAt  DateTime        @default(now()) @map("created_at")
   updatedAt  DateTime        @updatedAt @map("updated_at")
   parts      ToeicTestPart[]
+  attempts   ToeicTestAttempt[]
 
   @@unique([year, testNumber])
   @@map("toeic_tests")
@@ -327,9 +328,11 @@ model ToeicTestAttempt {
   createdAt    DateTime               @default(now()) @map("created_at")
   updatedAt    DateTime               @updatedAt @map("updated_at")
   user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test         ToeicTest              @relation(fields: [toeicTestId], references: [id], onDelete: Cascade)
   parts        ToeicTestAttemptPart[]
 
   @@index([userId])
+  @@index([toeicTestId])
   @@map("toeic_test_attempts")
 }
 
