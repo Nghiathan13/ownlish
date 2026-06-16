@@ -30,12 +30,14 @@ export function PracticeLeftPanel({
   plain = false,
 }: PracticeLeftPanelProps) {
   const showAudio =
-    partConfig.leftPanel === "audio-image" ||
-    partConfig.leftPanel === "audio" ||
-    partConfig.leftPanel === "listening-group";
+    partConfig.leftPanel !== "none" &&
+    (partConfig.leftPanel === "audio-image" ||
+      partConfig.leftPanel === "audio" ||
+      partConfig.leftPanel === "listening-group");
   const showImage =
-    partConfig.leftPanel === "audio-image" ||
-    partConfig.leftPanel === "listening-group";
+    partConfig.leftPanel !== "none" &&
+    (partConfig.leftPanel === "audio-image" ||
+      partConfig.leftPanel === "listening-group");
 
   const content = (
     <>

@@ -3,7 +3,8 @@ export type PartLeftPanel =
   | "audio"
   | "listening-group"
   | "question"
-  | "passage";
+  | "passage"
+  | "none";
 
 export type PartTranslationVariant =
   | "options"
@@ -61,9 +62,9 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     contentLayout: "split-plain",
   },
   5: {
-    leftPanel: "question",
+    leftPanel: "none",
     translationVariant: "question-options",
-    showQuestionInRightPanel: false,
+    showQuestionInRightPanel: true,
     navigationMode: "per-question",
     showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: false,
