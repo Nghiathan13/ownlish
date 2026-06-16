@@ -225,7 +225,6 @@ function PracticePartContent({
         showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
       />
       <QuestionTranslationPanel
-        contentVi={currentItem.group.contentVi}
         optionCount={currentItem.question.optionCount}
         options={currentItem.question.options}
         questionVi={currentItem.question.questionVi}

@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
-import { PassagePanel } from "@/features/tests/components/PassagePanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
@@ -351,7 +350,6 @@ export function ListeningGroupPracticeContent({
         />
 
         <QuestionTranslationPanel
-          contentVi={currentGroup.group.contentVi}
           optionCount={question.optionCount}
           options={question.options}
           questionVi={question.questionVi}
@@ -400,17 +398,21 @@ export function ListeningGroupPracticeContent({
     );
   });
 
-  const passageTranslation =
-    partConfig.leftPanel === "passage" &&
+  const showGroupPassageTranslation =
     showGroupReveal &&
-    currentGroup.group.contentVi?.trim() ? (
-      <PassagePanel
-        content={null}
-        contentVi={currentGroup.group.contentVi}
-        showTranslation
-        title="Passage translation"
-      />
-    ) : null;
+    currentGroup.group.contentVi?.trim() &&
+    (partConfig.leftPanel === "passage" ||
+      partConfig.translationVariant === "content-options" ||
+      partConfig.translationVariant === "content-question-options");
+
+  const groupPassageTranslation = showGroupPassageTranslation ? (
+    <div className="rounded-xl border border-border bg-muted/40 p-4">
+      <h3 className="mb-3 text-base font-semibold text-foreground">Translations</h3>
+      <div className="text-base text-foreground select-text">
+        <p className="whitespace-pre-wrap">{currentGroup.group.contentVi}</p>
+      </div>
+    </div>
+  ) : null;
 
   if (usesSplitPlainLayout) {
     return (
@@ -421,7 +423,7 @@ export function ListeningGroupPracticeContent({
           </div>
           <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
             {questionBlocks}
-            {passageTranslation}
+            {groupPassageTranslation}
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-4">
@@ -455,7 +457,7 @@ export function ListeningGroupPracticeContent({
 
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
           {questionBlocks}
-          {passageTranslation}
+          {groupPassageTranslation}
         </div>
       </div>
 
