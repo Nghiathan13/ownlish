@@ -290,7 +290,7 @@ model ToeicPracticeAnswer {
   sessionId       String               @map("session_id")
   toeicQuestionId Int                  @map("toeic_question_id")
   selectedKey     String               @map("selected_key")
-  isCorrect       Boolean              @map("is_correct")
+  isCorrect       Boolean?             @map("is_correct")
   answeredAt      DateTime             @default(now()) @map("answered_at")
   session         ToeicPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   toeicQuestion   ToeicQuestion        @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)

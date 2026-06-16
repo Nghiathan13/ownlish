@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ToeicPracticeMode } from '@prisma/client';
+import { Prisma, ToeicPracticeMode } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getOptionText,
@@ -14,6 +14,16 @@ import {
 } from './lib/toeic-question-mapper';
 import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
 import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
+
+const DEFERRED_GROUP_GRADING_PARTS = new Set([3, 4]);
+
+type SubmitAnswerResponse = {
+  graded: boolean;
+  isCorrect?: boolean;
+  answerKey?: 'A' | 'B' | 'C' | 'D';
+  correctOptionEn?: string | null;
+  correctOptionVi?: string | null;
+};
 
 @Injectable()
 export class PracticeService {
@@ -126,7 +136,7 @@ export class PracticeService {
     answers: Array<{
       toeicQuestionId: number;
       selectedKey: string;
-      isCorrect: boolean;
+      isCorrect: boolean | null;
       toeicQuestion: { answerKey: string | null };
     }>;
   }) {
@@ -142,6 +152,15 @@ export class PracticeService {
           return [];
         }
 
+        if (answer.isCorrect === null) {
+          return [
+            {
+              toeicQuestionId: answer.toeicQuestionId,
+              selectedKey,
+            },
+          ];
+        }
+
         return [
           {
             toeicQuestionId: answer.toeicQuestionId,
@@ -152,6 +171,217 @@ export class PracticeService {
         ];
       }),
     };
+  }
+
+  private usesDeferredGroupGrading(partNumber: number) {
+    return DEFERRED_GROUP_GRADING_PARTS.has(partNumber);
+  }
+
+  private buildGradedResponse(
+    question: {
+      answerKey: string | null;
+      optionA: string | null;
+      optionB: string | null;
+      optionC: string | null;
+      optionD: string | null;
+      optionAVi: string | null;
+      optionBVi: string | null;
+      optionCVi: string | null;
+      optionDVi: string | null;
+    },
+    answerKey: 'A' | 'B' | 'C' | 'D',
+    isCorrect: boolean,
+  ): SubmitAnswerResponse {
+    return {
+      graded: true,
+      isCorrect,
+      answerKey,
+      correctOptionEn: getOptionText(question, answerKey),
+      correctOptionVi: getOptionViText(question, answerKey),
+    };
+  }
+
+  private async isGroupReadyToGrade(
+    tx: Prisma.TransactionClient,
+    sessionId: string,
+    groupId: number,
+  ) {
+    const questions = await tx.toeicQuestion.findMany({
+      where: { groupId },
+      select: { id: true },
+    });
+
+    if (questions.length === 0) {
+      return false;
+    }
+
+    const answerCount = await tx.toeicPracticeAnswer.count({
+      where: {
+        sessionId,
+        toeicQuestionId: {
+          in: questions.map((item) => item.id),
+        },
+      },
+    });
+
+    return answerCount === questions.length;
+  }
+
+  private async gradeGroupAnswers(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    session: { id: string; mode: ToeicPracticeMode },
+    groupId: number,
+  ) {
+    const questions = await tx.toeicQuestion.findMany({
+      where: { groupId },
+    });
+    const answers = await tx.toeicPracticeAnswer.findMany({
+      where: {
+        sessionId: session.id,
+        toeicQuestionId: {
+          in: questions.map((item) => item.id),
+        },
+      },
+    });
+    const isReviewMode = session.mode === ToeicPracticeMode.WRONG_QUESTIONS;
+    let correctDelta = 0;
+    let wrongDelta = 0;
+
+    for (const question of questions) {
+      const answer = answers.find(
+        (item) => item.toeicQuestionId === question.id,
+      );
+      if (!answer) {
+        continue;
+      }
+
+      const questionAnswerKey = parseAnswerKey(question.answerKey);
+      if (!questionAnswerKey) {
+        continue;
+      }
+
+      const isCorrect = answer.selectedKey === questionAnswerKey;
+
+      await tx.toeicPracticeAnswer.update({
+        where: { id: answer.id },
+        data: { isCorrect },
+      });
+
+      correctDelta += isCorrect ? 1 : 0;
+      wrongDelta += !isReviewMode && !isCorrect ? 1 : 0;
+
+      if (isCorrect) {
+        await tx.toeicWrongQuestion.deleteMany({
+          where: {
+            userId,
+            toeicQuestionId: question.id,
+          },
+        });
+      } else if (!isReviewMode) {
+        await tx.toeicWrongQuestion.upsert({
+          where: {
+            userId_toeicQuestionId: {
+              userId,
+              toeicQuestionId: question.id,
+            },
+          },
+          create: {
+            userId,
+            toeicQuestionId: question.id,
+          },
+          update: {
+            wrongCount: { increment: 1 },
+            lastWrongAt: new Date(),
+          },
+        });
+      }
+    }
+
+    if (correctDelta > 0 || wrongDelta > 0) {
+      await tx.toeicPracticeSession.update({
+        where: { id: session.id },
+        data: {
+          correctCount:
+            correctDelta > 0 ? { increment: correctDelta } : undefined,
+          wrongCount: wrongDelta > 0 ? { increment: wrongDelta } : undefined,
+        },
+      });
+    }
+  }
+
+  private async applyWrongQuestionSideEffects(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    toeicQuestionId: number,
+    isCorrect: boolean,
+    isReviewMode: boolean,
+    wasCorrect: boolean | null = null,
+  ) {
+    if (isCorrect) {
+      await tx.toeicWrongQuestion.deleteMany({
+        where: {
+          userId,
+          toeicQuestionId,
+        },
+      });
+      return;
+    }
+
+    if (isReviewMode) {
+      return;
+    }
+
+    if (wasCorrect === null) {
+      await tx.toeicWrongQuestion.upsert({
+        where: {
+          userId_toeicQuestionId: {
+            userId,
+            toeicQuestionId,
+          },
+        },
+        create: {
+          userId,
+          toeicQuestionId,
+        },
+        update: {
+          wrongCount: { increment: 1 },
+          lastWrongAt: new Date(),
+        },
+      });
+      return;
+    }
+
+    if (!wasCorrect) {
+      await tx.toeicWrongQuestion.updateMany({
+        where: {
+          userId,
+          toeicQuestionId,
+        },
+        data: {
+          wrongCount: { increment: 1 },
+          lastWrongAt: new Date(),
+        },
+      });
+      return;
+    }
+
+    await tx.toeicWrongQuestion.upsert({
+      where: {
+        userId_toeicQuestionId: {
+          userId,
+          toeicQuestionId,
+        },
+      },
+      create: {
+        userId,
+        toeicQuestionId,
+      },
+      update: {
+        wrongCount: { increment: 1 },
+        lastWrongAt: new Date(),
+      },
+    });
   }
 
   async submitAnswer(
@@ -211,19 +441,59 @@ export class PracticeService {
       },
     });
 
+    const partNumber = session.partNumber;
+    const usesDeferredGrading = this.usesDeferredGroupGrading(partNumber);
+
     if (existingAnswer) {
       if (existingAnswer.selectedKey === selectedKey) {
-        return {
-          isCorrect: existingAnswer.isCorrect,
+        if (existingAnswer.isCorrect === null) {
+          return { graded: false };
+        }
+
+        return this.buildGradedResponse(
+          question,
           answerKey,
-          correctOptionEn: getOptionText(question, answerKey),
-          correctOptionVi: getOptionViText(question, answerKey),
-        };
+          existingAnswer.isCorrect,
+        );
       }
 
       if (session.completedAt) {
         throw new ConflictException(
           'This question was already answered in this session.',
+        );
+      }
+
+      if (usesDeferredGrading) {
+        if (existingAnswer.isCorrect !== null) {
+          throw new ConflictException(
+            'This question group was already graded in this session.',
+          );
+        }
+
+        let graded = false;
+
+        await this.prisma.$transaction(async (tx) => {
+          await tx.toeicPracticeAnswer.update({
+            where: { id: existingAnswer.id },
+            data: { selectedKey },
+          });
+
+          if (
+            await this.isGroupReadyToGrade(tx, session.id, question.groupId)
+          ) {
+            await this.gradeGroupAnswers(tx, userId, session, question.groupId);
+            graded = true;
+          }
+        });
+
+        if (!graded) {
+          return { graded: false };
+        }
+
+        return this.buildGradedResponse(
+          question,
+          answerKey,
+          selectedKey === answerKey,
         );
       }
 
@@ -255,50 +525,47 @@ export class PracticeService {
           },
         });
 
-        if (isCorrect) {
-          await tx.toeicWrongQuestion.deleteMany({
-            where: {
-              userId,
-              toeicQuestionId: question.id,
-            },
-          });
-        } else if (!isReviewMode && !wasCorrect) {
-          await tx.toeicWrongQuestion.updateMany({
-            where: {
-              userId,
-              toeicQuestionId: question.id,
-            },
-            data: {
-              wrongCount: { increment: 1 },
-              lastWrongAt: new Date(),
-            },
-          });
-        } else if (!isReviewMode && wasCorrect && !isCorrect) {
-          await tx.toeicWrongQuestion.upsert({
-            where: {
-              userId_toeicQuestionId: {
-                userId,
-                toeicQuestionId: question.id,
-              },
-            },
-            create: {
-              userId,
-              toeicQuestionId: question.id,
-            },
-            update: {
-              wrongCount: { increment: 1 },
-              lastWrongAt: new Date(),
-            },
-          });
+        await this.applyWrongQuestionSideEffects(
+          tx,
+          userId,
+          question.id,
+          isCorrect,
+          isReviewMode,
+          wasCorrect,
+        );
+      });
+
+      return this.buildGradedResponse(question, answerKey, isCorrect);
+    }
+
+    if (usesDeferredGrading) {
+      let graded = false;
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.toeicPracticeAnswer.create({
+          data: {
+            sessionId: session.id,
+            toeicQuestionId: question.id,
+            selectedKey,
+            isCorrect: null,
+          },
+        });
+
+        if (await this.isGroupReadyToGrade(tx, session.id, question.groupId)) {
+          await this.gradeGroupAnswers(tx, userId, session, question.groupId);
+          graded = true;
         }
       });
 
-      return {
-        isCorrect,
+      if (!graded) {
+        return { graded: false };
+      }
+
+      return this.buildGradedResponse(
+        question,
         answerKey,
-        correctOptionEn: getOptionText(question, answerKey),
-        correctOptionVi: getOptionViText(question, answerKey),
-      };
+        selectedKey === answerKey,
+      );
     }
 
     const isCorrect = selectedKey === answerKey;
@@ -323,41 +590,16 @@ export class PracticeService {
         },
       });
 
-      if (isCorrect) {
-        await tx.toeicWrongQuestion.deleteMany({
-          where: {
-            userId,
-            toeicQuestionId: question.id,
-          },
-        });
-      } else if (!isReviewMode) {
-        await tx.toeicWrongQuestion.upsert({
-          where: {
-            userId_toeicQuestionId: {
-              userId,
-              toeicQuestionId: question.id,
-            },
-          },
-          create: {
-            userId,
-            toeicQuestionId: question.id,
-          },
-          update: {
-            wrongCount: { increment: 1 },
-            lastWrongAt: new Date(),
-          },
-        });
-      }
+      await this.applyWrongQuestionSideEffects(
+        tx,
+        userId,
+        question.id,
+        isCorrect,
+        isReviewMode,
+      );
     });
 
-    const correctKey = answerKey;
-
-    return {
-      isCorrect,
-      answerKey: correctKey,
-      correctOptionEn: getOptionText(question, correctKey),
-      correctOptionVi: getOptionViText(question, correctKey),
-    };
+    return this.buildGradedResponse(question, answerKey, isCorrect);
   }
 
   async completeSession(userId: string, sessionId: string) {
