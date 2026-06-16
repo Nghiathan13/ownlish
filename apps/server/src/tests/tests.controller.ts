@@ -23,6 +23,7 @@ import { ListTestsDto } from './dto/list-tests.dto';
 import { ListWrongQuestionsDto } from './dto/list-wrong-questions.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
+import { SubmitReviewGroupAnswersDto } from './dto/submit-review-group-answers.dto';
 import { PracticeService } from './practice.service';
 import { AttemptService } from './attempt.service';
 import { TestsService } from './tests.service';
@@ -80,6 +81,21 @@ export class TestsController {
     @Body() dto: SubmitPracticeAnswerDto,
   ) {
     return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
+  }
+
+  @Post('practice/sessions/:sessionId/groups/:groupId/answers')
+  submitReviewGroupAnswers(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Body() dto: SubmitReviewGroupAnswersDto,
+  ) {
+    return this.practiceService.submitReviewGroupAnswers(
+      request.user.id,
+      sessionId,
+      groupId,
+      dto,
+    );
   }
 
   @Patch('practice/sessions/:sessionId/complete')
