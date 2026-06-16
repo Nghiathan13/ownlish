@@ -232,35 +232,22 @@ function PracticePartContent({
 
   if (partConfig.contentLayout === "split-plain") {
     return (
-      <>
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Test {testId}
-            {fullTestContext ? " · Full test" : ""} · Part {partNumber}
-            {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {practiceMode === "wrong_questions"
-              ? `Fixed ${practice.correctCount} · ${items.length} questions`
-              : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
-          </p>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="grid min-h-0 flex-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
-            <div className="min-h-0 overflow-y-auto py-2 pr-4 lg:py-4 lg:pr-6">
-              {leftPanel}
-            </div>
-            <div className="flex min-h-0 flex-col gap-4 overflow-y-auto py-2 pl-4 lg:py-4 lg:pl-6">
-              <p className="text-2xl font-semibold tabular-nums">
-                {currentItem.question.questionNumber}
-              </p>
-              {optionsPanel}
-            </div>
+      <div className="-mx-4 flex min-h-0 flex-1 flex-col">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
+          <div className="min-h-0 overflow-y-auto py-2 pl-4 pr-4 lg:py-4 lg:pr-6">
+            {leftPanel}
           </div>
-          <div className="shrink-0 border-t border-border pt-4">{navigationBar}</div>
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto py-2 pl-4 pr-4 lg:py-4 lg:pl-6">
+            <p className="text-2xl font-bold tabular-nums">
+              {currentItem.question.questionNumber}
+            </p>
+            {optionsPanel}
+          </div>
         </div>
-      </>
+        <div className="shrink-0 border-t border-border px-4 pt-4">
+          {navigationBar}
+        </div>
+      </div>
     );
   }
 
