@@ -212,9 +212,93 @@ export class PracticeService {
     });
 
     if (existingAnswer) {
-      throw new ConflictException(
-        'This question was already answered in this session.',
-      );
+      if (existingAnswer.selectedKey === selectedKey) {
+        return {
+          isCorrect: existingAnswer.isCorrect,
+          answerKey,
+          correctOptionEn: getOptionText(question, answerKey),
+          correctOptionVi: getOptionViText(question, answerKey),
+        };
+      }
+
+      if (session.completedAt) {
+        throw new ConflictException(
+          'This question was already answered in this session.',
+        );
+      }
+
+      const wasCorrect = existingAnswer.isCorrect;
+      const isCorrect = selectedKey === answerKey;
+      const isReviewMode = session.mode === ToeicPracticeMode.WRONG_QUESTIONS;
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.toeicPracticeAnswer.update({
+          where: { id: existingAnswer.id },
+          data: {
+            selectedKey,
+            isCorrect,
+          },
+        });
+
+        const correctDelta = (isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
+        const wrongDelta = !isReviewMode
+          ? (isCorrect ? 0 : 1) - (wasCorrect ? 0 : 1)
+          : 0;
+
+        await tx.toeicPracticeSession.update({
+          where: { id: session.id },
+          data: {
+            correctCount:
+              correctDelta === 0 ? undefined : { increment: correctDelta },
+            wrongCount:
+              wrongDelta === 0 ? undefined : { increment: wrongDelta },
+          },
+        });
+
+        if (isCorrect) {
+          await tx.toeicWrongQuestion.deleteMany({
+            where: {
+              userId,
+              toeicQuestionId: question.id,
+            },
+          });
+        } else if (!isReviewMode && !wasCorrect) {
+          await tx.toeicWrongQuestion.updateMany({
+            where: {
+              userId,
+              toeicQuestionId: question.id,
+            },
+            data: {
+              wrongCount: { increment: 1 },
+              lastWrongAt: new Date(),
+            },
+          });
+        } else if (!isReviewMode && wasCorrect && !isCorrect) {
+          await tx.toeicWrongQuestion.upsert({
+            where: {
+              userId_toeicQuestionId: {
+                userId,
+                toeicQuestionId: question.id,
+              },
+            },
+            create: {
+              userId,
+              toeicQuestionId: question.id,
+            },
+            update: {
+              wrongCount: { increment: 1 },
+              lastWrongAt: new Date(),
+            },
+          });
+        }
+      });
+
+      return {
+        isCorrect,
+        answerKey,
+        correctOptionEn: getOptionText(question, answerKey),
+        correctOptionVi: getOptionViText(question, answerKey),
+      };
     }
 
     const isCorrect = selectedKey === answerKey;
