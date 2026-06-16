@@ -11,23 +11,32 @@ export function PassagePanel({
   showTranslation,
   title = "Passage",
 }: PassagePanelProps) {
-  if (!content?.trim()) {
-    return (
-      <p className="text-sm text-muted-foreground">No passage available.</p>
-    );
+  const hasContent = Boolean(content?.trim());
+  const hasTranslation = Boolean(showTranslation && contentVi?.trim());
+
+  if (!hasContent && !hasTranslation) {
+    return null;
   }
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <div className="max-h-[420px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed select-text">
-        {content}
-      </div>
-      {showTranslation && contentVi?.trim() ? (
+      {hasContent ? (
+        <>
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <div className="max-h-[420px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed select-text">
+            {content}
+          </div>
+        </>
+      ) : null}
+      {hasTranslation ? (
         <div className="rounded-lg border border-border bg-muted/40 p-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Vietnamese
-          </p>
+          {hasContent ? (
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Vietnamese
+            </p>
+          ) : (
+            <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+          )}
           <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground select-text">
             {contentVi}
           </div>

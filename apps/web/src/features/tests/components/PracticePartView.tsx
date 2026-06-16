@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestPart } from "@/features/tests/api/testsApi";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
+import { ListeningGroupPracticeContent } from "@/features/tests/components/ListeningGroupPracticeContent";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
@@ -29,10 +30,10 @@ import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
-type PracticeItem = {
-  group: ToeicQuestionGroup;
-  question: ToeicQuestionGroup["questions"][number];
-};
+import {
+  buildPracticeGroups,
+  type PracticeItem,
+} from "@/features/tests/lib/practiceGroups";
 
 export type FullTestContext = {
   attemptId: string;
@@ -189,7 +190,12 @@ function PracticePartContent({
           partConfig={partConfig}
           questionNumber={currentItem.question.questionNumber}
           questionText={currentItem.question.question}
-          showTranslation={isAnswered}
+          showContext={
+            partConfig.leftPanel !== "listening-group" ||
+            !partConfig.hideContextUntilGroupComplete ||
+            isAnswered
+          }
+          showContextTranslation={isAnswered}
         />
 
         <div className="flex min-h-0 flex-col gap-4">
@@ -211,6 +217,7 @@ function PracticePartContent({
             optionCount={currentItem.question.optionCount}
             options={currentItem.question.options}
             selectedKey={currentAnswer?.selectedKey ?? null}
+            showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
           />
           <QuestionTranslationPanel
             contentVi={currentItem.group.contentVi}
@@ -319,6 +326,44 @@ export function PracticePartView({
     return allItems.filter((item) => frozenIds.has(item.question.id));
   }, [allItems, frozenWrongQuestionIds, fullTestContext, isWrongMode]);
 
+  const partConfig = getPartPracticeConfig(partNumber);
+  const practiceGroups = useMemo(
+    () => buildPracticeGroups(items),
+    [items],
+  );
+
+  const initialIndex = useMemo(() => {
+    if (!practice.sessionId || items.length === 0) {
+      return 0;
+    }
+
+    return Math.min(
+      syncPracticeProgressSession(testId, partNumber, practice.sessionId),
+      items.length - 1,
+    );
+  }, [items.length, partNumber, practice.sessionId, testId]);
+
+  const initialGroupIndex = useMemo(() => {
+    if (!practice.sessionId || practiceGroups.length === 0) {
+      return 0;
+    }
+
+    if (partConfig.navigationMode === "per-group") {
+      return Math.min(
+        syncPracticeProgressSession(testId, partNumber, practice.sessionId),
+        practiceGroups.length - 1,
+      );
+    }
+
+    return 0;
+  }, [
+    partConfig.navigationMode,
+    partNumber,
+    practice.sessionId,
+    practiceGroups.length,
+    testId,
+  ]);
+
   const handleFinish = () => {
     if (isWrongMode && !fullTestContext) {
       void queryClient.invalidateQueries({
@@ -337,17 +382,6 @@ export function PracticePartView({
 
     router.push("/tests");
   };
-
-  const initialIndex = useMemo(() => {
-    if (!practice.sessionId || items.length === 0) {
-      return 0;
-    }
-
-    return Math.min(
-      syncPracticeProgressSession(testId, partNumber, practice.sessionId),
-      items.length - 1,
-    );
-  }, [items.length, partNumber, practice.sessionId, testId]);
 
   if (!isSupportedPart) {
     return (
@@ -429,6 +463,28 @@ export function PracticePartView({
 
   if (!practice.sessionId || items.length === 0) {
     return null;
+  }
+
+  if (partConfig.navigationMode === "per-group") {
+    return (
+      <PageShell fillViewport>
+        <Panel className="flex min-h-0 flex-1 flex-col gap-4">
+          <ListeningGroupPracticeContent
+            accessToken={accessToken}
+            clearSession={clearSession}
+            fullTestContext={fullTestContext}
+            groups={practiceGroups}
+            initialGroupIndex={initialGroupIndex}
+            key={practice.sessionId}
+            onFinish={handleFinish}
+            partNumber={partNumber}
+            practice={practice}
+            practiceMode={practiceMode}
+            testId={testId}
+          />
+        </Panel>
+      </PageShell>
+    );
   }
 
   return (

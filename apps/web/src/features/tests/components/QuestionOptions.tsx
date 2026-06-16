@@ -13,6 +13,7 @@ type QuestionOptionsProps = {
   answerKey: "A" | "B" | "C" | "D" | null;
   isAnswered: boolean;
   isSubmitting?: boolean;
+  showEnglishTextBeforeAnswer?: boolean;
   onSelect: (key: "A" | "B" | "C" | "D") => void;
 };
 
@@ -36,14 +37,23 @@ type OptionLabelProps = {
   optionKey: (typeof OPTION_KEYS)[number];
   englishText: string | null;
   isAnswered: boolean;
+  showEnglishTextBeforeAnswer: boolean;
 };
 
-function OptionLabel({ optionKey, englishText, isAnswered }: OptionLabelProps) {
+function OptionLabel({
+  optionKey,
+  englishText,
+  isAnswered,
+  showEnglishTextBeforeAnswer,
+}: OptionLabelProps) {
+  const showEnglishText =
+    Boolean(englishText) && (isAnswered || showEnglishTextBeforeAnswer);
+
   return (
     <span className={OPTION_LABEL_CLASS}>
       {optionKey}
       {englishText ? (
-        <span className={isAnswered ? "" : "invisible"}>. {englishText}</span>
+        <span className={showEnglishText ? "" : "invisible"}>. {englishText}</span>
       ) : null}
     </span>
   );
@@ -56,6 +66,7 @@ export function QuestionOptions({
   answerKey,
   isAnswered,
   isSubmitting = false,
+  showEnglishTextBeforeAnswer = false,
   onSelect,
 }: QuestionOptionsProps) {
   return (
@@ -87,6 +98,7 @@ export function QuestionOptions({
             englishText={englishText}
             isAnswered={isAnswered}
             optionKey={key}
+            showEnglishTextBeforeAnswer={showEnglishTextBeforeAnswer}
           />
         );
 

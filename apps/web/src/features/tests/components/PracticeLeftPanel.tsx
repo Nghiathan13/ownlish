@@ -11,7 +11,8 @@ type PracticeLeftPanelProps = {
   imageUrl: string | null;
   mediaError: string | null;
   onMediaError: () => void;
-  showTranslation: boolean;
+  showContext?: boolean;
+  showContextTranslation?: boolean;
 };
 
 export function PracticeLeftPanel({
@@ -23,7 +24,8 @@ export function PracticeLeftPanel({
   imageUrl,
   mediaError,
   onMediaError,
-  showTranslation,
+  showContext = true,
+  showContextTranslation = false,
 }: PracticeLeftPanelProps) {
   const showAudio =
     partConfig.leftPanel === "audio-image" ||
@@ -64,12 +66,21 @@ export function PracticeLeftPanel({
         ) : null
       ) : null}
 
-      {partConfig.leftPanel === "listening-group" ? (
+      {partConfig.leftPanel === "listening-group" && showContext ? (
         <PassagePanel
           content={group.content}
-          contentVi={group.contentVi}
-          showTranslation={showTranslation}
+          contentVi={null}
+          showTranslation={false}
           title="Context"
+        />
+      ) : null}
+
+      {partConfig.leftPanel === "listening-group" && showContextTranslation ? (
+        <PassagePanel
+          content={null}
+          contentVi={group.contentVi}
+          showTranslation={Boolean(group.contentVi?.trim())}
+          title="Context translation"
         />
       ) : null}
 
@@ -86,7 +97,7 @@ export function PracticeLeftPanel({
         <PassagePanel
           content={group.content}
           contentVi={group.contentVi}
-          showTranslation={showTranslation}
+          showTranslation={showContextTranslation}
         />
       ) : null}
 
