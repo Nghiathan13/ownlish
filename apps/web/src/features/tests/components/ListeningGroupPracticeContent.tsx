@@ -108,16 +108,12 @@ export function ListeningGroupPracticeContent({
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
   const usesDeferredGroupGrading = partConfig.hideContextUntilGroupComplete;
-  const usesReviewBatchSubmit =
-    isWrongGroupReview && (partNumber === 3 || partNumber === 4);
   const isReviewGroupLocked =
-    usesReviewBatchSubmit &&
+    isWrongGroupReview &&
     (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);
-  const showGroupReveal = usesReviewBatchSubmit
+  const showGroupReveal = isWrongGroupReview
     ? isReviewGroupLocked
-    : isWrongGroupReview
-      ? allEditableGraded
-      : !usesDeferredGroupGrading || allGroupGraded;
+    : !usesDeferredGroupGrading || allGroupGraded;
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : showGroupReveal;
   const totalQuestions =
@@ -145,52 +141,43 @@ export function ListeningGroupPracticeContent({
         return;
       }
 
-      if (usesReviewBatchSubmit) {
-        if (isReviewGroupLocked) {
-          return;
-        }
+      if (isReviewGroupLocked) {
+        return;
+      }
 
-        const nextSelections = {
-          ...localSelections,
-          [toeicQuestionId]: key,
-        };
-        setLocalSelections(nextSelections);
+      const nextSelections = {
+        ...localSelections,
+        [toeicQuestionId]: key,
+      };
+      setLocalSelections(nextSelections);
 
-        const allEditableSelected = editableQuestionIds.every(
-          (questionId) => nextSelections[questionId] != null,
+      const allEditableSelected = editableQuestionIds.every(
+        (questionId) => nextSelections[questionId] != null,
+      );
+
+      if (!allEditableSelected) {
+        return;
+      }
+
+      const groupId = currentGroup.group.id;
+      setLockedReviewGroupIds((current) => new Set(current).add(groupId));
+
+      try {
+        await practice.submitReviewGroupAnswersBatch(
+          groupId,
+          editableQuestionIds.map((questionId) => ({
+            toeicQuestionId: questionId,
+            selectedKey: nextSelections[questionId]!,
+          })),
         );
-
-        if (!allEditableSelected) {
-          return;
-        }
-
-        const groupId = currentGroup.group.id;
-        setLockedReviewGroupIds((current) => new Set(current).add(groupId));
-
-        try {
-          await practice.submitReviewGroupAnswersBatch(
-            groupId,
-            editableQuestionIds.map((questionId) => ({
-              toeicQuestionId: questionId,
-              selectedKey: nextSelections[questionId]!,
-            })),
-          );
-          setLocalSelections({});
-        } catch {
-          setLockedReviewGroupIds((current) => {
-            const next = new Set(current);
-            next.delete(groupId);
-            return next;
-          });
-        }
-        return;
+        setLocalSelections({});
+      } catch {
+        setLockedReviewGroupIds((current) => {
+          const next = new Set(current);
+          next.delete(groupId);
+          return next;
+        });
       }
-
-      if (isPracticeAnswerGraded(practice.getAnswer(toeicQuestionId))) {
-        return;
-      }
-
-      await practice.submitAnswer(toeicQuestionId, key);
       return;
     }
 
@@ -302,7 +289,7 @@ export function ListeningGroupPracticeContent({
             let isLocked: boolean;
             let showResult: boolean;
 
-            if (isWrongGroupReview && usesReviewBatchSubmit) {
+            if (isWrongGroupReview) {
               selectedKey = wasCorrectInNormal
                 ? (normalAnswer?.selectedKey ?? null)
                 : isReviewGroupLocked
@@ -320,17 +307,6 @@ export function ListeningGroupPracticeContent({
                   : null;
               isLocked = wasCorrectInNormal || isReviewGroupLocked;
               showResult = wasCorrectInNormal || isReviewGroupLocked;
-            } else if (isWrongGroupReview) {
-              selectedKey = wasCorrectInNormal
-                ? (normalAnswer?.selectedKey ?? null)
-                : (reviewAnswer?.selectedKey ?? null);
-              answerKey = wasCorrectInNormal
-                ? (normalAnswer?.answerKey ?? null)
-                : questionGraded
-                  ? (reviewAnswer?.answerKey ?? null)
-                  : null;
-              isLocked = wasCorrectInNormal || questionGraded;
-              showResult = isLocked;
             } else if (usesDeferredGroupGrading) {
               selectedKey = reviewAnswer?.selectedKey ?? null;
               answerKey =
@@ -348,10 +324,7 @@ export function ListeningGroupPracticeContent({
               showResult = questionGraded;
             }
 
-            const translationVisible =
-              usesReviewBatchSubmit && isWrongGroupReview
-                ? isReviewGroupLocked
-                : showGroupReveal;
+            const translationVisible = showGroupReveal;
 
             return (
               <section
