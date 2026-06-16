@@ -95,4 +95,11 @@ export const env = {
     limit: optionalNumberEnv('AUTH_RATE_LIMIT_LIMIT', 10),
     ttlMs: optionalNumberEnv('AUTH_RATE_LIMIT_TTL_SECONDS', 60) * 1000,
   },
+  supabaseUrl: process.env.SUPABASE_URL ?? '',
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  toeicStorageBucket: process.env.TOEIC_STORAGE_BUCKET ?? 'toeic-media',
+  toeicSignedUrlTtlSeconds: optionalNumberEnv(
+    'TOEIC_SIGNED_URL_TTL_SECONDS',
+    900,
+  ),
 };

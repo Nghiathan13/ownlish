@@ -12,15 +12,18 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(uuid())
-  email           String           @unique
-  passwordHash    String           @map("password_hash")
-  name            String?
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
-  collections     WordCollection[]
-  refreshSessions RefreshSession[]
-  vocabWords      VocabWord[]
+  id                  String                 @id @default(uuid())
+  email               String                 @unique
+  passwordHash        String                 @map("password_hash")
+  name                String?
+  createdAt           DateTime               @default(now()) @map("created_at")
+  updatedAt           DateTime               @updatedAt @map("updated_at")
+  collections         WordCollection[]
+  refreshSessions     RefreshSession[]
+  vocabWords          VocabWord[]
+  practiceSessions    ToeicPracticeSession[]
+  toeicWrongQuestions ToeicWrongQuestion[]
+  toeicTestAttempts   ToeicTestAttempt[]
 
   @@map("users")
 }
@@ -179,4 +182,169 @@ model CollectionUserWordItem {
   @@id([collectionId, vocabWordId])
   @@index([vocabWordId])
   @@map("collection_user_word_items")
+}
+
+enum ToeicPracticeMode {
+  NORMAL
+  WRONG_QUESTIONS
+}
+
+model ToeicTest {
+  id         Int             @id @default(autoincrement())
+  year       Int
+  testNumber Int             @map("test_number")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  parts      ToeicTestPart[]
+
+  @@unique([year, testNumber])
+  @@map("toeic_tests")
+}
+
+model ToeicTestPart {
+  id         Int                  @id @default(autoincrement())
+  testId     Int                  @map("test_id")
+  partNumber Int                  @map("part_number")
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+  test       ToeicTest            @relation(fields: [testId], references: [id], onDelete: Cascade)
+  groups     ToeicQuestionGroup[]
+
+  @@unique([testId, partNumber])
+  @@index([testId])
+  @@map("toeic_test_parts")
+}
+
+model ToeicQuestionGroup {
+  id               Int             @id @default(autoincrement())
+  testPartId       Int             @map("test_part_id")
+  questionStart    Int             @map("question_start")
+  questionEnd      Int             @map("question_end")
+  groupType        String?         @map("group_type")
+  accent           String?
+  content          String?
+  contentVi        String?         @map("content_vi")
+  audioStoragePath String?         @map("audio_storage_path")
+  imageStoragePath String?         @map("image_storage_path")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  testPart         ToeicTestPart   @relation(fields: [testPartId], references: [id], onDelete: Cascade)
+  questions        ToeicQuestion[]
+
+  @@unique([testPartId, questionStart, questionEnd])
+  @@index([testPartId])
+  @@map("toeic_question_groups")
+}
+
+model ToeicQuestion {
+  id              Int                   @id @default(autoincrement())
+  groupId         Int                   @map("group_id")
+  questionNumber  Int                   @map("question_number")
+  question        String?
+  questionVi      String?               @map("question_vi")
+  questionType    String?               @map("question_type")
+  optionA         String?               @map("option_a")
+  optionB         String?               @map("option_b")
+  optionC         String?               @map("option_c")
+  optionD         String?               @map("option_d")
+  optionAVi       String?               @map("option_a_vi")
+  optionBVi       String?               @map("option_b_vi")
+  optionCVi       String?               @map("option_c_vi")
+  optionDVi       String?               @map("option_d_vi")
+  answerKey       String?               @map("answer_key")
+  explanationVi   String?               @map("explanation_vi")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+  group           ToeicQuestionGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  practiceAnswers ToeicPracticeAnswer[]
+  wrongQuestions  ToeicWrongQuestion[]
+
+  @@unique([groupId, questionNumber])
+  @@index([groupId])
+  @@map("toeic_questions")
+}
+
+model ToeicPracticeSession {
+  id           String                @id @default(uuid())
+  userId       String                @map("user_id")
+  toeicTestId  Int                   @map("toeic_test_id")
+  partNumber   Int                   @map("part_number")
+  mode         ToeicPracticeMode     @default(NORMAL)
+  startedAt    DateTime              @default(now()) @map("started_at")
+  completedAt  DateTime?             @map("completed_at")
+  correctCount Int                   @default(0) @map("correct_count")
+  wrongCount   Int                   @default(0) @map("wrong_count")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers      ToeicPracticeAnswer[]
+
+  @@index([userId])
+  @@index([userId, toeicTestId, partNumber])
+  @@map("toeic_practice_sessions")
+}
+
+model ToeicPracticeAnswer {
+  id              String               @id @default(uuid())
+  sessionId       String               @map("session_id")
+  toeicQuestionId Int                  @map("toeic_question_id")
+  selectedKey     String               @map("selected_key")
+  isCorrect       Boolean              @map("is_correct")
+  answeredAt      DateTime             @default(now()) @map("answered_at")
+  session         ToeicPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  toeicQuestion   ToeicQuestion        @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, toeicQuestionId])
+  @@index([sessionId])
+  @@index([toeicQuestionId])
+  @@map("toeic_practice_answers")
+}
+
+model ToeicWrongQuestion {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  toeicQuestionId Int           @map("toeic_question_id")
+  lastWrongAt     DateTime      @default(now()) @map("last_wrong_at")
+  wrongCount      Int           @default(1) @map("wrong_count")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toeicQuestion   ToeicQuestion @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, toeicQuestionId])
+  @@index([userId])
+  @@map("toeic_wrong_questions")
+}
+
+model ToeicTestAttempt {
+  id           String                 @id @default(uuid())
+  userId       String                 @map("user_id")
+  toeicTestId  Int                    @map("toeic_test_id")
+  startedAt    DateTime               @default(now()) @map("started_at")
+  completedAt  DateTime?              @map("completed_at")
+  totalCorrect Int                    @default(0) @map("total_correct")
+  totalWrong   Int                    @default(0) @map("total_wrong")
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parts        ToeicTestAttemptPart[]
+
+  @@index([userId])
+  @@map("toeic_test_attempts")
+}
+
+model ToeicTestAttemptPart {
+  id           String           @id @default(uuid())
+  attemptId    String           @map("attempt_id")
+  partNumber   Int              @map("part_number")
+  correctCount Int              @default(0) @map("correct_count")
+  wrongCount   Int              @default(0) @map("wrong_count")
+  completedAt  DateTime?        @map("completed_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  attempt      ToeicTestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, partNumber])
+  @@index([attemptId])
+  @@map("toeic_test_attempt_parts")
 }
