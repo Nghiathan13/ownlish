@@ -246,6 +246,52 @@ export function usePracticeSession({
             submitReviewGroupAnswers(token, sessionId, groupId, { answers }),
         });
 
+        const selectedKeyByQuestionId = new Map(
+          answers.map((answer) => [answer.toeicQuestionId, answer.selectedKey]),
+        );
+
+        queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+          if (!current) {
+            return current;
+          }
+
+          const answersByQuestionId = new Map(
+            current.answers.map((answer) => [answer.toeicQuestionId, answer]),
+          );
+          let correctCount = current.correctCount;
+
+          for (const item of result.results) {
+            const existing = answersByQuestionId.get(item.toeicQuestionId);
+            const wasCorrect = existing?.isCorrect === true;
+            const selectedKey =
+              selectedKeyByQuestionId.get(item.toeicQuestionId) ??
+              existing?.selectedKey;
+
+            if (!selectedKey || item.answerKey === undefined) {
+              continue;
+            }
+
+            if (item.isCorrect && !wasCorrect) {
+              correctCount += 1;
+            } else if (!item.isCorrect && wasCorrect) {
+              correctCount -= 1;
+            }
+
+            answersByQuestionId.set(item.toeicQuestionId, {
+              toeicQuestionId: item.toeicQuestionId,
+              selectedKey,
+              answerKey: item.answerKey,
+              isCorrect: item.isCorrect,
+            });
+          }
+
+          return {
+            ...current,
+            correctCount,
+            answers: Array.from(answersByQuestionId.values()),
+          };
+        });
+
         await queryClient.refetchQueries({ queryKey });
         await queryClient.invalidateQueries({
           queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),

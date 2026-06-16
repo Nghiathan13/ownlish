@@ -68,6 +68,9 @@ export function ListeningGroupPracticeContent({
   const [localSelections, setLocalSelections] = useState<
     Record<number, OptionKey>
   >({});
+  const [lockedReviewGroupIds, setLockedReviewGroupIds] = useState<
+    Set<number>
+  >(() => new Set());
   const [isFinishing, setIsFinishing] = useState(false);
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
@@ -103,8 +106,11 @@ export function ListeningGroupPracticeContent({
   const allEditableGraded = editableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
+  const isReviewGroupLocked =
+    isWrongGroupReview &&
+    (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);
   const showGroupReveal = isWrongGroupReview
-    ? allEditableGraded
+    ? isReviewGroupLocked
     : !partConfig.hideContextUntilGroupComplete || allGroupGraded;
   const totalQuestions =
     isWrongGroupReview && wrongQuestionCount != null
@@ -119,7 +125,7 @@ export function ListeningGroupPracticeContent({
   };
 
   const handleSelect = async (toeicQuestionId: number, key: OptionKey) => {
-    if (showGroupReveal || practice.isSubmitting) {
+    if (showGroupReveal || practice.isSubmitting || isReviewGroupLocked) {
       return;
     }
 
@@ -145,14 +151,25 @@ export function ListeningGroupPracticeContent({
         return;
       }
 
-      await practice.submitReviewGroupAnswersBatch(
-        currentGroup.group.id,
-        editableQuestionIds.map((questionId) => ({
-          toeicQuestionId: questionId,
-          selectedKey: nextSelections[questionId]!,
-        })),
-      );
-      setLocalSelections({});
+      const groupId = currentGroup.group.id;
+      setLockedReviewGroupIds((current) => new Set(current).add(groupId));
+
+      try {
+        await practice.submitReviewGroupAnswersBatch(
+          groupId,
+          editableQuestionIds.map((questionId) => ({
+            toeicQuestionId: questionId,
+            selectedKey: nextSelections[questionId]!,
+          })),
+        );
+        setLocalSelections({});
+      } catch {
+        setLockedReviewGroupIds((current) => {
+          const next = new Set(current);
+          next.delete(groupId);
+          return next;
+        });
+      }
       return;
     }
 
