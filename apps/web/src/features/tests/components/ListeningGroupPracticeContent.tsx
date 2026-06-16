@@ -9,7 +9,13 @@ import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSessi
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
-import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
+import {
+  clearPendingSelections,
+  readPendingSelections,
+  writePendingSelections,
+  writePracticeIndex,
+  type PendingSelectionsByGroup,
+} from "@/features/tests/lib/practiceStorage";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 
@@ -60,10 +66,11 @@ export function ListeningGroupPracticeContent({
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isCommittingGroup, setIsCommittingGroup] = useState(false);
-  const [localSelections, setLocalSelections] = useState<
-    Record<number, OptionKey>
-  >({});
-  const [trackedGroupId, setTrackedGroupId] = useState<number | null>(null);
+  const [pendingByGroupId, setPendingByGroupId] =
+    useState<PendingSelectionsByGroup>({});
+  const [hydratedSessionId, setHydratedSessionId] = useState<string | null>(
+    null,
+  );
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
   const currentGroup = groups[activeGroupIndex] ?? null;
@@ -76,10 +83,10 @@ export function ListeningGroupPracticeContent({
     clearSession,
   });
 
-  const activeGroupId = currentGroup?.group.id ?? null;
-  if (activeGroupId !== trackedGroupId) {
-    setTrackedGroupId(activeGroupId);
-    setLocalSelections({});
+  const sessionId = practice.sessionId;
+  if (sessionId && sessionId !== hydratedSessionId) {
+    setHydratedSessionId(sessionId);
+    setPendingByGroupId(readPendingSelections(sessionId));
   }
 
   const serverSelections: Record<number, OptionKey> = {};
@@ -92,7 +99,34 @@ export function ListeningGroupPracticeContent({
     }
   }
 
+  const localSelections = currentGroup
+    ? (pendingByGroupId[currentGroup.group.id] ?? {})
+    : {};
   const pendingSelections = { ...serverSelections, ...localSelections };
+
+  const updatePendingSelections = (
+    groupId: number,
+    updater: (current: Record<number, OptionKey>) => Record<number, OptionKey>,
+  ) => {
+    setPendingByGroupId((current) => {
+      const nextGroupSelections = updater(current[groupId] ?? {});
+      const next =
+        Object.keys(nextGroupSelections).length === 0
+          ? Object.fromEntries(
+              Object.entries(current).filter(([id]) => Number(id) !== groupId),
+            )
+          : {
+              ...current,
+              [groupId]: nextGroupSelections,
+            };
+
+      if (sessionId) {
+        writePendingSelections(sessionId, next);
+      }
+
+      return next;
+    });
+  };
 
   if (!currentGroup) {
     return null;
@@ -137,6 +171,7 @@ export function ListeningGroupPracticeContent({
           }
         }),
       );
+      updatePendingSelections(currentGroup.group.id, () => ({}));
     } finally {
       setIsCommittingGroup(false);
     }
@@ -156,7 +191,7 @@ export function ListeningGroupPracticeContent({
       ...pendingSelections,
       [toeicQuestionId]: key,
     };
-    setLocalSelections((current) => ({
+    updatePendingSelections(currentGroup.group.id, (current) => ({
       ...current,
       [toeicQuestionId]: key,
     }));
@@ -178,6 +213,10 @@ export function ListeningGroupPracticeContent({
     setIsFinishing(true);
     try {
       const result = await practice.completeSession();
+
+      if (sessionId) {
+        clearPendingSelections(sessionId);
+      }
 
       if (fullTestContext && result) {
         await fullTestContext.onPartComplete({
