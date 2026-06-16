@@ -196,7 +196,7 @@ export function ListeningGroupPracticeContent({
                 )}
 
                 <QuestionOptions
-                  answerKey={answer?.answerKey ?? null}
+                  answerKey={showGroupReveal ? (answer?.answerKey ?? null) : null}
                   isAnswered={isAnswered}
                   isSubmitting={practice.isSubmitting}
                   onSelect={(key) => void handleSelect(question.id, key)}
@@ -204,6 +204,7 @@ export function ListeningGroupPracticeContent({
                   options={question.options}
                   selectedKey={answer?.selectedKey ?? null}
                   showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
+                  showResult={showGroupReveal}
                 />
 
                 <QuestionTranslationPanel

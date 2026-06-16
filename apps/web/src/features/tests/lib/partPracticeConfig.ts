@@ -50,7 +50,7 @@ export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
     translationVariant: "content-question-options",
     showQuestionInRightPanel: true,
     navigationMode: "per-group",
-    showOptionTextBeforeAnswer: false,
+    showOptionTextBeforeAnswer: true,
     hideContextUntilGroupComplete: true,
   },
   5: {

@@ -14,6 +14,7 @@ type QuestionOptionsProps = {
   isAnswered: boolean;
   isSubmitting?: boolean;
   showEnglishTextBeforeAnswer?: boolean;
+  showResult?: boolean;
   onSelect: (key: "A" | "B" | "C" | "D") => void;
 };
 
@@ -38,6 +39,7 @@ type OptionLabelProps = {
   englishText: string | null;
   isAnswered: boolean;
   showEnglishTextBeforeAnswer: boolean;
+  showResult: boolean;
 };
 
 function OptionLabel({
@@ -45,9 +47,11 @@ function OptionLabel({
   englishText,
   isAnswered,
   showEnglishTextBeforeAnswer,
+  showResult,
 }: OptionLabelProps) {
   const showEnglishText =
-    Boolean(englishText) && (isAnswered || showEnglishTextBeforeAnswer);
+    Boolean(englishText) &&
+    (showEnglishTextBeforeAnswer || (isAnswered && showResult));
 
   return (
     <span className={OPTION_LABEL_CLASS}>
@@ -67,14 +71,17 @@ export function QuestionOptions({
   isAnswered,
   isSubmitting = false,
   showEnglishTextBeforeAnswer = false,
+  showResult = true,
   onSelect,
 }: QuestionOptionsProps) {
   return (
     <div className="grid gap-2">
       {OPTION_KEYS.slice(0, optionCount).map((key) => {
         const isSelected = selectedKey === key;
-        const isCorrect = answerKey === key;
-        const isWrong = isSelected && answerKey !== null && !isCorrect;
+        const showGrading = isAnswered && showResult;
+        const isCorrect = showGrading && answerKey === key;
+        const isWrong = showGrading && isSelected && answerKey !== null && !isCorrect;
+        const isSelectedPending = isAnswered && !showResult && isSelected;
         const englishText = getOptionEnglishText(key, options);
 
         const className = classNames(
@@ -82,13 +89,15 @@ export function QuestionOptions({
           isAnswered && "cursor-text",
           isCorrect && "border-emerald-600 bg-emerald-50 text-emerald-900",
           isWrong && "border-red-600 bg-red-50 text-red-900",
-          isAnswered &&
+          isSelectedPending && "border-foreground bg-muted",
+          showGrading &&
             !isCorrect &&
             !isWrong &&
             "border-border bg-background",
           !isAnswered &&
             !isCorrect &&
             !isWrong &&
+            !isSelectedPending &&
             "border-border bg-background hover:bg-muted",
           !isAnswered && isSubmitting && "pointer-events-none opacity-70",
         );
@@ -99,6 +108,7 @@ export function QuestionOptions({
             isAnswered={isAnswered}
             optionKey={key}
             showEnglishTextBeforeAnswer={showEnglishTextBeforeAnswer}
+            showResult={showResult}
           />
         );
 
