@@ -31,7 +31,7 @@ export function QuestionTranslationPanel({
     variant === "content-question-options";
 
   return (
-    <div className="flex flex-col gap-4 text-base text-foreground select-text">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-muted/40 p-4 text-base text-foreground select-text">
       <p className="font-semibold">Translations</p>
       {showQuestion && questionVi?.trim() ? <p>{questionVi}</p> : null}
       {showOptions ? (
