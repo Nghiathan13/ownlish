@@ -237,7 +237,7 @@ function PracticePartContent({
           <div className="min-h-0 overflow-y-auto p-4">
             {leftPanel}
           </div>
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-[4px]">
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
             <p className="text-2xl font-bold tabular-nums">
               {currentItem.question.questionNumber}
             </p>
