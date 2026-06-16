@@ -106,12 +106,18 @@ export function ListeningGroupPracticeContent({
   const allEditableGraded = editableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
+  const usesDeferredGroupGrading = partConfig.hideContextUntilGroupComplete;
+  const usesReviewBatchSubmit =
+    isWrongGroupReview && usesDeferredGroupGrading;
   const isReviewGroupLocked =
-    isWrongGroupReview &&
+    usesReviewBatchSubmit &&
     (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);
-  const showGroupReveal = isWrongGroupReview
+  const showPassageReveal = usesReviewBatchSubmit
     ? isReviewGroupLocked
-    : !partConfig.hideContextUntilGroupComplete || allGroupGraded;
+    : !usesDeferredGroupGrading || allGroupGraded;
+  const anyQuestionAnsweredInGroup = currentGroup.questions.some((question) =>
+    isPracticeAnswerGraded(practice.getAnswer(question.id)),
+  );
   const totalQuestions =
     isWrongGroupReview && wrongQuestionCount != null
       ? wrongQuestionCount
@@ -125,7 +131,7 @@ export function ListeningGroupPracticeContent({
   };
 
   const handleSelect = async (toeicQuestionId: number, key: OptionKey) => {
-    if (showGroupReveal || practice.isSubmitting || isReviewGroupLocked) {
+    if (practice.isSubmitting || isFinishing) {
       return;
     }
 
@@ -137,39 +143,60 @@ export function ListeningGroupPracticeContent({
         return;
       }
 
-      const nextSelections = {
-        ...localSelections,
-        [toeicQuestionId]: key,
-      };
-      setLocalSelections(nextSelections);
+      if (usesReviewBatchSubmit) {
+        if (isReviewGroupLocked) {
+          return;
+        }
 
-      const allEditableSelected = editableQuestionIds.every(
-        (questionId) => nextSelections[questionId] != null,
-      );
+        const nextSelections = {
+          ...localSelections,
+          [toeicQuestionId]: key,
+        };
+        setLocalSelections(nextSelections);
 
-      if (!allEditableSelected) {
+        const allEditableSelected = editableQuestionIds.every(
+          (questionId) => nextSelections[questionId] != null,
+        );
+
+        if (!allEditableSelected) {
+          return;
+        }
+
+        const groupId = currentGroup.group.id;
+        setLockedReviewGroupIds((current) => new Set(current).add(groupId));
+
+        try {
+          await practice.submitReviewGroupAnswersBatch(
+            groupId,
+            editableQuestionIds.map((questionId) => ({
+              toeicQuestionId: questionId,
+              selectedKey: nextSelections[questionId]!,
+            })),
+          );
+          setLocalSelections({});
+        } catch {
+          setLockedReviewGroupIds((current) => {
+            const next = new Set(current);
+            next.delete(groupId);
+            return next;
+          });
+        }
         return;
       }
 
-      const groupId = currentGroup.group.id;
-      setLockedReviewGroupIds((current) => new Set(current).add(groupId));
-
-      try {
-        await practice.submitReviewGroupAnswersBatch(
-          groupId,
-          editableQuestionIds.map((questionId) => ({
-            toeicQuestionId: questionId,
-            selectedKey: nextSelections[questionId]!,
-          })),
-        );
-        setLocalSelections({});
-      } catch {
-        setLockedReviewGroupIds((current) => {
-          const next = new Set(current);
-          next.delete(groupId);
-          return next;
-        });
+      if (isPracticeAnswerGraded(practice.getAnswer(toeicQuestionId))) {
+        return;
       }
+
+      await practice.submitAnswer(toeicQuestionId, key);
+      return;
+    }
+
+    if (usesDeferredGroupGrading && showPassageReveal) {
+      return;
+    }
+
+    if (isPracticeAnswerGraded(practice.getAnswer(toeicQuestionId))) {
       return;
     }
 
@@ -242,8 +269,12 @@ export function ListeningGroupPracticeContent({
           partConfig={partConfig}
           questionNumber={currentGroup.group.questionStart}
           questionText={null}
-          showContext={showGroupReveal}
-          showContextTranslation={showGroupReveal}
+          showContext={showPassageReveal}
+          showContextTranslation={
+            partConfig.leftPanel === "passage"
+              ? anyQuestionAnsweredInGroup
+              : showPassageReveal
+          }
         />
 
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
@@ -251,30 +282,71 @@ export function ListeningGroupPracticeContent({
             const reviewAnswer = practice.getAnswer(question.id);
             const normalAnswer = normalPractice?.getAnswer(question.id);
             const wasCorrectInNormal = normalAnswer?.isCorrect === true;
-            const selectedKey = wasCorrectInNormal
-              ? (normalAnswer?.selectedKey ?? null)
-              : showGroupReveal
-                ? (reviewAnswer?.selectedKey ??
-                  localSelections[question.id] ??
-                  null)
-                : (localSelections[question.id] ??
-                  reviewAnswer?.selectedKey ??
-                  normalAnswer?.selectedKey ??
-                  null);
-            const answerKey = wasCorrectInNormal
-              ? (normalAnswer?.answerKey ?? null)
-              : showGroupReveal
+            const questionGraded = isPracticeAnswerGraded(reviewAnswer);
+
+            let selectedKey: OptionKey | null;
+            let answerKey: OptionKey | null;
+            let isLocked: boolean;
+            let showResult: boolean;
+
+            if (isWrongGroupReview && usesReviewBatchSubmit) {
+              selectedKey = wasCorrectInNormal
+                ? (normalAnswer?.selectedKey ?? null)
+                : isReviewGroupLocked
+                  ? (reviewAnswer?.selectedKey ??
+                    localSelections[question.id] ??
+                    null)
+                  : (localSelections[question.id] ??
+                    reviewAnswer?.selectedKey ??
+                    normalAnswer?.selectedKey ??
+                    null);
+              answerKey = wasCorrectInNormal
+                ? (normalAnswer?.answerKey ?? null)
+                : isReviewGroupLocked
+                  ? (reviewAnswer?.answerKey ?? null)
+                  : null;
+              isLocked = wasCorrectInNormal || isReviewGroupLocked;
+              showResult = wasCorrectInNormal || isReviewGroupLocked;
+            } else if (isWrongGroupReview) {
+              selectedKey = wasCorrectInNormal
+                ? (normalAnswer?.selectedKey ?? null)
+                : (reviewAnswer?.selectedKey ?? null);
+              answerKey = wasCorrectInNormal
+                ? (normalAnswer?.answerKey ?? null)
+                : questionGraded
+                  ? (reviewAnswer?.answerKey ?? null)
+                  : null;
+              isLocked = wasCorrectInNormal || questionGraded;
+              showResult = isLocked;
+            } else if (usesDeferredGroupGrading) {
+              selectedKey = reviewAnswer?.selectedKey ?? null;
+              answerKey =
+                showPassageReveal && questionGraded
+                  ? (reviewAnswer?.answerKey ?? null)
+                  : null;
+              isLocked = showPassageReveal;
+              showResult = showPassageReveal;
+            } else {
+              selectedKey = reviewAnswer?.selectedKey ?? null;
+              answerKey = questionGraded
                 ? (reviewAnswer?.answerKey ?? null)
                 : null;
-            const isLocked = wasCorrectInNormal || showGroupReveal;
-            const showResult = wasCorrectInNormal || showGroupReveal;
+              isLocked = questionGraded;
+              showResult = questionGraded;
+            }
+
+            const translationVisible =
+              usesReviewBatchSubmit && isWrongGroupReview
+                ? isReviewGroupLocked
+                : questionGraded;
 
             return (
               <section
                 className="space-y-3 rounded-xl border border-border p-4"
                 key={question.id}
               >
-                {question.question?.trim() ? (
+                {partConfig.showQuestionInRightPanel &&
+                question.question?.trim() ? (
                   <div>
                     <h3 className="mb-2 text-sm font-semibold">
                       Question {question.questionNumber}
@@ -304,11 +376,12 @@ export function ListeningGroupPracticeContent({
                 />
 
                 <QuestionTranslationPanel
+                  contentVi={currentGroup.group.contentVi}
                   optionCount={question.optionCount}
                   options={question.options}
                   questionVi={question.questionVi}
-                  variant="question-options"
-                  visible={showGroupReveal}
+                  variant={partConfig.translationVariant}
+                  visible={translationVisible}
                 />
               </section>
             );
