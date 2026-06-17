@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,6 @@ import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceSt
 import { areAllPartsSelected } from "@/features/tests/lib/toeicParts";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
-import { Panel } from "@/shared/ui/Panel";
 import type { ToeicTestSummary } from "@/features/tests/api/types";
 
 const TOEIC_PART_COUNT = 7;
@@ -139,29 +137,22 @@ export function TestsPage() {
 
   return (
     <PageShell>
-      <Panel>
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">
-          <button
-            className="rounded-lg border border-foreground bg-foreground px-3.5 py-2 text-sm font-semibold text-background"
-            type="button"
-          >
-            TOEIC
-          </button>
-          <button
-            className="rounded-lg border border-border px-3.5 py-2 text-sm font-semibold text-foreground"
-            type="button"
-          >
-            2026
-          </button>
-          </div>
-          <Link href="/tests/attempts">
-            <Button type="button" variant="secondary">
-              Full test history
-            </Button>
-          </Link>
-        </div>
+      <div className="flex flex-col gap-2 p-4">
+        <button
+          className="rounded-lg border border-foreground bg-foreground px-4 py-2 text-sm font-semibold text-background"
+          type="button"
+        >
+          TOEIC
+        </button>
+        <button
+          className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground"
+          type="button"
+        >
+          2026
+        </button>
+      </div>
 
+      <div className="flex flex-col gap-4 p-4">
         {isLoadingTests ? (
           <p className="text-muted-foreground">Loading tests...</p>
         ) : testsError ? (
@@ -188,7 +179,7 @@ export function TestsPage() {
             ))}
           </div>
         )}
-      </Panel>
+      </div>
 
       {selectedTest ? (
         <PartPickerModal
