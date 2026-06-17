@@ -120,9 +120,7 @@ export function TestsPage() {
         request: (token) => createTestAttempt(token, testId),
       });
 
-      router.push(
-        `/tests/${testId}/attempt/${attempt.attemptId}/part/${Math.min(attempt.currentPartNumber, 7)}`,
-      );
+      router.push(`/tests/${testId}/attempt/${attempt.attemptId}`);
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start full test."));
     } finally {

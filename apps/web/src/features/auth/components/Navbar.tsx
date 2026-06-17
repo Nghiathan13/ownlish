@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { isPartPracticePath } from "@/features/tests/lib/isPartPracticePath";
+import { isImmersiveTestPath } from "@/features/tests/lib/isImmersiveTestPath";
 import { usePracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
@@ -15,7 +15,7 @@ export function Navbar() {
   const router = useRouter();
   const { logout, status, user } = useAuthSession();
   const practiceExit = usePracticeExit();
-  const isImmersivePractice = isPartPracticePath(pathname);
+  const isImmersivePractice = isImmersiveTestPath(pathname);
 
   const isAuth = status === "authenticated";
 
@@ -35,7 +35,7 @@ export function Navbar() {
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div className={classNames(APP_CONTAINER_CLASS, "flex items-center py-3")}>
           <Button
-            className="gap-2 text-base font-normal"
+            className="gap-2 py-2 text-base font-normal"
             onClick={() => {
               void (practiceExit?.exit() ?? router.push("/tests"));
             }}

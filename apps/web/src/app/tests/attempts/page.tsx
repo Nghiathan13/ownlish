@@ -92,7 +92,7 @@ function AttemptHistoryContent() {
                       </Link>
                     ) : (
                       <Link
-                        href={`/tests/${attempt.testId}/attempt/${attempt.attemptId}/part/${attempt.currentPartNumber}`}
+                        href={`/tests/${attempt.testId}/attempt/${attempt.attemptId}`}
                       >
                         <Button type="button">Continue</Button>
                       </Link>
