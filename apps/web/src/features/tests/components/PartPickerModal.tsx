@@ -69,7 +69,7 @@ function PartCheckboxOption({
         {checked ? <CheckIcon className="size-3" /> : null}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">{label}</span>
+        <span className="block text-base font-normal">{label}</span>
         {description ? (
           <span className="mt-0.5 block text-xs text-muted-foreground">
             {description}
@@ -151,7 +151,7 @@ export function PartPickerModal({
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold">Listening</h3>
+          <h3 className="text-base font-semibold">Listening</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {LISTENING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
@@ -177,7 +177,7 @@ export function PartPickerModal({
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold">Reading</h3>
+          <h3 className="text-base font-semibold">Reading</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {READING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
@@ -204,6 +204,7 @@ export function PartPickerModal({
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button
+            className="px-4 py-2"
             disabled={
               isStarting ||
               !isSinglePart ||
@@ -222,13 +223,13 @@ export function PartPickerModal({
             Review wrong{wrongQuestionCount > 0 ? ` (${wrongQuestionCount})` : ""}
           </Button>
           <Button
-            className="gap-2"
+            className="gap-2 px-4 py-2"
             disabled={isStarting || normalizedSelectedParts.length === 0}
             onClick={handleStart}
             type="button"
           >
-            {startLabel}
             <StartIcon className="size-4" />
+            {startLabel}
           </Button>
         </div>
       </div>
