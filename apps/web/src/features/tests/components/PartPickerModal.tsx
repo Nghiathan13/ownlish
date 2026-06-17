@@ -87,7 +87,7 @@ export function PartPickerModal({
   onStart,
   onStartMulti,
 }: PartPickerModalProps) {
-  const [selectedParts, setSelectedParts] = useState<number[]>([1]);
+  const [selectedParts, setSelectedParts] = useState<number[]>([]);
 
   const normalizedSelectedParts = useMemo(
     () => normalizeSelectedParts(selectedParts),

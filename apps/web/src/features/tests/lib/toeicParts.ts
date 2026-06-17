@@ -7,8 +7,12 @@ export function isToeicPartNumber(value: number): value is ToeicPartNumber {
 }
 
 export function normalizeSelectedParts(parts: number[] | null | undefined): number[] {
-  if (!parts || parts.length === 0) {
+  if (parts == null) {
     return [...ALL_TOEIC_PART_NUMBERS];
+  }
+
+  if (parts.length === 0) {
+    return [];
   }
 
   const uniqueParts = new Set<number>();
@@ -31,6 +35,10 @@ export function parseSelectedPartsParam(value: string | undefined) {
     .split(",")
     .map((part) => Number.parseInt(part.trim(), 10))
     .filter(isToeicPartNumber);
+
+  if (parsed.length === 0) {
+    return null;
+  }
 
   return normalizeSelectedParts(parsed);
 }
