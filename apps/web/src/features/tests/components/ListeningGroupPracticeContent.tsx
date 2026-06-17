@@ -105,8 +105,10 @@ export function ListeningGroupPracticeContent({
     isPracticeAnswerGraded(practice.getAnswer(question.id)),
   );
   const allQuestionsSelected = currentGroup.questions.every((question) => {
-    const answer = practice.getAnswer(question.id);
-    return answer?.selectedKey != null;
+    const selectedKey =
+      localSelections[question.id] ??
+      practice.getAnswer(question.id)?.selectedKey;
+    return selectedKey != null;
   });
   const allEditableGraded = editableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
@@ -194,15 +196,24 @@ export function ListeningGroupPracticeContent({
       }
 
       const existing = practice.getAnswer(toeicQuestionId);
-      if (existing?.selectedKey === key) {
+      const currentSelectedKey =
+        localSelections[toeicQuestionId] ?? existing?.selectedKey;
+      if (currentSelectedKey === key) {
         return;
       }
+
+      const nextSelections = {
+        ...localSelections,
+        [toeicQuestionId]: key,
+      };
+      setLocalSelections(nextSelections);
 
       const allSelected = currentGroup.questions.every((question) => {
         const selectedKey =
           question.id === toeicQuestionId
             ? key
-            : practice.getAnswer(question.id)?.selectedKey;
+            : (nextSelections[question.id] ??
+              practice.getAnswer(question.id)?.selectedKey);
         return selectedKey != null;
       });
 
@@ -211,9 +222,11 @@ export function ListeningGroupPracticeContent({
           toeicQuestionId: question.id,
           selectedKey: (question.id === toeicQuestionId
             ? key
-            : practice.getAnswer(question.id)?.selectedKey)!,
+            : (nextSelections[question.id] ??
+              practice.getAnswer(question.id)?.selectedKey))!,
         }));
         practice.gradeGroupLocally(entries);
+        setLocalSelections({});
         void practice.syncAnswerToServer(toeicQuestionId, key, {
           replace: Boolean(existing?.selectedKey),
         });
@@ -223,6 +236,7 @@ export function ListeningGroupPracticeContent({
       practice.selectAnswer(toeicQuestionId, key, {
         deferGrade: true,
         replace: Boolean(existing?.selectedKey),
+        selectionOnly: true,
       });
       return;
     }
@@ -298,6 +312,9 @@ export function ListeningGroupPracticeContent({
     </div>
   );
 
+  const isPartialGroupPhase =
+    usesDeferredGroupGrading && !showGroupReveal && !isWrongGroupReview;
+
   const leftPanel = (
     <PracticeLeftPanel
       audioUrl={signedMedia.audioUrl}
@@ -343,7 +360,8 @@ export function ListeningGroupPracticeContent({
       isLocked = wasCorrectInNormal || isReviewGroupLocked;
       showResult = wasCorrectInNormal || isReviewGroupLocked;
     } else if (usesDeferredGroupGrading) {
-      selectedKey = reviewAnswer?.selectedKey ?? null;
+      selectedKey =
+        localSelections[question.id] ?? reviewAnswer?.selectedKey ?? null;
       if (showGroupReveal) {
         answerKey = reviewAnswer?.answerKey ?? question.answerKey ?? null;
         isLocked = true;
@@ -369,7 +387,11 @@ export function ListeningGroupPracticeContent({
         <QuestionOptions
           answerKey={answerKey}
           isLocked={isLocked}
-          isSubmitting={practice.isQuestionPending(question.id) || isFinishing}
+          isSubmitting={
+            isPartialGroupPhase
+              ? isFinishing
+              : practice.isQuestionPending(question.id) || isFinishing
+          }
           onSelect={(key) => handleSelect(question.id, key)}
           optionCount={question.optionCount}
           options={question.options}

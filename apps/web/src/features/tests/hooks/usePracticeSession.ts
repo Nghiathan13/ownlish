@@ -32,10 +32,12 @@ type SelectAnswerOptions = {
   replace?: boolean;
   deferGrade?: boolean;
   skipLocalGrade?: boolean;
+  selectionOnly?: boolean;
 };
 
 type SyncAnswerOptions = {
   replace?: boolean;
+  selectionOnly?: boolean;
 };
 
 export function getPracticeSessionQueryKey(
@@ -325,6 +327,27 @@ export function usePracticeSession({
           return result;
         }
 
+        if (options?.selectionOnly) {
+          queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+            if (!current) {
+              return current;
+            }
+
+            const existing = current.answers.find(
+              (answer) => answer.toeicQuestionId === toeicQuestionId,
+            );
+
+            return applySelectionOnly(
+              current,
+              toeicQuestionId,
+              selectedKey,
+              existing,
+            );
+          });
+
+          return result;
+        }
+
         if (usesDeferredGroupGrading(partNumber, mode)) {
           await queryClient.refetchQueries({ queryKey });
           return result;
@@ -515,6 +538,7 @@ export function usePracticeSession({
 
       void syncAnswerToServer(toeicQuestionId, selectedKey, {
         replace: options?.replace,
+        selectionOnly: options?.selectionOnly,
       });
     },
     [answersByQuestionId, gradeLocally, syncAnswerToServer],
