@@ -7,7 +7,7 @@ import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { getTestAttempt } from "@/features/tests/api/testsApi";
-import { FullTestPracticeView } from "@/features/tests/components/FullTestPracticeView";
+import { AttemptPracticeView } from "@/features/tests/components/AttemptPracticeView";
 import {
   readFullTestSelectedParts,
   writeFullTestSelectedParts,
@@ -102,9 +102,8 @@ function FullTestAttemptPageContent({
   }
 
   return (
-    <FullTestPracticeView
+    <AttemptPracticeView
       accessToken={accessToken}
-      attempt={attempt}
       attemptId={attemptId}
       clearSession={clearSession}
       selectedParts={selectedParts}

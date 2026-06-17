@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestPart } from "@/features/tests/api/testsApi";
@@ -11,6 +11,7 @@ import {
   getPracticeSessionQueryKey,
   usePracticeSession,
 } from "@/features/tests/hooks/usePracticeSession";
+import { usePartItemNavigation } from "@/features/tests/hooks/usePartItemNavigation";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import {
   getWrongQuestionsQueryKey,
@@ -22,10 +23,8 @@ import {
 } from "@/features/tests/lib/partPracticeConfig";
 import {
   syncPracticeProgressSession,
-  writePracticeIndex,
 } from "@/features/tests/lib/practiceStorage";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -36,11 +35,6 @@ import {
   type PracticeItem,
 } from "@/features/tests/lib/practiceGroups";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
-import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
-import {
-  buildItemGridSection,
-  findItemIndexForQuestion,
-} from "@/features/tests/lib/practiceQuestionGrid";
 import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 
 type PracticePartViewProps = {
@@ -83,66 +77,17 @@ function PracticePartContent({
   clearSession,
 }: PracticePartContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const activeIndex =
-    items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
-  const currentItem = items[activeIndex] ?? null;
-
-  const goToIndex = (index: number) => {
-    const nextIndex = Math.max(0, Math.min(index, items.length - 1));
-    setCurrentIndex(nextIndex);
-    writePracticeIndex(testId, partNumber, nextIndex);
-  };
-
-  const handleNext = () => {
-    if (activeIndex >= items.length - 1) {
-      return;
-    }
-
-    goToIndex(activeIndex + 1);
-  };
-
-  const isLastItem = activeIndex >= items.length - 1;
-
-  const activeQuestionNumbers = useMemo(() => {
-    const numbers = new Set<number>();
-    if (currentItem) {
-      numbers.add(currentItem.question.questionNumber);
-    }
-    return numbers;
-  }, [currentItem]);
-
-  const questionGridSections = useMemo(
-    () => [
-      buildItemGridSection(
-        partNumber,
-        items,
-        activeQuestionNumbers,
-        (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
-      ),
-    ],
-    [activeQuestionNumbers, items, partNumber, practice],
-  );
+  const { currentItem, navigationBar } = usePartItemNavigation({
+    initialIndex,
+    items,
+    partNumber,
+    practice,
+    testId,
+  });
 
   if (!currentItem) {
     return null;
   }
-
-  const navigationBar = (
-    <PracticeNavigationButtons
-      nextDisabled={isLastItem}
-      onNext={handleNext}
-      onPrevious={() => goToIndex(activeIndex - 1)}
-      onQuestionGridSelect={(questionNumber) => {
-        const index = findItemIndexForQuestion(items, questionNumber);
-        if (index >= 0) {
-          goToIndex(index);
-        }
-      }}
-      previousDisabled={activeIndex === 0}
-      questionGridSections={questionGridSections}
-    />
-  );
 
   return (
     <PracticeQuestionScreen
