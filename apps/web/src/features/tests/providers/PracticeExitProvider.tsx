@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +16,11 @@ type ExitHandler = () => void | Promise<void>;
 
 type PracticeExitContextValue = {
   exit: () => Promise<void>;
-  registerExitHandler: (handler: ExitHandler | null) => void;
+  practiceTitle: string | null;
+  registerExitHandler: (
+    handler: ExitHandler | null,
+    title?: string | null,
+  ) => void;
 };
 
 const PracticeExitContext = createContext<PracticeExitContextValue | null>(
@@ -25,10 +30,15 @@ const PracticeExitContext = createContext<PracticeExitContextValue | null>(
 export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const handlerRef = useRef<ExitHandler | null>(null);
+  const [practiceTitle, setPracticeTitle] = useState<string | null>(null);
 
-  const registerExitHandler = useCallback((handler: ExitHandler | null) => {
-    handlerRef.current = handler;
-  }, []);
+  const registerExitHandler = useCallback(
+    (handler: ExitHandler | null, title: string | null = null) => {
+      handlerRef.current = handler;
+      setPracticeTitle(handler ? title : null);
+    },
+    [],
+  );
 
   const exit = useCallback(async () => {
     if (handlerRef.current) {
@@ -40,8 +50,8 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const value = useMemo(
-    () => ({ exit, registerExitHandler }),
-    [exit, registerExitHandler],
+    () => ({ exit, practiceTitle, registerExitHandler }),
+    [exit, practiceTitle, registerExitHandler],
   );
 
   return (
@@ -55,7 +65,10 @@ export function usePracticeExit() {
   return useContext(PracticeExitContext);
 }
 
-export function useRegisterPracticeExit(handler: ExitHandler | null) {
+export function useRegisterPracticeExit(
+  handler: ExitHandler | null,
+  title: string | null = null,
+) {
   const context = usePracticeExit();
 
   useEffect(() => {
@@ -63,10 +76,10 @@ export function useRegisterPracticeExit(handler: ExitHandler | null) {
       return;
     }
 
-    context.registerExitHandler(handler);
+    context.registerExitHandler(handler, title);
 
     return () => {
-      context.registerExitHandler(null);
+      context.registerExitHandler(null, null);
     };
-  }, [context, handler]);
+  }, [context, handler, title]);
 }

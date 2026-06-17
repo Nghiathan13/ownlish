@@ -33,7 +33,7 @@ export function Navbar() {
   if (isImmersivePractice) {
     return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-        <div className={classNames(APP_CONTAINER_CLASS, "flex items-center py-4")}>
+        <div className={classNames(APP_CONTAINER_CLASS, "flex items-center gap-4 py-4")}>
           <Button
             className="gap-2 py-2 text-base font-normal"
             onClick={() => {
@@ -44,6 +44,11 @@ export function Navbar() {
             <ArrowBackIcon className="size-4" />
             Exit
           </Button>
+          {practiceExit?.practiceTitle ? (
+            <span className="text-base font-semibold text-foreground">
+              {practiceExit.practiceTitle}
+            </span>
+          ) : null}
         </div>
       </nav>
     );

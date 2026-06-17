@@ -13,6 +13,7 @@ import {
 } from "@/features/tests/hooks/usePracticeSession";
 import { usePartItemNavigation } from "@/features/tests/hooks/usePartItemNavigation";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
+import { useTestsList } from "@/features/tests/hooks/useTestsList";
 import {
   getWrongQuestionsQueryKey,
   useWrongQuestions,
@@ -25,6 +26,7 @@ import {
   syncPracticeProgressSession,
 } from "@/features/tests/lib/practiceStorage";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -114,8 +116,21 @@ export function PracticePartView({
 }: PracticePartViewProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user, status } = useAuthSession();
   const isWrongMode = practiceMode === "wrong_questions";
   const isSupportedPart = isSupportedPracticePart(partNumber);
+
+  const { tests } = useTestsList({
+    accessToken,
+    clearSession,
+    isAuthenticated: status === "authenticated",
+    userId: user?.id ?? null,
+  });
+
+  const testLabel = useMemo(
+    () => tests.find((test) => test.id === testId)?.label ?? null,
+    [tests, testId],
+  );
 
   const partQuery = useQuery({
     queryKey: ["test-part", testId, partNumber],
@@ -271,7 +286,7 @@ export function PracticePartView({
     testId,
   ]);
 
-  useRegisterPracticeExit(sessionId ? handleExit : null);
+  useRegisterPracticeExit(sessionId ? handleExit : null, testLabel);
 
   if (!isSupportedPart) {
     return (

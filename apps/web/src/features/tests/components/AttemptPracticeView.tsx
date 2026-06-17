@@ -32,6 +32,7 @@ import { Panel } from "@/shared/ui/Panel";
 
 type AttemptPracticeViewProps = {
   testId: number;
+  testLabel: string;
   attemptId: string;
   selectedParts: number[];
   accessToken: string | null;
@@ -44,6 +45,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function AttemptPracticeView({
   testId,
+  testLabel,
   attemptId,
   selectedParts,
   accessToken,
@@ -161,7 +163,7 @@ export function AttemptPracticeView({
   const anySessionReady = Object.values(sessions).some(
     (session) => session.sessionId != null,
   );
-  useRegisterPracticeExit(anySessionReady ? handleExit : null);
+  useRegisterPracticeExit(anySessionReady ? handleExit : null, testLabel);
 
   const activeQuestionNumbers = useMemo(
     () => getActiveQuestionNumbersForStep(currentStep),

@@ -108,6 +108,7 @@ function FullTestAttemptPageContent({
       clearSession={clearSession}
       selectedParts={selectedParts}
       testId={testId}
+      testLabel={attempt.testLabel}
     />
   );
 }
