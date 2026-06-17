@@ -6,27 +6,19 @@ import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { getTestPart, syncTestAttemptProgress } from "@/features/tests/api/testsApi";
 import type { TestAttemptDetail, ToeicQuestionGroup } from "@/features/tests/api/types";
 import { ListeningGroupPracticeContent } from "@/features/tests/components/ListeningGroupPracticeContent";
-import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
-import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
-import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
-import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
-import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
+import { PracticeQuestionScreen } from "@/features/tests/components/PracticeQuestionScreen";
 import {
   getFullTestSession,
   useFullTestPracticeSessions,
-  type FullTestPracticeSession,
 } from "@/features/tests/hooks/useFullTestPracticeSessions";
-import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import {
   buildFullTestQuestions,
   buildFullTestSteps,
   resolveInitialStepIndex,
-  type FullTestQuestionItem,
 } from "@/features/tests/lib/fullTestQuestions";
 import { writeFullTestIndex } from "@/features/tests/lib/fullTestStorage";
-import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
-import { isPracticeAnswerGraded, getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
+import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
 import { normalizeSelectedParts } from "@/features/tests/lib/toeicParts";
 import {
   buildFullTestGridSections,
@@ -50,112 +42,6 @@ type FullTestPracticeViewProps = {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
-}
-
-type FullTestQuestionScreenProps = {
-  testId: number;
-  item: FullTestQuestionItem;
-  practice: FullTestPracticeSession;
-  accessToken: string | null;
-  clearSession: () => void;
-  navigation?: React.ReactNode;
-};
-
-function FullTestQuestionScreen({
-  testId,
-  item,
-  practice,
-  accessToken,
-  clearSession,
-  navigation,
-}: FullTestQuestionScreenProps) {
-  const partNumber = item.partNumber;
-  const partConfig = getPartPracticeConfig(partNumber);
-  const question = item.question;
-
-  const signedMedia = useSignedMedia({
-    testId,
-    partNumber,
-    group: item.group,
-    accessToken,
-    clearSession,
-  });
-
-  const currentAnswer = practice.getAnswer(question.id);
-  const isAnswered = isPracticeAnswerGraded(currentAnswer);
-
-  const handleSelect = (key: "A" | "B" | "C" | "D") => {
-    if (isAnswered) {
-      return;
-    }
-
-    practice.selectAnswer(question.id, key);
-  };
-
-  const leftPanel =
-    partConfig.leftPanel !== "none" ? (
-      <PracticeLeftPanel
-        audioUrl={signedMedia.audioUrl}
-        group={item.group}
-        imageUrl={signedMedia.imageUrl}
-        mediaError={signedMedia.mediaError}
-        onMediaError={signedMedia.handleMediaError}
-        partConfig={partConfig}
-        plain
-        questionNumber={question.questionNumber}
-        questionText={question.question}
-        showContext
-        showContextTranslation={isAnswered}
-      />
-    ) : null;
-
-  const syncFailureBanner = practice.isQuestionSyncFailed(question.id) ? (
-    <p className="text-base text-red-600">
-      Could not save this answer.{" "}
-      <button
-        className="underline"
-        onClick={() => practice.retrySync(question.id)}
-        type="button"
-      >
-        Retry
-      </button>
-    </p>
-  ) : null;
-
-  return (
-    <PracticeSplitPlainLayout
-      left={leftPanel}
-      navigation={navigation}
-      right={
-        <div className="flex flex-col gap-4">
-          <PracticeQuestionPrompt
-            questionNumber={question.questionNumber}
-            questionText={
-              partConfig.showQuestionInRightPanel ? question.question : null
-            }
-          />
-          <QuestionOptions
-            answerKey={currentAnswer?.answerKey ?? null}
-            isLocked={isAnswered}
-            isSubmitting={practice.isQuestionPending(question.id)}
-            onSelect={handleSelect}
-            optionCount={question.optionCount}
-            options={question.options}
-            selectedKey={currentAnswer?.selectedKey ?? null}
-            showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
-          />
-          <QuestionTranslationPanel
-            optionCount={question.optionCount}
-            options={question.options}
-            questionVi={question.questionVi}
-            variant={partConfig.translationVariant}
-            visible={isAnswered}
-          />
-          {syncFailureBanner}
-        </div>
-      }
-    />
-  );
 }
 
 export function FullTestPracticeView({
@@ -411,11 +297,12 @@ export function FullTestPracticeView({
               testId={testId}
             />
           ) : (
-            <FullTestQuestionScreen
+            <PracticeQuestionScreen
               accessToken={accessToken}
               clearSession={clearSession}
               item={currentStep.item}
               key={`${currentStep.item.question.id}-${practice.sessionId}`}
+              partNumber={currentStep.partNumber}
               practice={practice}
               testId={testId}
             />

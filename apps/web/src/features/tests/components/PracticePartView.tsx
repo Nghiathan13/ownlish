@@ -6,10 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestPart } from "@/features/tests/api/testsApi";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import { ListeningGroupPracticeContent } from "@/features/tests/components/ListeningGroupPracticeContent";
-import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
-import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
-import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
-import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
+import { PracticeQuestionScreen } from "@/features/tests/components/PracticeQuestionScreen";
 import {
   getPracticeSessionQueryKey,
   usePracticeSession,
@@ -19,7 +16,6 @@ import {
   getWrongQuestionsQueryKey,
   useWrongQuestions,
 } from "@/features/tests/hooks/useWrongQuestions";
-import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import {
   getPartPracticeConfig,
   isSupportedPracticePart,
@@ -30,7 +26,6 @@ import {
 } from "@/features/tests/lib/practiceStorage";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
-import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -41,7 +36,7 @@ import {
   type PracticeItem,
 } from "@/features/tests/lib/practiceGroups";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
-import { isPracticeAnswerGraded, getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
+import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
 import {
   buildItemGridSection,
   findItemIndexForQuestion,
@@ -93,32 +88,10 @@ function PracticePartContent({
     items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
   const currentItem = items[activeIndex] ?? null;
 
-  const signedMedia = useSignedMedia({
-    testId,
-    partNumber,
-    group: currentItem?.group ?? null,
-    accessToken,
-    clearSession,
-  });
-
-  const currentAnswer = currentItem
-    ? practice.getAnswer(currentItem.question.id)
-    : undefined;
-  const isAnswered = isPracticeAnswerGraded(currentAnswer);
-  const questionId = currentItem?.question.id;
-
   const goToIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, items.length - 1));
     setCurrentIndex(nextIndex);
     writePracticeIndex(testId, partNumber, nextIndex);
-  };
-
-  const handleSelect = (key: "A" | "B" | "C" | "D") => {
-    if (!currentItem || isAnswered) {
-      return;
-    }
-
-    practice.selectAnswer(currentItem.question.id, key);
   };
 
   const handleNext = () => {
@@ -171,128 +144,19 @@ function PracticePartContent({
     />
   );
 
-  const leftPanel = (
-    <PracticeLeftPanel
-      audioUrl={signedMedia.audioUrl}
-      group={currentItem.group}
-      imageUrl={signedMedia.imageUrl}
-      mediaError={signedMedia.mediaError}
-      onMediaError={signedMedia.handleMediaError}
-      partConfig={partConfig}
-      plain={partConfig.contentLayout === "split-plain"}
-      questionNumber={currentItem.question.questionNumber}
-      questionText={currentItem.question.question}
-      showContext={
-        partConfig.leftPanel !== "listening-group" ||
-        !partConfig.hideContextUntilGroupComplete ||
-        isAnswered
-      }
-      showContextTranslation={isAnswered}
-    />
-  );
-
-  const optionsPanel = (
-    <>
-      <QuestionOptions
-        answerKey={currentAnswer?.answerKey ?? null}
-        isLocked={isAnswered}
-        isSubmitting={questionId ? practice.isQuestionPending(questionId) : false}
-        onSelect={handleSelect}
-        optionCount={currentItem.question.optionCount}
-        options={currentItem.question.options}
-        selectedKey={currentAnswer?.selectedKey ?? null}
-        showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
-      />
-      <QuestionTranslationPanel
-        optionCount={currentItem.question.optionCount}
-        options={currentItem.question.options}
-        questionVi={currentItem.question.questionVi}
-        variant={partConfig.translationVariant}
-        visible={isAnswered}
-      />
-    </>
-  );
-
-  const syncFailureBanner =
-    questionId && practice.isQuestionSyncFailed(questionId) ? (
-      <p className="text-base text-red-600">
-        Could not save this answer.{" "}
-        <button
-          className="underline"
-          onClick={() => practice.retrySync(questionId)}
-          type="button"
-        >
-          Retry
-        </button>
-      </p>
-    ) : null;
-
-  const optionsPanelWithSync = (
-    <>
-      {optionsPanel}
-      {syncFailureBanner}
-    </>
-  );
-
-  if (partConfig.contentLayout === "split-plain") {
-    return (
-      <PracticeSplitPlainLayout
-        left={partConfig.leftPanel !== "none" ? leftPanel : null}
-        navigation={navigationBar}
-        right={
-          <div className="flex flex-col gap-4">
-            <PracticeQuestionPrompt
-              questionNumber={currentItem.question.questionNumber}
-              questionText={
-                partConfig.showQuestionInRightPanel
-                  ? currentItem.question.question
-                  : null
-              }
-            />
-            {optionsPanelWithSync}
-          </div>
-        }
-      />
-    );
-  }
-
   return (
-    <>
-      <div>
-        <p className="text-base text-muted-foreground">
-          Test {testId} · Part {partNumber}
-          {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
-        </p>
-        <h1 className="text-xl font-semibold">
-          Question {currentItem.question.questionNumber} / {items.length}
-        </h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          {practiceMode === "wrong_questions"
-            ? `Fixed ${practice.correctCount} · ${items.length} questions`
-            : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
-        </p>
-      </div>
-
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
-        {leftPanel}
-
-        <div className="flex min-h-0 flex-col gap-4">
-          {partConfig.showQuestionInRightPanel &&
-          currentItem.question.question?.trim() ? (
-            <div className="rounded-xl border border-border p-4">
-              <h3 className="mb-2 text-base font-semibold">Question</h3>
-              <p className="text-base leading-relaxed select-text">
-                {currentItem.question.question}
-              </p>
-            </div>
-          ) : null}
-
-          {optionsPanelWithSync}
-        </div>
-      </div>
-
-      {navigationBar}
-    </>
+    <PracticeQuestionScreen
+      accessToken={accessToken}
+      clearSession={clearSession}
+      item={currentItem}
+      layout={partConfig.contentLayout === "split-plain" ? "split-plain" : "panel"}
+      navigation={navigationBar}
+      partNumber={partNumber}
+      practice={practice}
+      practiceMode={practiceMode}
+      questionPosition={{ total: items.length }}
+      testId={testId}
+    />
   );
 }
 
