@@ -19,7 +19,7 @@ export type QuestionGridResult = "correct" | "wrong" | null;
 export function getQuestionGridResultFromAnswer(
   answer?: PracticeSessionAnswer | null,
 ): QuestionGridResult {
-  if (!isPracticeAnswerGraded(answer)) {
+  if (!answer || !isPracticeAnswerGraded(answer)) {
     return null;
   }
 

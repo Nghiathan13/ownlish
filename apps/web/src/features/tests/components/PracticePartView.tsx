@@ -189,7 +189,7 @@ function PracticePartContent({
         (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
       ),
     ],
-    [activeQuestionNumbers, items, partNumber, practice.answers],
+    [activeQuestionNumbers, items, partNumber, practice],
   );
 
   if (!currentItem) {

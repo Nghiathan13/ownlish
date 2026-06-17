@@ -1,4 +1,8 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
+import {
+  practiceCorrectClasses,
+  practiceWrongClasses,
+} from "@/features/tests/lib/practiceGradingClasses";
 import { classNames } from "@/shared/lib/classNames";
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
@@ -77,8 +81,8 @@ export function QuestionOptions({
         const className = classNames(
           "min-h-10 rounded-lg border px-4 py-2 text-left font-inherit transition select-text",
           locked && "cursor-text",
-          isCorrect && "border-emerald-600 bg-emerald-50 text-emerald-900",
-          isWrong && "border-red-600 bg-red-50 text-red-900",
+          isCorrect && practiceCorrectClasses,
+          isWrong && practiceWrongClasses,
           isSelectedHighlight && "border-foreground bg-muted",
           locked &&
             !isCorrect &&
