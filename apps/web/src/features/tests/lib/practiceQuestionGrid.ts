@@ -1,10 +1,21 @@
+import type { QuestionGridResult } from "@/features/tests/lib/practiceAnswers";
 import type { FullTestStep } from "@/features/tests/lib/fullTestQuestions";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/lib/practiceGroups";
 
 export type QuestionGridCell = {
   questionNumber: number;
   isActive: boolean;
+  result: QuestionGridResult;
 };
+
+type GetQuestionGridResult = (questionId: number) => QuestionGridResult;
+
+function resolveCellResult(
+  questionId: number,
+  getQuestionResult?: GetQuestionGridResult,
+): QuestionGridResult {
+  return getQuestionResult?.(questionId) ?? null;
+}
 
 export type QuestionGridSection = {
   partNumber: number;
@@ -15,12 +26,14 @@ export function buildItemGridSection(
   partNumber: number,
   items: PracticeItem[],
   activeQuestionNumbers: ReadonlySet<number>,
+  getQuestionResult?: GetQuestionGridResult,
 ): QuestionGridSection {
   return {
     partNumber,
     cells: items.map((item) => ({
       questionNumber: item.question.questionNumber,
       isActive: activeQuestionNumbers.has(item.question.questionNumber),
+      result: resolveCellResult(item.question.id, getQuestionResult),
     })),
   };
 }
@@ -30,6 +43,7 @@ export function buildGroupGridSection(
   groups: PracticeGroup[],
   activeQuestionNumbers: ReadonlySet<number>,
   shouldIncludeQuestion?: (questionId: number) => boolean,
+  getQuestionResult?: GetQuestionGridResult,
 ): QuestionGridSection {
   const cells: QuestionGridCell[] = [];
 
@@ -42,6 +56,7 @@ export function buildGroupGridSection(
       cells.push({
         questionNumber: question.questionNumber,
         isActive: activeQuestionNumbers.has(question.questionNumber),
+        result: resolveCellResult(question.id, getQuestionResult),
       });
     }
   }
@@ -89,10 +104,16 @@ export function getActiveQuestionNumbersForStep(
   return new Set(step.practiceGroup.questions.map((question) => question.questionNumber));
 }
 
+type GetFullTestQuestionGridResult = (
+  questionId: number,
+  partNumber: number,
+) => QuestionGridResult;
+
 export function buildFullTestGridSections(
   steps: FullTestStep[],
   selectedParts: number[],
   activeQuestionNumbers: ReadonlySet<number>,
+  getQuestionResult?: GetFullTestQuestionGridResult,
 ): QuestionGridSection[] {
   const sections: QuestionGridSection[] = [];
 
@@ -108,6 +129,9 @@ export function buildFullTestGridSections(
         cells.push({
           questionNumber: step.item.question.questionNumber,
           isActive: activeQuestionNumbers.has(step.item.question.questionNumber),
+          result: getQuestionResult
+            ? getQuestionResult(step.item.question.id, step.partNumber)
+            : null,
         });
         continue;
       }
@@ -116,6 +140,9 @@ export function buildFullTestGridSections(
         cells.push({
           questionNumber: question.questionNumber,
           isActive: activeQuestionNumbers.has(question.questionNumber),
+          result: getQuestionResult
+            ? getQuestionResult(question.id, step.partNumber)
+            : null,
         });
       }
     }

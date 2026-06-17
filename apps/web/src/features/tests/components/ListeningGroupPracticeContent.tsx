@@ -8,7 +8,10 @@ import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
-import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import {
+  getQuestionGridResultFromAnswer,
+  isPracticeAnswerGraded,
+} from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
 import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
@@ -116,6 +119,112 @@ export function ListeningGroupPracticeContent({
     return numbers;
   }, [currentGroup]);
 
+  const usesDeferredGroupGrading = partConfig.hideContextUntilGroupComplete;
+
+  const isReviewGroupLockedForGrid = useMemo(() => {
+    if (!isWrongGroupReview) {
+      return () => false;
+    }
+
+    return (group: PracticeGroup) => {
+      if (lockedReviewGroupIds.has(group.group.id)) {
+        return true;
+      }
+
+      const editableIds = group.questions
+        .filter(
+          (question) =>
+            normalPractice?.getAnswer(question.id)?.isCorrect !== true,
+        )
+        .map((question) => question.id);
+
+      return (
+        editableIds.length > 0 &&
+        editableIds.every((questionId) =>
+          isPracticeAnswerGraded(practice.getAnswer(questionId)),
+        )
+      );
+    };
+  }, [isWrongGroupReview, lockedReviewGroupIds, normalPractice, practice]);
+
+  const isGroupRevealedForGrid = useMemo(() => {
+    if (!usesDeferredGroupGrading || isWrongGroupReview) {
+      return () => true;
+    }
+
+    return (group: PracticeGroup) => {
+      if (group.group.id === currentGroup?.group.id) {
+        const allQuestionsSelected = group.questions.every((question) => {
+          const selectedKey =
+            localSelections[question.id] ??
+            practice.getAnswer(question.id)?.selectedKey;
+          return selectedKey != null;
+        });
+        const allGroupGraded = group.questions.every((question) =>
+          isPracticeAnswerGraded(practice.getAnswer(question.id)),
+        );
+        return allQuestionsSelected || allGroupGraded;
+      }
+
+      return group.questions.every((question) =>
+        isPracticeAnswerGraded(practice.getAnswer(question.id)),
+      );
+    };
+  }, [
+    currentGroup,
+    isWrongGroupReview,
+    localSelections,
+    practice,
+    usesDeferredGroupGrading,
+  ]);
+
+  const getQuestionGridResult = useMemo(() => {
+    return (questionId: number) => {
+      const reviewAnswer = practice.getAnswer(questionId);
+      const normalAnswer = normalPractice?.getAnswer(questionId);
+
+      if (isWrongGroupReview) {
+        if (normalAnswer?.isCorrect === true) {
+          return "correct";
+        }
+
+        const group = groups.find((item) =>
+          item.questions.some((question) => question.id === questionId),
+        );
+
+        if (group && isReviewGroupLockedForGrid(group)) {
+          return getQuestionGridResultFromAnswer(reviewAnswer);
+        }
+
+        if (
+          isPracticeAnswerGraded(normalAnswer) &&
+          normalAnswer.isCorrect === false
+        ) {
+          return "wrong";
+        }
+
+        return null;
+      }
+
+      const group = groups.find((item) =>
+        item.questions.some((question) => question.id === questionId),
+      );
+
+      if (group && !isGroupRevealedForGrid(group)) {
+        return null;
+      }
+
+      return getQuestionGridResultFromAnswer(reviewAnswer);
+    };
+  }, [
+    groups,
+    isGroupRevealedForGrid,
+    isReviewGroupLockedForGrid,
+    isWrongGroupReview,
+    normalPractice,
+    practice,
+  ]);
+
   const questionGridSections = useMemo(() => {
     if (!currentGroup) {
       return [];
@@ -127,13 +236,15 @@ export function ListeningGroupPracticeContent({
         groups,
         activeQuestionNumbers,
         isWrongGroupReview
-          ? (questionId) => normalPractice.getAnswer(questionId)?.isCorrect !== true
+          ? (questionId) => normalPractice?.getAnswer(questionId)?.isCorrect !== true
           : undefined,
+        getQuestionGridResult,
       ),
     ];
   }, [
     activeQuestionNumbers,
     currentGroup,
+    getQuestionGridResult,
     groups,
     isWrongGroupReview,
     normalPractice,
@@ -156,7 +267,6 @@ export function ListeningGroupPracticeContent({
   const allEditableGraded = editableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
-  const usesDeferredGroupGrading = partConfig.hideContextUntilGroupComplete;
   const isReviewGroupLocked =
     isWrongGroupReview &&
     (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);

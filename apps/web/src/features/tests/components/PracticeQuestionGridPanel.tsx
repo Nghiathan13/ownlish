@@ -54,9 +54,19 @@ export function PracticeQuestionGridPanel({
                   <button
                     className={classNames(
                       "flex aspect-square items-center justify-center rounded-md border text-base font-normal tabular-nums transition",
-                      cell.isActive
-                        ? "border-foreground bg-muted text-foreground"
-                        : "border-border bg-background text-foreground hover:border-foreground hover:bg-muted/60",
+                      cell.result === "correct" &&
+                        "border-emerald-600 bg-emerald-50 text-emerald-900",
+                      cell.result === "wrong" &&
+                        "border-red-600 bg-red-50 text-red-900",
+                      cell.isActive &&
+                        cell.result == null &&
+                        "border-foreground bg-muted text-foreground",
+                      cell.isActive &&
+                        cell.result != null &&
+                        "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                      !cell.isActive &&
+                        cell.result == null &&
+                        "border-border bg-background text-foreground hover:border-foreground hover:bg-muted/60",
                     )}
                     key={cell.questionNumber}
                     onClick={() => onSelect(cell.questionNumber)}

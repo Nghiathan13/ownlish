@@ -26,7 +26,7 @@ import {
 } from "@/features/tests/lib/fullTestQuestions";
 import { writeFullTestIndex } from "@/features/tests/lib/fullTestStorage";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
-import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import { isPracticeAnswerGraded, getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
 import { normalizeSelectedParts } from "@/features/tests/lib/toeicParts";
 import {
   buildFullTestGridSections,
@@ -311,8 +311,12 @@ export function FullTestPracticeView({
         steps,
         normalizedSelectedParts,
         activeQuestionNumbers,
+        (questionId, partNumber) =>
+          getQuestionGridResultFromAnswer(
+            getFullTestSession(sessions, partNumber).getAnswer(questionId),
+          ),
       ),
-    [activeQuestionNumbers, normalizedSelectedParts, steps],
+    [activeQuestionNumbers, normalizedSelectedParts, sessions, steps],
   );
 
   const isLastStep = activeStepIndex >= steps.length - 1;

@@ -13,3 +13,15 @@ export function isPracticeAnswerGraded(
     answer?.isCorrect !== undefined && answer.answerKey !== undefined
   );
 }
+
+export type QuestionGridResult = "correct" | "wrong" | null;
+
+export function getQuestionGridResultFromAnswer(
+  answer?: PracticeSessionAnswer | null,
+): QuestionGridResult {
+  if (!isPracticeAnswerGraded(answer)) {
+    return null;
+  }
+
+  return answer.isCorrect ? "correct" : "wrong";
+}

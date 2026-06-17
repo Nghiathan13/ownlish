@@ -41,7 +41,7 @@ import {
   type PracticeItem,
 } from "@/features/tests/lib/practiceGroups";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
-import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import { isPracticeAnswerGraded, getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
 import {
   buildItemGridSection,
   findItemIndexForQuestion,
@@ -181,8 +181,15 @@ function PracticePartContent({
   }, [currentItem]);
 
   const questionGridSections = useMemo(
-    () => [buildItemGridSection(partNumber, items, activeQuestionNumbers)],
-    [activeQuestionNumbers, items, partNumber],
+    () => [
+      buildItemGridSection(
+        partNumber,
+        items,
+        activeQuestionNumbers,
+        (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
+      ),
+    ],
+    [activeQuestionNumbers, items, partNumber, practice.answers],
   );
 
   if (!currentItem) {
