@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTestPart } from "@/features/tests/api/testsApi";
@@ -42,6 +42,7 @@ import {
 } from "@/features/tests/lib/practiceGroups";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 
 export type FullTestContext = {
   attemptId: string;
@@ -153,17 +154,23 @@ function PracticePartContent({
   };
 
   const handleNext = () => {
-    if (activeIndex >= items.length - 1) {
+    const isLastItem = activeIndex >= items.length - 1;
+
+    if (fullTestContext && isLastItem) {
       void handleFinish();
       return;
     }
 
-    goToIndex(activeIndex + 1);
+    if (!isLastItem) {
+      goToIndex(activeIndex + 1);
+    }
   };
 
   if (!currentItem) {
     return null;
   }
+
+  const isLastItem = activeIndex >= items.length - 1;
 
   const finishLabel = fullTestContext
     ? partNumber >= 7
@@ -173,10 +180,8 @@ function PracticePartContent({
 
   const navigationBar = (
     <PracticeNavigationButtons
-      nextAriaLabel={
-        activeIndex >= items.length - 1 ? finishLabel : "Next"
-      }
-      nextDisabled={isFinishing}
+      nextAriaLabel={fullTestContext && isLastItem ? finishLabel : "Next"}
+      nextDisabled={isFinishing || (isLastItem && !fullTestContext)}
       onNext={handleNext}
       onPrevious={() => goToIndex(activeIndex - 1)}
       previousDisabled={activeIndex === 0 || isFinishing}
@@ -473,6 +478,35 @@ export function PracticePartView({
 
     router.push("/tests");
   };
+
+  const { sessionId, completeSession } = practice;
+
+  const handleExit = useCallback(async () => {
+    if (isWrongMode && sessionId) {
+      await completeSession();
+      void queryClient.invalidateQueries({
+        queryKey: getPracticeStatsQueryKey(testId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getWrongQuestionsQueryKey(testId, partNumber),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+      });
+    }
+
+    router.push("/tests");
+  }, [
+    completeSession,
+    isWrongMode,
+    partNumber,
+    queryClient,
+    router,
+    sessionId,
+    testId,
+  ]);
+
+  useRegisterPracticeExit(sessionId && !fullTestContext ? handleExit : null);
 
   if (!isSupportedPart) {
     return (

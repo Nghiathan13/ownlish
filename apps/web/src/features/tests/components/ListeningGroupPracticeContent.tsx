@@ -271,13 +271,19 @@ export function ListeningGroupPracticeContent({
   };
 
   const handleNext = () => {
-    if (activeGroupIndex >= groups.length - 1) {
+    const isLastGroup = activeGroupIndex >= groups.length - 1;
+
+    if (fullTestContext && isLastGroup) {
       void handleFinish();
       return;
     }
 
-    goToGroupIndex(activeGroupIndex + 1);
+    if (!isLastGroup) {
+      goToGroupIndex(activeGroupIndex + 1);
+    }
   };
+
+  const isLastGroup = activeGroupIndex >= groups.length - 1;
 
   const finishLabel = fullTestContext
     ? partNumber >= 7
@@ -289,10 +295,8 @@ export function ListeningGroupPracticeContent({
 
   const navigationBar = (
     <PracticeNavigationButtons
-      nextAriaLabel={
-        activeGroupIndex >= groups.length - 1 ? finishLabel : "Next"
-      }
-      nextDisabled={isFinishing}
+      nextAriaLabel={fullTestContext && isLastGroup ? finishLabel : "Next"}
+      nextDisabled={isFinishing || (isLastGroup && !fullTestContext)}
       onNext={handleNext}
       onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
       previousDisabled={activeGroupIndex === 0 || isFinishing}

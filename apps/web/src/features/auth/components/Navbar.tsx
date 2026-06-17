@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { isPartPracticePath } from "@/features/tests/lib/isPartPracticePath";
+import { usePracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
+import { Button } from "@/shared/ui/Button";
+import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { logout, status, user } = useAuthSession();
+  const practiceExit = usePracticeExit();
+  const isImmersivePractice = isPartPracticePath(pathname);
 
   const isAuth = status === "authenticated";
 
@@ -22,6 +29,25 @@ export function Navbar() {
         : "text-muted-foreground hover:text-foreground"
     }`;
   };
+
+  if (isImmersivePractice) {
+    return (
+      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+        <div className={classNames(APP_CONTAINER_CLASS, "flex items-center py-3")}>
+          <Button
+            className="gap-2 text-base font-normal"
+            onClick={() => {
+              void (practiceExit?.exit() ?? router.push("/tests"));
+            }}
+            type="button"
+          >
+            <ArrowBackIcon className="size-4" />
+            Exit
+          </Button>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
