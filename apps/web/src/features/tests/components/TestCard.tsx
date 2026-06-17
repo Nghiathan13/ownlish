@@ -1,5 +1,7 @@
 "use client";
 
+import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
+import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { Button } from "@/shared/ui/Button";
@@ -17,6 +19,12 @@ type TestCardProps = {
   onPractice: () => void;
 };
 
+const TOEIC_TEST_QUESTION_COUNT = 200;
+
+function getPracticedQuestionCount(stats: PracticeStats) {
+  return stats.practiceCorrectCount + stats.wrongQuestionCount;
+}
+
 export function TestCard({
   test,
   stats,
@@ -25,6 +33,8 @@ export function TestCard({
   onClearHistory,
   onPractice,
 }: TestCardProps) {
+  const practicedQuestionCount = stats ? getPracticedQuestionCount(stats) : 0;
+
   return (
     <article className="flex flex-col gap-4 rounded-xl border border-border p-4 transition hover:bg-muted">
       <div className="flex items-start justify-between gap-3">
@@ -33,10 +43,23 @@ export function TestCard({
           {isLoadingStats ? (
             <p className="mt-2 text-sm text-muted-foreground">Loading stats...</p>
           ) : stats ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Correct {stats.practiceCorrectCount} · Wrong{" "}
-              {stats.wrongQuestionCount}
-            </p>
+            practicedQuestionCount === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">Not attempted yet</p>
+            ) : (
+              <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                <span>
+                  {practicedQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <CheckIcon className="size-4" />
+                  {stats.practiceCorrectCount}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <CloseIcon className="size-4" />
+                  {stats.wrongQuestionCount}
+                </span>
+              </div>
+            )
           ) : null}
         </div>
         <button
