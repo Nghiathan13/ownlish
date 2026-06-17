@@ -46,7 +46,7 @@ export function PracticeQuestionGridPanel({
         <div className="flex flex-col gap-4">
           {sections.map((section) => (
             <section className="flex flex-col gap-2" key={section.partNumber}>
-              <h3 className="text-base font-normal">
+              <h3 className="text-base font-semibold">
                 Part {section.partNumber}
               </h3>
               <div className="grid grid-cols-6 gap-2">

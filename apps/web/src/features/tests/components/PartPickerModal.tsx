@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
+import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { classNames } from "@/shared/lib/classNames";
 import type { PracticeMode, PracticeStats } from "@/features/tests/api/types";
 import { getPartStats } from "@/features/tests/hooks/usePracticeStats";
@@ -131,14 +132,16 @@ export function PartPickerModal({
     onStartMulti(normalizedSelectedParts);
   };
 
+  const startLabel = isStarting
+    ? "Starting..."
+    : normalizedSelectedParts.length > 1
+      ? `Start (${normalizedSelectedParts.length} parts)`
+      : "Start";
+
   return (
-    <Modal
-      description="Choose one or more parts to practice."
-      onClose={onClose}
-      title={`Practice ${testLabel}`}
-    >
-      <div className="space-y-6">
-        <section>
+    <Modal onClose={onClose} title={`Practice ${testLabel}`}>
+      <div className="flex flex-col gap-4">
+        <section className="flex flex-col gap-2">
           <PartCheckboxOption
             checked={isFullTest}
             description="All 7 parts"
@@ -147,8 +150,8 @@ export function PartPickerModal({
           />
         </section>
 
-        <section>
-          <h3 className="mb-3 text-sm font-semibold">Listening</h3>
+        <section className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold">Listening</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {LISTENING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
@@ -173,8 +176,8 @@ export function PartPickerModal({
           </div>
         </section>
 
-        <section>
-          <h3 className="mb-3 text-sm font-semibold">Reading</h3>
+        <section className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold">Reading</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {READING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
@@ -200,9 +203,6 @@ export function PartPickerModal({
         </section>
 
         <div className="flex flex-wrap justify-end gap-2">
-          <Button disabled={isStarting} onClick={onClose} type="button" variant="secondary">
-            Cancel
-          </Button>
           <Button
             disabled={
               isStarting ||
@@ -222,17 +222,13 @@ export function PartPickerModal({
             Review wrong{wrongQuestionCount > 0 ? ` (${wrongQuestionCount})` : ""}
           </Button>
           <Button
-            disabled={
-              isStarting || normalizedSelectedParts.length === 0
-            }
+            className="gap-2"
+            disabled={isStarting || normalizedSelectedParts.length === 0}
             onClick={handleStart}
             type="button"
           >
-            {isStarting
-              ? "Starting..."
-              : normalizedSelectedParts.length > 1
-                ? `Start (${normalizedSelectedParts.length} parts)`
-                : "Start"}
+            {startLabel}
+            <StartIcon className="size-4" />
           </Button>
         </div>
       </div>
