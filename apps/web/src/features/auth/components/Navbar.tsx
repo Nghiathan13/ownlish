@@ -33,7 +33,7 @@ export function Navbar() {
   if (isImmersivePractice) {
     return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-        <div className={classNames(APP_CONTAINER_CLASS, "flex items-center py-3")}>
+        <div className={classNames(APP_CONTAINER_CLASS, "flex items-center py-4")}>
           <Button
             className="gap-2 py-2 text-base font-normal"
             onClick={() => {

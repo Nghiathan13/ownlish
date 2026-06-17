@@ -63,7 +63,7 @@ export function QuestionOptions({
   const showGrading = showResult && locked;
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2 px-4">
       {OPTION_KEYS.slice(0, optionCount).map((key) => {
         const isSelected = selectedKey === key;
         const isCorrect = showGrading && answerKey === key;
