@@ -63,7 +63,7 @@ export function QuestionOptions({
   const showGrading = showResult && locked;
 
   return (
-    <div className="grid gap-2 px-4">
+    <div className="grid gap-2">
       {OPTION_KEYS.slice(0, optionCount).map((key) => {
         const isSelected = selectedKey === key;
         const isCorrect = showGrading && answerKey === key;
@@ -75,7 +75,7 @@ export function QuestionOptions({
           (showEnglishTextBeforeAnswer || locked);
 
         const className = classNames(
-          "min-h-10 rounded-lg border px-3 py-2 text-left font-inherit transition select-text",
+          "min-h-10 rounded-lg border px-4 py-2 text-left font-inherit transition select-text",
           locked && "cursor-text",
           isCorrect && "border-emerald-600 bg-emerald-50 text-emerald-900",
           isWrong && "border-red-600 bg-red-50 text-red-900",

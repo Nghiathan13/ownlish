@@ -28,6 +28,11 @@ import { writeFullTestIndex } from "@/features/tests/lib/fullTestStorage";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { normalizeSelectedParts } from "@/features/tests/lib/toeicParts";
+import {
+  buildFullTestGridSections,
+  findStepIndexForQuestion,
+  getActiveQuestionNumbersForStep,
+} from "@/features/tests/lib/practiceQuestionGrid";
 import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { Button } from "@/shared/ui/Button";
@@ -295,6 +300,21 @@ export function FullTestPracticeView({
   );
   useRegisterPracticeExit(anySessionReady ? handleExit : null);
 
+  const activeQuestionNumbers = useMemo(
+    () => getActiveQuestionNumbersForStep(currentStep),
+    [currentStep],
+  );
+
+  const questionGridSections = useMemo(
+    () =>
+      buildFullTestGridSections(
+        steps,
+        normalizedSelectedParts,
+        activeQuestionNumbers,
+      ),
+    [activeQuestionNumbers, normalizedSelectedParts, steps],
+  );
+
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
     <PracticeNavigationButtons
@@ -306,7 +326,14 @@ export function FullTestPracticeView({
       onPrevious={() => {
         goToStepIndex(activeStepIndex - 1);
       }}
+      onQuestionGridSelect={(questionNumber) => {
+        const stepIndex = findStepIndexForQuestion(steps, questionNumber);
+        if (stepIndex >= 0) {
+          goToStepIndex(stepIndex);
+        }
+      }}
       previousDisabled={activeStepIndex === 0 || isSyncing}
+      questionGridSections={questionGridSections}
     />
   );
 

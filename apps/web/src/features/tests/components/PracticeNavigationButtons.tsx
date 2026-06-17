@@ -1,6 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import { PracticeQuestionGridPanel } from "@/features/tests/components/PracticeQuestionGridPanel";
+import type { QuestionGridSection } from "@/features/tests/lib/practiceQuestionGrid";
 import { classNames } from "@/shared/lib/classNames";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
+import { GridViewIcon } from "@/shared/ui/icons/GridViewIcon";
 
 type PracticeNavigationButtonsProps = {
   nextAriaLabel?: string;
@@ -8,6 +14,8 @@ type PracticeNavigationButtonsProps = {
   onNext: () => void;
   onPrevious: () => void;
   previousDisabled?: boolean;
+  questionGridSections?: QuestionGridSection[];
+  onQuestionGridSelect?: (questionNumber: number) => void;
 };
 
 export function PracticeNavigationButtons({
@@ -16,37 +24,66 @@ export function PracticeNavigationButtons({
   onNext,
   onPrevious,
   previousDisabled = false,
+  questionGridSections,
+  onQuestionGridSelect,
 }: PracticeNavigationButtonsProps) {
+  const [isGridOpen, setIsGridOpen] = useState(false);
+  const showQuestionGrid =
+    questionGridSections != null &&
+    questionGridSections.some((section) => section.cells.length > 0) &&
+    onQuestionGridSelect != null;
+
   return (
-    <div className="flex items-center justify-end gap-2">
-      <button
-        aria-label="Previous"
-        className={classNames(
-          "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
-          previousDisabled
-            ? "cursor-not-allowed opacity-50"
-            : "cursor-pointer hover:border-foreground",
-        )}
-        disabled={previousDisabled}
-        onClick={onPrevious}
-        type="button"
-      >
-        <ArrowBackIcon className="size-4" />
-      </button>
-      <button
-        aria-label={nextAriaLabel}
-        className={classNames(
-          "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
-          nextDisabled
-            ? "cursor-not-allowed opacity-50"
-            : "cursor-pointer hover:border-foreground",
-        )}
-        disabled={nextDisabled}
-        onClick={onNext}
-        type="button"
-      >
-        <ArrowForwardIcon className="size-4" />
-      </button>
-    </div>
+    <>
+      {isGridOpen && showQuestionGrid ? (
+        <PracticeQuestionGridPanel
+          onClose={() => setIsGridOpen(false)}
+          onSelect={(questionNumber) => {
+            onQuestionGridSelect(questionNumber);
+          }}
+          sections={questionGridSections}
+        />
+      ) : null}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          aria-label="Previous"
+          className={classNames(
+            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
+            previousDisabled
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:border-foreground",
+          )}
+          disabled={previousDisabled}
+          onClick={onPrevious}
+          type="button"
+        >
+          <ArrowBackIcon className="size-4" />
+        </button>
+        {showQuestionGrid ? (
+          <button
+            aria-label="Question list"
+            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200 hover:border-foreground"
+            onClick={() => setIsGridOpen(true)}
+            type="button"
+          >
+            <GridViewIcon className="size-4" />
+          </button>
+        ) : null}
+        <button
+          aria-label={nextAriaLabel}
+          className={classNames(
+            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
+            nextDisabled
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:border-foreground",
+          )}
+          disabled={nextDisabled}
+          onClick={onNext}
+          type="button"
+        >
+          <ArrowForwardIcon className="size-4" />
+        </button>
+      </div>
+    </>
   );
 }

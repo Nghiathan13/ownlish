@@ -12,6 +12,10 @@ import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
 import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
+import {
+  buildGroupGridSection,
+  findGroupIndexForQuestion,
+} from "@/features/tests/lib/practiceQuestionGrid";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
 import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
 
@@ -98,6 +102,43 @@ export function ListeningGroupPracticeContent({
       )
       .map((question) => question.id);
   }, [currentGroup, isWrongGroupReview, normalPractice]);
+
+  const activeQuestionNumbers = useMemo(() => {
+    const numbers = new Set<number>();
+    if (!currentGroup) {
+      return numbers;
+    }
+
+    for (const question of currentGroup.questions) {
+      numbers.add(question.questionNumber);
+    }
+
+    return numbers;
+  }, [currentGroup]);
+
+  const questionGridSections = useMemo(() => {
+    if (!currentGroup) {
+      return [];
+    }
+
+    return [
+      buildGroupGridSection(
+        partNumber,
+        groups,
+        activeQuestionNumbers,
+        isWrongGroupReview
+          ? (questionId) => normalPractice.getAnswer(questionId)?.isCorrect !== true
+          : undefined,
+      ),
+    ];
+  }, [
+    activeQuestionNumbers,
+    currentGroup,
+    groups,
+    isWrongGroupReview,
+    normalPractice,
+    partNumber,
+  ]);
 
   if (!currentGroup) {
     return null;
@@ -295,15 +336,24 @@ export function ListeningGroupPracticeContent({
 
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
-  const navigationBar = navigation ?? (
+  const defaultNavigationBar = (
     <PracticeNavigationButtons
       nextAriaLabel={fullTestContext && isLastGroup ? finishLabel : "Next"}
       nextDisabled={isFinishing || (isLastGroup && !fullTestContext)}
       onNext={handleNext}
       onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
+      onQuestionGridSelect={(questionNumber) => {
+        const groupIndex = findGroupIndexForQuestion(groups, questionNumber);
+        if (groupIndex >= 0) {
+          goToGroupIndex(groupIndex);
+        }
+      }}
       previousDisabled={activeGroupIndex === 0 || isFinishing}
+      questionGridSections={questionGridSections}
     />
   );
+
+  const navigationBar = navigation ?? defaultNavigationBar;
 
   const isPartialGroupPhase =
     usesDeferredGroupGrading && !showGroupReveal && !isWrongGroupReview;

@@ -42,6 +42,10 @@ import {
 } from "@/features/tests/lib/practiceGroups";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import {
+  buildItemGridSection,
+  findItemIndexForQuestion,
+} from "@/features/tests/lib/practiceQuestionGrid";
 import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 
 export type FullTestContext = {
@@ -166,11 +170,24 @@ function PracticePartContent({
     }
   };
 
+  const isLastItem = activeIndex >= items.length - 1;
+
+  const activeQuestionNumbers = useMemo(() => {
+    const numbers = new Set<number>();
+    if (currentItem) {
+      numbers.add(currentItem.question.questionNumber);
+    }
+    return numbers;
+  }, [currentItem]);
+
+  const questionGridSections = useMemo(
+    () => [buildItemGridSection(partNumber, items, activeQuestionNumbers)],
+    [activeQuestionNumbers, items, partNumber],
+  );
+
   if (!currentItem) {
     return null;
   }
-
-  const isLastItem = activeIndex >= items.length - 1;
 
   const finishLabel = fullTestContext
     ? partNumber >= 7
@@ -184,7 +201,14 @@ function PracticePartContent({
       nextDisabled={isFinishing || (isLastItem && !fullTestContext)}
       onNext={handleNext}
       onPrevious={() => goToIndex(activeIndex - 1)}
+      onQuestionGridSelect={(questionNumber) => {
+        const index = findItemIndexForQuestion(items, questionNumber);
+        if (index >= 0) {
+          goToIndex(index);
+        }
+      }}
       previousDisabled={activeIndex === 0 || isFinishing}
+      questionGridSections={questionGridSections}
     />
   );
 
