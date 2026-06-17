@@ -17,6 +17,7 @@ import type { AuthRequest } from '../auth/types/auth.types';
 import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { CompleteAttemptPartDto } from './dto/complete-attempt-part.dto';
+import { SyncAttemptProgressDto } from './dto/sync-attempt-progress.dto';
 import { GetPracticeStatsDto } from './dto/get-practice-stats.dto';
 import { ListAttemptsDto } from './dto/list-attempts.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
@@ -148,6 +149,19 @@ export class TestsController {
       request.user.id,
       attemptId,
       partNumber,
+      dto,
+    );
+  }
+
+  @Patch('attempts/:attemptId/sync')
+  syncAttemptProgress(
+    @Req() request: AuthRequest,
+    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
+    @Body() dto: SyncAttemptProgressDto,
+  ) {
+    return this.attemptService.syncAttemptProgress(
+      request.user.id,
+      attemptId,
       dto,
     );
   }

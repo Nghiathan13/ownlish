@@ -117,4 +117,40 @@ describe('AttemptService', () => {
       ],
     });
   });
+
+  it('syncs attempt progress for multiple parts in one request', async () => {
+    prismaMock.toeicTestAttempt.findFirst.mockResolvedValue(sampleAttempt);
+    prismaMock.$transaction.mockImplementation(async (callback) =>
+      callback({
+        toeicTestAttemptPart: {
+          update: jest.fn(),
+          findMany: jest.fn().mockResolvedValue(
+            sampleAttempt.parts.map((part) => ({
+              ...part,
+              correctCount: 1,
+              wrongCount: 0,
+            })),
+          ),
+        },
+        toeicTestAttempt: {
+          update: jest.fn().mockResolvedValue({
+            ...sampleAttempt,
+            totalCorrect: 7,
+            totalWrong: 0,
+          }),
+        },
+      }),
+    );
+
+    await expect(
+      service.syncAttemptProgress('user-id', 'attempt-id', {
+        parts: [
+          { partNumber: 1, correctCount: 1, wrongCount: 0 },
+          { partNumber: 3, correctCount: 2, wrongCount: 1 },
+        ],
+      }),
+    ).resolves.toMatchObject({
+      attemptId: 'attempt-id',
+    });
+  });
 });

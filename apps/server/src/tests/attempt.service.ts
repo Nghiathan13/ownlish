@@ -153,16 +153,6 @@ export class AttemptService {
       throw new NotFoundException('Attempt part not found.');
     }
 
-    const previousPart = attempt.parts.find(
-      (part) => part.partNumber === partNumber - 1,
-    );
-
-    if (partNumber > 1 && !previousPart?.completedAt) {
-      throw new ConflictException(
-        'Complete the previous part before finishing this one.',
-      );
-    }
-
     const updatedAttempt = await this.prisma.$transaction(async (tx) => {
       await tx.toeicTestAttemptPart.update({
         where: { id: attemptPart.id },
@@ -172,6 +162,91 @@ export class AttemptService {
           completedAt: new Date(),
         },
       });
+
+      const parts = await tx.toeicTestAttemptPart.findMany({
+        where: { attemptId },
+        orderBy: { partNumber: 'asc' },
+      });
+
+      const totalCorrect = parts.reduce(
+        (sum, part) => sum + part.correctCount,
+        0,
+      );
+      const totalWrong = parts.reduce((sum, part) => sum + part.wrongCount, 0);
+      const allPartsCompleted = parts.every((part) => part.completedAt);
+
+      return tx.toeicTestAttempt.update({
+        where: { id: attemptId },
+        data: {
+          totalCorrect,
+          totalWrong,
+          completedAt: allPartsCompleted ? new Date() : null,
+        },
+        include: {
+          parts: {
+            orderBy: { partNumber: 'asc' },
+          },
+          test: true,
+        },
+      });
+    });
+
+    return this.formatAttemptResponse(updatedAttempt);
+  }
+
+  async syncAttemptProgress(
+    userId: string,
+    attemptId: string,
+    dto: {
+      parts: Array<{
+        partNumber: number;
+        correctCount: number;
+        wrongCount: number;
+      }>;
+      finish?: boolean;
+    },
+  ) {
+    const attempt = await this.findAttemptForUser(userId, attemptId);
+
+    if (attempt.completedAt) {
+      throw new ConflictException(
+        'This full test attempt is already completed.',
+      );
+    }
+
+    const partNumbers = new Set<number>();
+
+    for (const part of dto.parts) {
+      if (part.partNumber < 1 || part.partNumber > TOEIC_PART_COUNT) {
+        throw new NotFoundException('Test part not found.');
+      }
+
+      if (partNumbers.has(part.partNumber)) {
+        throw new ConflictException('Duplicate part numbers in sync payload.');
+      }
+
+      partNumbers.add(part.partNumber);
+    }
+
+    const updatedAttempt = await this.prisma.$transaction(async (tx) => {
+      for (const part of dto.parts) {
+        const attemptPart = attempt.parts.find(
+          (entry) => entry.partNumber === part.partNumber,
+        );
+
+        if (!attemptPart) {
+          throw new NotFoundException('Attempt part not found.');
+        }
+
+        await tx.toeicTestAttemptPart.update({
+          where: { id: attemptPart.id },
+          data: {
+            correctCount: part.correctCount,
+            wrongCount: part.wrongCount,
+            ...(dto.finish ? { completedAt: new Date() } : {}),
+          },
+        });
+      }
 
       const parts = await tx.toeicTestAttemptPart.findMany({
         where: { attemptId },
