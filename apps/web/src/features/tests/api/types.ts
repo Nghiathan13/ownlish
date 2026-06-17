@@ -23,6 +23,7 @@ export type ToeicQuestion = {
   questionVi: string | null;
   options: ToeicQuestionOptions;
   optionCount: number;
+  answerKey: "A" | "B" | "C" | "D" | null;
 };
 
 export type ToeicQuestionGroup = {

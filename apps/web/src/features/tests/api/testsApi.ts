@@ -46,6 +46,18 @@ function parseQuestion(value: unknown): ToeicQuestion | null {
   }
 
   const options = parseOptions(value.options);
+  const rawAnswerKey =
+    typeof value.answerKey === "string"
+      ? value.answerKey.trim().toUpperCase()
+      : null;
+  const answerKey =
+    rawAnswerKey === "A" ||
+    rawAnswerKey === "B" ||
+    rawAnswerKey === "C" ||
+    rawAnswerKey === "D"
+      ? rawAnswerKey
+      : null;
+
   if (
     !isNumber(value.id) ||
     !isNumber(value.questionNumber) ||
@@ -62,6 +74,7 @@ function parseQuestion(value: unknown): ToeicQuestion | null {
     questionVi: isNullableString(value.questionVi) ? value.questionVi : null,
     options,
     optionCount: value.optionCount,
+    answerKey,
   };
 }
 

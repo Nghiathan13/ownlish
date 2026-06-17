@@ -39,6 +39,8 @@ import {
   buildWrongReviewGroups,
   type PracticeItem,
 } from "@/features/tests/lib/practiceGroups";
+import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
+import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 
 export type FullTestContext = {
   attemptId: string;
@@ -110,7 +112,8 @@ function PracticePartContent({
   const currentAnswer = currentItem
     ? practice.getAnswer(currentItem.question.id)
     : undefined;
-  const isAnswered = Boolean(currentAnswer);
+  const isAnswered = isPracticeAnswerGraded(currentAnswer);
+  const questionId = currentItem?.question.id;
 
   const goToIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, items.length - 1));
@@ -118,12 +121,12 @@ function PracticePartContent({
     writePracticeIndex(testId, partNumber, nextIndex);
   };
 
-  const handleSelect = async (key: "A" | "B" | "C" | "D") => {
-    if (!currentItem || currentAnswer || practice.isSubmitting) {
+  const handleSelect = (key: "A" | "B" | "C" | "D") => {
+    if (!currentItem || isAnswered) {
       return;
     }
 
-    await practice.submitAnswer(currentItem.question.id, key);
+    practice.selectAnswer(currentItem.question.id, key);
   };
 
   const handleFinish = async () => {
@@ -183,7 +186,7 @@ function PracticePartContent({
           "text-base",
           activeIndex >= items.length - 1 && "min-w-32",
         )}
-        disabled={practice.isSubmitting || isFinishing}
+        disabled={isFinishing}
         onClick={handleNext}
         type="button"
       >
@@ -217,7 +220,7 @@ function PracticePartContent({
       <QuestionOptions
         answerKey={currentAnswer?.answerKey ?? null}
         isLocked={isAnswered}
-        isSubmitting={practice.isSubmitting}
+        isSubmitting={questionId ? practice.isQuestionPending(questionId) : false}
         onSelect={handleSelect}
         optionCount={currentItem.question.optionCount}
         options={currentItem.question.options}
@@ -231,6 +234,27 @@ function PracticePartContent({
         variant={partConfig.translationVariant}
         visible={isAnswered}
       />
+    </>
+  );
+
+  const syncFailureBanner =
+    questionId && practice.isQuestionSyncFailed(questionId) ? (
+      <p className="text-base text-red-600">
+        Could not save this answer.{" "}
+        <button
+          className="underline"
+          onClick={() => practice.retrySync(questionId)}
+          type="button"
+        >
+          Retry
+        </button>
+      </p>
+    ) : null;
+
+  const optionsPanelWithSync = (
+    <>
+      {optionsPanel}
+      {syncFailureBanner}
     </>
   );
 
@@ -251,7 +275,7 @@ function PracticePartContent({
                     : null
                 }
               />
-              {optionsPanel}
+              {optionsPanelWithSync}
             </div>
           </div>
         </div>
@@ -294,7 +318,7 @@ function PracticePartContent({
             </div>
           ) : null}
 
-          {optionsPanel}
+          {optionsPanelWithSync}
         </div>
       </div>
 
@@ -333,6 +357,11 @@ export function PracticePartView({
     [partQuery.data?.groups],
   );
 
+  const answerKeyMap = useMemo(
+    () => buildAnswerKeyMap(partQuery.data?.groups ?? []),
+    [partQuery.data?.groups],
+  );
+
   const { wrongQuestions, isLoadingWrongQuestions, wrongQuestionsError } =
     useWrongQuestions({
       accessToken,
@@ -348,6 +377,7 @@ export function PracticePartView({
     testId,
     partNumber,
     mode: effectiveMode,
+    answerKeyMap,
     enabled:
       isSupportedPart &&
       Boolean(partQuery.data) &&
@@ -366,6 +396,7 @@ export function PracticePartView({
     testId,
     partNumber,
     mode: "normal",
+    answerKeyMap,
     enabled:
       isSupportedPart &&
       Boolean(partQuery.data) &&

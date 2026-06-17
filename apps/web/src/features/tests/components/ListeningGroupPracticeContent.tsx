@@ -104,6 +104,10 @@ export function ListeningGroupPracticeContent({
   const allGroupGraded = currentGroup.questions.every((question) =>
     isPracticeAnswerGraded(practice.getAnswer(question.id)),
   );
+  const allQuestionsSelected = currentGroup.questions.every((question) => {
+    const answer = practice.getAnswer(question.id);
+    return answer?.selectedKey != null;
+  });
   const allEditableGraded = editableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
@@ -113,7 +117,7 @@ export function ListeningGroupPracticeContent({
     (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);
   const showGroupReveal = isWrongGroupReview
     ? isReviewGroupLocked
-    : !usesDeferredGroupGrading || allGroupGraded;
+    : !usesDeferredGroupGrading || allQuestionsSelected || allGroupGraded;
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : showGroupReveal;
   const totalQuestions =
@@ -128,8 +132,8 @@ export function ListeningGroupPracticeContent({
     writePracticeIndex(testId, partNumber, nextIndex);
   };
 
-  const handleSelect = async (toeicQuestionId: number, key: OptionKey) => {
-    if (practice.isSubmitting || isFinishing) {
+  const handleSelect = (toeicQuestionId: number, key: OptionKey) => {
+    if (isFinishing) {
       return;
     }
 
@@ -159,25 +163,28 @@ export function ListeningGroupPracticeContent({
         return;
       }
 
+      const entries = editableQuestionIds.map((questionId) => ({
+        toeicQuestionId: questionId,
+        selectedKey: nextSelections[questionId]!,
+      }));
       const groupId = currentGroup.group.id;
+
+      practice.gradeGroupLocally(entries);
       setLockedReviewGroupIds((current) => new Set(current).add(groupId));
 
-      try {
-        await practice.submitReviewGroupAnswersBatch(
-          groupId,
-          editableQuestionIds.map((questionId) => ({
-            toeicQuestionId: questionId,
-            selectedKey: nextSelections[questionId]!,
-          })),
-        );
-        setLocalSelections({});
-      } catch {
-        setLockedReviewGroupIds((current) => {
-          const next = new Set(current);
-          next.delete(groupId);
-          return next;
+      void practice
+        .submitReviewGroupAnswersBatch(groupId, entries)
+        .then(() => {
+          setLocalSelections({});
+        })
+        .catch(() => {
+          practice.rollbackGroupGrade(entries);
+          setLockedReviewGroupIds((current) => {
+            const next = new Set(current);
+            next.delete(groupId);
+            return next;
+          });
         });
-      }
       return;
     }
 
@@ -191,12 +198,32 @@ export function ListeningGroupPracticeContent({
         return;
       }
 
-      const replace = Boolean(existing && isPracticeAnswerGraded(existing));
-      await practice.submitAnswer(
-        toeicQuestionId,
-        key,
-        replace ? { replace: true } : undefined,
-      );
+      const allSelected = currentGroup.questions.every((question) => {
+        const selectedKey =
+          question.id === toeicQuestionId
+            ? key
+            : practice.getAnswer(question.id)?.selectedKey;
+        return selectedKey != null;
+      });
+
+      if (allSelected) {
+        const entries = currentGroup.questions.map((question) => ({
+          toeicQuestionId: question.id,
+          selectedKey: (question.id === toeicQuestionId
+            ? key
+            : practice.getAnswer(question.id)?.selectedKey)!,
+        }));
+        practice.gradeGroupLocally(entries);
+        void practice.syncAnswerToServer(toeicQuestionId, key, {
+          replace: Boolean(existing?.selectedKey),
+        });
+        return;
+      }
+
+      practice.selectAnswer(toeicQuestionId, key, {
+        deferGrade: true,
+        replace: Boolean(existing?.selectedKey),
+      });
       return;
     }
 
@@ -204,7 +231,7 @@ export function ListeningGroupPracticeContent({
       return;
     }
 
-    await practice.submitAnswer(toeicQuestionId, key);
+    practice.selectAnswer(toeicQuestionId, key);
   };
 
   const handleFinish = async () => {
@@ -262,7 +289,7 @@ export function ListeningGroupPracticeContent({
           "text-base",
           activeGroupIndex >= groups.length - 1 && "min-w-32",
         )}
-        disabled={practice.isSubmitting || isFinishing}
+        disabled={isFinishing}
         onClick={handleNext}
         type="button"
       >
@@ -291,7 +318,6 @@ export function ListeningGroupPracticeContent({
     const reviewAnswer = practice.getAnswer(question.id);
     const normalAnswer = normalPractice?.getAnswer(question.id);
     const wasCorrectInNormal = normalAnswer?.isCorrect === true;
-    const questionGraded = isPracticeAnswerGraded(reviewAnswer);
 
     let selectedKey: OptionKey | null;
     let answerKey: OptionKey | null;
@@ -312,25 +338,28 @@ export function ListeningGroupPracticeContent({
       answerKey = wasCorrectInNormal
         ? (normalAnswer?.answerKey ?? null)
         : isReviewGroupLocked
-          ? (reviewAnswer?.answerKey ?? null)
+          ? (reviewAnswer?.answerKey ?? question.answerKey ?? null)
           : null;
       isLocked = wasCorrectInNormal || isReviewGroupLocked;
       showResult = wasCorrectInNormal || isReviewGroupLocked;
     } else if (usesDeferredGroupGrading) {
       selectedKey = reviewAnswer?.selectedKey ?? null;
-      answerKey =
-        showGroupReveal && questionGraded
-          ? (reviewAnswer?.answerKey ?? null)
-          : null;
-      isLocked = showGroupReveal;
-      showResult = showGroupReveal;
+      if (showGroupReveal) {
+        answerKey = reviewAnswer?.answerKey ?? question.answerKey ?? null;
+        isLocked = true;
+        showResult = true;
+      } else {
+        answerKey = null;
+        isLocked = false;
+        showResult = false;
+      }
     } else {
       selectedKey = reviewAnswer?.selectedKey ?? null;
-      answerKey = questionGraded
-        ? (reviewAnswer?.answerKey ?? null)
+      answerKey = isPracticeAnswerGraded(reviewAnswer)
+        ? (reviewAnswer?.answerKey ?? question.answerKey ?? null)
         : null;
-      isLocked = questionGraded;
-      showResult = questionGraded;
+      isLocked = isPracticeAnswerGraded(reviewAnswer);
+      showResult = isPracticeAnswerGraded(reviewAnswer);
     }
 
     const translationVisible = showGroupReveal;
@@ -340,7 +369,7 @@ export function ListeningGroupPracticeContent({
         <QuestionOptions
           answerKey={answerKey}
           isLocked={isLocked}
-          isSubmitting={practice.isSubmitting || isFinishing}
+          isSubmitting={practice.isQuestionPending(question.id) || isFinishing}
           onSelect={(key) => handleSelect(question.id, key)}
           optionCount={question.optionCount}
           options={question.options}
@@ -412,6 +441,12 @@ export function ListeningGroupPracticeContent({
     </div>
   ) : null;
 
+  const syncFailureBanner = practice.hasSyncFailures ? (
+    <p className="text-base text-red-600">
+      Some answers could not be saved. Please retry before leaving this group.
+    </p>
+  ) : null;
+
   if (usesSplitPlainLayout) {
     return (
       <>
@@ -422,6 +457,7 @@ export function ListeningGroupPracticeContent({
           <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
             {questionBlocks}
             {groupPassageTranslation}
+            {syncFailureBanner}
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-4">
@@ -456,6 +492,7 @@ export function ListeningGroupPracticeContent({
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
           {questionBlocks}
           {groupPassageTranslation}
+          {syncFailureBanner}
         </div>
       </div>
 
