@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { countOptions, mapQuestionOptions } from './lib/toeic-question-mapper';
+import { countOptions, mapQuestionOptions, parseAnswerKey } from './lib/toeic-question-mapper';
 import { TestsStorageService } from './tests-storage.service';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 
@@ -90,6 +90,7 @@ export class TestsService {
             questionVi: question.questionVi,
             options: mapQuestionOptions(question),
             optionCount: countOptions(question),
+            answerKey: parseAnswerKey(question.answerKey),
           })),
         };
       }),
