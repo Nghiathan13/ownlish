@@ -720,3 +720,29 @@ export async function completeTestAttemptPart(
 
   return attempt;
 }
+
+export async function syncTestAttemptProgress(
+  token: string,
+  attemptId: string,
+  payload: {
+    parts: Array<{
+      partNumber: number;
+      correctCount: number;
+      wrongCount: number;
+    }>;
+    finish?: boolean;
+  },
+) {
+  const body = await apiRequest(`/tests/attempts/${attemptId}/sync`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+
+  const attempt = parseAttemptDetail(body);
+  if (!attempt) {
+    invalidApiResponse();
+  }
+
+  return attempt;
+}

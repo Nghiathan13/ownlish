@@ -38,6 +38,7 @@ type ListeningGroupPracticeContentProps = {
   clearSession: () => void;
   fullTestContext?: FullTestContext;
   onFinish: () => void;
+  navigation?: React.ReactNode;
 };
 
 function formatGroupLabel(group: PracticeGroup["group"]) {
@@ -61,6 +62,7 @@ export function ListeningGroupPracticeContent({
   clearSession,
   fullTestContext,
   onFinish,
+  navigation,
 }: ListeningGroupPracticeContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
   const isWrongGroupReview =
@@ -293,7 +295,7 @@ export function ListeningGroupPracticeContent({
 
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
-  const navigationBar = (
+  const navigationBar = navigation ?? (
     <PracticeNavigationButtons
       nextAriaLabel={fullTestContext && isLastGroup ? finishLabel : "Next"}
       nextDisabled={isFinishing || (isLastGroup && !fullTestContext)}
