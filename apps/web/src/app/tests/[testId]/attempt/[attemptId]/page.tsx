@@ -1,13 +1,21 @@
 "use client";
 
-import { use } from "react";
-import { useRouter } from "next/navigation";
+import { use, Suspense, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { getTestAttempt } from "@/features/tests/api/testsApi";
 import { FullTestPracticeView } from "@/features/tests/components/FullTestPracticeView";
+import {
+  readFullTestSelectedParts,
+  writeFullTestSelectedParts,
+} from "@/features/tests/lib/fullTestStorage";
+import {
+  normalizeSelectedParts,
+  parseSelectedPartsParam,
+} from "@/features/tests/lib/toeicParts";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -27,7 +35,18 @@ function FullTestAttemptPageContent({
   attemptId: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { accessToken, clearSession } = useAuthSession();
+
+  const selectedParts = useMemo(() => {
+    const fromQuery = parseSelectedPartsParam(searchParams.get("parts") ?? undefined);
+    const fromStorage = readFullTestSelectedParts(attemptId);
+    return normalizeSelectedParts(fromQuery ?? fromStorage);
+  }, [attemptId, searchParams]);
+
+  useEffect(() => {
+    writeFullTestSelectedParts(attemptId, selectedParts);
+  }, [attemptId, selectedParts]);
 
   const attemptQuery = useQuery({
     queryKey: ["test-attempt", attemptId],
@@ -88,6 +107,7 @@ function FullTestAttemptPageContent({
       attempt={attempt}
       attemptId={attemptId}
       clearSession={clearSession}
+      selectedParts={selectedParts}
       testId={testId}
     />
   );
@@ -112,7 +132,17 @@ export default function FullTestAttemptPage({ params }: FullTestAttemptPageProps
 
   return (
     <RequireAuth>
-      <FullTestAttemptPageContent attemptId={attemptId} testId={testId} />
+      <Suspense
+        fallback={
+          <PageShell>
+            <Panel>
+              <p className="text-muted-foreground">Loading full test...</p>
+            </Panel>
+          </PageShell>
+        }
+      >
+        <FullTestAttemptPageContent attemptId={attemptId} testId={testId} />
+      </Suspense>
     </RequireAuth>
   );
 }

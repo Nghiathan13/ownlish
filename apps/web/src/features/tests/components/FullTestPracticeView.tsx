@@ -27,6 +27,7 @@ import {
 import { writeFullTestIndex } from "@/features/tests/lib/fullTestStorage";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
+import { normalizeSelectedParts } from "@/features/tests/lib/toeicParts";
 import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { Button } from "@/shared/ui/Button";
@@ -37,6 +38,7 @@ type FullTestPracticeViewProps = {
   testId: number;
   attemptId: string;
   attempt: TestAttemptDetail;
+  selectedParts: number[];
   accessToken: string | null;
   clearSession: () => void;
 };
@@ -44,8 +46,6 @@ type FullTestPracticeViewProps = {
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
-
-const FULL_TEST_PART_NUMBERS = [1, 2, 3, 4, 5, 6, 7] as const;
 
 type FullTestQuestionScreenProps = {
   testId: number;
@@ -156,16 +156,20 @@ function FullTestQuestionScreen({
 export function FullTestPracticeView({
   testId,
   attemptId,
-  attempt,
+  selectedParts,
   accessToken,
   clearSession,
 }: FullTestPracticeViewProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
+  const normalizedSelectedParts = useMemo(
+    () => normalizeSelectedParts(selectedParts),
+    [selectedParts],
+  );
 
   const partQueries = useQueries({
-    queries: [1, 2, 3, 4, 5, 6, 7].map((partNumber) => ({
+    queries: normalizedSelectedParts.map((partNumber) => ({
       queryKey: ["test-part", testId, partNumber],
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         runAuthenticatedRequest({
@@ -180,24 +184,29 @@ export function FullTestPracticeView({
   const partGroups = useMemo(() => {
     const groups: Record<number, ToeicQuestionGroup[]> = {};
 
-    for (let index = 0; index < partQueries.length; index += 1) {
-      const partNumber = index + 1;
-      if (partQueries[index]?.data?.groups) {
+    for (let index = 0; index < normalizedSelectedParts.length; index += 1) {
+      const partNumber = normalizedSelectedParts[index];
+      if (partNumber != null && partQueries[index]?.data?.groups) {
         groups[partNumber] = partQueries[index].data!.groups;
       }
     }
 
     return groups;
-  }, [partQueries]);
+  }, [normalizedSelectedParts, partQueries]);
 
   const questions = useMemo(
-    () => buildFullTestQuestions(partGroups),
-    [partGroups],
+    () => buildFullTestQuestions(partGroups, normalizedSelectedParts),
+    [normalizedSelectedParts, partGroups],
   );
 
-  const steps = useMemo(() => buildFullTestSteps(partGroups), [partGroups]);
+  const steps = useMemo(
+    () => buildFullTestSteps(partGroups, normalizedSelectedParts),
+    [normalizedSelectedParts, partGroups],
+  );
 
-  const allPartsLoaded = partQueries.every((query) => query.data);
+  const allPartsLoaded =
+    normalizedSelectedParts.length > 0 &&
+    partQueries.every((query) => query.data);
   const partLoadError = partQueries.find((query) => query.error)?.error;
 
   const { sessions, isStarting, startError, allReady } =
@@ -206,11 +215,17 @@ export function FullTestPracticeView({
       clearSession,
       testId,
       partGroups,
+      selectedParts: normalizedSelectedParts,
       enabled: allPartsLoaded,
     });
 
   const [stepIndex, setStepIndex] = useState(() =>
-    resolveInitialStepIndex(attemptId, steps, questions, attempt.currentPartNumber),
+    resolveInitialStepIndex(
+      attemptId,
+      steps,
+      questions,
+      normalizedSelectedParts,
+    ),
   );
 
   const activeStepIndex =
@@ -222,7 +237,7 @@ export function FullTestPracticeView({
 
   const syncAttemptProgress = useCallback(
     async (finish = false) => {
-      const parts = FULL_TEST_PART_NUMBERS.map((partNumber) => {
+      const parts = normalizedSelectedParts.map((partNumber) => {
         const session = getFullTestSession(sessions, partNumber);
         return {
           partNumber,
@@ -244,7 +259,7 @@ export function FullTestPracticeView({
 
       return updatedAttempt;
     },
-    [accessToken, attemptId, clearSession, queryClient, sessions],
+    [accessToken, attemptId, clearSession, normalizedSelectedParts, queryClient, sessions],
   );
 
   const goToStepIndex = useCallback(

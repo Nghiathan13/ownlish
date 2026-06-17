@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
+import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { classNames } from "@/shared/lib/classNames";
 import type { PracticeMode, PracticeStats } from "@/features/tests/api/types";
 import { getPartStats } from "@/features/tests/hooks/usePracticeStats";
 import { isSupportedPracticePart } from "@/features/tests/lib/partPracticeConfig";
+import {
+  ALL_TOEIC_PART_NUMBERS,
+  areAllPartsSelected,
+  normalizeSelectedParts,
+} from "@/features/tests/lib/toeicParts";
 
 type PartPickerModalProps = {
   testLabel: string;
   stats: PracticeStats | null;
+  isStarting?: boolean;
   onClose: () => void;
   onStart: (partNumber: number, mode: PracticeMode) => void;
+  onStartMulti: (partNumbers: number[]) => void;
 };
 
 const LISTENING_PARTS = [1, 2, 3, 4];
@@ -22,44 +30,51 @@ function isPartEnabled(partNumber: number) {
   return isSupportedPracticePart(partNumber);
 }
 
-function PartOptionButton({
-  partNumber,
-  enabled,
-  isSelected,
-  wrongQuestionCount,
-  onSelect,
+function PartCheckboxOption({
+  checked,
+  disabled,
+  label,
+  description,
+  onToggle,
 }: {
-  partNumber: number;
-  enabled: boolean;
-  isSelected: boolean;
-  wrongQuestionCount: number;
-  onSelect: () => void;
+  checked: boolean;
+  disabled?: boolean;
+  label: string;
+  description?: string | null;
+  onToggle: () => void;
 }) {
   return (
     <button
       className={classNames(
-        "rounded-lg border px-3 py-2 text-left text-sm font-medium transition",
-        enabled
-          ? isSelected
-            ? "border-foreground bg-foreground text-background"
-            : "border-border hover:border-foreground"
-          : "cursor-not-allowed border-border text-muted-foreground opacity-60",
+        "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition",
+        disabled
+          ? "cursor-not-allowed border-border opacity-60"
+          : checked
+            ? "border-foreground bg-muted/40"
+            : "border-border hover:border-foreground",
       )}
-      disabled={!enabled}
-      onClick={onSelect}
+      disabled={disabled}
+      onClick={onToggle}
       type="button"
     >
-      <span className="block">Part {partNumber}</span>
-      {enabled && wrongQuestionCount > 0 ? (
-        <span
-          className={classNames(
-            "mt-1 block text-xs",
-            isSelected ? "text-background/80" : "text-muted-foreground",
-          )}
-        >
-          {wrongQuestionCount} wrong to review
-        </span>
-      ) : null}
+      <span
+        className={classNames(
+          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
+          checked
+            ? "border-foreground bg-foreground text-background"
+            : "border-border bg-background",
+        )}
+      >
+        {checked ? <CheckIcon className="size-3" /> : null}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{label}</span>
+        {description ? (
+          <span className="mt-0.5 block text-xs text-muted-foreground">
+            {description}
+          </span>
+        ) : null}
+      </span>
     </button>
   );
 }
@@ -67,36 +82,91 @@ function PartOptionButton({
 export function PartPickerModal({
   testLabel,
   stats,
+  isStarting = false,
   onClose,
   onStart,
+  onStartMulti,
 }: PartPickerModalProps) {
-  const [selectedPart, setSelectedPart] = useState<number | null>(1);
-  const selectedPartStats =
-    selectedPart !== null ? getPartStats(stats, selectedPart) : null;
-  const wrongQuestionCount = selectedPartStats?.wrongQuestionCount ?? 0;
+  const [selectedParts, setSelectedParts] = useState<number[]>([1]);
+
+  const normalizedSelectedParts = useMemo(
+    () => normalizeSelectedParts(selectedParts),
+    [selectedParts],
+  );
+  const isFullTest = areAllPartsSelected(normalizedSelectedParts);
+  const isSinglePart = normalizedSelectedParts.length === 1;
+  const singlePartNumber = isSinglePart ? normalizedSelectedParts[0] : null;
+  const singlePartStats =
+    singlePartNumber !== null ? getPartStats(stats, singlePartNumber) : null;
+  const wrongQuestionCount = singlePartStats?.wrongQuestionCount ?? 0;
+
+  const setFullTestSelection = (checked: boolean) => {
+    setSelectedParts(checked ? [...ALL_TOEIC_PART_NUMBERS] : []);
+  };
+
+  const togglePart = (partNumber: number) => {
+    setSelectedParts((current) => {
+      const next = new Set(current);
+
+      if (next.has(partNumber)) {
+        next.delete(partNumber);
+      } else {
+        next.add(partNumber);
+      }
+
+      return normalizeSelectedParts(Array.from(next));
+    });
+  };
+
+  const handleStart = () => {
+    if (normalizedSelectedParts.length === 0) {
+      return;
+    }
+
+    if (normalizedSelectedParts.length === 1) {
+      onStart(normalizedSelectedParts[0]!, "normal");
+      return;
+    }
+
+    onStartMulti(normalizedSelectedParts);
+  };
 
   return (
     <Modal
-      description="Choose a part to practice."
+      description="Choose one or more parts to practice."
       onClose={onClose}
       title={`Practice ${testLabel}`}
     >
       <div className="space-y-6">
+        <section>
+          <PartCheckboxOption
+            checked={isFullTest}
+            description="All 7 parts"
+            label="Full test"
+            onToggle={() => setFullTestSelection(!isFullTest)}
+          />
+        </section>
+
         <section>
           <h3 className="mb-3 text-sm font-semibold">Listening</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {LISTENING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
               const partStats = getPartStats(stats, partNumber);
+              const wrongCount = partStats?.wrongQuestionCount ?? 0;
 
               return (
-                <PartOptionButton
-                  enabled={enabled}
-                  isSelected={selectedPart === partNumber}
+                <PartCheckboxOption
+                  checked={normalizedSelectedParts.includes(partNumber)}
+                  description={
+                    enabled && wrongCount > 0
+                      ? `${wrongCount} wrong to review`
+                      : null
+                  }
+                  disabled={!enabled}
                   key={partNumber}
-                  onSelect={() => enabled && setSelectedPart(partNumber)}
-                  partNumber={partNumber}
-                  wrongQuestionCount={partStats?.wrongQuestionCount ?? 0}
+                  label={`Part ${partNumber}`}
+                  onToggle={() => enabled && togglePart(partNumber)}
                 />
               );
             })}
@@ -109,15 +179,20 @@ export function PartPickerModal({
             {READING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
               const partStats = getPartStats(stats, partNumber);
+              const wrongCount = partStats?.wrongQuestionCount ?? 0;
 
               return (
-                <PartOptionButton
-                  enabled={enabled}
-                  isSelected={selectedPart === partNumber}
+                <PartCheckboxOption
+                  checked={normalizedSelectedParts.includes(partNumber)}
+                  description={
+                    enabled && wrongCount > 0
+                      ? `${wrongCount} wrong to review`
+                      : null
+                  }
+                  disabled={!enabled}
                   key={partNumber}
-                  onSelect={() => enabled && setSelectedPart(partNumber)}
-                  partNumber={partNumber}
-                  wrongQuestionCount={partStats?.wrongQuestionCount ?? 0}
+                  label={`Part ${partNumber}`}
+                  onToggle={() => enabled && togglePart(partNumber)}
                 />
               );
             })}
@@ -125,18 +200,20 @@ export function PartPickerModal({
         </section>
 
         <div className="flex flex-wrap justify-end gap-2">
-          <Button onClick={onClose} type="button" variant="secondary">
+          <Button disabled={isStarting} onClick={onClose} type="button" variant="secondary">
             Cancel
           </Button>
           <Button
             disabled={
-              selectedPart === null ||
-              !isPartEnabled(selectedPart) ||
+              isStarting ||
+              !isSinglePart ||
+              singlePartNumber === null ||
+              !isPartEnabled(singlePartNumber) ||
               wrongQuestionCount === 0
             }
             onClick={() => {
-              if (selectedPart !== null) {
-                onStart(selectedPart, "wrong_questions");
+              if (singlePartNumber !== null) {
+                onStart(singlePartNumber, "wrong_questions");
               }
             }}
             type="button"
@@ -145,15 +222,17 @@ export function PartPickerModal({
             Review wrong{wrongQuestionCount > 0 ? ` (${wrongQuestionCount})` : ""}
           </Button>
           <Button
-            disabled={selectedPart === null || !isPartEnabled(selectedPart)}
-            onClick={() => {
-              if (selectedPart !== null) {
-                onStart(selectedPart, "normal");
-              }
-            }}
+            disabled={
+              isStarting || normalizedSelectedParts.length === 0
+            }
+            onClick={handleStart}
             type="button"
           >
-            Start
+            {isStarting
+              ? "Starting..."
+              : normalizedSelectedParts.length > 1
+                ? `Start (${normalizedSelectedParts.length} parts)`
+                : "Start"}
           </Button>
         </div>
       </div>

@@ -11,10 +11,8 @@ type TestCardProps = {
   stats: PracticeStats | null;
   isLoadingStats?: boolean;
   isClearingHistory?: boolean;
-  isStartingFullTest?: boolean;
   onClearHistory: () => void;
   onPractice: () => void;
-  onFullTest: () => void;
 };
 
 export function TestCard({
@@ -22,10 +20,8 @@ export function TestCard({
   stats,
   isLoadingStats = false,
   isClearingHistory = false,
-  isStartingFullTest = false,
   onClearHistory,
   onPractice,
-  onFullTest,
 }: TestCardProps) {
   return (
     <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
@@ -54,14 +50,6 @@ export function TestCard({
       <div className="flex flex-wrap gap-2">
         <Button onClick={onPractice} type="button">
           Practice
-        </Button>
-        <Button
-          disabled={isStartingFullTest}
-          onClick={onFullTest}
-          type="button"
-          variant="secondary"
-        >
-          {isStartingFullTest ? "Starting..." : "Full test"}
         </Button>
       </div>
     </article>

@@ -10,6 +10,7 @@ type UseFullTestPracticeSessionsParams = {
   clearSession: () => void;
   testId: number;
   partGroups: Record<number, ToeicQuestionGroup[] | undefined>;
+  selectedParts: number[];
   enabled: boolean;
 };
 
@@ -22,6 +23,7 @@ function usePartPracticeSession(
     () => buildAnswerKeyMap(groups ?? []),
     [groups],
   );
+  const isSelected = params.selectedParts.includes(partNumber);
 
   return usePracticeSession({
     accessToken: params.accessToken,
@@ -30,7 +32,7 @@ function usePartPracticeSession(
     partNumber,
     mode: "normal",
     answerKeyMap,
-    enabled: params.enabled && Boolean(groups),
+    enabled: params.enabled && isSelected && Boolean(groups),
   });
 }
 
@@ -59,26 +61,18 @@ export function useFullTestPracticeSessions(
     [session1, session2, session3, session4, session5, session6, session7],
   );
 
-  const isStarting =
-    session1.isStarting ||
-    session2.isStarting ||
-    session3.isStarting ||
-    session4.isStarting ||
-    session5.isStarting ||
-    session6.isStarting ||
-    session7.isStarting;
+  const isStarting = params.selectedParts.some(
+    (partNumber) =>
+      sessions[partNumber as ToeicPartNumber]?.isStarting ?? false,
+  );
 
-  const startError =
-    session1.startError ??
-    session2.startError ??
-    session3.startError ??
-    session4.startError ??
-    session5.startError ??
-    session6.startError ??
-    session7.startError;
+  const startError = params.selectedParts
+    .map((partNumber) => sessions[partNumber as ToeicPartNumber]?.startError)
+    .find((error) => error != null);
 
-  const allReady = ([1, 2, 3, 4, 5, 6, 7] as const).every(
-    (partNumber) => sessions[partNumber].sessionId != null,
+  const allReady = params.selectedParts.every(
+    (partNumber) =>
+      sessions[partNumber as ToeicPartNumber]?.sessionId != null,
   );
 
   return {

@@ -33,10 +33,20 @@ function flattenPartItems(
 
 export function buildFullTestQuestions(
   partGroups: Record<number, ToeicQuestionGroup[] | undefined>,
+  selectedParts?: number[],
 ): FullTestQuestionItem[] {
+  const allowedParts = new Set(
+    selectedParts && selectedParts.length > 0
+      ? selectedParts
+      : [1, 2, 3, 4, 5, 6, 7],
+  );
   const items: Omit<FullTestQuestionItem, "globalIndex">[] = [];
 
   for (let partNumber = 1; partNumber <= 7; partNumber += 1) {
+    if (!allowedParts.has(partNumber)) {
+      continue;
+    }
+
     const groups = partGroups[partNumber];
     if (!groups) {
       continue;
@@ -54,8 +64,9 @@ export function buildFullTestQuestions(
 
 export function buildFullTestSteps(
   partGroups: Record<number, ToeicQuestionGroup[] | undefined>,
+  selectedParts?: number[],
 ): FullTestStep[] {
-  const questions = buildFullTestQuestions(partGroups);
+  const questions = buildFullTestQuestions(partGroups, selectedParts);
   const steps: FullTestStep[] = [];
 
   for (let index = 0; index < questions.length; ) {
@@ -101,7 +112,7 @@ export function resolveInitialStepIndex(
   attemptId: string,
   steps: FullTestStep[],
   questions: FullTestQuestionItem[],
-  currentPartNumber: number,
+  selectedParts: number[],
 ) {
   if (steps.length === 0) {
     return 0;
@@ -129,8 +140,13 @@ export function resolveInitialStepIndex(
     }
   }
 
+  const firstSelectedPart = selectedParts[0];
+  if (firstSelectedPart == null) {
+    return 0;
+  }
+
   const partStartIndex = steps.findIndex(
-    (step) => step.partNumber === currentPartNumber,
+    (step) => step.partNumber === firstSelectedPart,
   );
 
   return partStartIndex >= 0 ? partStartIndex : 0;

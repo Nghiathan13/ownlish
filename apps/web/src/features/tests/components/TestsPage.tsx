@@ -19,7 +19,9 @@ import {
 } from "@/features/tests/hooks/usePracticeSession";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import { useTestsList } from "@/features/tests/hooks/useTestsList";
+import { writeFullTestSelectedParts } from "@/features/tests/lib/fullTestStorage";
 import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceStorage";
+import { areAllPartsSelected } from "@/features/tests/lib/toeicParts";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -40,7 +42,7 @@ export function TestsPage() {
     null,
   );
   const [clearingTestId, setClearingTestId] = useState<number | null>(null);
-  const [startingFullTestId, setStartingFullTestId] = useState<number | null>(
+  const [startingMultiTestId, setStartingMultiTestId] = useState<number | null>(
     null,
   );
   const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
@@ -107,12 +109,12 @@ export function TestsPage() {
     }
   };
 
-  const handleFullTest = async (testId: number) => {
-    if (!accessToken) {
+  const handleStartMulti = async (testId: number, partNumbers: number[]) => {
+    if (!accessToken || partNumbers.length === 0) {
       return;
     }
 
-    setStartingFullTestId(testId);
+    setStartingMultiTestId(testId);
     try {
       const attempt = await runAuthenticatedRequest({
         accessToken,
@@ -120,11 +122,18 @@ export function TestsPage() {
         request: (token) => createTestAttempt(token, testId),
       });
 
-      router.push(`/tests/${testId}/attempt/${attempt.attemptId}`);
+      writeFullTestSelectedParts(attempt.attemptId, partNumbers);
+
+      const query = areAllPartsSelected(partNumbers)
+        ? ""
+        : `?parts=${partNumbers.join(",")}`;
+
+      router.push(`/tests/${testId}/attempt/${attempt.attemptId}${query}`);
+      setSelectedTest(null);
     } catch (error) {
-      window.alert(getErrorMessage(error, "Cannot start full test."));
+      window.alert(getErrorMessage(error, "Cannot start practice session."));
     } finally {
-      setStartingFullTestId(null);
+      setStartingMultiTestId(null);
     }
   };
 
@@ -170,10 +179,8 @@ export function TestsPage() {
               <TestCard
                 isClearingHistory={clearingTestId === test.id}
                 isLoadingStats={statsQueries[index]?.isLoading ?? false}
-                isStartingFullTest={startingFullTestId === test.id}
                 key={test.id}
                 onClearHistory={() => void handleClearHistory(test.id)}
-                onFullTest={() => void handleFullTest(test.id)}
                 onPractice={() => setSelectedTest(test)}
                 stats={statsQueries[index]?.data ?? null}
                 test={test}
@@ -185,6 +192,7 @@ export function TestsPage() {
 
       {selectedTest ? (
         <PartPickerModal
+          isStarting={startingMultiTestId === selectedTest.id}
           onClose={() => setSelectedTest(null)}
           onStart={(partNumber, mode) => {
             const query =
@@ -193,6 +201,9 @@ export function TestsPage() {
               `/tests/${selectedTest.id}/part/${partNumber}${query}`,
             );
             setSelectedTest(null);
+          }}
+          onStartMulti={(partNumbers) => {
+            void handleStartMulti(selectedTest.id, partNumbers);
           }}
           stats={selectedTestStats}
           testLabel={selectedTest.label}
