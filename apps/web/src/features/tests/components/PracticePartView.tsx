@@ -48,21 +48,12 @@ import {
 } from "@/features/tests/lib/practiceQuestionGrid";
 import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 
-export type FullTestContext = {
-  attemptId: string;
-  onPartComplete: (result: {
-    correctCount: number;
-    wrongCount: number;
-  }) => Promise<void>;
-};
-
 type PracticePartViewProps = {
   testId: number;
   partNumber: number;
   practiceMode: PracticeMode;
   accessToken: string | null;
   clearSession: () => void;
-  fullTestContext?: FullTestContext;
 };
 
 function flattenPracticeItems(groups: ToeicQuestionGroup[]): PracticeItem[] {
@@ -84,8 +75,6 @@ type PracticePartContentProps = {
   practice: ReturnType<typeof usePracticeSession>;
   accessToken: string | null;
   clearSession: () => void;
-  fullTestContext?: FullTestContext;
-  onFinish: () => void;
 };
 
 function PracticePartContent({
@@ -97,12 +86,9 @@ function PracticePartContent({
   practice,
   accessToken,
   clearSession,
-  fullTestContext,
-  onFinish,
 }: PracticePartContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [isFinishing, setIsFinishing] = useState(false);
   const activeIndex =
     items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
   const currentItem = items[activeIndex] ?? null;
@@ -135,39 +121,12 @@ function PracticePartContent({
     practice.selectAnswer(currentItem.question.id, key);
   };
 
-  const handleFinish = async () => {
-    if (isFinishing) {
-      return;
-    }
-
-    setIsFinishing(true);
-    try {
-      if (fullTestContext) {
-        await fullTestContext.onPartComplete({
-          correctCount: practice.correctCount,
-          wrongCount: practice.wrongCount,
-        });
-      } else if (practiceMode === "wrong_questions") {
-        await practice.completeSession();
-      }
-
-      onFinish();
-    } finally {
-      setIsFinishing(false);
-    }
-  };
-
   const handleNext = () => {
-    const isLastItem = activeIndex >= items.length - 1;
-
-    if (fullTestContext && isLastItem) {
-      void handleFinish();
+    if (activeIndex >= items.length - 1) {
       return;
     }
 
-    if (!isLastItem) {
-      goToIndex(activeIndex + 1);
-    }
+    goToIndex(activeIndex + 1);
   };
 
   const isLastItem = activeIndex >= items.length - 1;
@@ -196,16 +155,9 @@ function PracticePartContent({
     return null;
   }
 
-  const finishLabel = fullTestContext
-    ? partNumber >= 7
-      ? "Finish test"
-      : "Next part"
-    : "Finish";
-
   const navigationBar = (
     <PracticeNavigationButtons
-      nextAriaLabel={fullTestContext && isLastItem ? finishLabel : "Next"}
-      nextDisabled={isFinishing || (isLastItem && !fullTestContext)}
+      nextDisabled={isLastItem}
       onNext={handleNext}
       onPrevious={() => goToIndex(activeIndex - 1)}
       onQuestionGridSelect={(questionNumber) => {
@@ -214,7 +166,7 @@ function PracticePartContent({
           goToIndex(index);
         }
       }}
-      previousDisabled={activeIndex === 0 || isFinishing}
+      previousDisabled={activeIndex === 0}
       questionGridSections={questionGridSections}
     />
   );
@@ -308,8 +260,7 @@ function PracticePartContent({
     <>
       <div>
         <p className="text-base text-muted-foreground">
-          Test {testId}
-          {fullTestContext ? " · Full test" : ""} · Part {partNumber}
+          Test {testId} · Part {partNumber}
           {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
         </p>
         <h1 className="text-xl font-semibold">
@@ -351,12 +302,10 @@ export function PracticePartView({
   practiceMode,
   accessToken,
   clearSession,
-  fullTestContext,
 }: PracticePartViewProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isWrongMode = practiceMode === "wrong_questions";
-  const effectiveMode = fullTestContext ? "normal" : practiceMode;
   const isSupportedPart = isSupportedPracticePart(partNumber);
 
   const partQuery = useQuery({
@@ -386,7 +335,7 @@ export function PracticePartView({
       clearSession,
       testId,
       partNumber,
-      enabled: Boolean(partQuery.data) && isWrongMode && !fullTestContext,
+      enabled: Boolean(partQuery.data) && isWrongMode,
     });
 
   const practice = usePracticeSession({
@@ -394,19 +343,17 @@ export function PracticePartView({
     clearSession,
     testId,
     partNumber,
-    mode: effectiveMode,
+    mode: practiceMode,
     answerKeyMap,
     enabled:
       isSupportedPart &&
       Boolean(partQuery.data) &&
-      (!isWrongMode || !isLoadingWrongQuestions || Boolean(fullTestContext)),
+      (!isWrongMode || !isLoadingWrongQuestions),
   });
 
   const partConfig = getPartPracticeConfig(partNumber);
   const isWrongGroupReview =
-    isWrongMode &&
-    !fullTestContext &&
-    partConfig.navigationMode === "per-group";
+    isWrongMode && partConfig.navigationMode === "per-group";
 
   const normalPractice = usePracticeSession({
     accessToken,
@@ -423,17 +370,17 @@ export function PracticePartView({
   });
 
   const frozenWrongQuestionIds = useMemo(() => {
-    if (!isWrongMode || fullTestContext || !practice.sessionId || wrongQuestions.length === 0) {
+    if (!isWrongMode || !practice.sessionId || wrongQuestions.length === 0) {
       return null;
     }
 
     return wrongQuestions.map((item) => item.toeicQuestionId);
     // Freeze the review pool when a session starts; correct answers must not shrink it mid-session.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- wrongQuestions intentionally omitted
-  }, [fullTestContext, isWrongMode, practice.sessionId]);
+  }, [isWrongMode, practice.sessionId]);
 
   const items = useMemo(() => {
-    if (!isWrongMode || fullTestContext) {
+    if (!isWrongMode) {
       return allItems;
     }
 
@@ -443,7 +390,7 @@ export function PracticePartView({
 
     const frozenIds = new Set(frozenWrongQuestionIds);
     return allItems.filter((item) => frozenIds.has(item.question.id));
-  }, [allItems, frozenWrongQuestionIds, fullTestContext, isWrongMode]);
+  }, [allItems, frozenWrongQuestionIds, isWrongMode]);
 
   const practiceGroups = useMemo(() => {
     if (isWrongGroupReview && frozenWrongQuestionIds && partQuery.data?.groups) {
@@ -488,28 +435,6 @@ export function PracticePartView({
     testId,
   ]);
 
-  const handleFinish = () => {
-    if (isWrongMode && !fullTestContext) {
-      void queryClient.invalidateQueries({
-        queryKey: getPracticeStatsQueryKey(testId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getWrongQuestionsQueryKey(testId, partNumber),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
-      });
-      router.push("/tests");
-      return;
-    }
-
-    if (fullTestContext) {
-      return;
-    }
-
-    router.push("/tests");
-  };
-
   const { sessionId, completeSession } = practice;
 
   const handleExit = useCallback(async () => {
@@ -537,7 +462,7 @@ export function PracticePartView({
     testId,
   ]);
 
-  useRegisterPracticeExit(sessionId && !fullTestContext ? handleExit : null);
+  useRegisterPracticeExit(sessionId ? handleExit : null);
 
   if (!isSupportedPart) {
     return (
@@ -552,7 +477,7 @@ export function PracticePartView({
   if (
     partQuery.isLoading ||
     practice.isStarting ||
-    (isWrongMode && !fullTestContext && isLoadingWrongQuestions) ||
+    (isWrongMode && isLoadingWrongQuestions) ||
     (isWrongGroupReview && normalPractice.isStarting)
   ) {
     return (
@@ -584,7 +509,7 @@ export function PracticePartView({
     );
   }
 
-  if (isWrongMode && !fullTestContext && wrongQuestions.length === 0) {
+  if (isWrongMode && wrongQuestions.length === 0) {
     return (
       <PageShell>
         <Panel>
@@ -636,12 +561,10 @@ export function PracticePartView({
       <ListeningGroupPracticeContent
         accessToken={accessToken}
         clearSession={clearSession}
-        fullTestContext={fullTestContext}
         groups={practiceGroups}
         initialGroupIndex={initialGroupIndex}
         key={practice.sessionId}
         normalPractice={isWrongGroupReview ? normalPractice : undefined}
-        onFinish={handleFinish}
         partNumber={partNumber}
         practice={practice}
         practiceMode={practiceMode}
@@ -677,11 +600,9 @@ export function PracticePartView({
         <PracticePartContent
           accessToken={accessToken}
           clearSession={clearSession}
-          fullTestContext={fullTestContext}
           initialIndex={initialIndex}
           items={items}
           key={practice.sessionId}
-          onFinish={handleFinish}
           partNumber={partNumber}
           practice={practice}
           practiceMode={practiceMode}
@@ -697,11 +618,9 @@ export function PracticePartView({
         <PracticePartContent
           accessToken={accessToken}
           clearSession={clearSession}
-          fullTestContext={fullTestContext}
           initialIndex={initialIndex}
           items={items}
           key={practice.sessionId}
-          onFinish={handleFinish}
           partNumber={partNumber}
           practice={practice}
           practiceMode={practiceMode}

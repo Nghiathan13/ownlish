@@ -16,6 +16,8 @@ type PracticeNavigationButtonsProps = {
   previousDisabled?: boolean;
   questionGridSections?: QuestionGridSection[];
   onQuestionGridSelect?: (questionNumber: number) => void;
+  isQuestionGridOpen?: boolean;
+  onQuestionGridOpenChange?: (open: boolean) => void;
 };
 
 export function PracticeNavigationButtons({
@@ -26,8 +28,12 @@ export function PracticeNavigationButtons({
   previousDisabled = false,
   questionGridSections,
   onQuestionGridSelect,
+  isQuestionGridOpen,
+  onQuestionGridOpenChange,
 }: PracticeNavigationButtonsProps) {
-  const [isGridOpen, setIsGridOpen] = useState(false);
+  const [internalGridOpen, setInternalGridOpen] = useState(false);
+  const isGridOpen = isQuestionGridOpen ?? internalGridOpen;
+  const setIsGridOpen = onQuestionGridOpenChange ?? setInternalGridOpen;
   const showQuestionGrid =
     questionGridSections != null &&
     questionGridSections.some((section) => section.cells.length > 0) &&

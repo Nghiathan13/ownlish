@@ -58,7 +58,7 @@ type FullTestQuestionScreenProps = {
   practice: FullTestPracticeSession;
   accessToken: string | null;
   clearSession: () => void;
-  navigation: React.ReactNode;
+  navigation?: React.ReactNode;
 };
 
 function FullTestQuestionScreen({
@@ -168,6 +168,7 @@ export function FullTestPracticeView({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const normalizedSelectedParts = useMemo(
     () => normalizeSelectedParts(selectedParts),
     [selectedParts],
@@ -322,6 +323,7 @@ export function FullTestPracticeView({
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
     <PracticeNavigationButtons
+      isQuestionGridOpen={isQuestionGridOpen}
       nextAriaLabel="Next"
       nextDisabled={isLastStep || isSyncing}
       onNext={() => {
@@ -330,6 +332,7 @@ export function FullTestPracticeView({
       onPrevious={() => {
         goToStepIndex(activeStepIndex - 1);
       }}
+      onQuestionGridOpenChange={setIsQuestionGridOpen}
       onQuestionGridSelect={(questionNumber) => {
         const stepIndex = findStepIndexForQuestion(steps, questionNumber);
         if (stepIndex >= 0) {
@@ -392,31 +395,34 @@ export function FullTestPracticeView({
 
   return (
     <PageShell fillViewport>
-      {currentStep.kind === "group" ? (
-        <ListeningGroupPracticeContent
-          accessToken={accessToken}
-          clearSession={clearSession}
-          groups={[currentStep.practiceGroup]}
-          initialGroupIndex={0}
-          key={`${currentStep.practiceGroup.group.id}-${practice.sessionId}`}
-          navigation={navigationBar}
-          onFinish={() => {}}
-          partNumber={currentStep.partNumber}
-          practice={practice}
-          practiceMode="normal"
-          testId={testId}
-        />
-      ) : (
-        <FullTestQuestionScreen
-          accessToken={accessToken}
-          clearSession={clearSession}
-          item={currentStep.item}
-          key={`${currentStep.item.question.id}-${practice.sessionId}`}
-          navigation={navigationBar}
-          practice={practice}
-          testId={testId}
-        />
-      )}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {currentStep.kind === "group" ? (
+            <ListeningGroupPracticeContent
+              accessToken={accessToken}
+              clearSession={clearSession}
+              groups={[currentStep.practiceGroup]}
+              initialGroupIndex={0}
+              key={`${currentStep.practiceGroup.group.id}-${practice.sessionId}`}
+              navigation={null}
+              partNumber={currentStep.partNumber}
+              practice={practice}
+              practiceMode="normal"
+              testId={testId}
+            />
+          ) : (
+            <FullTestQuestionScreen
+              accessToken={accessToken}
+              clearSession={clearSession}
+              item={currentStep.item}
+              key={`${currentStep.item.question.id}-${practice.sessionId}`}
+              practice={practice}
+              testId={testId}
+            />
+          )}
+        </div>
+        <div className="shrink-0 border-t border-border p-4">{navigationBar}</div>
+      </div>
     </PageShell>
   );
 }

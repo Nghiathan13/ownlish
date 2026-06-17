@@ -22,14 +22,6 @@ import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSp
 
 type OptionKey = "A" | "B" | "C" | "D";
 
-type FullTestContext = {
-  attemptId: string;
-  onPartComplete: (result: {
-    correctCount: number;
-    wrongCount: number;
-  }) => Promise<void>;
-};
-
 type ListeningGroupPracticeContentProps = {
   testId: number;
   partNumber: number;
@@ -41,8 +33,6 @@ type ListeningGroupPracticeContentProps = {
   wrongQuestionCount?: number;
   accessToken: string | null;
   clearSession: () => void;
-  fullTestContext?: FullTestContext;
-  onFinish: () => void;
   navigation?: React.ReactNode;
 };
 
@@ -65,8 +55,6 @@ export function ListeningGroupPracticeContent({
   wrongQuestionCount,
   accessToken,
   clearSession,
-  fullTestContext,
-  onFinish,
   navigation,
 }: ListeningGroupPracticeContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
@@ -79,7 +67,6 @@ export function ListeningGroupPracticeContent({
   const [lockedReviewGroupIds, setLockedReviewGroupIds] = useState<
     Set<number>
   >(() => new Set());
-  const [isFinishing, setIsFinishing] = useState(false);
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
   const currentGroup = groups[activeGroupIndex] ?? null;
@@ -196,10 +183,6 @@ export function ListeningGroupPracticeContent({
   };
 
   const handleSelect = (toeicQuestionId: number, key: OptionKey) => {
-    if (isFinishing) {
-      return;
-    }
-
     if (isWrongGroupReview) {
       const wasCorrectInNormal =
         normalPractice.getAnswer(toeicQuestionId)?.isCorrect === true;
@@ -309,55 +292,21 @@ export function ListeningGroupPracticeContent({
     practice.selectAnswer(toeicQuestionId, key);
   };
 
-  const handleFinish = async () => {
-    if (isFinishing) {
-      return;
-    }
-
-    setIsFinishing(true);
-    try {
-      if (fullTestContext) {
-        await fullTestContext.onPartComplete({
-          correctCount: practice.correctCount,
-          wrongCount: practice.wrongCount,
-        });
-      } else if (practiceMode === "wrong_questions") {
-        await practice.completeSession();
-      }
-
-      onFinish();
-    } finally {
-      setIsFinishing(false);
-    }
-  };
-
   const handleNext = () => {
-    const isLastGroup = activeGroupIndex >= groups.length - 1;
-
-    if (fullTestContext && isLastGroup) {
-      void handleFinish();
+    if (activeGroupIndex >= groups.length - 1) {
       return;
     }
 
-    if (!isLastGroup) {
-      goToGroupIndex(activeGroupIndex + 1);
-    }
+    goToGroupIndex(activeGroupIndex + 1);
   };
 
   const isLastGroup = activeGroupIndex >= groups.length - 1;
-
-  const finishLabel = fullTestContext
-    ? partNumber >= 7
-      ? "Finish test"
-      : "Next part"
-    : "Finish";
 
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
   const defaultNavigationBar = (
     <PracticeNavigationButtons
-      nextAriaLabel={fullTestContext && isLastGroup ? finishLabel : "Next"}
-      nextDisabled={isFinishing || (isLastGroup && !fullTestContext)}
+      nextDisabled={isLastGroup}
       onNext={handleNext}
       onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
       onQuestionGridSelect={(questionNumber) => {
@@ -366,12 +315,13 @@ export function ListeningGroupPracticeContent({
           goToGroupIndex(groupIndex);
         }
       }}
-      previousDisabled={activeGroupIndex === 0 || isFinishing}
+      previousDisabled={activeGroupIndex === 0}
       questionGridSections={questionGridSections}
     />
   );
 
-  const navigationBar = navigation ?? defaultNavigationBar;
+  const navigationBar =
+    navigation === undefined ? defaultNavigationBar : navigation;
 
   const isPartialGroupPhase =
     usesDeferredGroupGrading && !showGroupReveal && !isWrongGroupReview;
@@ -450,8 +400,8 @@ export function ListeningGroupPracticeContent({
           isLocked={isLocked}
           isSubmitting={
             isPartialGroupPhase
-              ? isFinishing
-              : practice.isQuestionPending(question.id) || isFinishing
+              ? false
+              : practice.isQuestionPending(question.id)
           }
           onSelect={(key) => handleSelect(question.id, key)}
           optionCount={question.optionCount}
@@ -550,8 +500,7 @@ export function ListeningGroupPracticeContent({
     <>
       <div>
         <p className="text-base text-muted-foreground">
-          Test {testId}
-          {fullTestContext ? " · Full test" : ""} · Part {partNumber}
+          Test {testId} · Part {partNumber}
           {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
         </p>
         <h1 className="text-xl font-semibold">

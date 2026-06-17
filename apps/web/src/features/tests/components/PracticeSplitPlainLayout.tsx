@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 type PracticeSplitPlainLayoutProps = {
   left: ReactNode;
-  navigation: ReactNode;
+  navigation?: ReactNode;
   right: ReactNode;
 };
 
@@ -21,7 +21,9 @@ export function PracticeSplitPlainLayout({
           {right}
         </div>
       </div>
-      <div className="shrink-0 border-t border-border p-4">{navigation}</div>
+      {navigation != null ? (
+        <div className="shrink-0 border-t border-border p-4">{navigation}</div>
+      ) : null}
     </>
   );
 }
