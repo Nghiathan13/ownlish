@@ -12,8 +12,8 @@ import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
 import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
-import { classNames } from "@/shared/lib/classNames";
-import { Button } from "@/shared/ui/Button";
+import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
+import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
 
 type OptionKey = "A" | "B" | "C" | "D";
 
@@ -288,28 +288,15 @@ export function ListeningGroupPracticeContent({
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
   const navigationBar = (
-    <div className="flex items-center justify-between gap-3">
-      <Button
-        className="text-base"
-        disabled={activeGroupIndex === 0 || isFinishing}
-        onClick={() => goToGroupIndex(activeGroupIndex - 1)}
-        type="button"
-        variant="secondary"
-      >
-        Prev
-      </Button>
-      <Button
-        className={classNames(
-          "text-base",
-          activeGroupIndex >= groups.length - 1 && "min-w-32",
-        )}
-        disabled={isFinishing}
-        onClick={handleNext}
-        type="button"
-      >
-        {activeGroupIndex >= groups.length - 1 ? finishLabel : "Next"}
-      </Button>
-    </div>
+    <PracticeNavigationButtons
+      nextAriaLabel={
+        activeGroupIndex >= groups.length - 1 ? finishLabel : "Next"
+      }
+      nextDisabled={isFinishing}
+      onNext={handleNext}
+      onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
+      previousDisabled={activeGroupIndex === 0 || isFinishing}
+    />
   );
 
   const isPartialGroupPhase =
@@ -471,21 +458,17 @@ export function ListeningGroupPracticeContent({
 
   if (usesSplitPlainLayout) {
     return (
-      <>
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
-            {leftPanel}
-          </div>
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
+      <PracticeSplitPlainLayout
+        left={leftPanel}
+        navigation={navigationBar}
+        right={
+          <>
             {questionBlocks}
             {groupPassageTranslation}
             {syncFailureBanner}
-          </div>
-        </div>
-        <div className="shrink-0 border-t border-border p-4">
-          {navigationBar}
-        </div>
-      </>
+          </>
+        }
+      />
     );
   }
 

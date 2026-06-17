@@ -29,7 +29,8 @@ import {
   writePracticeIndex,
 } from "@/features/tests/lib/practiceStorage";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { classNames } from "@/shared/lib/classNames";
+import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
+import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -171,28 +172,15 @@ function PracticePartContent({
     : "Finish";
 
   const navigationBar = (
-    <div className="flex items-center justify-between gap-3">
-      <Button
-        className="text-base"
-        disabled={activeIndex === 0 || isFinishing}
-        onClick={() => goToIndex(activeIndex - 1)}
-        type="button"
-        variant="secondary"
-      >
-        Prev
-      </Button>
-      <Button
-        className={classNames(
-          "text-base",
-          activeIndex >= items.length - 1 && "min-w-32",
-        )}
-        disabled={isFinishing}
-        onClick={handleNext}
-        type="button"
-      >
-        {activeIndex >= items.length - 1 ? finishLabel : "Next"}
-      </Button>
-    </div>
+    <PracticeNavigationButtons
+      nextAriaLabel={
+        activeIndex >= items.length - 1 ? finishLabel : "Next"
+      }
+      nextDisabled={isFinishing}
+      onNext={handleNext}
+      onPrevious={() => goToIndex(activeIndex - 1)}
+      previousDisabled={activeIndex === 0 || isFinishing}
+    />
   );
 
   const leftPanel = (
@@ -260,29 +248,23 @@ function PracticePartContent({
 
   if (partConfig.contentLayout === "split-plain") {
     return (
-      <>
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
-            {partConfig.leftPanel !== "none" ? leftPanel : null}
+      <PracticeSplitPlainLayout
+        left={partConfig.leftPanel !== "none" ? leftPanel : null}
+        navigation={navigationBar}
+        right={
+          <div className="flex flex-col gap-4">
+            <PracticeQuestionPrompt
+              questionNumber={currentItem.question.questionNumber}
+              questionText={
+                partConfig.showQuestionInRightPanel
+                  ? currentItem.question.question
+                  : null
+              }
+            />
+            {optionsPanelWithSync}
           </div>
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
-            <div className="flex flex-col gap-4">
-              <PracticeQuestionPrompt
-                questionNumber={currentItem.question.questionNumber}
-                questionText={
-                  partConfig.showQuestionInRightPanel
-                    ? currentItem.question.question
-                    : null
-                }
-              />
-              {optionsPanelWithSync}
-            </div>
-          </div>
-        </div>
-        <div className="shrink-0 border-t border-border p-4">
-          {navigationBar}
-        </div>
-      </>
+        }
+      />
     );
   }
 
