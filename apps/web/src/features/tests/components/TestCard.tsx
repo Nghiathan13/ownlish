@@ -5,6 +5,11 @@ import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { Button } from "@/shared/ui/Button";
+import {
+  practiceCorrectStatClasses,
+  practiceWrongStatClasses,
+} from "@/features/tests/lib/practiceGradingClasses";
+import { classNames } from "@/shared/lib/classNames";
 import type {
   PracticeStats,
   ToeicTestSummary,
@@ -51,12 +56,16 @@ export function TestCard({
                   {practicedQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CheckIcon className="size-4" />
-                  {stats.practiceCorrectCount}
+                  <CheckIcon className={classNames("size-4", practiceCorrectStatClasses)} />
+                  <span className={practiceCorrectStatClasses}>
+                    {stats.practiceCorrectCount}
+                  </span>
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CloseIcon className="size-4" />
-                  {stats.wrongQuestionCount}
+                  <CloseIcon className={classNames("size-4", practiceWrongStatClasses)} />
+                  <span className={practiceWrongStatClasses}>
+                    {stats.wrongQuestionCount}
+                  </span>
                 </span>
               </div>
             )
