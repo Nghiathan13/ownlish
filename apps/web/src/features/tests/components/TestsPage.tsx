@@ -137,7 +137,7 @@ export function TestsPage() {
 
   return (
     <PageShell>
-      <div className="flex flex-col gap-2 p-4">
+      <div className="flex flex-col items-start gap-2 p-4">
         <button
           className="rounded-lg border border-foreground bg-foreground px-4 py-2 text-sm font-semibold text-background"
           type="button"

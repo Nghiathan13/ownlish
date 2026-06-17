@@ -26,8 +26,8 @@ export function TestCard({
   onPractice,
 }: TestCardProps) {
   return (
-    <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
-      <div className="mb-5 flex items-start justify-between gap-3">
+    <article className="flex flex-col gap-4 rounded-xl border border-border p-4 transition hover:bg-muted">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">{test.label}</h2>
           {isLoadingStats ? (
@@ -49,12 +49,10 @@ export function TestCard({
           <DeleteIcon className="size-4" />
         </button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button className="gap-2 px-4 py-2" onClick={onPractice} type="button">
-          <PracticeIcon className="size-4" />
-          Practice
-        </Button>
-      </div>
+      <Button className="gap-2 self-start px-4 py-2" onClick={onPractice} type="button">
+        <PracticeIcon className="size-4" />
+        Practice
+      </Button>
     </article>
   );
 }
