@@ -43,17 +43,17 @@ export function PracticeQuestionGridPanel({
         className="absolute inset-y-0 left-0 flex w-[min(360px,85vw)] flex-col overflow-y-auto border-r border-border bg-background p-4 shadow-xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           {sections.map((section) => (
-            <section key={section.partNumber}>
-              <h3 className="mb-3 text-sm font-semibold">
+            <section className="flex flex-col gap-2" key={section.partNumber}>
+              <h3 className="text-base font-normal">
                 Part {section.partNumber}
               </h3>
               <div className="grid grid-cols-6 gap-2">
                 {section.cells.map((cell) => (
                   <button
                     className={classNames(
-                      "flex aspect-square items-center justify-center rounded-md border text-sm font-medium tabular-nums transition",
+                      "flex aspect-square items-center justify-center rounded-md border text-base font-normal tabular-nums transition",
                       cell.isActive
                         ? "border-foreground bg-muted text-foreground"
                         : "border-border bg-background text-foreground hover:border-foreground hover:bg-muted/60",
