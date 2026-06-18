@@ -83,7 +83,7 @@ function OptionAnswerIcon({
     return <AdjustIcon className="text-foreground" />;
   }
 
-  return <CircleIcon className="text-muted-foreground" />;
+  return <CircleIcon className="text-foreground" />;
 }
 
 export function QuestionOptions({
