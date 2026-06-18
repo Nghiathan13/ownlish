@@ -332,7 +332,6 @@ export function ListeningGroupPracticeContent({
         const groupIndex = findGroupIndexForQuestion(groups, questionNumber);
         if (groupIndex >= 0) {
           goToGroupIndex(groupIndex);
-          setIsQuestionGridOpen(false);
         }
       }}
       previousDisabled={activeGroupIndex === 0}

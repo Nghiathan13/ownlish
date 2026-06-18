@@ -89,7 +89,6 @@ export function usePartItemNavigation({
         const index = findItemIndexForQuestion(items, questionNumber);
         if (index >= 0) {
           goToIndex(index);
-          setIsQuestionGridOpen(false);
         }
       }}
       previousDisabled={activeIndex === 0}

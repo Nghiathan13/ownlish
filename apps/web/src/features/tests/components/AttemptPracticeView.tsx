@@ -218,7 +218,6 @@ export function AttemptPracticeView({
         const stepIndexForQuestion = findStepIndexForQuestion(steps, questionNumber);
         if (stepIndexForQuestion >= 0) {
           goToStepIndex(stepIndexForQuestion);
-          setIsQuestionGridOpen(false);
         }
       }}
       previousDisabled={activeStepIndex === 0 || isSyncing}
