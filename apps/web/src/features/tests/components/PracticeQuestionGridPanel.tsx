@@ -64,7 +64,7 @@ export function PracticeQuestionGridPanel({
                         "ring-1 ring-foreground ring-offset-2 ring-offset-background",
                       cell.isActive &&
                         cell.result == null &&
-                        "border-foreground bg-muted text-foreground",
+                        "border-foreground text-foreground",
                       !cell.isActive &&
                         cell.result == null &&
                         "border-border bg-background text-foreground hover:border-foreground",
