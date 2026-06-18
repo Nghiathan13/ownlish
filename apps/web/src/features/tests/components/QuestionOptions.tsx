@@ -79,7 +79,7 @@ export function QuestionOptions({
           (showEnglishTextBeforeAnswer || locked);
 
         const className = classNames(
-          "min-h-10 rounded-lg border px-4 py-2 text-left font-inherit transition select-text",
+          "min-h-10 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
           isCorrect && practiceCorrectClasses,
           isWrong && practiceWrongClasses,
@@ -90,7 +90,7 @@ export function QuestionOptions({
             "border-border bg-background",
           !locked &&
             !isSelectedHighlight &&
-            "border-border bg-background hover:bg-muted",
+            "border-border bg-background hover:border-foreground",
           !locked && isSubmitting && "pointer-events-none opacity-70",
         );
 
