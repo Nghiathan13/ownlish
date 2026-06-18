@@ -22,9 +22,7 @@ export function PracticeTranslationCard({
       <div className="p-4">
         <p className="font-semibold">{title}</p>
       </div>
-      <div className="flex items-center">
-        <div className="h-px w-full bg-border" />
-      </div>
+      <div className="border-t border-border" />
       <div className="flex flex-col gap-2 p-4">{children}</div>
     </div>
   );

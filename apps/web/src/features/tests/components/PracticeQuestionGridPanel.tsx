@@ -53,19 +53,18 @@ export function PracticeQuestionGridPanel({
               <h3 className="text-base font-semibold">
                 Part {section.partNumber}
               </h3>
-              <div className="grid grid-cols-6 gap-2">
+              <div className="flex flex-wrap gap-2">
                 {section.cells.map((cell) => (
                   <button
                     className={classNames(
-                      "flex aspect-square items-center justify-center rounded-md border text-base font-normal tabular-nums transition",
+                      "flex size-8 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums transition",
                       cell.result === "correct" && practiceCorrectClasses,
                       cell.result === "wrong" && practiceWrongClasses,
                       cell.isActive &&
+                        "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                      cell.isActive &&
                         cell.result == null &&
                         "border-foreground bg-muted text-foreground",
-                      cell.isActive &&
-                        cell.result != null &&
-                        "ring-2 ring-foreground ring-offset-2 ring-offset-background",
                       !cell.isActive &&
                         cell.result == null &&
                         "border-border bg-background text-foreground hover:border-foreground hover:bg-muted/60",
