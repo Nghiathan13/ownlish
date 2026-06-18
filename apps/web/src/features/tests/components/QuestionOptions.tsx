@@ -71,19 +71,25 @@ function OptionAnswerIcon({
   isWrong,
   showGrading,
 }: OptionAnswerIconProps) {
+  const iconOffsetClass = "-translate-y-px";
+
   if (isCorrect) {
-    return <RightIcon className={practiceCorrectStatClasses} />;
+    return (
+      <RightIcon className={classNames(practiceCorrectStatClasses, iconOffsetClass)} />
+    );
   }
 
   if (isWrong) {
-    return <WrongIcon className={practiceWrongStatClasses} />;
+    return (
+      <WrongIcon className={classNames(practiceWrongStatClasses, iconOffsetClass)} />
+    );
   }
 
   if (isSelected && !showGrading) {
-    return <AdjustIcon className="text-foreground" />;
+    return <AdjustIcon className={classNames("text-foreground", iconOffsetClass)} />;
   }
 
-  return <CircleIcon className="text-foreground" />;
+  return <CircleIcon className={classNames("text-foreground", iconOffsetClass)} />;
 }
 
 export function QuestionOptions({
