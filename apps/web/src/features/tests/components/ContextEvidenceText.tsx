@@ -12,9 +12,9 @@ type ContextEvidenceTextProps = {
 const evidenceBadgeSlotClassName =
   "relative -top-[1px] mr-1 inline-grid place-items-center align-middle shrink-0";
 const evidenceBadgeClassName =
-  "relative -top-[0.5px] inline-flex h-4 min-w-4 items-center justify-center rounded px-0.5 text-[0.625rem] font-semibold leading-none tabular-nums text-amber-800 ring-1 ring-amber-300/70 bg-amber-50 dark:text-amber-300 dark:ring-amber-700/60 dark:bg-amber-950/60";  
+  "relative -top-[0.5px] inline-flex h-4 min-w-4 items-center justify-center rounded px-0.5 text-[0.625rem] font-semibold leading-none tabular-nums text-amber-800 ring-1 ring-amber-800 dark:text-amber-200 dark:ring-amber-200";  
 const evidenceHighlightClassName =
-  "bg-amber-100/80 px-0.5 box-decoration-clone dark:bg-amber-900/35";
+  "bg-amber-100/60 px-0.5 box-decoration-clone dark:bg-amber-900/60";
 
 export function ContextEvidenceText({
   content,
