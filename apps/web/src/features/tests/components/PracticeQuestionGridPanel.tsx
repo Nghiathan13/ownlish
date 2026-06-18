@@ -57,17 +57,17 @@ export function PracticeQuestionGridPanel({
                 {section.cells.map((cell) => (
                   <button
                     className={classNames(
-                      "flex size-10 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums transition",
+                      "flex size-10 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums",
                       cell.result === "correct" && practiceCorrectClasses,
                       cell.result === "wrong" && practiceWrongClasses,
                       cell.isActive &&
-                        "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+                        "ring-1 ring-foreground ring-offset-2 ring-offset-background",
                       cell.isActive &&
                         cell.result == null &&
                         "border-foreground bg-muted text-foreground",
                       !cell.isActive &&
                         cell.result == null &&
-                        "border-border bg-background text-foreground hover:border-foreground hover:bg-muted/60",
+                        "border-border bg-background text-foreground hover:border-foreground",
                     )}
                     key={cell.questionNumber}
                     onClick={() => onSelect(cell.questionNumber)}
