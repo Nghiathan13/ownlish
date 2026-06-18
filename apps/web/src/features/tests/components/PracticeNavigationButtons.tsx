@@ -54,7 +54,7 @@ export function PracticeNavigationButtons({
         <button
           aria-label="Previous"
           className={classNames(
-            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
+            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground",
             previousDisabled
               ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:border-foreground",
@@ -68,7 +68,7 @@ export function PracticeNavigationButtons({
         {showQuestionGrid ? (
           <button
             aria-label="Question list"
-            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200 hover:border-foreground"
+            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-transparent text-foreground hover:border-foreground"
             onClick={() => setIsGridOpen(true)}
             type="button"
           >
@@ -78,7 +78,7 @@ export function PracticeNavigationButtons({
         <button
           aria-label={nextAriaLabel}
           className={classNames(
-            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
+            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground",
             nextDisabled
               ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:border-foreground",

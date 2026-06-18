@@ -4,10 +4,12 @@ import { useMemo, useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
+import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { classNames } from "@/shared/lib/classNames";
 import type { PracticeMode, PracticeStats } from "@/features/tests/api/types";
 import { getPartStats } from "@/features/tests/hooks/usePracticeStats";
+import { practiceWrongStatClasses } from "@/features/tests/lib/practiceGradingClasses";
 import { isSupportedPracticePart } from "@/features/tests/lib/partPracticeConfig";
 import {
   ALL_TOEIC_PART_NUMBERS,
@@ -35,19 +37,19 @@ function PartCheckboxOption({
   checked,
   disabled,
   label,
-  description,
+  wrongCount = 0,
   onToggle,
 }: {
   checked: boolean;
   disabled?: boolean;
   label: string;
-  description?: string | null;
+  wrongCount?: number;
   onToggle: () => void;
 }) {
   return (
     <button
       className={classNames(
-        "flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition",
+        "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition",
         disabled
           ? "cursor-not-allowed border-border opacity-60"
           : checked
@@ -60,7 +62,7 @@ function PartCheckboxOption({
     >
       <span
         className={classNames(
-          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
+          "flex size-5 shrink-0 items-center justify-center rounded-full border",
           checked
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-background",
@@ -68,11 +70,12 @@ function PartCheckboxOption({
       >
         {checked ? <CheckIcon className="size-3" /> : null}
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-base font-normal">{label}</span>
-        {description ? (
-          <span className="mt-0.5 block text-xs text-muted-foreground">
-            {description}
+      <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+        <span className="text-base font-normal">{label}</span>
+        {wrongCount > 0 ? (
+          <span className="inline-flex shrink-0 items-center gap-1">
+            <CloseIcon className={classNames("size-4", practiceWrongStatClasses)} />
+            <span className={practiceWrongStatClasses}>{wrongCount}</span>
           </span>
         ) : null}
       </span>
@@ -144,7 +147,6 @@ export function PartPickerModal({
         <section className="flex flex-col gap-2">
           <PartCheckboxOption
             checked={isFullTest}
-            description="All 7 parts"
             label="Full test"
             onToggle={() => setFullTestSelection(!isFullTest)}
           />
@@ -161,15 +163,11 @@ export function PartPickerModal({
               return (
                 <PartCheckboxOption
                   checked={normalizedSelectedParts.includes(partNumber)}
-                  description={
-                    enabled && wrongCount > 0
-                      ? `${wrongCount} wrong to review`
-                      : null
-                  }
                   disabled={!enabled}
                   key={partNumber}
                   label={`Part ${partNumber}`}
                   onToggle={() => enabled && togglePart(partNumber)}
+                  wrongCount={enabled ? wrongCount : 0}
                 />
               );
             })}
@@ -187,15 +185,11 @@ export function PartPickerModal({
               return (
                 <PartCheckboxOption
                   checked={normalizedSelectedParts.includes(partNumber)}
-                  description={
-                    enabled && wrongCount > 0
-                      ? `${wrongCount} wrong to review`
-                      : null
-                  }
                   disabled={!enabled}
                   key={partNumber}
                   label={`Part ${partNumber}`}
                   onToggle={() => enabled && togglePart(partNumber)}
+                  wrongCount={enabled ? wrongCount : 0}
                 />
               );
             })}
