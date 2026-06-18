@@ -71,7 +71,7 @@ function OptionAnswerIcon({
   isWrong,
   showGrading,
 }: OptionAnswerIconProps) {
-  const iconOffsetClass = "-translate-y-px";
+  const iconOffsetClass = "-translate-y-[0.5px]";
 
   if (isCorrect) {
     return (
