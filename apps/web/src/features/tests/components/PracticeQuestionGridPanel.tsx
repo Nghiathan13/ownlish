@@ -44,7 +44,7 @@ export function PracticeQuestionGridPanel({
         type="button"
       />
       <aside
-        className="absolute inset-y-0 left-0 flex w-[min(360px,85vw)] flex-col overflow-y-auto border-r border-border bg-background p-4 shadow-xl"
+        className="absolute inset-y-0 left-0 flex w-fit max-w-[85vw] flex-col overflow-y-auto border-r border-border bg-background p-4 shadow-xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex flex-col gap-4">
@@ -53,11 +53,11 @@ export function PracticeQuestionGridPanel({
               <h3 className="text-base font-semibold">
                 Part {section.partNumber}
               </h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-[repeat(6,32px)] gap-2">
                 {section.cells.map((cell) => (
                   <button
                     className={classNames(
-                      "flex size-10 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums transition",
+                      "flex size-8 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums transition",
                       cell.result === "correct" && practiceCorrectClasses,
                       cell.result === "wrong" && practiceWrongClasses,
                       cell.isActive &&
