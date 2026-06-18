@@ -81,7 +81,7 @@ export function PassagePanel({
               />
             ) : null}
           </div>
-          <div className="whitespace-pre-wrap text-base leading-relaxed select-text">
+          <div className="whitespace-pre-wrap text-base">
             {shouldHighlightEvidence ? (
               <ContextEvidenceText content={content!} />
             ) : canToggleEvidence ? (
