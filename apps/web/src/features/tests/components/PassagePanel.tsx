@@ -1,6 +1,7 @@
 "use client";
 
 import { ContextEvidenceText } from "@/features/tests/components/ContextEvidenceText";
+import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
 import { useEvidenceHighlightPreference } from "@/features/tests/hooks/useEvidenceHighlightPreference";
 import { hasContextEvidenceMarkers, stripContextEvidenceMarkup } from "@/features/tests/lib/parseContextEvidence";
 import { classNames } from "@/shared/lib/classNames";
@@ -92,18 +93,13 @@ export function PassagePanel({
         </>
       ) : null}
       {hasTranslation ? (
-        <div className="rounded-lg border border-border bg-muted/40 p-3">
-          {hasContent ? (
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Vietnamese
-            </p>
-          ) : (
-            <h3 className="mb-2 text-base font-semibold">{title}</h3>
-          )}
-          <div className="whitespace-pre-wrap text-base leading-relaxed text-muted-foreground select-text">
+        <PracticeTranslationCard
+          title={hasContent ? "Translation" : title}
+        >
+          <div className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
             {contentVi}
           </div>
-        </div>
+        </PracticeTranslationCard>
       ) : null}
     </div>
   );

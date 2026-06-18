@@ -9,10 +9,10 @@ type ContextEvidenceTextProps = {
 };
 
 const evidenceBadgeClassName =
-  "mr-1 inline-block min-w-[1.1rem] shrink-0 rounded px-1 py-px text-center text-[10px] font-semibold tabular-nums leading-none align-middle text-amber-800 ring-1 ring-amber-300/70 bg-amber-50 dark:text-amber-300 dark:ring-amber-700/60 dark:bg-amber-950/60";
+  "mr-1 inline-flex h-[1.125rem] min-w-[1.125rem] shrink-0 -translate-y-px items-center justify-center rounded px-0.5 align-middle text-[10px] font-semibold tabular-nums leading-none text-amber-800 ring-1 ring-amber-300/70 bg-amber-50 dark:text-amber-300 dark:ring-amber-700/60 dark:bg-amber-950/60";
 
 const evidenceHighlightClassName =
-  "inline rounded-[3px] bg-amber-100/80 px-0.5 py-px align-middle box-decoration-clone dark:bg-amber-900/35";
+  "inline rounded-[3px] bg-amber-100/80 px-0.5 py-px box-decoration-clone dark:bg-amber-900/35";
 
 export function ContextEvidenceText({
   content,

@@ -1,4 +1,5 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
+import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
 import type { PartTranslationVariant } from "@/features/tests/lib/partPracticeConfig";
 
 type QuestionTranslationPanelProps = {
@@ -31,9 +32,10 @@ export function QuestionTranslationPanel({
     variant === "content-question-options";
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-muted/40 p-4 text-base text-foreground select-text">
-      <p className="font-semibold">Translations</p>
-      {showQuestion && questionVi?.trim() ? <p>{questionVi}</p> : null}
+    <PracticeTranslationCard>
+      {showQuestion && questionVi?.trim() ? (
+        <p className="whitespace-pre-wrap">{questionVi}</p>
+      ) : null}
       {showOptions ? (
         <div className="flex flex-col gap-2">
           {OPTION_KEYS.slice(0, optionCount).map((key) => {
@@ -51,6 +53,6 @@ export function QuestionTranslationPanel({
           })}
         </div>
       ) : null}
-    </div>
+    </PracticeTranslationCard>
   );
 }

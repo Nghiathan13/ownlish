@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
+import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
 import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
 import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
@@ -468,10 +469,9 @@ export function ListeningGroupPracticeContent({
       partConfig.translationVariant === "content-question-options");
 
   const groupPassageTranslation = showGroupPassageTranslation ? (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-muted/40 p-4 text-base text-foreground select-text">
-      <p className="font-semibold">Translations</p>
+    <PracticeTranslationCard>
       <p className="whitespace-pre-wrap">{currentGroup.group.contentVi}</p>
-    </div>
+    </PracticeTranslationCard>
   ) : null;
 
   const syncFailureBanner = practice.hasSyncFailures ? (
