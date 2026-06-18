@@ -44,7 +44,7 @@ export function PracticeQuestionGridPanel({
         type="button"
       />
       <aside
-        className="absolute inset-y-0 left-0 flex w-fit max-w-[85vw] flex-col overflow-y-auto border-r border-border bg-background p-4 shadow-xl"
+        className="absolute inset-y-0 right-0 flex w-fit max-w-[85vw] flex-col overflow-y-auto border-l border-border bg-background p-4 shadow-xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex flex-col gap-4">

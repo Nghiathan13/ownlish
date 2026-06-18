@@ -14,13 +14,20 @@ import { useRouter } from "next/navigation";
 
 type ExitHandler = () => void | Promise<void>;
 
+export type PracticeQuestionNavState = {
+  currentQuestionNumber: number;
+  totalQuestions: number;
+};
+
 type PracticeExitContextValue = {
   exit: () => Promise<void>;
   practiceTitle: string | null;
+  questionNav: PracticeQuestionNavState | null;
   registerExitHandler: (
     handler: ExitHandler | null,
     title?: string | null,
   ) => void;
+  registerQuestionNav: (state: PracticeQuestionNavState | null) => void;
 };
 
 const PracticeExitContext = createContext<PracticeExitContextValue | null>(
@@ -31,6 +38,9 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const handlerRef = useRef<ExitHandler | null>(null);
   const [practiceTitle, setPracticeTitle] = useState<string | null>(null);
+  const [questionNav, setQuestionNav] = useState<PracticeQuestionNavState | null>(
+    null,
+  );
 
   const registerExitHandler = useCallback(
     (handler: ExitHandler | null, title: string | null = null) => {
@@ -39,6 +49,10 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+
+  const registerQuestionNav = useCallback((state: PracticeQuestionNavState | null) => {
+    setQuestionNav(state);
+  }, []);
 
   const exit = useCallback(async () => {
     if (handlerRef.current) {
@@ -50,8 +64,14 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const value = useMemo(
-    () => ({ exit, practiceTitle, registerExitHandler }),
-    [exit, practiceTitle, registerExitHandler],
+    () => ({
+      exit,
+      practiceTitle,
+      questionNav,
+      registerExitHandler,
+      registerQuestionNav,
+    }),
+    [exit, practiceTitle, questionNav, registerExitHandler, registerQuestionNav],
   );
 
   return (

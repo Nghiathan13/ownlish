@@ -13,9 +13,11 @@ import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
 import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
+import { useRegisterPracticeQuestionNav } from "@/features/tests/hooks/useRegisterPracticeQuestionNav";
 import {
   buildGroupGridSection,
   findGroupIndexForQuestion,
+  getPrimaryActiveQuestionNumber,
 } from "@/features/tests/lib/practiceQuestionGrid";
 import { resolveListeningGroupQuestionGridResult } from "@/features/tests/lib/resolveListeningGroupQuestionGridResult";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
@@ -68,6 +70,7 @@ export function ListeningGroupPracticeContent({
   const [lockedReviewGroupIds, setLockedReviewGroupIds] = useState<
     Set<number>
   >(() => new Set());
+  const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
   const currentGroup = groups[activeGroupIndex] ?? null;
@@ -147,6 +150,23 @@ export function ListeningGroupPracticeContent({
     usesDeferredGroupGrading,
   ]);
 
+  const totalQuestions = useMemo(
+    () =>
+      isWrongGroupReview && wrongQuestionCount != null
+        ? wrongQuestionCount
+        : groups.reduce((count, group) => count + group.questions.length, 0),
+    [groups, isWrongGroupReview, wrongQuestionCount],
+  );
+
+  useRegisterPracticeQuestionNav({
+    currentQuestionNumber: getPrimaryActiveQuestionNumber(
+      activeQuestionNumbers,
+      currentGroup?.group.questionStart,
+    ),
+    enabled: navigation === undefined && groups.length > 0,
+    totalQuestions,
+  });
+
   if (!currentGroup) {
     return null;
   }
@@ -171,10 +191,6 @@ export function ListeningGroupPracticeContent({
     : !usesDeferredGroupGrading || allQuestionsSelected || allGroupGraded;
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : showGroupReveal;
-  const totalQuestions =
-    isWrongGroupReview && wrongQuestionCount != null
-      ? wrongQuestionCount
-      : groups.reduce((count, group) => count + group.questions.length, 0);
 
   const goToGroupIndex = (index: number) => {
     const nextIndex = Math.max(0, Math.min(index, groups.length - 1));
@@ -307,13 +323,16 @@ export function ListeningGroupPracticeContent({
 
   const defaultNavigationBar = (
     <PracticeNavigationButtons
+      isQuestionGridOpen={isQuestionGridOpen}
       nextDisabled={isLastGroup}
       onNext={handleNext}
       onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
+      onQuestionGridOpenChange={setIsQuestionGridOpen}
       onQuestionGridSelect={(questionNumber) => {
         const groupIndex = findGroupIndexForQuestion(groups, questionNumber);
         if (groupIndex >= 0) {
           goToGroupIndex(groupIndex);
+          setIsQuestionGridOpen(false);
         }
       }}
       previousDisabled={activeGroupIndex === 0}

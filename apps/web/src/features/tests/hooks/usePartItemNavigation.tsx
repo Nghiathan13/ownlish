@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
+import { useRegisterPracticeQuestionNav } from "@/features/tests/hooks/useRegisterPracticeQuestionNav";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
 import type { PracticeItem } from "@/features/tests/lib/practiceGroups";
 import {
   buildItemGridSection,
   findItemIndexForQuestion,
+  getTotalQuestionCountFromSections,
 } from "@/features/tests/lib/practiceQuestionGrid";
 import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
 
@@ -27,6 +29,7 @@ export function usePartItemNavigation({
   practice,
 }: UsePartItemNavigationParams) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const activeIndex =
     items.length === 0 ? 0 : Math.min(currentIndex, items.length - 1);
   const currentItem = items[activeIndex] ?? null;
@@ -67,19 +70,31 @@ export function usePartItemNavigation({
     [activeQuestionNumbers, items, partNumber, practice],
   );
 
+  const totalQuestions = getTotalQuestionCountFromSections(questionGridSections);
+  const currentQuestionNumber = currentItem?.question.questionNumber ?? 1;
+
+  useRegisterPracticeQuestionNav({
+    currentQuestionNumber,
+    enabled: items.length > 0,
+    totalQuestions,
+  });
+
   const navigationBar = (
     <PracticeNavigationButtons
       nextDisabled={isLastItem}
       onNext={handleNext}
       onPrevious={() => goToIndex(activeIndex - 1)}
+      onQuestionGridOpenChange={setIsQuestionGridOpen}
       onQuestionGridSelect={(questionNumber) => {
         const index = findItemIndexForQuestion(items, questionNumber);
         if (index >= 0) {
           goToIndex(index);
+          setIsQuestionGridOpen(false);
         }
       }}
       previousDisabled={activeIndex === 0}
       questionGridSections={questionGridSections}
+      isQuestionGridOpen={isQuestionGridOpen}
     />
   );
 

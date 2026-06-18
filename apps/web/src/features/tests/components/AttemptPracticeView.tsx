@@ -23,7 +23,10 @@ import {
   buildFullTestGridSections,
   findStepIndexForQuestion,
   getActiveQuestionNumbersForStep,
+  getPrimaryActiveQuestionNumber,
+  getTotalQuestionCountFromSections,
 } from "@/features/tests/lib/practiceQuestionGrid";
+import { useRegisterPracticeQuestionNav } from "@/features/tests/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeExit } from "@/features/tests/providers/PracticeExitProvider";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { Button } from "@/shared/ui/Button";
@@ -184,6 +187,20 @@ export function AttemptPracticeView({
     [activeQuestionNumbers, normalizedSelectedParts, sessions, steps],
   );
 
+  const totalQuestions = getTotalQuestionCountFromSections(questionGridSections);
+  const currentQuestionNumber = getPrimaryActiveQuestionNumber(
+    activeQuestionNumbers,
+    currentStep?.kind === "group"
+      ? currentStep.practiceGroup.group.questionStart
+      : undefined,
+  );
+
+  useRegisterPracticeQuestionNav({
+    currentQuestionNumber,
+    enabled: anySessionReady && steps.length > 0,
+    totalQuestions,
+  });
+
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
     <PracticeNavigationButtons
@@ -201,6 +218,7 @@ export function AttemptPracticeView({
         const stepIndexForQuestion = findStepIndexForQuestion(steps, questionNumber);
         if (stepIndexForQuestion >= 0) {
           goToStepIndex(stepIndexForQuestion);
+          setIsQuestionGridOpen(false);
         }
       }}
       previousDisabled={activeStepIndex === 0 || isSyncing}

@@ -15,6 +15,7 @@ export function Navbar() {
   const router = useRouter();
   const { logout, status, user } = useAuthSession();
   const practiceExit = usePracticeExit();
+  const questionNav = practiceExit?.questionNav ?? null;
   const isImmersivePractice = isImmersiveTestPath(pathname);
 
   const isAuth = status === "authenticated";
@@ -33,20 +34,33 @@ export function Navbar() {
   if (isImmersivePractice) {
     return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-        <div className={classNames(APP_CONTAINER_CLASS, "flex items-center gap-4 py-4")}>
-          <Button
-            className="gap-2 py-2 text-base font-normal"
-            onClick={() => {
-              void (practiceExit?.exit() ?? router.push("/tests"));
-            }}
-            type="button"
-          >
-            <ArrowBackIcon className="size-4" />
-            Exit
-          </Button>
-          {practiceExit?.practiceTitle ? (
-            <span className="text-base font-semibold text-foreground">
-              {practiceExit.practiceTitle}
+        <div
+          className={classNames(
+            APP_CONTAINER_CLASS,
+            "flex items-center justify-between gap-4 py-4",
+          )}
+        >
+          <div className="flex items-center gap-4">
+            <Button
+              className="gap-2 py-2 text-base font-normal"
+              onClick={() => {
+                void (practiceExit?.exit() ?? router.push("/tests"));
+              }}
+              type="button"
+            >
+              <ArrowBackIcon className="size-4" />
+              Exit
+            </Button>
+            {practiceExit?.practiceTitle ? (
+              <span className="text-base font-semibold text-foreground">
+                {practiceExit.practiceTitle}
+              </span>
+            ) : null}
+          </div>
+          {questionNav ? (
+            <span className="rounded-lg border border-border bg-background/80 px-3 py-2 text-sm font-semibold text-foreground backdrop-blur-md">
+              Question {questionNav.currentQuestionNumber}/
+              {questionNav.totalQuestions}
             </span>
           ) : null}
         </div>
