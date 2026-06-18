@@ -58,7 +58,7 @@ export function Navbar() {
             ) : null}
           </div>
           {questionNav ? (
-            <span className="rounded-lg border border-border bg-background/80 px-4 py-2 text-base text-foreground">
+            <span className="rounded-lg border border-border px-4 py-2 text-base font-normal">
               Question {questionNav.currentQuestionNumber}/
               {questionNav.totalQuestions}
             </span>

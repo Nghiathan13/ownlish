@@ -1,9 +1,15 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
 import {
   practiceCorrectClasses,
+  practiceCorrectStatClasses,
   practiceWrongClasses,
+  practiceWrongStatClasses,
 } from "@/features/tests/lib/practiceGradingClasses";
 import { classNames } from "@/shared/lib/classNames";
+import { AdjustIcon } from "@/shared/ui/icons/AdjustIcon";
+import { CircleIcon } from "@/shared/ui/icons/CircleIcon";
+import { RightIcon } from "@/shared/ui/icons/RightIcon";
+import { WrongIcon } from "@/shared/ui/icons/WrongIcon";
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
@@ -52,6 +58,34 @@ function OptionLabel({ optionKey, englishText, showEnglishText }: OptionLabelPro
   );
 }
 
+type OptionAnswerIconProps = {
+  isCorrect: boolean;
+  isSelected: boolean;
+  isWrong: boolean;
+  showGrading: boolean;
+};
+
+function OptionAnswerIcon({
+  isCorrect,
+  isSelected,
+  isWrong,
+  showGrading,
+}: OptionAnswerIconProps) {
+  if (isCorrect) {
+    return <RightIcon className={practiceCorrectStatClasses} />;
+  }
+
+  if (isWrong) {
+    return <WrongIcon className={practiceWrongStatClasses} />;
+  }
+
+  if (isSelected && !showGrading) {
+    return <AdjustIcon className="text-foreground" />;
+  }
+
+  return <CircleIcon className="text-muted-foreground" />;
+}
+
 export function QuestionOptions({
   optionCount,
   options,
@@ -79,7 +113,7 @@ export function QuestionOptions({
           (showEnglishTextBeforeAnswer || locked);
 
         const className = classNames(
-          "min-h-10 rounded-lg border px-4 py-2 text-left font-inherit select-text",
+          "flex min-h-10 items-center gap-4 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
           isCorrect && practiceCorrectClasses,
           isWrong && practiceWrongClasses,
@@ -94,18 +128,26 @@ export function QuestionOptions({
           !locked && isSubmitting && "pointer-events-none opacity-70",
         );
 
-        const label = (
-          <OptionLabel
-            englishText={englishText}
-            optionKey={key}
-            showEnglishText={showEnglishText}
-          />
+        const content = (
+          <>
+            <OptionAnswerIcon
+              isCorrect={isCorrect}
+              isSelected={isSelected}
+              isWrong={isWrong}
+              showGrading={showGrading}
+            />
+            <OptionLabel
+              englishText={englishText}
+              optionKey={key}
+              showEnglishText={showEnglishText}
+            />
+          </>
         );
 
         if (locked) {
           return (
             <div className={className} key={key}>
-              {label}
+              {content}
             </div>
           );
         }
@@ -118,7 +160,7 @@ export function QuestionOptions({
             onClick={() => onSelect(key)}
             type="button"
           >
-            {label}
+            {content}
           </button>
         );
       })}
