@@ -2,7 +2,6 @@ import {
   hasContextEvidenceMarkers,
   parseContextEvidence,
 } from "@/features/tests/lib/parseContextEvidence";
-import { classNames } from "@/shared/lib/classNames";
 
 type ContextEvidenceTextProps = {
   content: string;
@@ -10,10 +9,10 @@ type ContextEvidenceTextProps = {
 };
 
 const evidenceBadgeClassName =
-  "mr-1 inline-flex min-w-[1.1rem] shrink-0 items-center justify-center rounded px-1 py-px text-[10px] font-semibold tabular-nums leading-none text-muted-foreground ring-1 ring-border/70 bg-background/80 align-baseline";
+  "mr-1 inline-flex min-w-[1.1rem] shrink-0 items-center justify-center rounded px-1 py-px text-[10px] font-semibold tabular-nums leading-none text-amber-800 ring-1 ring-amber-300/70 bg-amber-50 align-baseline dark:text-amber-300 dark:ring-amber-700/60 dark:bg-amber-950/60";
 
 const evidenceHighlightClassName =
-  "rounded-[3px] bg-muted/80 px-0.5 py-px box-decoration-clone dark:bg-muted/45";
+  "rounded-[3px] bg-amber-100/80 px-0.5 py-px box-decoration-clone dark:bg-amber-900/35";
 
 export function ContextEvidenceText({
   content,
@@ -37,7 +36,7 @@ export function ContextEvidenceText({
             <span aria-hidden className={evidenceBadgeClassName}>
               {segment.questionNumber}
             </span>
-            <span className={classNames(evidenceHighlightClassName)}>
+            <span className={evidenceHighlightClassName}>
               {segment.value}
             </span>
           </span>
