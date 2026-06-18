@@ -68,3 +68,13 @@ export function parseContextEvidence(content: string): ContextEvidenceSegment[] 
 
   return segments;
 }
+
+export function stripContextEvidenceMarkup(content: string): string {
+  if (!hasContextEvidenceMarkers(content)) {
+    return content;
+  }
+
+  return parseContextEvidence(content)
+    .map((segment) => segment.value)
+    .join("");
+}

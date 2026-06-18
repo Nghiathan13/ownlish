@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   hasContextEvidenceMarkers,
   parseContextEvidence,
+  stripContextEvidenceMarkup,
 } from "./parseContextEvidence";
 
 describe("parseContextEvidence", () => {
@@ -77,5 +78,11 @@ W: It’s in my computer files. ` },
           "the work my design team’s doing to update your company logo.",
       },
     ]);
+  });
+
+  it("strips evidence markup without highlighting", () => {
+    const input = "W: {{q38}}Thanks.{{/q38}} Done.";
+
+    expect(stripContextEvidenceMarkup(input)).toBe("W: Thanks. Done.");
   });
 });

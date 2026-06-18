@@ -74,9 +74,9 @@ export function PracticeLeftPanel({
         <PassagePanel
           content={group.content}
           contentVi={null}
-          highlightEvidence
+          showEvidenceToggle
           showTranslation={false}
-          title="Context"
+          title="Transcript"
         />
       ) : null}
 
@@ -85,7 +85,7 @@ export function PracticeLeftPanel({
           content={null}
           contentVi={group.contentVi}
           showTranslation={Boolean(group.contentVi?.trim())}
-          title="Context translation"
+          title="Transcript translation"
         />
       ) : null}
 
