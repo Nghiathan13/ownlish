@@ -74,6 +74,7 @@ export function PracticeLeftPanel({
         <PassagePanel
           content={group.content}
           contentVi={null}
+          highlightEvidence
           showTranslation={false}
           title="Context"
         />

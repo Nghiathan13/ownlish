@@ -1,8 +1,12 @@
+import { ContextEvidenceText } from "@/features/tests/components/ContextEvidenceText";
+import { hasContextEvidenceMarkers } from "@/features/tests/lib/parseContextEvidence";
+
 type PassagePanelProps = {
   content: string | null;
   contentVi?: string | null;
   showTranslation: boolean;
   title?: string;
+  highlightEvidence?: boolean;
 };
 
 export function PassagePanel({
@@ -10,9 +14,12 @@ export function PassagePanel({
   contentVi,
   showTranslation,
   title = "Passage",
+  highlightEvidence = false,
 }: PassagePanelProps) {
   const hasContent = Boolean(content?.trim());
   const hasTranslation = Boolean(showTranslation && contentVi?.trim());
+  const shouldHighlightEvidence =
+    highlightEvidence && hasContent && hasContextEvidenceMarkers(content);
 
   if (!hasContent && !hasTranslation) {
     return null;
@@ -24,7 +31,11 @@ export function PassagePanel({
         <>
           <h3 className="text-base font-semibold">{title}</h3>
           <div className="whitespace-pre-wrap text-base leading-relaxed select-text">
-            {content}
+            {shouldHighlightEvidence ? (
+              <ContextEvidenceText content={content!} />
+            ) : (
+              content
+            )}
           </div>
         </>
       ) : null}
