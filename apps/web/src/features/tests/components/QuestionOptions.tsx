@@ -113,7 +113,7 @@ export function QuestionOptions({
           (showEnglishTextBeforeAnswer || locked);
 
         const className = classNames(
-          "flex min-h-10 items-center gap-4 rounded-lg border px-4 py-2 text-left font-inherit select-text",
+          "flex min-h-10 items-center gap-2 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
           isCorrect && practiceCorrectClasses,
           isWrong && practiceWrongClasses,
