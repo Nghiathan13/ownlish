@@ -53,7 +53,7 @@ export function PracticeQuestionGridPanel({
               <h3 className="text-base font-semibold">
                 Part {section.partNumber}
               </h3>
-              <div className="grid grid-cols-[repeat(6,32px)] gap-2">
+              <div className="grid grid-cols-[repeat(6,2.5rem)] gap-2">
                 {section.cells.map((cell) => (
                   <button
                     className={classNames(
