@@ -4,12 +4,14 @@ import { classNames } from "@/shared/lib/classNames";
 type PracticeTranslationCardProps = {
   children: ReactNode;
   className?: string;
+  headerAction?: ReactNode;
   title?: string;
 };
 
 export function PracticeTranslationCard({
   children,
   className,
+  headerAction,
   title = "Translation",
 }: PracticeTranslationCardProps) {
   return (
@@ -19,8 +21,9 @@ export function PracticeTranslationCard({
         className,
       )}
     >
-      <div className="p-4">
+      <div className="flex items-center gap-4 p-4">
         <p className="font-semibold">{title}</p>
+        {headerAction}
       </div>
       <div className="border-t border-border" />
       <div className="flex flex-col gap-2 p-4">{children}</div>

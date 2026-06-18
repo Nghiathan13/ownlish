@@ -71,16 +71,17 @@ export function PassagePanel({
   return (
     <div className="flex flex-col gap-4">
       {hasContent ? (
-        <>
-          <div className="flex items-center gap-4">
-            <h3 className="text-base font-semibold">{title}</h3>
-            {canToggleEvidence ? (
+        <PracticeTranslationCard
+          headerAction={
+            canToggleEvidence ? (
               <EvidenceHighlightSwitch
                 checked={isEvidenceHighlighted}
                 onCheckedChange={setIsEvidenceHighlighted}
               />
-            ) : null}
-          </div>
+            ) : undefined
+          }
+          title={title}
+        >
           <div className="whitespace-pre-wrap text-base">
             {shouldHighlightEvidence ? (
               <ContextEvidenceText content={content!} />
@@ -90,13 +91,11 @@ export function PassagePanel({
               content
             )}
           </div>
-        </>
+        </PracticeTranslationCard>
       ) : null}
       {hasTranslation ? (
-        <PracticeTranslationCard
-          title={hasContent ? "Translation" : title}
-        >
-          <div className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+        <PracticeTranslationCard title={hasContent ? "Translation" : title}>
+          <div className="whitespace-pre-wrap text-muted-foreground">
             {contentVi}
           </div>
         </PracticeTranslationCard>
