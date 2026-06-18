@@ -13,14 +13,40 @@ type PassagePanelProps = {
   showEvidenceToggle?: boolean;
 };
 
-const evidenceToggleClassName =
-  "inline-flex shrink-0 cursor-pointer items-center rounded-md border px-2.5 py-1 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+type EvidenceHighlightSwitchProps = {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+};
 
-const evidenceToggleOnClassName =
-  "border-amber-300/70 bg-amber-50 text-amber-900 hover:bg-amber-100/80 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-950/70";
-
-const evidenceToggleOffClassName =
-  "border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground";
+function EvidenceHighlightSwitch({
+  checked,
+  onCheckedChange,
+}: EvidenceHighlightSwitchProps) {
+  return (
+    <button
+      aria-checked={checked}
+      aria-label="Highlight evidence"
+      className={classNames(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent p-0.5 transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        checked
+          ? "bg-amber-500 dark:bg-amber-600"
+          : "bg-muted-foreground/25 dark:bg-muted-foreground/35",
+      )}
+      onClick={() => {
+        onCheckedChange(!checked);
+      }}
+      role="switch"
+      type="button"
+    >
+      <span
+        className={classNames(
+          "pointer-events-none inline-block size-5 rounded-full bg-background shadow-sm transition duration-200 ease-in-out",
+          checked ? "translate-x-5" : "translate-x-0",
+        )}
+      />
+    </button>
+  );
+}
 
 export function PassagePanel({
   content,
@@ -46,24 +72,13 @@ export function PassagePanel({
     <div className="flex flex-col gap-4">
       {hasContent ? (
         <>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
             <h3 className="text-base font-semibold">{title}</h3>
             {canToggleEvidence ? (
-              <button
-                aria-pressed={isEvidenceHighlighted}
-                className={classNames(
-                  evidenceToggleClassName,
-                  isEvidenceHighlighted
-                    ? evidenceToggleOnClassName
-                    : evidenceToggleOffClassName,
-                )}
-                onClick={() => {
-                  setIsEvidenceHighlighted((current) => !current);
-                }}
-                type="button"
-              >
-                Evidence
-              </button>
+              <EvidenceHighlightSwitch
+                checked={isEvidenceHighlighted}
+                onCheckedChange={setIsEvidenceHighlighted}
+              />
             ) : null}
           </div>
           <div className="whitespace-pre-wrap text-base leading-relaxed select-text">
