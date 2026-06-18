@@ -122,6 +122,7 @@ export function PracticeQuestionScreen({
         showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
       />
       <QuestionTranslationPanel
+        answerKey={currentAnswer?.answerKey ?? null}
         optionCount={question.optionCount}
         options={question.options}
         questionVi={question.questionVi}

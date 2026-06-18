@@ -1,6 +1,9 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
 import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
+import { practiceCorrectStatClasses } from "@/features/tests/lib/practiceGradingClasses";
 import type { PartTranslationVariant } from "@/features/tests/lib/partPracticeConfig";
+import { classNames } from "@/shared/lib/classNames";
+import { RightIcon } from "@/shared/ui/icons/RightIcon";
 
 type QuestionTranslationPanelProps = {
   options: ToeicQuestionOptions;
@@ -8,6 +11,7 @@ type QuestionTranslationPanelProps = {
   visible: boolean;
   variant?: PartTranslationVariant;
   questionVi?: string | null;
+  answerKey?: "A" | "B" | "C" | "D" | null;
 };
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
@@ -18,6 +22,7 @@ export function QuestionTranslationPanel({
   visible,
   variant = "options",
   questionVi,
+  answerKey = null,
 }: QuestionTranslationPanelProps) {
   if (!visible) {
     return null;
@@ -44,8 +49,24 @@ export function QuestionTranslationPanel({
               return null;
             }
 
+            const isCorrect = answerKey === key;
+
             return (
-              <p key={key}>
+              <p
+                className={classNames(
+                  "flex items-center gap-2",
+                  isCorrect && practiceCorrectStatClasses,
+                )}
+                key={key}
+              >
+                {isCorrect ? (
+                  <RightIcon
+                    className={classNames(
+                      practiceCorrectStatClasses,
+                      "-translate-y-[0.5px]",
+                    )}
+                  />
+                ) : null}
                 {key}. {label}
               </p>
             );

@@ -432,6 +432,7 @@ export function ListeningGroupPracticeContent({
         />
 
         <QuestionTranslationPanel
+          answerKey={showResult ? answerKey : null}
           optionCount={question.optionCount}
           options={question.options}
           questionVi={question.questionVi}
