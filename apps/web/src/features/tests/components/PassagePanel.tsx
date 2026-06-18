@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { ContextEvidenceText } from "@/features/tests/components/ContextEvidenceText";
+import { useEvidenceHighlightPreference } from "@/features/tests/hooks/useEvidenceHighlightPreference";
 import { hasContextEvidenceMarkers, stripContextEvidenceMarkup } from "@/features/tests/lib/parseContextEvidence";
 import { classNames } from "@/shared/lib/classNames";
 
@@ -27,7 +27,7 @@ function EvidenceHighlightSwitch({
       aria-checked={checked}
       aria-label="Highlight evidence"
       className={classNames(
-        "relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         checked ? "bg-foreground" : "bg-neutral-300 dark:bg-neutral-600",
       )}
       onClick={() => {
@@ -38,8 +38,8 @@ function EvidenceHighlightSwitch({
     >
       <span
         className={classNames(
-          "absolute top-1/2 size-5 -translate-y-1/2 rounded-full bg-background shadow-sm transition-[left] duration-200 ease-in-out",
-          checked ? "left-[calc(100%-1.375rem)]" : "left-0.5",
+          "absolute top-1/2 size-4 -translate-y-1/2 rounded-full bg-background shadow-sm transition-[left] duration-200 ease-in-out",
+          checked ? "left-[calc(100%-1.125rem)]" : "left-0.5",
         )}
       />
     </button>
@@ -57,7 +57,8 @@ export function PassagePanel({
   const hasTranslation = Boolean(showTranslation && contentVi?.trim());
   const canToggleEvidence =
     showEvidenceToggle && hasContent && hasContextEvidenceMarkers(content);
-  const [isEvidenceHighlighted, setIsEvidenceHighlighted] = useState(true);
+  const { enabled: isEvidenceHighlighted, setEnabled: setIsEvidenceHighlighted } =
+    useEvidenceHighlightPreference();
 
   const shouldHighlightEvidence =
     canToggleEvidence && isEvidenceHighlighted;
