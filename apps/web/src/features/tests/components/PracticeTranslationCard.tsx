@@ -15,14 +15,17 @@ export function PracticeTranslationCard({
   return (
     <div
       className={classNames(
-        "flex flex-col gap-8 rounded-xl border border-border bg-muted/40 p-4 text-base text-foreground select-text",
+        "rounded-xl border border-border bg-muted/40 text-base text-foreground select-text",
         className,
       )}
     >
-      <div>
+      <div className="p-4">
         <p className="font-semibold">{title}</p>
       </div>
-      <div className="-mx-4 border-t border-border px-4">{children}</div>
+      <div className="flex h-8 items-center">
+        <div className="h-px w-full bg-border" />
+      </div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }
