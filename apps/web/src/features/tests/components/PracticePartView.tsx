@@ -262,26 +262,25 @@ export function PracticePartView({
   const { sessionId, completeSession } = practice;
 
   const handleExit = useCallback(async () => {
-    if (isWrongMode && sessionId) {
-      await completeSession();
-      void queryClient.invalidateQueries({
-        queryKey: getPracticeStatsQueryKey(testId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getWrongQuestionsQueryKey(testId, partNumber),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
-      });
+    if (!isWrongMode || !sessionId) {
+      return;
     }
 
-    router.push("/tests");
+    await completeSession();
+    void queryClient.invalidateQueries({
+      queryKey: getPracticeStatsQueryKey(testId),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: getWrongQuestionsQueryKey(testId, partNumber),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+    });
   }, [
     completeSession,
     isWrongMode,
     partNumber,
     queryClient,
-    router,
     sessionId,
     testId,
   ]);

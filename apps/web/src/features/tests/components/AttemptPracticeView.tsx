@@ -159,9 +159,7 @@ export function AttemptPracticeView({
     } finally {
       setIsSyncing(false);
     }
-
-    router.push("/tests");
-  }, [router, syncAttemptProgress]);
+  }, [syncAttemptProgress]);
 
   const anySessionReady = Object.values(sessions).some(
     (session) => session.sessionId != null,

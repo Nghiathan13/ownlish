@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { isImmersiveTestPath } from "@/features/tests/lib/isImmersiveTestPath";
-import { usePracticeExit } from "@/features/tests/providers/PracticeExitProvider";
+import {
+  usePracticeExit,
+  usePracticeQuestionNav,
+} from "@/features/tests/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
@@ -15,7 +18,8 @@ export function Navbar() {
   const router = useRouter();
   const { logout, status, user } = useAuthSession();
   const practiceExit = usePracticeExit();
-  const questionNav = practiceExit?.questionNav ?? null;
+  const practiceQuestionNav = usePracticeQuestionNav();
+  const questionNav = practiceQuestionNav?.questionNav ?? null;
   const isImmersivePractice = isImmersiveTestPath(pathname);
 
   const isAuth = status === "authenticated";

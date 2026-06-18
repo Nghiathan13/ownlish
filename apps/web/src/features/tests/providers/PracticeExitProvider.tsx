@@ -22,17 +22,23 @@ export type PracticeQuestionNavState = {
 type PracticeExitContextValue = {
   exit: () => Promise<void>;
   practiceTitle: string | null;
-  questionNav: PracticeQuestionNavState | null;
   registerExitHandler: (
     handler: ExitHandler | null,
     title?: string | null,
   ) => void;
+};
+
+type PracticeQuestionNavContextValue = {
+  questionNav: PracticeQuestionNavState | null;
   registerQuestionNav: (state: PracticeQuestionNavState | null) => void;
 };
 
 const PracticeExitContext = createContext<PracticeExitContextValue | null>(
   null,
 );
+
+const PracticeQuestionNavContext =
+  createContext<PracticeQuestionNavContextValue | null>(null);
 
 export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -55,28 +61,39 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const exit = useCallback(async () => {
-    if (handlerRef.current) {
-      await handlerRef.current();
-      return;
+    try {
+      if (handlerRef.current) {
+        await handlerRef.current();
+      }
+    } catch {
+      // Exit should not be blocked by best-effort practice cleanup.
     }
 
     router.push("/tests");
   }, [router]);
 
-  const value = useMemo(
+  const exitValue = useMemo(
     () => ({
       exit,
       practiceTitle,
-      questionNav,
       registerExitHandler,
+    }),
+    [exit, practiceTitle, registerExitHandler],
+  );
+
+  const questionNavValue = useMemo(
+    () => ({
+      questionNav,
       registerQuestionNav,
     }),
-    [exit, practiceTitle, questionNav, registerExitHandler, registerQuestionNav],
+    [questionNav, registerQuestionNav],
   );
 
   return (
-    <PracticeExitContext.Provider value={value}>
-      {children}
+    <PracticeExitContext.Provider value={exitValue}>
+      <PracticeQuestionNavContext.Provider value={questionNavValue}>
+        {children}
+      </PracticeQuestionNavContext.Provider>
     </PracticeExitContext.Provider>
   );
 }
@@ -85,21 +102,26 @@ export function usePracticeExit() {
   return useContext(PracticeExitContext);
 }
 
+export function usePracticeQuestionNav() {
+  return useContext(PracticeQuestionNavContext);
+}
+
 export function useRegisterPracticeExit(
   handler: ExitHandler | null,
   title: string | null = null,
 ) {
   const context = usePracticeExit();
+  const registerExitHandler = context?.registerExitHandler;
 
   useEffect(() => {
-    if (!context) {
+    if (!registerExitHandler) {
       return;
     }
 
-    context.registerExitHandler(handler, title);
+    registerExitHandler(handler, title);
 
     return () => {
-      context.registerExitHandler(null, null);
+      registerExitHandler(null, null);
     };
-  }, [context, handler, title]);
+  }, [handler, registerExitHandler, title]);
 }

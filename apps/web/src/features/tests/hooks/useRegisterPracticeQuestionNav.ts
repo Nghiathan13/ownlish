@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePracticeExit } from "@/features/tests/providers/PracticeExitProvider";
+import { usePracticeQuestionNav } from "@/features/tests/providers/PracticeExitProvider";
 
 type UseRegisterPracticeQuestionNavParams = {
   enabled: boolean;
@@ -14,10 +14,11 @@ export function useRegisterPracticeQuestionNav({
   currentQuestionNumber,
   totalQuestions,
 }: UseRegisterPracticeQuestionNavParams) {
-  const context = usePracticeExit();
+  const context = usePracticeQuestionNav();
+  const registerQuestionNav = context?.registerQuestionNav;
 
   useEffect(() => {
-    if (!context) {
+    if (!registerQuestionNav) {
       return;
     }
 
@@ -25,13 +26,13 @@ export function useRegisterPracticeQuestionNav({
       return;
     }
 
-    context.registerQuestionNav({
+    registerQuestionNav({
       currentQuestionNumber,
       totalQuestions,
     });
 
     return () => {
-      context.registerQuestionNav(null);
+      registerQuestionNav(null);
     };
-  }, [context, currentQuestionNumber, enabled, totalQuestions]);
+  }, [currentQuestionNumber, enabled, registerQuestionNav, totalQuestions]);
 }
