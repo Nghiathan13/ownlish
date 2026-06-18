@@ -1,6 +1,6 @@
 "use client";
 
-import { use, Suspense, useEffect, useMemo } from "react";
+import { use, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
@@ -8,10 +8,6 @@ import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { getTestAttempt } from "@/features/tests/api/testsApi";
 import { AttemptPracticeView } from "@/features/tests/components/AttemptPracticeView";
-import {
-  readFullTestSelectedParts,
-  writeFullTestSelectedParts,
-} from "@/features/tests/lib/fullTestStorage";
 import {
   normalizeSelectedParts,
   parseSelectedPartsParam,
@@ -40,13 +36,8 @@ function FullTestAttemptPageContent({
 
   const selectedParts = useMemo(() => {
     const fromQuery = parseSelectedPartsParam(searchParams.get("parts") ?? undefined);
-    const fromStorage = readFullTestSelectedParts(attemptId);
-    return normalizeSelectedParts(fromQuery ?? fromStorage);
-  }, [attemptId, searchParams]);
-
-  useEffect(() => {
-    writeFullTestSelectedParts(attemptId, selectedParts);
-  }, [attemptId, selectedParts]);
+    return normalizeSelectedParts(fromQuery);
+  }, [searchParams]);
 
   const attemptQuery = useQuery({
     queryKey: ["test-attempt", attemptId],

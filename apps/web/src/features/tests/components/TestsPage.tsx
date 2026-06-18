@@ -18,7 +18,6 @@ import {
 } from "@/features/tests/hooks/usePracticeSession";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import { useTestsList } from "@/features/tests/hooks/useTestsList";
-import { writeFullTestSelectedParts } from "@/features/tests/lib/fullTestStorage";
 import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceStorage";
 import { areAllPartsSelected } from "@/features/tests/lib/toeicParts";
 import { Button } from "@/shared/ui/Button";
@@ -119,8 +118,6 @@ export function TestsPage() {
         clearSession,
         request: (token) => createTestAttempt(token, testId),
       });
-
-      writeFullTestSelectedParts(attempt.attemptId, partNumbers);
 
       const query = areAllPartsSelected(partNumbers)
         ? ""
