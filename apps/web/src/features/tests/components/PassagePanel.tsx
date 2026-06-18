@@ -28,7 +28,7 @@ function EvidenceHighlightSwitch({
       aria-checked={checked}
       aria-label="Highlight evidence"
       className={classNames(
-        "relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         checked ? "bg-foreground" : "bg-neutral-300 dark:bg-neutral-600",
       )}
       onClick={() => {
@@ -39,7 +39,7 @@ function EvidenceHighlightSwitch({
     >
       <span
         className={classNames(
-          "absolute top-1/2 size-4 -translate-y-1/2 rounded-full bg-background shadow-sm transition-[left] duration-200 ease-in-out",
+          "absolute top-1/2 size-4 -translate-y-1/2 rounded-full bg-background shadow-sm transition-[left] duration-100 ease-in-out",
           checked ? "left-[calc(100%-1.125rem)]" : "left-0.5",
         )}
       />
