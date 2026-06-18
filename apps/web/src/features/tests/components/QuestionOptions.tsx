@@ -6,7 +6,6 @@ import {
   practiceWrongStatClasses,
 } from "@/features/tests/lib/practiceGradingClasses";
 import { classNames } from "@/shared/lib/classNames";
-import { AdjustIcon } from "@/shared/ui/icons/AdjustIcon";
 import { CircleIcon } from "@/shared/ui/icons/CircleIcon";
 import { RightIcon } from "@/shared/ui/icons/RightIcon";
 import { WrongIcon } from "@/shared/ui/icons/WrongIcon";
@@ -85,11 +84,12 @@ function OptionAnswerIcon({
     );
   }
 
-  if (isSelected && !showGrading) {
-    return <AdjustIcon className={classNames("text-foreground", iconOffsetClass)} />;
-  }
-
-  return <CircleIcon className={classNames("text-foreground", iconOffsetClass)} />;
+  return (
+    <CircleIcon
+      className={classNames("text-foreground", iconOffsetClass)}
+      selected={isSelected && !showGrading}
+    />
+  );
 }
 
 export function QuestionOptions({
