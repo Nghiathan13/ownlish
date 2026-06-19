@@ -8,7 +8,7 @@ import {
   IsPositive,
 } from 'class-validator';
 
-export class CreatePracticeSessionDto {
+export class CreateToeicSessionDto {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayUnique()

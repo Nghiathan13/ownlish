@@ -1,6 +1,6 @@
 import { IsIn, IsInt, IsPositive } from 'class-validator';
 
-export class SubmitPracticeAnswerDto {
+export class SubmitToeicAnswerDto {
   @IsInt()
   @IsPositive()
   toeicQuestionId!: number;

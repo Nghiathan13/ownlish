@@ -14,17 +14,11 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
-import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
-import { CreateAttemptDto } from './dto/create-attempt.dto';
-import { CompleteAttemptPartDto } from './dto/complete-attempt-part.dto';
-import { SyncAttemptProgressDto } from './dto/sync-attempt-progress.dto';
-import { ListAttemptsDto } from './dto/list-attempts.dto';
+import { CreateToeicSessionDto } from './dto/create-toeic-session.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
-import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
-import { SubmitReviewGroupAnswersDto } from './dto/submit-review-group-answers.dto';
+import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { PracticeService } from './practice.service';
-import { AttemptService } from './attempt.service';
 import { TestsService } from './tests.service';
 
 @Controller('tests')
@@ -33,7 +27,6 @@ export class TestsController {
   constructor(
     private readonly testsService: TestsService,
     private readonly practiceService: PracticeService,
-    private readonly attemptService: AttemptService,
   ) {}
 
   @Get()
@@ -44,7 +37,7 @@ export class TestsController {
   @Post('practice/sessions')
   createSession(
     @Req() request: AuthRequest,
-    @Body() dto: CreatePracticeSessionDto,
+    @Body() dto: CreateToeicSessionDto,
   ) {
     return this.practiceService.createSession(request.user.id, dto);
   }
@@ -53,24 +46,9 @@ export class TestsController {
   submitAnswer(
     @Req() request: AuthRequest,
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-    @Body() dto: SubmitPracticeAnswerDto,
+    @Body() dto: SubmitToeicAnswerDto,
   ) {
     return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
-  }
-
-  @Post('practice/sessions/:sessionId/groups/:groupId/answers')
-  submitReviewGroupAnswers(
-    @Req() request: AuthRequest,
-    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-    @Param('groupId', ParseIntPipe) groupId: number,
-    @Body() dto: SubmitReviewGroupAnswersDto,
-  ) {
-    return this.practiceService.submitReviewGroupAnswers(
-      request.user.id,
-      sessionId,
-      groupId,
-      dto,
-    );
   }
 
   @Patch('practice/sessions/:sessionId/complete')
@@ -87,65 +65,6 @@ export class TestsController {
     @Param('testId', ParseIntPipe) testId: number,
   ) {
     return this.practiceService.clearTestHistory(request.user.id, testId);
-  }
-
-  @Post('attempts')
-  createAttempt(@Req() request: AuthRequest, @Body() dto: CreateAttemptDto) {
-    return this.attemptService.createAttempt(request.user.id, dto);
-  }
-
-  @Get('attempts')
-  listAttempts(@Req() request: AuthRequest, @Query() query: ListAttemptsDto) {
-    return this.attemptService.listAttempts(
-      request.user.id,
-      query.testId,
-      query.limit,
-      query.offset,
-    );
-  }
-
-  @Get('attempts/:attemptId')
-  getAttempt(
-    @Req() request: AuthRequest,
-    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
-  ) {
-    return this.attemptService.getAttempt(request.user.id, attemptId);
-  }
-
-  @Patch('attempts/:attemptId/parts/:partNumber/complete')
-  completeAttemptPart(
-    @Req() request: AuthRequest,
-    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
-    @Param('partNumber', ParseIntPipe) partNumber: number,
-    @Body() dto: CompleteAttemptPartDto,
-  ) {
-    return this.attemptService.completeAttemptPart(
-      request.user.id,
-      attemptId,
-      partNumber,
-      dto,
-    );
-  }
-
-  @Patch('attempts/:attemptId/sync')
-  syncAttemptProgress(
-    @Req() request: AuthRequest,
-    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
-    @Body() dto: SyncAttemptProgressDto,
-  ) {
-    return this.attemptService.syncAttemptProgress(
-      request.user.id,
-      attemptId,
-      dto,
-    );
-  }
-
-  @Patch('attempts/:attemptId/complete')
-  completeAttempt(
-    @Req() request: AuthRequest,
-    @Param('attemptId', new ParseUUIDPipe({ version: '4' })) attemptId: string,
-  ) {
-    return this.attemptService.completeAttempt(request.user.id, attemptId);
   }
 
   @Get(':testId/parts/:partNumber')

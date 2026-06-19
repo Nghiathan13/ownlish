@@ -19,9 +19,8 @@ import {
   mapQuestionOptions,
   parseAnswerKey,
 } from './lib/toeic-question-mapper';
-import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
-import { SubmitReviewGroupAnswersDto } from './dto/submit-review-group-answers.dto';
-import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
+import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
+import { CreateToeicSessionDto } from './dto/create-toeic-session.dto';
 import { TestsStorageService } from './tests-storage.service';
 
 const DEFERRED_GROUP_GRADING_PARTS = new Set([3, 4]);
@@ -106,7 +105,7 @@ export class PracticeService {
     private readonly storageService: TestsStorageService,
   ) {}
 
-  async createSession(userId: string, dto: CreatePracticeSessionDto) {
+  async createSession(userId: string, dto: CreateToeicSessionDto) {
     const selectedParts = this.resolveSelectedParts(dto);
     const mode =
       dto.mode === 'review_wrong'
@@ -151,7 +150,7 @@ export class PracticeService {
     return this.formatSessionResponse(run);
   }
 
-  private resolveSelectedParts(dto: CreatePracticeSessionDto): number[] {
+  private resolveSelectedParts(dto: CreateToeicSessionDto): number[] {
     const selectedParts = [...new Set(dto.partNumbers)].sort((a, b) => a - b);
 
     if (selectedParts.length === 0) {
@@ -678,7 +677,7 @@ export class PracticeService {
   async submitAnswer(
     userId: string,
     sessionId: string,
-    dto: SubmitPracticeAnswerDto,
+    dto: SubmitToeicAnswerDto,
   ) {
     const run = await this.prisma.toeicRun.findFirst({
       where: {
@@ -736,7 +735,14 @@ export class PracticeService {
     }
 
     if (this.usesReviewGroupBatchSubmit(runQuestion.partNumber, run.mode)) {
-      return this.selectReviewGroupAnswer(runQuestion, selectedKey);
+      return this.selectReviewGroupAnswer(
+        userId,
+        run,
+        runQuestion,
+        question,
+        selectedKey,
+        answerKey,
+      );
     }
 
     if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
@@ -826,19 +832,45 @@ export class PracticeService {
   }
 
   private async selectReviewGroupAnswer(
+    userId: string,
+    run: {
+      id: string;
+      mode: ToeicRunMode;
+      toeicTestId: number;
+      selectedParts: number[];
+    },
     runQuestion: RunQuestionWithQuestion,
+    question: QuestionWithGroup,
     selectedKey: 'A' | 'B' | 'C' | 'D',
+    answerKey: 'A' | 'B' | 'C' | 'D',
   ): Promise<SubmitAnswerResponse> {
-    await this.prisma.toeicRunQuestion.update({
-      where: { id: runQuestion.id },
-      data: {
-        selectedKey,
-        status: ToeicRunQuestionStatus.SELECTED,
-        answeredAt: new Date(),
-      },
+    let graded = false;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.toeicRunQuestion.update({
+        where: { id: runQuestion.id },
+        data: {
+          selectedKey,
+          status: ToeicRunQuestionStatus.SELECTED,
+          answeredAt: new Date(),
+        },
+      });
+
+      if (await this.isRunGroupReadyToGrade(tx, runQuestion.runGroupId)) {
+        await this.gradeRunGroup(tx, userId, run, runQuestion.runGroupId);
+        graded = true;
+      }
     });
 
-    return { graded: false };
+    if (!graded) {
+      return { graded: false };
+    }
+
+    return this.buildGradedResponse(
+      question,
+      answerKey,
+      selectedKey === answerKey,
+    );
   }
 
   private async isRunGroupReadyToGrade(
@@ -1046,135 +1078,6 @@ export class PracticeService {
       where: { id: runId },
       data: { totalRight, totalWrong },
     });
-  }
-
-  async submitReviewGroupAnswers(
-    userId: string,
-    sessionId: string,
-    groupId: number,
-    dto: SubmitReviewGroupAnswersDto,
-  ) {
-    const run = await this.prisma.toeicRun.findFirst({
-      where: {
-        id: sessionId,
-        userId,
-      },
-    });
-
-    if (!run) {
-      throw new NotFoundException('Practice session not found.');
-    }
-
-    if (run.mode !== ToeicRunMode.WRONG_REVIEW) {
-      throw new BadRequestException(
-        'Group answers can only be submitted in review mode.',
-      );
-    }
-
-    const runGroup = await this.prisma.toeicRunGroup.findFirst({
-      where: {
-        runId: run.id,
-        toeicQuestionGroupId: groupId,
-      },
-      include: {
-        questions: {
-          include: { toeicQuestion: true },
-        },
-      },
-    });
-
-    if (!runGroup) {
-      throw new BadRequestException(
-        'Question group does not belong to this session.',
-      );
-    }
-
-    if (!this.usesReviewGroupBatchSubmit(runGroup.partNumber, run.mode)) {
-      throw new BadRequestException(
-        'Group answers are only supported for parts 3, 4, 6, and 7 in review mode.',
-      );
-    }
-
-    const submittedQuestionIds = new Set(
-      dto.answers.map((item) => item.toeicQuestionId),
-    );
-
-    if (submittedQuestionIds.size !== dto.answers.length) {
-      throw new BadRequestException('Duplicate questions in group submission.');
-    }
-
-    const editableQuestions = runGroup.questions.filter(
-      (question) => question.status !== ToeicRunQuestionStatus.RIGHT,
-    );
-    const editableQuestionIds = editableQuestions.map(
-      (question) => question.toeicQuestionId,
-    );
-
-    if (
-      editableQuestionIds.length !== submittedQuestionIds.size ||
-      !editableQuestionIds.every((id) => submittedQuestionIds.has(id))
-    ) {
-      throw new BadRequestException(
-        'Submit answers for every wrong question in the group.',
-      );
-    }
-
-    const questionsById = new Map(
-      runGroup.questions.map((question) => [
-        question.toeicQuestionId,
-        question,
-      ]),
-    );
-    const results: Array<SubmitAnswerResponse & { toeicQuestionId: number }> =
-      [];
-
-    await this.prisma.$transaction(async (tx) => {
-      for (const answer of dto.answers) {
-        const runQuestion = questionsById.get(answer.toeicQuestionId);
-        if (!runQuestion) {
-          continue;
-        }
-
-        const answerKey = parseAnswerKey(runQuestion.toeicQuestion.answerKey);
-        const selectedKey = answer.selectedKey.trim().toUpperCase();
-
-        if (!answerKey) {
-          throw new BadRequestException('Question has an invalid answer key.');
-        }
-
-        if (!isToeicQuestionOptionKey(selectedKey)) {
-          throw new BadRequestException('Invalid answer.');
-        }
-
-        const isCorrect = selectedKey === answerKey;
-
-        await this.gradeRunQuestion(tx, {
-          run,
-          runQuestion,
-          selectedKey,
-          isCorrect,
-        });
-
-        await this.markLatestPracticeQuestion(tx, {
-          userId,
-          testId: run.toeicTestId,
-          toeicQuestionId: runQuestion.toeicQuestionId,
-          selectedKey,
-          isCorrect,
-        });
-
-        results.push({
-          toeicQuestionId: runQuestion.toeicQuestionId,
-          ...this.buildGradedResponse(
-            runQuestion.toeicQuestion,
-            answerKey,
-            isCorrect,
-          ),
-        });
-      }
-    });
-
-    return { results };
   }
 
   async completeSession(userId: string, sessionId: string) {

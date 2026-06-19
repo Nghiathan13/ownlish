@@ -21,7 +21,6 @@ model User {
   collections         WordCollection[]
   refreshSessions     RefreshSession[]
   vocabWords          VocabWord[]
-  toeicTestAttempts   ToeicTestAttempt[]
   toeicRuns           ToeicRun[]
 
   @@map("users")
@@ -206,7 +205,6 @@ model ToeicTest {
   createdAt  DateTime           @default(now()) @map("created_at")
   updatedAt  DateTime           @updatedAt @map("updated_at")
   parts      ToeicTestPart[]
-  attempts   ToeicTestAttempt[]
   toeicRuns  ToeicRun[]
 
   @@unique([year, testNumber])
@@ -343,39 +341,4 @@ model ToeicRunQuestion {
   @@index([runGroupId, status])
   @@index([toeicQuestionId])
   @@map("toeic_run_questions")
-}
-
-model ToeicTestAttempt {
-  id           String                 @id @default(uuid())
-  userId       String                 @map("user_id")
-  toeicTestId  Int                    @map("toeic_test_id")
-  startedAt    DateTime               @default(now()) @map("started_at")
-  completedAt  DateTime?              @map("completed_at")
-  totalCorrect Int                    @default(0) @map("total_correct")
-  totalWrong   Int                    @default(0) @map("total_wrong")
-  createdAt    DateTime               @default(now()) @map("created_at")
-  updatedAt    DateTime               @updatedAt @map("updated_at")
-  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  test         ToeicTest              @relation(fields: [toeicTestId], references: [id], onDelete: Cascade)
-  parts        ToeicTestAttemptPart[]
-
-  @@index([userId])
-  @@index([toeicTestId])
-  @@map("toeic_test_attempts")
-}
-
-model ToeicTestAttemptPart {
-  id           String           @id @default(uuid())
-  attemptId    String           @map("attempt_id")
-  partNumber   Int              @map("part_number")
-  correctCount Int              @default(0) @map("correct_count")
-  wrongCount   Int              @default(0) @map("wrong_count")
-  completedAt  DateTime?        @map("completed_at")
-  createdAt    DateTime         @default(now()) @map("created_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
-  attempt      ToeicTestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-
-  @@unique([attemptId, partNumber])
-  @@index([attemptId])
-  @@map("toeic_test_attempt_parts")
 }
