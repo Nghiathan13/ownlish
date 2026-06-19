@@ -28,6 +28,21 @@ export function getStepQuestionStart(step: PracticeRunStep): number {
     : step.item.group.questionStart;
 }
 
+export function getMinQuestionNumberInSession(questionNumbers: number[]) {
+  if (questionNumbers.length === 0) {
+    return 1;
+  }
+
+  return Math.min(...questionNumbers);
+}
+
+export function toSessionQuestionDisplayNumber(
+  questionNumber: number,
+  minQuestionNumberInSession: number,
+) {
+  return questionNumber - minQuestionNumberInSession + 1;
+}
+
 function flattenPartItems(
   partNumber: number,
   groups: ToeicQuestionGroup[],

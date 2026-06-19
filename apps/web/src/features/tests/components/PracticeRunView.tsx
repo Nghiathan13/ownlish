@@ -12,8 +12,10 @@ import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/type
 import {
   buildPracticeRunQuestions,
   buildPracticeRunSteps,
+  getMinQuestionNumberInSession,
   getStepQuestionStart,
   resolveInitialStepIndex,
+  toSessionQuestionDisplayNumber,
 } from "@/features/tests/lib/practiceRunSteps";
 import { writePracticeRunIndex } from "@/features/tests/lib/practiceRunStorage";
 import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
@@ -174,7 +176,21 @@ export function PracticeRunView({
   );
 
   const totalQuestions = getTotalQuestionCountFromSections(questionGridSections);
-  const currentQuestionNumber = currentStep ? getStepQuestionStart(currentStep) : 1;
+  const minSessionQuestionNumber = useMemo(
+    () =>
+      getMinQuestionNumberInSession(
+        questionGridSections.flatMap((section) =>
+          section.cells.map((cell) => cell.questionNumber),
+        ),
+      ),
+    [questionGridSections],
+  );
+  const currentQuestionNumber = currentStep
+    ? toSessionQuestionDisplayNumber(
+        getStepQuestionStart(currentStep),
+        minSessionQuestionNumber,
+      )
+    : 1;
 
   useRegisterPracticeQuestionNav({
     currentQuestionNumber,

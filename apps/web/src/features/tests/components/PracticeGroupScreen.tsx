@@ -12,6 +12,10 @@ import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
+import {
+  getMinQuestionNumberInSession,
+  toSessionQuestionDisplayNumber,
+} from "@/features/tests/lib/practiceRunSteps";
 import { writePracticeIndex } from "@/features/tests/lib/practiceStorage";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/hooks/useRegisterPracticeQuestionNav";
 import {
@@ -164,8 +168,21 @@ export function PracticeGroupScreen({
     [groups, isWrongGroupReview, wrongQuestionCount],
   );
 
+  const minSessionQuestionNumber = useMemo(
+    () =>
+      getMinQuestionNumberInSession(
+        groups.flatMap((group) =>
+          group.questions.map((question) => question.questionNumber),
+        ),
+      ),
+    [groups],
+  );
+
   useRegisterPracticeQuestionNav({
-    currentQuestionNumber: currentGroup?.group.questionStart ?? 1,
+    currentQuestionNumber: toSessionQuestionDisplayNumber(
+      currentGroup?.group.questionStart ?? minSessionQuestionNumber,
+      minSessionQuestionNumber,
+    ),
     enabled: navigation === undefined && groups.length > 0,
     totalQuestions,
   });
