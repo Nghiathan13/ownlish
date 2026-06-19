@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ToeicRunMode, ToeicRunQuestionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { countOptions, mapQuestionOptions, parseAnswerKey } from './lib/toeic-question-mapper';
+import {
+  countOptions,
+  mapQuestionOptions,
+  parseAnswerKey,
+} from './lib/toeic-question-mapper';
 import { TestsStorageService } from './tests-storage.service';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 
@@ -11,18 +16,81 @@ export class TestsService {
     private readonly storageService: TestsStorageService,
   ) {}
 
-  async listTests(year: number) {
+  async listTests(userId: string, year: number) {
     const tests = await this.prisma.toeicTest.findMany({
       where: { year },
       orderBy: { testNumber: 'asc' },
+      include: {
+        parts: {
+          orderBy: { partNumber: 'asc' },
+          select: { partNumber: true },
+        },
+      },
     });
+    const testIds = tests.map((test) => test.id);
+    const practiceRuns = testIds.length
+      ? await this.prisma.toeicRun.findMany({
+          where: {
+            userId,
+            toeicTestId: { in: testIds },
+            mode: ToeicRunMode.PRACTICE,
+          },
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, toeicTestId: true },
+        })
+      : [];
+    const latestRunByTestId = new Map<number, string>();
+
+    for (const run of practiceRuns) {
+      if (!latestRunByTestId.has(run.toeicTestId)) {
+        latestRunByTestId.set(run.toeicTestId, run.id);
+      }
+    }
+
+    const latestRunIds = [...latestRunByTestId.values()];
+    const progressCounts = latestRunIds.length
+      ? await this.prisma.toeicRunQuestion.groupBy({
+          by: ['runId', 'partNumber', 'status'],
+          where: {
+            runId: { in: latestRunIds },
+            status: {
+              in: [ToeicRunQuestionStatus.RIGHT, ToeicRunQuestionStatus.WRONG],
+            },
+          },
+          _count: { _all: true },
+        })
+      : [];
+    const progressCountByPart = new Map<string, number>();
+
+    for (const count of progressCounts) {
+      progressCountByPart.set(
+        `${count.runId}:${count.partNumber}:${count.status}`,
+        count._count._all,
+      );
+    }
 
     return {
       items: tests.map((test) => ({
         id: test.id,
         year: test.year,
         testNumber: test.testNumber,
-        label: `Test ${test.testNumber}`,
+        parts: test.parts.map((part) => {
+          const runId = latestRunByTestId.get(test.id);
+
+          return {
+            partNumber: part.partNumber,
+            partCorrectCount: runId
+              ? (progressCountByPart.get(
+                  `${runId}:${part.partNumber}:${ToeicRunQuestionStatus.RIGHT}`,
+                ) ?? 0)
+              : 0,
+            partWrongCount: runId
+              ? (progressCountByPart.get(
+                  `${runId}:${part.partNumber}:${ToeicRunQuestionStatus.WRONG}`,
+                ) ?? 0)
+              : 0,
+          };
+        }),
       })),
     };
   }

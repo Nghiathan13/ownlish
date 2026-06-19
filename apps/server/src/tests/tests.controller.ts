@@ -18,7 +18,6 @@ import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
 import { CreateAttemptDto } from './dto/create-attempt.dto';
 import { CompleteAttemptPartDto } from './dto/complete-attempt-part.dto';
 import { SyncAttemptProgressDto } from './dto/sync-attempt-progress.dto';
-import { GetPracticeStatsDto } from './dto/get-practice-stats.dto';
 import { ListAttemptsDto } from './dto/list-attempts.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
 import { ListWrongQuestionsDto } from './dto/list-wrong-questions.dto';
@@ -39,8 +38,8 @@ export class TestsController {
   ) {}
 
   @Get()
-  list(@Query() query: ListTestsDto) {
-    return this.testsService.listTests(query.year);
+  list(@Req() request: AuthRequest, @Query() query: ListTestsDto) {
+    return this.testsService.listTests(request.user.id, query.year);
   }
 
   @Post('practice/sessions')
@@ -57,18 +56,6 @@ export class TestsController {
     @Query() query: ListWrongQuestionsDto,
   ) {
     return this.practiceService.listWrongQuestions(
-      request.user.id,
-      query.testId,
-      query.partNumber,
-    );
-  }
-
-  @Get('practice/stats')
-  getPracticeStats(
-    @Req() request: AuthRequest,
-    @Query() query: GetPracticeStatsDto,
-  ) {
-    return this.practiceService.getPracticeStats(
       request.user.id,
       query.testId,
       query.partNumber,

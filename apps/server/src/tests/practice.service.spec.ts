@@ -107,8 +107,8 @@ describe('PracticeService', () => {
       { partNumber: 2 },
     ]);
     prismaMock.toeicRun.findFirst.mockResolvedValue({ id: 'run-id' });
-    prismaMock.$transaction.mockImplementation(async (callback) =>
-      callback(prismaMock),
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
     );
     prismaMock.toeicRun.findUnique
       .mockResolvedValueOnce({
@@ -141,7 +141,7 @@ describe('PracticeService', () => {
         mode: 'PRACTICE',
       },
       orderBy: { createdAt: 'desc' },
-      include: expect.any(Object),
+      include: expect.any(Object) as unknown,
     });
     expect(prismaMock.toeicRun.create).not.toHaveBeenCalled();
     expect(prismaMock.toeicRun.update).toHaveBeenCalledWith({
@@ -156,43 +156,6 @@ describe('PracticeService', () => {
     await expect(
       service.listWrongQuestions('user-id', 1, 9),
     ).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it('returns aggregated practice stats from the latest practice run per part', async () => {
-    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
-    prismaMock.toeicTestPart.findMany.mockResolvedValue([
-      { partNumber: 1 },
-      { partNumber: 2 },
-    ]);
-    prismaMock.toeicRun.findFirst
-      .mockResolvedValueOnce({ id: 'part-1-run' })
-      .mockResolvedValueOnce({ id: 'part-2-run' });
-    prismaMock.toeicRunQuestion.count
-      .mockResolvedValueOnce(4)
-      .mockResolvedValueOnce(2)
-      .mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(1);
-
-    await expect(service.getPracticeStats('user-id', 1)).resolves.toEqual({
-      testId: 1,
-      wrongQuestionCount: 3,
-      practiceCorrectCount: 4,
-      practiceWrongCount: 3,
-      parts: [
-        {
-          partNumber: 1,
-          wrongQuestionCount: 2,
-          practiceCorrectCount: 4,
-          practiceWrongCount: 2,
-        },
-        {
-          partNumber: 2,
-          wrongQuestionCount: 1,
-          practiceCorrectCount: 0,
-          practiceWrongCount: 1,
-        },
-      ],
-    });
   });
 
   it('clears practice runs, legacy sessions, and wrong questions for a test', async () => {

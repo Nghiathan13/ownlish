@@ -1114,6 +1114,18 @@ export class PracticeService {
     return { deletedSessionCount: runResult.count + legacySessionResult.count };
   }
 
+  private findLatestPracticeRunForPart(userId: string, testId: number) {
+    return this.prisma.toeicRun.findFirst({
+      where: {
+        userId,
+        toeicTestId: testId,
+        mode: ToeicRunMode.PRACTICE,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+  }
+
   async listWrongQuestions(userId: string, testId: number, partNumber: number) {
     await this.assertTestPartExists(testId, partNumber);
 
@@ -1154,62 +1166,6 @@ export class PracticeService {
     };
   }
 
-  async getPracticeStats(userId: string, testId: number, partNumber?: number) {
-    const test = await this.prisma.toeicTest.findUnique({
-      where: { id: testId },
-    });
-
-    if (!test) {
-      throw new NotFoundException('Test not found.');
-    }
-
-    if (partNumber !== undefined) {
-      await this.assertTestPartExists(testId, partNumber);
-      const partStats = await this.getPracticeStatsForPart(
-        userId,
-        testId,
-        partNumber,
-      );
-
-      return {
-        testId,
-        wrongQuestionCount: partStats.wrongQuestionCount,
-        practiceCorrectCount: partStats.practiceCorrectCount,
-        practiceWrongCount: partStats.practiceWrongCount,
-        parts: [partStats],
-      };
-    }
-
-    const parts = await this.prisma.toeicTestPart.findMany({
-      where: { testId },
-      orderBy: { partNumber: 'asc' },
-      select: { partNumber: true },
-    });
-
-    const partStats = await Promise.all(
-      parts.map((part) =>
-        this.getPracticeStatsForPart(userId, testId, part.partNumber),
-      ),
-    );
-
-    return {
-      testId,
-      wrongQuestionCount: partStats.reduce(
-        (total, part) => total + part.wrongQuestionCount,
-        0,
-      ),
-      practiceCorrectCount: partStats.reduce(
-        (total, part) => total + part.practiceCorrectCount,
-        0,
-      ),
-      practiceWrongCount: partStats.reduce(
-        (total, part) => total + part.practiceWrongCount,
-        0,
-      ),
-      parts: partStats,
-    };
-  }
-
   private async assertTestPartExists(testId: number, partNumber: number) {
     const part = await this.prisma.toeicTestPart.findUnique({
       where: {
@@ -1223,58 +1179,5 @@ export class PracticeService {
     if (!part) {
       throw new NotFoundException('Test part not found.');
     }
-  }
-
-  private findLatestPracticeRunForPart(userId: string, testId: number) {
-    return this.prisma.toeicRun.findFirst({
-      where: {
-        userId,
-        toeicTestId: testId,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true },
-    });
-  }
-
-  private async getPracticeStatsForPart(
-    userId: string,
-    testId: number,
-    partNumber: number,
-  ) {
-    const practiceRun = await this.findLatestPracticeRunForPart(userId, testId);
-
-    if (!practiceRun) {
-      return {
-        partNumber,
-        wrongQuestionCount: 0,
-        practiceCorrectCount: 0,
-        practiceWrongCount: 0,
-      };
-    }
-
-    const [practiceCorrectCount, practiceWrongCount] = await Promise.all([
-      this.prisma.toeicRunQuestion.count({
-        where: {
-          runId: practiceRun.id,
-          partNumber,
-          status: ToeicRunQuestionStatus.RIGHT,
-        },
-      }),
-      this.prisma.toeicRunQuestion.count({
-        where: {
-          runId: practiceRun.id,
-          partNumber,
-          status: ToeicRunQuestionStatus.WRONG,
-        },
-      }),
-    ]);
-
-    return {
-      partNumber,
-      wrongQuestionCount: practiceWrongCount,
-      practiceCorrectCount,
-      practiceWrongCount,
-    };
   }
 }

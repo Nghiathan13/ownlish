@@ -120,26 +120,29 @@ describe('AttemptService', () => {
 
   it('syncs attempt progress for multiple parts in one request', async () => {
     prismaMock.toeicTestAttempt.findFirst.mockResolvedValue(sampleAttempt);
-    prismaMock.$transaction.mockImplementation(async (callback) =>
-      callback({
-        toeicTestAttemptPart: {
-          update: jest.fn(),
-          findMany: jest.fn().mockResolvedValue(
-            sampleAttempt.parts.map((part) => ({
-              ...part,
-              correctCount: 1,
-              wrongCount: 0,
-            })),
-          ),
-        },
-        toeicTestAttempt: {
-          update: jest.fn().mockResolvedValue({
-            ...sampleAttempt,
-            totalCorrect: 7,
-            totalWrong: 0,
-          }),
-        },
-      }),
+    const transactionMock = {
+      toeicTestAttemptPart: {
+        update: jest.fn(),
+        findMany: jest.fn().mockResolvedValue(
+          sampleAttempt.parts.map((part) => ({
+            ...part,
+            correctCount: 1,
+            wrongCount: 0,
+          })),
+        ),
+      },
+      toeicTestAttempt: {
+        update: jest.fn().mockResolvedValue({
+          ...sampleAttempt,
+          totalCorrect: 7,
+          totalWrong: 0,
+        }),
+      },
+    };
+
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof transactionMock) => unknown) =>
+        callback(transactionMock),
     );
 
     await expect(
