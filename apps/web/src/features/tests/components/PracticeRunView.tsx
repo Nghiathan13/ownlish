@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 import { PracticeStepContent } from "@/features/tests/components/PracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
@@ -52,7 +51,6 @@ export function PracticeRunView({
   practiceMode = "practice",
 }: PracticeRunViewProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [stepIndex, setStepIndex] = useState(0);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const initializedStorageKeyRef = useRef<string | null>(null);
@@ -144,19 +142,9 @@ export function PracticeRunView({
     [activeStepIndex, steps.length, storageKey],
   );
 
-  const handleExit = useCallback(async () => {
-    if (isWrongMode && practice.sessionId) {
-      await practice.completeSession();
-    }
-
-    await queryClient.invalidateQueries({
-      queryKey: ["tests"],
-    });
-  }, [isWrongMode, practice, queryClient]);
-
   useRegisterPracticeExit(
-    practice.sessionId ? handleExit : null,
-    isWrongMode ? `Test ${testId} · Review wrong` : `Test ${testId}`,
+    practice.sessionId ? () => undefined : null,
+    `Test ${testId}`,
   );
 
   const activeQuestionNumbers = useMemo(
