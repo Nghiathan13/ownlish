@@ -20,7 +20,6 @@ import { CompleteAttemptPartDto } from './dto/complete-attempt-part.dto';
 import { SyncAttemptProgressDto } from './dto/sync-attempt-progress.dto';
 import { ListAttemptsDto } from './dto/list-attempts.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
-import { ListWrongQuestionsDto } from './dto/list-wrong-questions.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
 import { SubmitReviewGroupAnswersDto } from './dto/submit-review-group-answers.dto';
@@ -48,18 +47,6 @@ export class TestsController {
     @Body() dto: CreatePracticeSessionDto,
   ) {
     return this.practiceService.createSession(request.user.id, dto);
-  }
-
-  @Get('practice/wrong-questions')
-  listWrongQuestions(
-    @Req() request: AuthRequest,
-    @Query() query: ListWrongQuestionsDto,
-  ) {
-    return this.practiceService.listWrongQuestions(
-      request.user.id,
-      query.testId,
-      query.partNumber,
-    );
   }
 
   @Post('practice/sessions/:sessionId/answers')

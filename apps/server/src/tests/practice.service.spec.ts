@@ -1,6 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ToeicRunQuestionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PracticeService } from './practice.service';
 import { TestsStorageService } from './tests-storage.service';
@@ -33,12 +31,6 @@ describe('PracticeService', () => {
     },
     toeicQuestionGroup: {
       findMany: jest.fn(),
-    },
-    toeicWrongQuestion: {
-      deleteMany: jest.fn(),
-    },
-    toeicPracticeSession: {
-      deleteMany: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -75,48 +67,6 @@ describe('PracticeService', () => {
     }).compile();
 
     service = module.get<PracticeService>(PracticeService);
-  });
-
-  it('lists wrong questions for the latest practice run in a test part', async () => {
-    prismaMock.toeicTestPart.findUnique.mockResolvedValue({
-      id: 1,
-      testId: 1,
-      partNumber: 1,
-    });
-    prismaMock.toeicRun.findFirst.mockResolvedValue({ id: 'run-id' });
-    prismaMock.toeicRunQuestion.findMany.mockResolvedValue([
-      {
-        toeicQuestionId: 10,
-        status: ToeicRunQuestionStatus.WRONG,
-        answeredAt: new Date('2026-06-01T00:00:00.000Z'),
-        gradedAt: new Date('2026-06-01T00:01:00.000Z'),
-        toeicQuestion: {
-          id: 10,
-          questionNumber: 3,
-        },
-      },
-    ]);
-
-    await expect(service.listWrongQuestions('user-id', 1, 1)).resolves.toEqual({
-      items: [
-        {
-          toeicQuestionId: 10,
-          questionNumber: 3,
-          wrongCount: 1,
-          lastWrongAt: '2026-06-01T00:01:00.000Z',
-        },
-      ],
-    });
-
-    expect(prismaMock.toeicRun.findFirst).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        toeicTestId: 1,
-        mode: 'PRACTICE',
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true },
-    });
   });
 
   it('reuses the latest practice run for the test when selected parts change', async () => {
@@ -256,37 +206,15 @@ describe('PracticeService', () => {
     });
   });
 
-  it('throws when listing wrong questions for a missing part', async () => {
-    prismaMock.toeicTestPart.findUnique.mockResolvedValue(null);
-
-    await expect(
-      service.listWrongQuestions('user-id', 1, 9),
-    ).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it('clears practice runs, legacy sessions, and wrong questions for a test', async () => {
+  it('clears practice runs for a test', async () => {
     prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
     prismaMock.toeicRun.deleteMany.mockReturnValue('delete-runs-query');
-    prismaMock.toeicPracticeSession.deleteMany.mockReturnValue(
-      'delete-legacy-sessions-query',
-    );
-    prismaMock.toeicWrongQuestion.deleteMany.mockReturnValue(
-      'delete-legacy-wrong-questions-query',
-    );
-    prismaMock.$transaction.mockResolvedValue([
-      { count: 2 },
-      { count: 1 },
-      { count: 4 },
-    ]);
+    prismaMock.$transaction.mockResolvedValue([{ count: 2 }]);
 
     await expect(service.clearTestHistory('user-id', 1)).resolves.toEqual({
-      deletedSessionCount: 3,
+      deletedSessionCount: 2,
     });
 
-    expect(prismaMock.$transaction).toHaveBeenCalledWith([
-      'delete-runs-query',
-      'delete-legacy-sessions-query',
-      'delete-legacy-wrong-questions-query',
-    ]);
+    expect(prismaMock.$transaction).toHaveBeenCalledWith(['delete-runs-query']);
   });
 });

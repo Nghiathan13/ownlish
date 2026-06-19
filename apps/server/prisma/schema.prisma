@@ -21,8 +21,6 @@ model User {
   collections         WordCollection[]
   refreshSessions     RefreshSession[]
   vocabWords          VocabWord[]
-  practiceSessions    ToeicPracticeSession[]
-  toeicWrongQuestions ToeicWrongQuestion[]
   toeicTestAttempts   ToeicTestAttempt[]
   toeicRuns           ToeicRun[]
 
@@ -185,11 +183,6 @@ model CollectionUserWordItem {
   @@map("collection_user_word_items")
 }
 
-enum ToeicPracticeMode {
-  NORMAL
-  WRONG_QUESTIONS
-}
-
 enum ToeicRunMode {
   PRACTICE
   WRONG_REVIEW
@@ -276,9 +269,7 @@ model ToeicQuestion {
   createdAt       DateTime              @default(now()) @map("created_at")
   updatedAt       DateTime              @updatedAt @map("updated_at")
   group           ToeicQuestionGroup    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  practiceAnswers ToeicPracticeAnswer[]
   runQuestions    ToeicRunQuestion[]
-  wrongQuestions  ToeicWrongQuestion[]
 
   @@unique([groupId, questionNumber])
   @@index([groupId])
@@ -352,58 +343,6 @@ model ToeicRunQuestion {
   @@index([runGroupId, status])
   @@index([toeicQuestionId])
   @@map("toeic_run_questions")
-}
-
-model ToeicPracticeSession {
-  id           String                @id @default(uuid())
-  userId       String                @map("user_id")
-  toeicTestId  Int                   @map("toeic_test_id")
-  partNumber   Int                   @map("part_number")
-  mode         ToeicPracticeMode     @default(NORMAL)
-  startedAt    DateTime              @default(now()) @map("started_at")
-  completedAt  DateTime?             @map("completed_at")
-  correctCount Int                   @default(0) @map("correct_count")
-  wrongCount   Int                   @default(0) @map("wrong_count")
-  createdAt    DateTime              @default(now()) @map("created_at")
-  updatedAt    DateTime              @updatedAt @map("updated_at")
-  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  answers      ToeicPracticeAnswer[]
-
-  @@index([userId])
-  @@index([userId, toeicTestId, partNumber])
-  @@map("toeic_practice_sessions")
-}
-
-model ToeicPracticeAnswer {
-  id              String               @id @default(uuid())
-  sessionId       String               @map("session_id")
-  toeicQuestionId Int                  @map("toeic_question_id")
-  selectedKey     String               @map("selected_key")
-  isCorrect       Boolean?             @map("is_correct")
-  answeredAt      DateTime             @default(now()) @map("answered_at")
-  session         ToeicPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  toeicQuestion   ToeicQuestion        @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)
-
-  @@unique([sessionId, toeicQuestionId])
-  @@index([sessionId])
-  @@index([toeicQuestionId])
-  @@map("toeic_practice_answers")
-}
-
-model ToeicWrongQuestion {
-  id              String        @id @default(uuid())
-  userId          String        @map("user_id")
-  toeicQuestionId Int           @map("toeic_question_id")
-  lastWrongAt     DateTime      @default(now()) @map("last_wrong_at")
-  wrongCount      Int           @default(1) @map("wrong_count")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  toeicQuestion   ToeicQuestion @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, toeicQuestionId])
-  @@index([userId])
-  @@map("toeic_wrong_questions")
 }
 
 model ToeicTestAttempt {

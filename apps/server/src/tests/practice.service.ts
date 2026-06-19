@@ -1204,100 +1204,15 @@ export class PracticeService {
       throw new NotFoundException('Test not found.');
     }
 
-    const [runResult, legacySessionResult] = await this.prisma.$transaction([
+    const [runResult] = await this.prisma.$transaction([
       this.prisma.toeicRun.deleteMany({
         where: {
           userId,
           toeicTestId: testId,
         },
       }),
-      this.prisma.toeicPracticeSession.deleteMany({
-        where: {
-          userId,
-          toeicTestId: testId,
-        },
-      }),
-      this.prisma.toeicWrongQuestion.deleteMany({
-        where: {
-          userId,
-          toeicQuestion: {
-            group: {
-              testPart: {
-                testId,
-              },
-            },
-          },
-        },
-      }),
     ]);
 
-    return { deletedSessionCount: runResult.count + legacySessionResult.count };
-  }
-
-  private findLatestPracticeRunForPart(userId: string, testId: number) {
-    return this.prisma.toeicRun.findFirst({
-      where: {
-        userId,
-        toeicTestId: testId,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true },
-    });
-  }
-
-  async listWrongQuestions(userId: string, testId: number, partNumber: number) {
-    await this.assertTestPartExists(testId, partNumber);
-
-    const practiceRun = await this.findLatestPracticeRunForPart(userId, testId);
-
-    if (!practiceRun) {
-      return { items: [] };
-    }
-
-    const items = await this.prisma.toeicRunQuestion.findMany({
-      where: {
-        runId: practiceRun.id,
-        partNumber,
-        status: ToeicRunQuestionStatus.WRONG,
-      },
-      include: {
-        toeicQuestion: {
-          select: {
-            id: true,
-            questionNumber: true,
-          },
-        },
-      },
-      orderBy: [{ gradedAt: 'desc' }, { toeicQuestionId: 'asc' }],
-    });
-
-    return {
-      items: items.map((item) => ({
-        toeicQuestionId: item.toeicQuestionId,
-        questionNumber: item.toeicQuestion.questionNumber,
-        wrongCount: 1,
-        lastWrongAt: (
-          item.gradedAt ??
-          item.answeredAt ??
-          new Date()
-        ).toISOString(),
-      })),
-    };
-  }
-
-  private async assertTestPartExists(testId: number, partNumber: number) {
-    const part = await this.prisma.toeicTestPart.findUnique({
-      where: {
-        testId_partNumber: {
-          testId,
-          partNumber,
-        },
-      },
-    });
-
-    if (!part) {
-      throw new NotFoundException('Test part not found.');
-    }
+    return { deletedSessionCount: runResult.count };
   }
 }
