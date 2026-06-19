@@ -33,7 +33,7 @@ export function TestCard({
   const answeredQuestionCount = testCorrectCount + testWrongCount;
 
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-border p-4 transition hover:bg-muted">
+    <article className="flex flex-col gap-4 rounded-xl border border-border p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Test {test.id}</h2>
@@ -64,7 +64,7 @@ export function TestCard({
           className={classNames(
             "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md bg-transparent",
             statusColorClasses.danger.text,
-            "hover:bg-red-200/20 dark:hover:bg-red-900/20",
+            "hover:bg-red-200/30 dark:hover:bg-red-900/30",
             "disabled:cursor-not-allowed disabled:opacity-60",
           )}
           disabled={isClearingHistory}
