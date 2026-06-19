@@ -53,7 +53,7 @@ function OptionLabel({
   showBilingual,
 }: OptionLabelProps) {
   return (
-    <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-base font-normal leading-snug tracking-normal">
+    <span className="flex min-w-0 flex-1 flex-col gap-1 text-base font-normal leading-snug tracking-normal">
       <span>
         {optionKey}
         {englishText ? (
