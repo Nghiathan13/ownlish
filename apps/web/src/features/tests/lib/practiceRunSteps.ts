@@ -22,6 +22,12 @@ export type PracticeRunGroupStep = {
 
 export type PracticeRunStep = PracticeRunQuestionStep | PracticeRunGroupStep;
 
+export function getStepQuestionStart(step: PracticeRunStep): number {
+  return step.kind === "group"
+    ? step.practiceGroup.group.questionStart
+    : step.item.group.questionStart;
+}
+
 function flattenPartItems(
   partNumber: number,
   groups: ToeicQuestionGroup[],

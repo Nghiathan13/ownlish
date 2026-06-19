@@ -17,7 +17,6 @@ import { useRegisterPracticeQuestionNav } from "@/features/tests/hooks/useRegist
 import {
   buildGroupGridSection,
   findGroupIndexForQuestion,
-  getPrimaryActiveQuestionNumber,
 } from "@/features/tests/lib/practiceQuestionGrid";
 import { resolveListeningGroupQuestionGridResult } from "@/features/tests/lib/resolveListeningGroupQuestionGridResult";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
@@ -166,10 +165,7 @@ export function PracticeGroupScreen({
   );
 
   useRegisterPracticeQuestionNav({
-    currentQuestionNumber: getPrimaryActiveQuestionNumber(
-      activeQuestionNumbers,
-      currentGroup?.group.questionStart,
-    ),
+    currentQuestionNumber: currentGroup?.group.questionStart ?? 1,
     enabled: navigation === undefined && groups.length > 0,
     totalQuestions,
   });

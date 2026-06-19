@@ -158,18 +158,3 @@ export function buildPracticeRunGridSections(
 export function getTotalQuestionCountFromSections(sections: QuestionGridSection[]) {
   return sections.reduce((total, section) => total + section.cells.length, 0);
 }
-
-export function getPrimaryActiveQuestionNumber(
-  activeQuestionNumbers: ReadonlySet<number>,
-  groupQuestionStart?: number,
-) {
-  if (groupQuestionStart != null) {
-    return groupQuestionStart;
-  }
-
-  if (activeQuestionNumbers.size === 0) {
-    return 1;
-  }
-
-  return Math.min(...activeQuestionNumbers);
-}

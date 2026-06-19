@@ -12,6 +12,7 @@ import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/type
 import {
   buildPracticeRunQuestions,
   buildPracticeRunSteps,
+  getStepQuestionStart,
   resolveInitialStepIndex,
 } from "@/features/tests/lib/practiceRunSteps";
 import { writePracticeRunIndex } from "@/features/tests/lib/practiceRunStorage";
@@ -20,7 +21,6 @@ import {
   buildPracticeRunGridSections,
   findStepIndexForQuestion,
   getActiveQuestionNumbersForStep,
-  getPrimaryActiveQuestionNumber,
   getTotalQuestionCountFromSections,
 } from "@/features/tests/lib/practiceQuestionGrid";
 import { normalizeSelectedParts } from "@/features/tests/lib/toeicParts";
@@ -174,12 +174,7 @@ export function PracticeRunView({
   );
 
   const totalQuestions = getTotalQuestionCountFromSections(questionGridSections);
-  const currentQuestionNumber = getPrimaryActiveQuestionNumber(
-    activeQuestionNumbers,
-    currentStep?.kind === "group"
-      ? currentStep.practiceGroup.group.questionStart
-      : undefined,
-  );
+  const currentQuestionNumber = currentStep ? getStepQuestionStart(currentStep) : 1;
 
   useRegisterPracticeQuestionNav({
     currentQuestionNumber,
