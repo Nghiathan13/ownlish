@@ -4,11 +4,11 @@ import { ListeningGroupPracticeContent } from "@/features/tests/components/Liste
 import { PracticeQuestionScreen } from "@/features/tests/components/PracticeQuestionScreen";
 import type { PracticeMode } from "@/features/tests/api/types";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
-import type { FullTestStep } from "@/features/tests/lib/fullTestQuestions";
+import type { PracticeRunStep } from "@/features/tests/lib/practiceRunSteps";
 
-type PracticeAttemptStepContentProps = {
+type PracticeStepContentProps = {
   testId: number;
-  step: FullTestStep;
+  step: PracticeRunStep;
   practice: ReturnType<typeof usePracticeSession>;
   normalPractice?: ReturnType<typeof usePracticeSession>;
   sessionId: string;
@@ -17,7 +17,7 @@ type PracticeAttemptStepContentProps = {
   clearSession: () => void;
 };
 
-export function PracticeAttemptStepContent({
+export function PracticeStepContent({
   testId,
   step,
   practice,
@@ -26,7 +26,7 @@ export function PracticeAttemptStepContent({
   practiceMode = "practice",
   accessToken,
   clearSession,
-}: PracticeAttemptStepContentProps) {
+}: PracticeStepContentProps) {
   if (step.kind === "group") {
     return (
       <ListeningGroupPracticeContent

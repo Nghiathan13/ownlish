@@ -41,7 +41,7 @@ export function TestCard({
         <div>
           <h2 className="text-lg font-semibold">Test {test.id}</h2>
           {answeredQuestionCount === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">Not attempted yet</p>
+              <p className="mt-2 text-sm text-muted-foreground">No practice progress yet</p>
             ) : (
               <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                 <span>

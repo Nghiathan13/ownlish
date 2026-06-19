@@ -4,7 +4,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   submitPracticeAnswer,
-  submitReviewGroupAnswers,
   completePracticeSession,
 } from "@/features/tests/api/testsApi";
 import type {
@@ -601,110 +600,6 @@ export function usePracticeSession({
     [selectAnswer],
   );
 
-  const submitReviewGroupAnswersBatch = useCallback(
-    async (
-      groupId: number,
-      answers: Array<{
-        toeicQuestionId: number;
-        selectedKey: OptionKey;
-      }>,
-    ) => {
-      if (!accessToken || !sessionId) {
-        return null;
-      }
-
-      try {
-        const result = await runAuthenticatedRequest({
-          accessToken,
-          clearSession,
-          request: (token) =>
-            submitReviewGroupAnswers(token, sessionId, groupId, { answers }),
-        });
-
-        const selectedKeyByQuestionId = new Map(
-          answers.map((answer) => [answer.toeicQuestionId, answer.selectedKey]),
-        );
-
-        queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
-          if (!current) {
-            return current;
-          }
-
-          const answersByQuestionId = new Map(
-            current.answers.map((answer) => [answer.toeicQuestionId, answer]),
-          );
-          let correctCount = current.correctCount;
-
-          for (const item of result.results) {
-            const existing = answersByQuestionId.get(item.toeicQuestionId);
-            const wasCorrect = existing?.isCorrect === true;
-            const selectedKey =
-              selectedKeyByQuestionId.get(item.toeicQuestionId) ??
-              existing?.selectedKey;
-
-            if (!selectedKey || item.answerKey === undefined) {
-              continue;
-            }
-
-            if (item.isCorrect && !wasCorrect) {
-              correctCount += 1;
-            } else if (!item.isCorrect && wasCorrect) {
-              correctCount -= 1;
-            }
-
-            answersByQuestionId.set(item.toeicQuestionId, {
-              toeicQuestionId: item.toeicQuestionId,
-              selectedKey,
-              answerKey: item.answerKey,
-              isCorrect: item.isCorrect,
-            });
-          }
-
-          return {
-            ...current,
-            correctCount,
-            answers: Array.from(answersByQuestionId.values()),
-          };
-        });
-
-        setFailedQuestionIds((current) => {
-          const next = new Set(current);
-          for (const answer of answers) {
-            next.delete(answer.toeicQuestionId);
-          }
-          return next;
-        });
-
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "practice"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["tests"],
-          }),
-        ]);
-
-        return result;
-      } catch {
-        for (const answer of answers) {
-          setFailedQuestionIds((current) =>
-            new Set(current).add(answer.toeicQuestionId),
-          );
-        }
-        throw new Error("Could not save group answers.");
-      }
-    },
-    [
-      accessToken,
-      clearSession,
-      selectedParts,
-      queryClient,
-      queryKey,
-      sessionId,
-      testId,
-    ],
-  );
-
   const completeSession = useCallback(async () => {
     if (!accessToken || !sessionId) {
       return null;
@@ -753,7 +648,6 @@ export function usePracticeSession({
     syncAnswerToServer,
     retrySync,
     submitAnswer,
-    submitReviewGroupAnswersBatch,
     completeSession,
   };
 }

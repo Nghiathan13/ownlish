@@ -103,7 +103,7 @@ export function PartPickerModal({
 }: PartPickerModalProps) {
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
 
-  const isFullTest = areAllPartsSelected(selectedParts);
+  const areAllPartsChecked = areAllPartsSelected(selectedParts);
   const selectedWrongCount = selectedParts.reduce((total, partNumber) => {
     return total + (getPartProgress(test, partNumber)?.partWrongCount ?? 0);
   }, 0);
@@ -116,7 +116,7 @@ export function PartPickerModal({
     );
   };
 
-  const toggleFullTest = () => {
+  const toggleAllParts = () => {
     setSelectedParts((current) => {
       if (areAllPartsSelected(current)) {
         let next = current;
@@ -159,9 +159,9 @@ export function PartPickerModal({
       <div className="flex flex-col gap-4">
         <section className="flex flex-col gap-2">
           <PartCheckboxOption
-            checked={isFullTest}
-            label="Full test"
-            onToggle={toggleFullTest}
+            checked={areAllPartsChecked}
+            label="All parts"
+            onToggle={toggleAllParts}
           />
         </section>
 

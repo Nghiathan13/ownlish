@@ -1,5 +1,5 @@
 import type { QuestionGridResult } from "@/features/tests/lib/practiceAnswers";
-import type { FullTestStep } from "@/features/tests/lib/fullTestQuestions";
+import type { PracticeRunStep } from "@/features/tests/lib/practiceRunSteps";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/lib/practiceGroups";
 
 export type QuestionGridCell = {
@@ -80,7 +80,7 @@ export function findItemIndexForQuestion(items: PracticeItem[], questionNumber: 
   return items.findIndex((item) => item.question.questionNumber === questionNumber);
 }
 
-export function findStepIndexForQuestion(steps: FullTestStep[], questionNumber: number) {
+export function findStepIndexForQuestion(steps: PracticeRunStep[], questionNumber: number) {
   return steps.findIndex((step) =>
     step.kind === "question"
       ? step.item.question.questionNumber === questionNumber
@@ -91,7 +91,7 @@ export function findStepIndexForQuestion(steps: FullTestStep[], questionNumber: 
 }
 
 export function getActiveQuestionNumbersForStep(
-  step: FullTestStep | null | undefined,
+  step: PracticeRunStep | null | undefined,
 ): Set<number> {
   if (!step) {
     return new Set();
@@ -104,16 +104,16 @@ export function getActiveQuestionNumbersForStep(
   return new Set(step.practiceGroup.questions.map((question) => question.questionNumber));
 }
 
-type GetFullTestQuestionGridResult = (
+type GetPracticeRunQuestionGridResult = (
   questionId: number,
   partNumber: number,
 ) => QuestionGridResult;
 
-export function buildFullTestGridSections(
-  steps: FullTestStep[],
+export function buildPracticeRunGridSections(
+  steps: PracticeRunStep[],
   selectedParts: number[],
   activeQuestionNumbers: ReadonlySet<number>,
-  getQuestionResult?: GetFullTestQuestionGridResult,
+  getQuestionResult?: GetPracticeRunQuestionGridResult,
 ): QuestionGridSection[] {
   const sections: QuestionGridSection[] = [];
 

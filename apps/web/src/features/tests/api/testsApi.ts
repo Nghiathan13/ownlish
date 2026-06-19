@@ -140,10 +140,6 @@ export async function getTestPart(
   } satisfies ToeicPartResponse;
 }
 
-function isOptionKey(value: string): value is "A" | "B" | "C" | "D" {
-  return value === "A" || value === "B" || value === "C" || value === "D";
-}
-
 export async function submitPracticeAnswer(
   token: string,
   sessionId: string,
@@ -186,67 +182,6 @@ export async function submitPracticeAnswer(
       ? body.correctOptionVi
       : null,
   } satisfies SubmitAnswerResult;
-}
-
-export async function submitReviewGroupAnswers(
-  token: string,
-  sessionId: string,
-  groupId: number,
-  payload: {
-    answers: Array<{
-      toeicQuestionId: number;
-      selectedKey: "A" | "B" | "C" | "D";
-    }>;
-  },
-) {
-  const body = await apiRequest(
-    `/tests/practice/sessions/${sessionId}/groups/${groupId}/answers`,
-    {
-      method: "POST",
-      token,
-      body: JSON.stringify(payload),
-    },
-  );
-
-  if (!isRecord(body) || !Array.isArray(body.results)) {
-    invalidApiResponse();
-  }
-
-  const results = body.results.flatMap((value) => {
-    if (!isRecord(value) || !isNumber(value.toeicQuestionId)) {
-      return [];
-    }
-
-    if (!isBoolean(value.graded) || !value.graded) {
-      return [];
-    }
-
-    if (!isBoolean(value.isCorrect) || !isString(value.answerKey)) {
-      return [];
-    }
-
-    const answerKey = value.answerKey.trim().toUpperCase();
-    if (!isOptionKey(answerKey)) {
-      return [];
-    }
-
-    return [
-      {
-        toeicQuestionId: value.toeicQuestionId,
-        graded: true as const,
-        isCorrect: value.isCorrect,
-        answerKey,
-        correctOptionEn: isNullableString(value.correctOptionEn)
-          ? value.correctOptionEn
-          : null,
-        correctOptionVi: isNullableString(value.correctOptionVi)
-          ? value.correctOptionVi
-          : null,
-      },
-    ];
-  });
-
-  return { results };
 }
 
 export async function completePracticeSession(

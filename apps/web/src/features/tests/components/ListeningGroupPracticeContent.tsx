@@ -240,13 +240,15 @@ export function ListeningGroupPracticeContent({
         selectedKey: (nextSelections[questionId] ??
           practice.getAnswer(questionId)?.selectedKey)!,
       }));
-      const groupId = currentGroup.group.id;
-
       practice.gradeGroupLocally(entries);
-      setLockedReviewGroupIds((current) => new Set(current).add(groupId));
+      setLockedReviewGroupIds((current) =>
+        new Set(current).add(currentGroup.group.id),
+      );
 
       void practice
-        .submitReviewGroupAnswersBatch(groupId, entries)
+        .syncAnswerToServer(toeicQuestionId, key, {
+          replace: Boolean(practice.getAnswer(toeicQuestionId)?.selectedKey),
+        })
         .then(() => {
           setLocalSelections({});
         })
@@ -254,7 +256,7 @@ export function ListeningGroupPracticeContent({
           practice.rollbackGroupGrade(entries);
           setLockedReviewGroupIds((current) => {
             const next = new Set(current);
-            next.delete(groupId);
+            next.delete(currentGroup.group.id);
             return next;
           });
         });

@@ -4,20 +4,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { PracticeAttemptStepContent } from "@/features/tests/components/PracticeAttemptStepContent";
+import { PracticeStepContent } from "@/features/tests/components/PracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
 import { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import {
-  buildFullTestQuestions,
-  buildFullTestSteps,
+  buildPracticeRunQuestions,
+  buildPracticeRunSteps,
   resolveInitialStepIndex,
-} from "@/features/tests/lib/fullTestQuestions";
-import { writeFullTestIndex } from "@/features/tests/lib/fullTestStorage";
+} from "@/features/tests/lib/practiceRunSteps";
+import { writePracticeRunIndex } from "@/features/tests/lib/practiceRunStorage";
 import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
 import {
-  buildFullTestGridSections,
+  buildPracticeRunGridSections,
   findStepIndexForQuestion,
   getActiveQuestionNumbersForStep,
   getPrimaryActiveQuestionNumber,
@@ -88,12 +88,12 @@ export function PracticeRunView({
   }, [practice.groups]);
 
   const questions = useMemo(
-    () => buildFullTestQuestions(partGroups, normalizedSelectedParts),
+    () => buildPracticeRunQuestions(partGroups, normalizedSelectedParts),
     [partGroups, normalizedSelectedParts],
   );
 
   const steps = useMemo(
-    () => buildFullTestSteps(partGroups, normalizedSelectedParts),
+    () => buildPracticeRunSteps(partGroups, normalizedSelectedParts),
     [partGroups, normalizedSelectedParts],
   );
 
@@ -137,7 +137,7 @@ export function PracticeRunView({
       }
 
       setStepIndex(boundedIndex);
-      writeFullTestIndex(storageKey, boundedIndex);
+      writePracticeRunIndex(storageKey, boundedIndex);
     },
     [activeStepIndex, steps.length, storageKey],
   );
@@ -164,7 +164,7 @@ export function PracticeRunView({
 
   const questionGridSections = useMemo(
     () =>
-      buildFullTestGridSections(
+      buildPracticeRunGridSections(
         steps,
         normalizedSelectedParts,
         activeQuestionNumbers,
@@ -266,7 +266,7 @@ export function PracticeRunView({
 
   return (
     <PracticeContinuousShell navigation={navigationBar}>
-      <PracticeAttemptStepContent
+      <PracticeStepContent
         accessToken={accessToken}
         clearSession={clearSession}
         practice={practice}

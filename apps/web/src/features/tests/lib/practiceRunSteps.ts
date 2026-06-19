@@ -1,46 +1,46 @@
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
-import { readFullTestIndex } from "@/features/tests/lib/fullTestStorage";
+import { readPracticeRunIndex } from "@/features/tests/lib/practiceRunStorage";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/lib/practiceGroups";
 
-export type FullTestQuestionItem = PracticeItem & {
+export type PracticeRunQuestionItem = PracticeItem & {
   partNumber: number;
   globalIndex: number;
 };
 
-export type FullTestQuestionStep = {
+export type PracticeRunQuestionStep = {
   kind: "question";
   partNumber: number;
-  item: FullTestQuestionItem;
+  item: PracticeRunQuestionItem;
 };
 
-export type FullTestGroupStep = {
+export type PracticeRunGroupStep = {
   kind: "group";
   partNumber: number;
   practiceGroup: PracticeGroup;
 };
 
-export type FullTestStep = FullTestQuestionStep | FullTestGroupStep;
+export type PracticeRunStep = PracticeRunQuestionStep | PracticeRunGroupStep;
 
 function flattenPartItems(
   partNumber: number,
   groups: ToeicQuestionGroup[],
-): Omit<FullTestQuestionItem, "globalIndex">[] {
+): Omit<PracticeRunQuestionItem, "globalIndex">[] {
   return groups.flatMap((group) =>
     group.questions.map((question) => ({ group, question, partNumber })),
   );
 }
 
-export function buildFullTestQuestions(
+export function buildPracticeRunQuestions(
   partGroups: Record<number, ToeicQuestionGroup[] | undefined>,
   selectedParts?: number[],
-): FullTestQuestionItem[] {
+): PracticeRunQuestionItem[] {
   const allowedParts = new Set(
     selectedParts && selectedParts.length > 0
       ? selectedParts
       : [1, 2, 3, 4, 5, 6, 7],
   );
-  const items: Omit<FullTestQuestionItem, "globalIndex">[] = [];
+  const items: Omit<PracticeRunQuestionItem, "globalIndex">[] = [];
 
   for (let partNumber = 1; partNumber <= 7; partNumber += 1) {
     if (!allowedParts.has(partNumber)) {
@@ -62,12 +62,12 @@ export function buildFullTestQuestions(
   return items.map((item, globalIndex) => ({ ...item, globalIndex }));
 }
 
-export function buildFullTestSteps(
+export function buildPracticeRunSteps(
   partGroups: Record<number, ToeicQuestionGroup[] | undefined>,
   selectedParts?: number[],
-): FullTestStep[] {
-  const questions = buildFullTestQuestions(partGroups, selectedParts);
-  const steps: FullTestStep[] = [];
+): PracticeRunStep[] {
+  const questions = buildPracticeRunQuestions(partGroups, selectedParts);
+  const steps: PracticeRunStep[] = [];
 
   for (let index = 0; index < questions.length; ) {
     const item = questions[index];
@@ -75,7 +75,7 @@ export function buildFullTestSteps(
 
     if (partConfig.navigationMode === "per-group") {
       const groupId = item.group.id;
-      const groupItems: FullTestQuestionItem[] = [];
+      const groupItems: PracticeRunQuestionItem[] = [];
 
       while (index < questions.length && questions[index].group.id === groupId) {
         groupItems.push(questions[index]);
@@ -109,16 +109,16 @@ export function buildFullTestSteps(
 }
 
 export function resolveInitialStepIndex(
-  attemptId: string,
-  steps: FullTestStep[],
-  questions: FullTestQuestionItem[],
+  sessionId: string,
+  steps: PracticeRunStep[],
+  questions: PracticeRunQuestionItem[],
   selectedParts: number[],
 ) {
   if (steps.length === 0) {
     return 0;
   }
 
-  const savedIndex = readFullTestIndex(attemptId);
+  const savedIndex = readPracticeRunIndex(sessionId);
   if (savedIndex > 0) {
     if (savedIndex < steps.length) {
       return savedIndex;
