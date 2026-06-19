@@ -77,7 +77,6 @@ function applyGradedAnswer(
   selectedKey: OptionKey,
   answerKey: OptionKey,
   isCorrect: boolean,
-  mode: PracticeMode,
   existingAnswer?: PracticeSessionAnswer,
 ): PracticeSessionResult {
   const gradedAnswer: PracticeSessionAnswer = {
@@ -88,17 +87,8 @@ function applyGradedAnswer(
   };
 
   if (existingAnswer) {
-    const wasCorrect = existingAnswer.isCorrect ?? false;
-    const correctDelta = (isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
-    const wrongDelta =
-      mode === "practice"
-        ? (isCorrect ? 0 : 1) - (wasCorrect ? 0 : 1)
-        : 0;
-
     return {
       ...current,
-      correctCount: current.correctCount + correctDelta,
-      wrongCount: current.wrongCount + wrongDelta,
       answers: current.answers.map((answer) =>
         answer.toeicQuestionId === toeicQuestionId ? gradedAnswer : answer,
       ),
@@ -107,9 +97,6 @@ function applyGradedAnswer(
 
   return {
     ...current,
-    correctCount: current.correctCount + (isCorrect ? 1 : 0),
-    wrongCount:
-      current.wrongCount + (mode === "practice" && !isCorrect ? 1 : 0),
     answers: [...current.answers, gradedAnswer],
   };
 }
@@ -144,7 +131,6 @@ function revertGradedAnswer(
   current: PracticeSessionResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-  mode: PracticeMode,
   existingAnswer?: PracticeSessionAnswer,
 ): PracticeSessionResult {
   const nextAnswer: PracticeSessionAnswer = {
@@ -161,14 +147,8 @@ function revertGradedAnswer(
     );
   }
 
-  const wasCorrect = existingAnswer.isCorrect === true;
-  const correctDelta = wasCorrect ? -1 : 0;
-  const wrongDelta = mode === "practice" && !wasCorrect ? -1 : 0;
-
   return {
     ...current,
-    correctCount: current.correctCount + correctDelta,
-    wrongCount: current.wrongCount + wrongDelta,
     answers: current.answers.map((answer) =>
       answer.toeicQuestionId === toeicQuestionId ? nextAnswer : answer,
     ),
@@ -275,12 +255,11 @@ export function usePracticeSession({
           selectedKey,
           answerKey,
           isCorrect,
-          mode,
           existingAnswer,
         );
       });
     },
-    [mode, queryClient, queryKey],
+    [queryClient, queryKey],
   );
 
   const syncAnswerToServer = useCallback(
@@ -374,30 +353,24 @@ export function usePracticeSession({
             queryClient.invalidateQueries({
               queryKey: ["tests"],
             }),
-            mode === "review_wrong"
-              ? queryClient.invalidateQueries({
-                  queryKey: getPracticeSessionQueryKey(
-                    testId,
-                    selectedParts,
-                    "practice",
-                  ),
-                })
-              : Promise.resolve(),
           ]);
-          return result;
-        }
+        } else {
+          reconcileGradedResult(toeicQuestionId, selectedKey, result, syncVersion);
 
-        if (mode === "review_wrong" && result.isCorrect) {
           await queryClient.invalidateQueries({
-            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "practice"),
+            queryKey: ["tests"],
           });
         }
 
-        reconcileGradedResult(toeicQuestionId, selectedKey, result, syncVersion);
-
-        await queryClient.invalidateQueries({
-          queryKey: ["tests"],
-        });
+        if (mode === "review_wrong") {
+          await queryClient.invalidateQueries({
+            queryKey: getPracticeSessionQueryKey(
+              testId,
+              selectedParts,
+              "practice",
+            ),
+          });
+        }
 
         return result;
       } catch {
@@ -469,12 +442,11 @@ export function usePracticeSession({
           selectedKey,
           answerKey,
           selectedKey === answerKey,
-          mode,
           existingAnswer,
         );
       });
     },
-    [answerKeyMap, mode, queryClient, queryKey],
+    [answerKeyMap, queryClient, queryKey],
   );
 
   const gradeGroupLocally = useCallback(
@@ -508,7 +480,6 @@ export function usePracticeSession({
             entry.selectedKey,
             answerKey,
             entry.selectedKey === answerKey,
-            mode,
             existingAnswer,
           );
         }
@@ -516,7 +487,7 @@ export function usePracticeSession({
         return next;
       });
     },
-    [answerKeyMap, mode, queryClient, queryKey],
+    [answerKeyMap, queryClient, queryKey],
   );
 
   const rollbackGroupGrade = useCallback(
@@ -539,7 +510,6 @@ export function usePracticeSession({
             next,
             entry.toeicQuestionId,
             entry.selectedKey,
-            mode,
             existingAnswer,
           );
         }
@@ -547,7 +517,7 @@ export function usePracticeSession({
         return next;
       });
     },
-    [mode, queryClient, queryKey],
+    [queryClient, queryKey],
   );
 
   const selectAnswer = useCallback(
@@ -637,8 +607,6 @@ export function usePracticeSession({
     sessionId,
     groups: sessionData?.groups ?? [],
     answers: sessionData?.answers ?? [],
-    correctCount: sessionData?.correctCount ?? 0,
-    wrongCount: sessionData?.wrongCount ?? 0,
     getAnswer,
     isStarting: sessionQuery.isLoading,
     startError: sessionQuery.error

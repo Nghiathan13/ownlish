@@ -269,7 +269,6 @@ export function PracticeRunView({
         accessToken={accessToken}
         clearSession={clearSession}
         practice={practice}
-        practiceMode={practiceMode}
         sessionId={practice.sessionId}
         step={currentStep}
         testId={testId}

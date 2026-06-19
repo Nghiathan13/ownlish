@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { PracticeMode } from "@/features/tests/api/types";
 import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
 import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
 import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
@@ -31,48 +30,29 @@ type OptionKey = "A" | "B" | "C" | "D";
 type PracticeGroupScreenProps = {
   testId: number;
   partNumber: number;
-  practiceMode: PracticeMode;
   groups: PracticeGroup[];
   initialGroupIndex: number;
   practice: ReturnType<typeof usePracticeSession>;
-  normalPractice?: ReturnType<typeof usePracticeSession>;
-  wrongQuestionCount?: number;
   accessToken: string | null;
   clearSession: () => void;
   navigation?: React.ReactNode;
 };
 
-function formatGroupLabel(group: PracticeGroup["group"]) {
-  if (group.questionStart === group.questionEnd) {
-    return `Question ${group.questionStart}`;
-  }
-
-  return `Questions ${group.questionStart}–${group.questionEnd}`;
-}
-
 export function PracticeGroupScreen({
   testId,
   partNumber,
-  practiceMode,
   groups,
   initialGroupIndex,
   practice,
-  normalPractice,
-  wrongQuestionCount,
   accessToken,
   clearSession,
   navigation,
 }: PracticeGroupScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
-  const isWrongGroupReview = practiceMode === "review_wrong";
-  const reviewAnswerSource = normalPractice ?? practice;
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
   const [localSelections, setLocalSelections] = useState<
     Record<number, OptionKey>
   >({});
-  const [lockedReviewGroupIds, setLockedReviewGroupIds] = useState<
-    Set<number>
-  >(() => new Set());
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const activeGroupIndex =
     groups.length === 0 ? 0 : Math.min(currentGroupIndex, groups.length - 1);
@@ -91,18 +71,13 @@ export function PracticeGroupScreen({
       return [];
     }
 
-    return currentGroup.questions.reduce<number[]>((ids, question) => {
-      if (
-        isWrongGroupReview &&
-        reviewAnswerSource.getAnswer(question.id)?.isCorrect === true
-      ) {
-        return ids;
-      }
-
-      ids.push(question.id);
-      return ids;
-    }, []);
-  }, [currentGroup, isWrongGroupReview, reviewAnswerSource]);
+    return currentGroup.questions
+      .filter(
+        (question) =>
+          !isPracticeAnswerGraded(practice.getAnswer(question.id)),
+      )
+      .map((question) => question.id);
+  }, [currentGroup, practice]);
 
   const activeQuestionNumbers = useMemo(() => {
     const numbers = new Set<number>();
@@ -129,21 +104,15 @@ export function PracticeGroupScreen({
         partNumber,
         groups,
         activeQuestionNumbers,
-        isWrongGroupReview
-          ? (questionId) =>
-              reviewAnswerSource.getAnswer(questionId)?.isCorrect !== true
-          : undefined,
+        undefined,
         (questionId) =>
           resolveListeningGroupQuestionGridResult({
             questionId,
             groups,
-            isWrongGroupReview,
             usesDeferredGroupGrading,
-            lockedReviewGroupIds,
             currentGroupId: currentGroup.group.id,
             localSelections,
             getPracticeAnswer: practice.getAnswer,
-            getNormalAnswer: reviewAnswerSource.getAnswer,
           }),
       ),
     ];
@@ -151,21 +120,15 @@ export function PracticeGroupScreen({
     activeQuestionNumbers,
     currentGroup,
     groups,
-    isWrongGroupReview,
     localSelections,
-    lockedReviewGroupIds,
     partNumber,
     practice.getAnswer,
-    reviewAnswerSource,
     usesDeferredGroupGrading,
   ]);
 
   const totalQuestions = useMemo(
-    () =>
-      isWrongGroupReview && wrongQuestionCount != null
-        ? wrongQuestionCount
-        : groups.reduce((count, group) => count + group.questions.length, 0),
-    [groups, isWrongGroupReview, wrongQuestionCount],
+    () => groups.reduce((count, group) => count + group.questions.length, 0),
+    [groups],
   );
 
   const minSessionQuestionNumber = useMemo(
@@ -191,24 +154,19 @@ export function PracticeGroupScreen({
     return null;
   }
 
-  const allGroupGraded = currentGroup.questions.every((question) =>
-    isPracticeAnswerGraded(practice.getAnswer(question.id)),
-  );
-  const allQuestionsSelected = currentGroup.questions.every((question) => {
-    const selectedKey =
-      localSelections[question.id] ??
-      practice.getAnswer(question.id)?.selectedKey;
-    return selectedKey != null;
-  });
   const allSelectableGraded = selectableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
-  const isReviewGroupLocked =
-    isWrongGroupReview &&
-    (lockedReviewGroupIds.has(currentGroup.group.id) || allSelectableGraded);
-  const showGroupReveal = isWrongGroupReview
-    ? isReviewGroupLocked
-    : !usesDeferredGroupGrading || allQuestionsSelected || allGroupGraded;
+  const allSelectableSelected = selectableQuestionIds.every((questionId) => {
+    const selectedKey =
+      localSelections[questionId] ??
+      practice.getAnswer(questionId)?.selectedKey;
+    return selectedKey != null;
+  });
+  const showGroupReveal =
+    !usesDeferredGroupGrading ||
+    allSelectableSelected ||
+    allSelectableGraded;
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : showGroupReveal;
 
@@ -263,9 +221,6 @@ export function PracticeGroupScreen({
     }));
     practice.gradeGroupLocally(entries);
     setLocalSelections({});
-    setLockedReviewGroupIds((current) =>
-      new Set(current).add(currentGroup.group.id),
-    );
 
     void practice
       .syncAnswerToServer(toeicQuestionId, key, {
@@ -273,11 +228,6 @@ export function PracticeGroupScreen({
       })
       .catch(() => {
         practice.rollbackGroupGrade(entries);
-        setLockedReviewGroupIds((current) => {
-          const next = new Set(current);
-          next.delete(currentGroup.group.id);
-          return next;
-        });
       });
   };
 
@@ -315,7 +265,7 @@ export function PracticeGroupScreen({
     navigation === undefined ? defaultNavigationBar : navigation;
 
   const isPartialGroupPhase =
-    usesDeferredGroupGrading && !showGroupReveal && !isWrongGroupReview;
+    usesDeferredGroupGrading && !showGroupReveal;
 
   const leftPanel = (
     <PracticeLeftPanel
@@ -334,38 +284,17 @@ export function PracticeGroupScreen({
   );
 
   const questionBlocks = currentGroup.questions.map((question) => {
-    const reviewAnswer = practice.getAnswer(question.id);
-    const normalAnswer = reviewAnswerSource.getAnswer(question.id);
-    const wasCorrectInNormal = normalAnswer?.isCorrect === true;
+    const answer = practice.getAnswer(question.id);
 
     let selectedKey: OptionKey | null;
     let answerKey: OptionKey | null;
     let isLocked: boolean;
     let showResult: boolean;
 
-    if (isWrongGroupReview) {
-      selectedKey = wasCorrectInNormal
-        ? (normalAnswer?.selectedKey ?? null)
-        : isReviewGroupLocked
-          ? (reviewAnswer?.selectedKey ??
-            localSelections[question.id] ??
-            null)
-          : (localSelections[question.id] ??
-            reviewAnswer?.selectedKey ??
-            normalAnswer?.selectedKey ??
-            null);
-      answerKey = wasCorrectInNormal
-        ? (normalAnswer?.answerKey ?? null)
-        : isReviewGroupLocked
-          ? (reviewAnswer?.answerKey ?? question.answerKey ?? null)
-          : null;
-      isLocked = wasCorrectInNormal || isReviewGroupLocked;
-      showResult = wasCorrectInNormal || isReviewGroupLocked;
-    } else if (usesDeferredGroupGrading) {
-      selectedKey =
-        localSelections[question.id] ?? reviewAnswer?.selectedKey ?? null;
-      if (showGroupReveal) {
-        answerKey = reviewAnswer?.answerKey ?? question.answerKey ?? null;
+    if (usesDeferredGroupGrading) {
+      selectedKey = localSelections[question.id] ?? answer?.selectedKey ?? null;
+      if (isPracticeAnswerGraded(answer) || showGroupReveal) {
+        answerKey = answer?.answerKey ?? question.answerKey ?? null;
         isLocked = true;
         showResult = true;
       } else {
@@ -374,12 +303,12 @@ export function PracticeGroupScreen({
         showResult = false;
       }
     } else {
-      selectedKey = reviewAnswer?.selectedKey ?? null;
-      answerKey = isPracticeAnswerGraded(reviewAnswer)
-        ? (reviewAnswer?.answerKey ?? question.answerKey ?? null)
+      selectedKey = answer?.selectedKey ?? null;
+      answerKey = isPracticeAnswerGraded(answer)
+        ? (answer?.answerKey ?? question.answerKey ?? null)
         : null;
-      isLocked = isPracticeAnswerGraded(reviewAnswer);
-      showResult = isPracticeAnswerGraded(reviewAnswer);
+      isLocked = isPracticeAnswerGraded(answer);
+      showResult = isPracticeAnswerGraded(answer);
     }
 
     const translationVisible = showGroupReveal;
@@ -489,22 +418,6 @@ export function PracticeGroupScreen({
 
   return (
     <>
-      <div>
-        <p className="text-base text-muted-foreground">
-          Test {testId} · Part {partNumber}
-          {practiceMode === "review_wrong" ? " · Review wrong" : ""}
-        </p>
-        <h1 className="text-xl font-semibold">
-          Group {activeGroupIndex + 1} / {groups.length} ·{" "}
-          {formatGroupLabel(currentGroup.group)}
-        </h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          {practiceMode === "review_wrong"
-            ? `Fixed ${practice.correctCount} · ${totalQuestions} questions`
-            : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
-        </p>
-      </div>
-
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
         {leftPanel}
 

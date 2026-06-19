@@ -1,7 +1,6 @@
 "use client";
 
 import { PracticeGroupScreen } from "@/features/tests/components/PracticeGroupScreen";
-import type { PracticeMode } from "@/features/tests/api/types";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import type { PracticeRunStep } from "@/features/tests/lib/practiceRunSteps";
 
@@ -9,9 +8,7 @@ type PracticeStepContentProps = {
   testId: number;
   step: PracticeRunStep;
   practice: ReturnType<typeof usePracticeSession>;
-  normalPractice?: ReturnType<typeof usePracticeSession>;
   sessionId: string;
-  practiceMode?: PracticeMode;
   accessToken: string | null;
   clearSession: () => void;
 };
@@ -20,9 +17,7 @@ export function PracticeStepContent({
   testId,
   step,
   practice,
-  normalPractice,
   sessionId,
-  practiceMode = "practice",
   accessToken,
   clearSession,
 }: PracticeStepContentProps) {
@@ -35,10 +30,8 @@ export function PracticeStepContent({
         initialGroupIndex={0}
         key={`${step.practiceGroup.group.id}-${sessionId}`}
         navigation={null}
-        normalPractice={normalPractice}
         partNumber={step.partNumber}
         practice={practice}
-        practiceMode={practiceMode}
         testId={testId}
       />
     );
@@ -57,10 +50,8 @@ export function PracticeStepContent({
       initialGroupIndex={0}
       key={`${step.item.question.id}-${sessionId}`}
       navigation={null}
-      normalPractice={normalPractice}
       partNumber={step.partNumber}
       practice={practice}
-      practiceMode={practiceMode}
       testId={testId}
     />
   );
