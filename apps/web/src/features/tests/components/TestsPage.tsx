@@ -58,7 +58,8 @@ export function TestsPage() {
           request: (token) => getPracticeStats(token, test.id),
         }),
       enabled: status === "authenticated" && Boolean(accessToken),
-      staleTime: 30_000,
+      refetchOnMount: "always" as const,
+      staleTime: 0,
     })),
   });
 
@@ -175,11 +176,13 @@ export function TestsPage() {
           isStarting={startingMultiTestId === selectedTest.id}
           onClose={() => setSelectedTest(null)}
           onStart={(partNumber, mode) => {
-            const query =
-              mode === "wrong_questions" ? "?mode=wrong_questions" : "";
-            router.push(
-              `/tests/${selectedTest.id}/part/${partNumber}${query}`,
-            );
+            if (mode === "wrong_questions") {
+              router.push(
+                `/tests/${selectedTest.id}/part/${partNumber}?mode=wrong_questions`,
+              );
+            } else {
+              router.push(`/tests/${selectedTest.id}/practice?parts=${partNumber}`);
+            }
             setSelectedTest(null);
           }}
           onStartMulti={(partNumbers) => {
