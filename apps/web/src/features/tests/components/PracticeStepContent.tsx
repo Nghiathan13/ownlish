@@ -1,7 +1,6 @@
 "use client";
 
-import { ListeningGroupPracticeContent } from "@/features/tests/components/ListeningGroupPracticeContent";
-import { PracticeQuestionScreen } from "@/features/tests/components/PracticeQuestionScreen";
+import { PracticeGroupScreen } from "@/features/tests/components/PracticeGroupScreen";
 import type { PracticeMode } from "@/features/tests/api/types";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import type { PracticeRunStep } from "@/features/tests/lib/practiceRunSteps";
@@ -29,7 +28,7 @@ export function PracticeStepContent({
 }: PracticeStepContentProps) {
   if (step.kind === "group") {
     return (
-      <ListeningGroupPracticeContent
+      <PracticeGroupScreen
         accessToken={accessToken}
         clearSession={clearSession}
         groups={[step.practiceGroup]}
@@ -46,11 +45,19 @@ export function PracticeStepContent({
   }
 
   return (
-    <PracticeQuestionScreen
+    <PracticeGroupScreen
       accessToken={accessToken}
       clearSession={clearSession}
-      item={step.item}
+      groups={[
+        {
+          group: step.item.group,
+          questions: [step.item.question],
+        },
+      ]}
+      initialGroupIndex={0}
       key={`${step.item.question.id}-${sessionId}`}
+      navigation={null}
+      normalPractice={normalPractice}
       partNumber={step.partNumber}
       practice={practice}
       practiceMode={practiceMode}

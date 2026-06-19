@@ -25,7 +25,7 @@ import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSp
 
 type OptionKey = "A" | "B" | "C" | "D";
 
-type ListeningGroupPracticeContentProps = {
+type PracticeGroupScreenProps = {
   testId: number;
   partNumber: number;
   practiceMode: PracticeMode;
@@ -47,7 +47,7 @@ function formatGroupLabel(group: PracticeGroup["group"]) {
   return `Questions ${group.questionStart}–${group.questionEnd}`;
 }
 
-export function ListeningGroupPracticeContent({
+export function PracticeGroupScreen({
   testId,
   partNumber,
   practiceMode,
@@ -59,7 +59,7 @@ export function ListeningGroupPracticeContent({
   accessToken,
   clearSession,
   navigation,
-}: ListeningGroupPracticeContentProps) {
+}: PracticeGroupScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
   const isWrongGroupReview = practiceMode === "review_wrong";
   const reviewAnswerSource = normalPractice ?? practice;
@@ -83,16 +83,22 @@ export function ListeningGroupPracticeContent({
     clearSession,
   });
 
-  const editableQuestionIds = useMemo(() => {
-    if (!currentGroup || !isWrongGroupReview) {
+  const selectableQuestionIds = useMemo(() => {
+    if (!currentGroup) {
       return [];
     }
 
-    return currentGroup.questions
-      .filter(
-        (question) => reviewAnswerSource.getAnswer(question.id)?.isCorrect !== true,
-      )
-      .map((question) => question.id);
+    return currentGroup.questions.reduce<number[]>((ids, question) => {
+      if (
+        isWrongGroupReview &&
+        reviewAnswerSource.getAnswer(question.id)?.isCorrect === true
+      ) {
+        return ids;
+      }
+
+      ids.push(question.id);
+      return ids;
+    }, []);
   }, [currentGroup, isWrongGroupReview, reviewAnswerSource]);
 
   const activeQuestionNumbers = useMemo(() => {
@@ -181,12 +187,12 @@ export function ListeningGroupPracticeContent({
       practice.getAnswer(question.id)?.selectedKey;
     return selectedKey != null;
   });
-  const allEditableGraded = editableQuestionIds.every((questionId) =>
+  const allSelectableGraded = selectableQuestionIds.every((questionId) =>
     isPracticeAnswerGraded(practice.getAnswer(questionId)),
   );
   const isReviewGroupLocked =
     isWrongGroupReview &&
-    (lockedReviewGroupIds.has(currentGroup.group.id) || allEditableGraded);
+    (lockedReviewGroupIds.has(currentGroup.group.id) || allSelectableGraded);
   const showGroupReveal = isWrongGroupReview
     ? isReviewGroupLocked
     : !usesDeferredGroupGrading || allQuestionsSelected || allGroupGraded;
@@ -201,111 +207,34 @@ export function ListeningGroupPracticeContent({
   };
 
   const handleSelect = (toeicQuestionId: number, key: OptionKey) => {
-    if (isWrongGroupReview) {
-      const wasCorrectInNormal =
-        reviewAnswerSource.getAnswer(toeicQuestionId)?.isCorrect === true;
-
-      if (wasCorrectInNormal) {
-        return;
-      }
-
-      if (isReviewGroupLocked) {
-        return;
-      }
-
-      const nextSelections = {
-        ...localSelections,
-        [toeicQuestionId]: key,
-      };
-      setLocalSelections(nextSelections);
-
-      const allEditableSelected = editableQuestionIds.every(
-        (questionId) =>
-          (nextSelections[questionId] ??
-            practice.getAnswer(questionId)?.selectedKey) != null,
-      );
-
-      if (!allEditableSelected) {
-        const existing = practice.getAnswer(toeicQuestionId);
-        practice.selectAnswer(toeicQuestionId, key, {
-          deferGrade: true,
-          replace: Boolean(existing?.selectedKey),
-          selectionOnly: true,
-        });
-        return;
-      }
-
-      const entries = editableQuestionIds.map((questionId) => ({
-        toeicQuestionId: questionId,
-        selectedKey: (nextSelections[questionId] ??
-          practice.getAnswer(questionId)?.selectedKey)!,
-      }));
-      practice.gradeGroupLocally(entries);
-      setLockedReviewGroupIds((current) =>
-        new Set(current).add(currentGroup.group.id),
-      );
-
-      void practice
-        .syncAnswerToServer(toeicQuestionId, key, {
-          replace: Boolean(practice.getAnswer(toeicQuestionId)?.selectedKey),
-        })
-        .then(() => {
-          setLocalSelections({});
-        })
-        .catch(() => {
-          practice.rollbackGroupGrade(entries);
-          setLockedReviewGroupIds((current) => {
-            const next = new Set(current);
-            next.delete(currentGroup.group.id);
-            return next;
-          });
-        });
+    if (!selectableQuestionIds.includes(toeicQuestionId)) {
       return;
     }
 
-    if (usesDeferredGroupGrading) {
-      if (showGroupReveal) {
-        return;
-      }
+    if (showGroupReveal) {
+      return;
+    }
 
-      const existing = practice.getAnswer(toeicQuestionId);
-      const currentSelectedKey =
-        localSelections[toeicQuestionId] ?? existing?.selectedKey;
-      if (currentSelectedKey === key) {
-        return;
-      }
+    const existing = practice.getAnswer(toeicQuestionId);
+    const currentSelectedKey =
+      localSelections[toeicQuestionId] ?? existing?.selectedKey;
+    if (currentSelectedKey === key) {
+      return;
+    }
 
-      const nextSelections = {
-        ...localSelections,
-        [toeicQuestionId]: key,
-      };
-      setLocalSelections(nextSelections);
+    const nextSelections = {
+      ...localSelections,
+      [toeicQuestionId]: key,
+    };
+    setLocalSelections(nextSelections);
 
-      const allSelected = currentGroup.questions.every((question) => {
-        const selectedKey =
-          question.id === toeicQuestionId
-            ? key
-            : (nextSelections[question.id] ??
-              practice.getAnswer(question.id)?.selectedKey);
-        return selectedKey != null;
-      });
+    const allSelected = selectableQuestionIds.every(
+      (questionId) =>
+        (nextSelections[questionId] ??
+          practice.getAnswer(questionId)?.selectedKey) != null,
+    );
 
-      if (allSelected) {
-        const entries = currentGroup.questions.map((question) => ({
-          toeicQuestionId: question.id,
-          selectedKey: (question.id === toeicQuestionId
-            ? key
-            : (nextSelections[question.id] ??
-              practice.getAnswer(question.id)?.selectedKey))!,
-        }));
-        practice.gradeGroupLocally(entries);
-        setLocalSelections({});
-        void practice.syncAnswerToServer(toeicQuestionId, key, {
-          replace: Boolean(existing?.selectedKey),
-        });
-        return;
-      }
-
+    if (!allSelected) {
       practice.selectAnswer(toeicQuestionId, key, {
         deferGrade: true,
         replace: Boolean(existing?.selectedKey),
@@ -314,11 +243,29 @@ export function ListeningGroupPracticeContent({
       return;
     }
 
-    if (isPracticeAnswerGraded(practice.getAnswer(toeicQuestionId))) {
-      return;
-    }
+    const entries = selectableQuestionIds.map((questionId) => ({
+      toeicQuestionId: questionId,
+      selectedKey: (nextSelections[questionId] ??
+        practice.getAnswer(questionId)?.selectedKey)!,
+    }));
+    practice.gradeGroupLocally(entries);
+    setLocalSelections({});
+    setLockedReviewGroupIds((current) =>
+      new Set(current).add(currentGroup.group.id),
+    );
 
-    practice.selectAnswer(toeicQuestionId, key);
+    void practice
+      .syncAnswerToServer(toeicQuestionId, key, {
+        replace: Boolean(existing?.selectedKey),
+      })
+      .catch(() => {
+        practice.rollbackGroupGrade(entries);
+        setLockedReviewGroupIds((current) => {
+          const next = new Set(current);
+          next.delete(currentGroup.group.id);
+          return next;
+        });
+      });
   };
 
   const handleNext = () => {

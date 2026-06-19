@@ -67,8 +67,8 @@ function toAnswerMap(answers: PracticeSessionAnswer[]) {
   return new Map(answers.map((answer) => [answer.toeicQuestionId, answer]));
 }
 
-function usesDeferredGroupGrading(partNumber: number, mode: PracticeMode) {
-  return (partNumber === 3 || partNumber === 4) && mode === "practice";
+function usesGroupGrading(partNumber: number) {
+  return partNumber === 3 || partNumber === 4 || partNumber === 6 || partNumber === 7;
 }
 
 function applyGradedAnswer(
@@ -368,12 +368,21 @@ export function usePracticeSession({
           return result;
         }
 
-        if (usesDeferredGroupGrading(partNumber, mode)) {
+        if (usesGroupGrading(partNumber)) {
           await Promise.all([
             queryClient.refetchQueries({ queryKey }),
             queryClient.invalidateQueries({
               queryKey: ["tests"],
             }),
+            mode === "review_wrong"
+              ? queryClient.invalidateQueries({
+                  queryKey: getPracticeSessionQueryKey(
+                    testId,
+                    selectedParts,
+                    "practice",
+                  ),
+                })
+              : Promise.resolve(),
           ]);
           return result;
         }
