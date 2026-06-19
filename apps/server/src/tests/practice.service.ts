@@ -23,9 +23,6 @@ import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { CreateToeicSessionDto } from './dto/create-toeic-session.dto';
 import { TestsStorageService } from './tests-storage.service';
 
-const DEFERRED_GROUP_GRADING_PARTS = new Set([3, 4]);
-const REVIEW_GROUP_BATCH_PARTS = new Set([3, 4, 6, 7]);
-
 type SubmitAnswerResponse = {
   graded: boolean;
   isCorrect?: boolean;
@@ -646,20 +643,6 @@ export class PracticeService {
     });
   }
 
-  private usesDeferredGroupGrading(partNumber: number, mode: ToeicRunMode) {
-    return (
-      mode === ToeicRunMode.PRACTICE &&
-      DEFERRED_GROUP_GRADING_PARTS.has(partNumber)
-    );
-  }
-
-  private usesReviewGroupBatchSubmit(partNumber: number, mode: ToeicRunMode) {
-    return (
-      mode === ToeicRunMode.WRONG_REVIEW &&
-      REVIEW_GROUP_BATCH_PARTS.has(partNumber)
-    );
-  }
-
   private buildGradedResponse(
     question: ToeicQuestion,
     answerKey: 'A' | 'B' | 'C' | 'D',
@@ -734,104 +717,21 @@ export class PracticeService {
       );
     }
 
-    if (this.usesReviewGroupBatchSubmit(runQuestion.partNumber, run.mode)) {
-      return this.selectReviewGroupAnswer(
-        userId,
-        run,
-        runQuestion,
-        question,
-        selectedKey,
-        answerKey,
-      );
-    }
-
     if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
       return this.buildGradedResponse(question, answerKey, true);
     }
 
-    const usesDeferredGrading = this.usesDeferredGroupGrading(
-      runQuestion.partNumber,
-      run.mode,
-    );
-
-    if (usesDeferredGrading) {
-      return this.submitDeferredPracticeAnswer(
-        userId,
-        run,
-        runQuestion,
-        question,
-        selectedKey,
-        answerKey,
-      );
-    }
-
-    const isCorrect = selectedKey === answerKey;
-
-    await this.prisma.$transaction(async (tx) => {
-      await this.gradeRunQuestion(tx, {
-        run,
-        runQuestion,
-        selectedKey,
-        isCorrect,
-      });
-
-      if (run.mode === ToeicRunMode.WRONG_REVIEW) {
-        await this.markLatestPracticeQuestion(tx, {
-          userId,
-          testId: run.toeicTestId,
-          toeicQuestionId: question.id,
-          selectedKey,
-          isCorrect,
-        });
-      }
-    });
-
-    return this.buildGradedResponse(question, answerKey, isCorrect);
-  }
-
-  private async submitDeferredPracticeAnswer(
-    userId: string,
-    run: {
-      id: string;
-      mode: ToeicRunMode;
-      toeicTestId: number;
-      selectedParts: number[];
-    },
-    runQuestion: RunQuestionWithQuestion,
-    question: QuestionWithGroup,
-    selectedKey: 'A' | 'B' | 'C' | 'D',
-    answerKey: 'A' | 'B' | 'C' | 'D',
-  ): Promise<SubmitAnswerResponse> {
-    let graded = false;
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.toeicRunQuestion.update({
-        where: { id: runQuestion.id },
-        data: {
-          selectedKey,
-          status: ToeicRunQuestionStatus.SELECTED,
-          answeredAt: new Date(),
-        },
-      });
-
-      if (await this.isRunGroupReadyToGrade(tx, runQuestion.runGroupId)) {
-        await this.gradeRunGroup(tx, userId, run, runQuestion.runGroupId);
-        graded = true;
-      }
-    });
-
-    if (!graded) {
-      return { graded: false };
-    }
-
-    return this.buildGradedResponse(
+    return this.submitGroupAnswer(
+      userId,
+      run,
+      runQuestion,
       question,
+      selectedKey,
       answerKey,
-      selectedKey === answerKey,
     );
   }
 
-  private async selectReviewGroupAnswer(
+  private async submitGroupAnswer(
     userId: string,
     run: {
       id: string;
