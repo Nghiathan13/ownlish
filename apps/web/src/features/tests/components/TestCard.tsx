@@ -61,7 +61,12 @@ export function TestCard({
         </div>
         <button
           aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
-          className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200 hover:border-foreground disabled:cursor-not-allowed disabled:opacity-60"
+          className={classNames(
+            "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md bg-transparent",
+            statusColorClasses.danger.text,
+            "hover:bg-red-200/20 dark:hover:bg-red-900/20",
+            "disabled:cursor-not-allowed disabled:opacity-60",
+          )}
           disabled={isClearingHistory}
           onClick={onClearHistory}
           type="button"
