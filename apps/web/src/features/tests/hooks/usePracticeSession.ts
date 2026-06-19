@@ -23,6 +23,7 @@ type UsePracticeSessionParams = {
   clearSession: () => void;
   testId: number;
   partNumber: number;
+  selectedParts?: number[];
   mode?: PracticeMode;
   enabled: boolean;
   answerKeyMap?: Map<number, OptionKey>;
@@ -40,12 +41,25 @@ type SyncAnswerOptions = {
   selectionOnly?: boolean;
 };
 
+function normalizePracticeParts(partNumber: number, selectedParts?: number[]) {
+  const parts = selectedParts?.length ? selectedParts : [partNumber];
+  return [...new Set(parts)].sort((a, b) => a - b);
+}
+
+function getPracticePartsKey(parts: number[]) {
+  return parts.join(",");
+}
+
 export function getPracticeSessionQueryKey(
   testId: number,
-  partNumber: number,
+  partNumberOrParts: number | number[],
   mode: PracticeMode = "normal",
 ) {
-  return ["practice-session", testId, partNumber, mode] as const;
+  const parts = Array.isArray(partNumberOrParts)
+    ? normalizePracticeParts(partNumberOrParts[0] ?? 1, partNumberOrParts)
+    : [partNumberOrParts];
+
+  return ["practice-session", testId, getPracticePartsKey(parts), mode] as const;
 }
 
 function toAnswerMap(answers: PracticeSessionAnswer[]) {
@@ -165,12 +179,17 @@ export function usePracticeSession({
   clearSession,
   testId,
   partNumber,
+  selectedParts: selectedPartsInput,
   mode = "normal",
   enabled,
   answerKeyMap,
 }: UsePracticeSessionParams) {
   const queryClient = useQueryClient();
-  const queryKey = getPracticeSessionQueryKey(testId, partNumber, mode);
+  const selectedParts = useMemo(
+    () => normalizePracticeParts(partNumber, selectedPartsInput),
+    [partNumber, selectedPartsInput],
+  );
+  const queryKey = getPracticeSessionQueryKey(testId, selectedParts, mode);
   const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -188,7 +207,9 @@ export function usePracticeSession({
         request: (token) =>
           createPracticeSession(token, {
             testId,
-            partNumber,
+            ...(selectedParts.length > 1
+              ? { partNumbers: selectedParts }
+              : { partNumber: selectedParts[0] ?? partNumber }),
             mode,
           }),
       }),
@@ -355,7 +376,7 @@ export function usePracticeSession({
 
         if (mode === "wrong_questions" && result.isCorrect) {
           await queryClient.invalidateQueries({
-            queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "normal"),
           });
         }
 
@@ -382,6 +403,7 @@ export function usePracticeSession({
       clearSession,
       mode,
       partNumber,
+      selectedParts,
       queryClient,
       queryKey,
       reconcileGradedResult,
@@ -645,7 +667,7 @@ export function usePracticeSession({
         });
 
         await queryClient.invalidateQueries({
-          queryKey: getPracticeSessionQueryKey(testId, partNumber, "normal"),
+          queryKey: getPracticeSessionQueryKey(testId, selectedParts, "normal"),
         });
 
         return result;
@@ -661,7 +683,7 @@ export function usePracticeSession({
     [
       accessToken,
       clearSession,
-      partNumber,
+      selectedParts,
       queryClient,
       queryKey,
       sessionId,

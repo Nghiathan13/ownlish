@@ -7,7 +7,6 @@ import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import {
   clearTestPracticeHistory,
-  createTestAttempt,
   getPracticeStats,
 } from "@/features/tests/api/testsApi";
 import type { PracticeMode } from "@/features/tests/api/types";
@@ -91,6 +90,9 @@ export function TestsPage() {
         queryClient.invalidateQueries({
           queryKey: getPracticeStatsQueryKey(testId),
         }),
+        queryClient.invalidateQueries({
+          queryKey: ["practice-session", testId],
+        }),
         ...Array.from({ length: TOEIC_PART_COUNT }, (_, index) =>
           PRACTICE_MODES.map((mode) =>
             queryClient.invalidateQueries({
@@ -106,30 +108,20 @@ export function TestsPage() {
     }
   };
 
-  const handleStartMulti = async (testId: number, partNumbers: number[]) => {
-    if (!accessToken || partNumbers.length === 0) {
+  const handleStartMulti = (testId: number, partNumbers: number[]) => {
+    if (partNumbers.length === 0) {
       return;
     }
 
     setStartingMultiTestId(testId);
-    try {
-      const attempt = await runAuthenticatedRequest({
-        accessToken,
-        clearSession,
-        request: (token) => createTestAttempt(token, testId),
-      });
 
-      const query = areAllPartsSelected(partNumbers)
-        ? ""
-        : `?parts=${partNumbers.join(",")}`;
+    const query = areAllPartsSelected(partNumbers)
+      ? ""
+      : `?parts=${partNumbers.join(",")}`;
 
-      router.push(`/tests/${testId}/attempt/${attempt.attemptId}${query}`);
-      setSelectedTest(null);
-    } catch (error) {
-      window.alert(getErrorMessage(error, "Cannot start practice session."));
-    } finally {
-      setStartingMultiTestId(null);
-    }
+    router.push(`/tests/${testId}/practice${query}`);
+    setSelectedTest(null);
+    setStartingMultiTestId(null);
   };
 
   return (
@@ -191,7 +183,7 @@ export function TestsPage() {
             setSelectedTest(null);
           }}
           onStartMulti={(partNumbers) => {
-            void handleStartMulti(selectedTest.id, partNumbers);
+            handleStartMulti(selectedTest.id, partNumbers);
           }}
           stats={selectedTestStats}
           testLabel={selectedTest.label}

@@ -195,7 +195,8 @@ export async function createPracticeSession(
   token: string,
   payload: {
     testId: number;
-    partNumber: number;
+    partNumber?: number;
+    partNumbers?: number[];
     mode?: "normal" | "wrong_questions";
   },
 ) {
