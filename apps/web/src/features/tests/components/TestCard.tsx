@@ -63,33 +63,36 @@ export function TestCard({
             )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <div className="inline-flex items-center gap-1">
-            <button
-              aria-label="Review wrong (all parts)"
-              className={classNames(
-                "inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent text-foreground",
-                "hover:bg-muted",
-                "disabled:cursor-not-allowed disabled:opacity-60",
-              )}
-              disabled={isClearingHistory || testWrongCount === 0}
-              onClick={onReviewWrong}
-              type="button"
-            >
-              <ReplayIcon className="size-4" />
-            </button>
+          <button
+            aria-label={
+              testWrongCount > 0
+                ? `Review wrong (${testWrongCount})`
+                : "Review wrong (all parts)"
+            }
+            className={classNames(
+              "relative inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent text-foreground",
+              "hover:bg-muted",
+              "disabled:cursor-not-allowed disabled:opacity-60",
+            )}
+            disabled={isClearingHistory || testWrongCount === 0}
+            onClick={onReviewWrong}
+            type="button"
+          >
+            <ReplayIcon className="size-4" />
             {testWrongCount > 0 ? (
               <span
                 aria-hidden
                 className={classNames(
-                  "inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1.5 py-0.5",
-                  "text-[11px] font-semibold leading-none tabular-nums text-background",
+                  "pointer-events-none absolute -right-1 -top-1",
+                  "inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 py-px",
+                  "text-[10px] font-semibold leading-none tabular-nums text-background",
                   "bg-red-700 dark:bg-red-400",
                 )}
               >
                 {testWrongCount}
               </span>
             ) : null}
-          </div>
+          </button>
           <button
             aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
             className={classNames(
