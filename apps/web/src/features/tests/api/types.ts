@@ -77,13 +77,6 @@ export type PracticeSessionResult = {
 
 export type PracticeMode = "practice" | "review_wrong";
 
-export type WrongQuestionItem = {
-  toeicQuestionId: number;
-  questionNumber: number;
-  wrongCount: number;
-  lastWrongAt: string;
-};
-
 export type ToeicPartProgress = {
   partNumber: number;
   partCorrectCount: number;

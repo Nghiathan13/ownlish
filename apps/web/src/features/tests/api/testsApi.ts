@@ -14,7 +14,6 @@ import type {
   ToeicQuestion,
   ToeicQuestionGroup,
   ToeicQuestionOptions,
-  WrongQuestionItem,
 } from "./types";
 
 function parseOptions(value: unknown): ToeicQuestionOptions | null {
@@ -287,51 +286,6 @@ export async function clearTestPracticeHistory(token: string, testId: number) {
   }
 
   return { deletedSessionCount: body.deletedSessionCount };
-}
-
-function parseWrongQuestionItem(value: unknown): WrongQuestionItem | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  if (
-    !isNumber(value.toeicQuestionId) ||
-    !isNumber(value.questionNumber) ||
-    !isNumber(value.wrongCount) ||
-    !isString(value.lastWrongAt)
-  ) {
-    return null;
-  }
-
-  return {
-    toeicQuestionId: value.toeicQuestionId,
-    questionNumber: value.questionNumber,
-    wrongCount: value.wrongCount,
-    lastWrongAt: value.lastWrongAt,
-  };
-}
-
-export async function listWrongQuestions(
-  token: string,
-  testId: number,
-  partNumber: number,
-  init?: RequestInit,
-) {
-  const body = await apiRequest(
-    `/tests/practice/wrong-questions?testId=${testId}&partNumber=${partNumber}`,
-    {
-      ...init,
-      token,
-    },
-  );
-
-  if (!isRecord(body) || !Array.isArray(body.items)) {
-    invalidApiResponse();
-  }
-
-  return body.items
-    .map(parseWrongQuestionItem)
-    .filter((item): item is WrongQuestionItem => item !== null);
 }
 
 function parseRefreshGroup(value: unknown): RefreshMediaGroup | null {
