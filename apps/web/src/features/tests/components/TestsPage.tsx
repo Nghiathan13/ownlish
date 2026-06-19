@@ -2,21 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import {
-  clearTestPracticeHistory,
-  getPracticeStats,
-} from "@/features/tests/api/testsApi";
+import { clearTestPracticeHistory } from "@/features/tests/api/testsApi";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { PartPickerModal } from "@/features/tests/components/PartPickerModal";
 import { TestCard } from "@/features/tests/components/TestCard";
-import {
-  getPracticeSessionQueryKey,
-} from "@/features/tests/hooks/usePracticeSession";
-import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
-import { useTestsList } from "@/features/tests/hooks/useTestsList";
+import { getPracticeSessionQueryKey } from "@/features/tests/hooks/usePracticeSession";
+import { getTestsQueryKey, useTestsList } from "@/features/tests/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceStorage";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -47,26 +41,6 @@ export function TestsPage() {
     userId: user?.id ?? null,
   });
 
-  const statsQueries = useQueries({
-    queries: tests.map((test) => ({
-      queryKey: getPracticeStatsQueryKey(test.id),
-      queryFn: () =>
-        runAuthenticatedRequest({
-          accessToken,
-          clearSession,
-          request: (token) => getPracticeStats(token, test.id),
-        }),
-      enabled: status === "authenticated" && Boolean(accessToken),
-      refetchOnMount: "always" as const,
-      staleTime: 0,
-    })),
-  });
-
-  const selectedTestStats = selectedTest
-    ? (statsQueries.find((_, index) => tests[index]?.id === selectedTest.id)
-        ?.data ?? null)
-    : null;
-
   const handleClearHistory = async (testId: number) => {
     if (
       !accessToken ||
@@ -88,7 +62,7 @@ export function TestsPage() {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: getPracticeStatsQueryKey(testId),
+          queryKey: getTestsQueryKey(user?.id ?? null, 2026),
         }),
         queryClient.invalidateQueries({
           queryKey: ["practice-session", testId],
@@ -155,14 +129,12 @@ export function TestsPage() {
           <p className="text-muted-foreground">No tests available yet.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {tests.map((test, index) => (
+            {tests.map((test) => (
               <TestCard
                 isClearingHistory={clearingTestId === test.id}
-                isLoadingStats={statsQueries[index]?.isLoading ?? false}
                 key={test.id}
                 onClearHistory={() => void handleClearHistory(test.id)}
                 onPractice={() => setSelectedTest(test)}
-                stats={statsQueries[index]?.data ?? null}
                 test={test}
               />
             ))}
@@ -177,8 +149,8 @@ export function TestsPage() {
           onStart={(partNumbers, mode) => {
             handleStart(selectedTest.id, partNumbers, mode);
           }}
-          stats={selectedTestStats}
-          testLabel={selectedTest.label}
+          test={selectedTest}
+          testLabel={`Test ${selectedTest.id}`}
         />
       ) : null}
     </PageShell>

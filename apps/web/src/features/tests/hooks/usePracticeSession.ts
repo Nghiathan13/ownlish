@@ -16,7 +16,6 @@ import type {
 import type { OptionKey } from "@/features/tests/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import { createToeicSessionRequest } from "@/features/tests/lib/createToeicSessionRequest";
 
 type UsePracticeSessionParams = {
@@ -369,7 +368,7 @@ export function usePracticeSession({
           await Promise.all([
             queryClient.refetchQueries({ queryKey }),
             queryClient.invalidateQueries({
-              queryKey: getPracticeStatsQueryKey(testId),
+              queryKey: ["tests"],
             }),
           ]);
           return result;
@@ -384,7 +383,7 @@ export function usePracticeSession({
         reconcileGradedResult(toeicQuestionId, selectedKey, result, syncVersion);
 
         await queryClient.invalidateQueries({
-          queryKey: getPracticeStatsQueryKey(testId),
+          queryKey: ["tests"],
         });
 
         return result;
@@ -676,7 +675,7 @@ export function usePracticeSession({
             queryKey: getPracticeSessionQueryKey(testId, selectedParts, "practice"),
           }),
           queryClient.invalidateQueries({
-            queryKey: getPracticeStatsQueryKey(testId),
+            queryKey: ["tests"],
           }),
         ]);
 

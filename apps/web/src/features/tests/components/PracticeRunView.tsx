@@ -13,7 +13,6 @@ import {
   useWrongQuestionsForParts,
 } from "@/features/tests/hooks/useWrongQuestions";
 import { useTestPartGroups } from "@/features/tests/hooks/useTestPartGroups";
-import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
 import {
@@ -252,7 +251,7 @@ export function PracticeRunView({
 
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: getPracticeStatsQueryKey(testId),
+        queryKey: ["tests"],
       }),
       ...normalizedSelectedParts.map((partNumber) =>
         queryClient.invalidateQueries({

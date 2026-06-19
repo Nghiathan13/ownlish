@@ -10,15 +10,14 @@ import {
   practiceWrongStatClasses,
 } from "@/features/tests/lib/practiceGradingClasses";
 import { classNames } from "@/shared/lib/classNames";
-import type {
-  PracticeStats,
-  ToeicTestSummary,
-} from "@/features/tests/api/types";
+import type { ToeicTestSummary } from "@/features/tests/api/types";
+import {
+  getTestCorrectCount,
+  getTestWrongCount,
+} from "@/features/tests/lib/toeicTestProgress";
 
 type TestCardProps = {
   test: ToeicTestSummary;
-  stats: PracticeStats | null;
-  isLoadingStats?: boolean;
   isClearingHistory?: boolean;
   onClearHistory: () => void;
   onPractice: () => void;
@@ -26,50 +25,42 @@ type TestCardProps = {
 
 const TOEIC_TEST_QUESTION_COUNT = 200;
 
-function getPracticedQuestionCount(stats: PracticeStats) {
-  return stats.practiceCorrectCount + stats.wrongQuestionCount;
-}
-
 export function TestCard({
   test,
-  stats,
-  isLoadingStats = false,
   isClearingHistory = false,
   onClearHistory,
   onPractice,
 }: TestCardProps) {
-  const practicedQuestionCount = stats ? getPracticedQuestionCount(stats) : 0;
+  const testCorrectCount = getTestCorrectCount(test);
+  const testWrongCount = getTestWrongCount(test);
+  const answeredQuestionCount = testCorrectCount + testWrongCount;
 
   return (
     <article className="flex flex-col gap-4 rounded-xl border border-border p-4 transition hover:bg-muted">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">{test.label}</h2>
-          {isLoadingStats ? (
-            <p className="mt-2 text-sm text-muted-foreground">Loading stats...</p>
-          ) : stats ? (
-            practicedQuestionCount === 0 ? (
+          <h2 className="text-lg font-semibold">Test {test.id}</h2>
+          {answeredQuestionCount === 0 ? (
               <p className="mt-2 text-sm text-muted-foreground">Not attempted yet</p>
             ) : (
               <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                 <span>
-                  {practicedQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
+                  {answeredQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <CheckIcon className={classNames("size-4", practiceCorrectStatClasses)} />
                   <span className={practiceCorrectStatClasses}>
-                    {stats.practiceCorrectCount}
+                    {testCorrectCount}
                   </span>
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <CloseIcon className={classNames("size-4", practiceWrongStatClasses)} />
                   <span className={practiceWrongStatClasses}>
-                    {stats.wrongQuestionCount}
+                    {testWrongCount}
                   </span>
                 </span>
               </div>
-            )
-          ) : null}
+            )}
         </div>
         <button
           aria-label={isClearingHistory ? "Clearing history" : "Clear history"}

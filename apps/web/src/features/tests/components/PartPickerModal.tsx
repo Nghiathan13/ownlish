@@ -7,10 +7,10 @@ import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { classNames } from "@/shared/lib/classNames";
-import type { PracticeMode, PracticeStats } from "@/features/tests/api/types";
-import { getPartStats } from "@/features/tests/hooks/usePracticeStats";
+import type { PracticeMode, ToeicTestSummary } from "@/features/tests/api/types";
 import { practiceWrongStatClasses } from "@/features/tests/lib/practiceGradingClasses";
 import { isSupportedPracticePart } from "@/features/tests/lib/partPracticeConfig";
+import { getPartProgress } from "@/features/tests/lib/toeicTestProgress";
 import {
   ALL_TOEIC_PART_NUMBERS,
   areAllPartsSelected,
@@ -19,7 +19,7 @@ import {
 
 type PartPickerModalProps = {
   testLabel: string;
-  stats: PracticeStats | null;
+  test: ToeicTestSummary;
   isStarting?: boolean;
   onClose: () => void;
   onStart: (partNumbers: number[], mode: PracticeMode) => void;
@@ -96,7 +96,7 @@ function PartCheckboxOption({
 
 export function PartPickerModal({
   testLabel,
-  stats,
+  test,
   isStarting = false,
   onClose,
   onStart,
@@ -104,8 +104,8 @@ export function PartPickerModal({
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
 
   const isFullTest = areAllPartsSelected(selectedParts);
-  const wrongQuestionCount = selectedParts.reduce((total, partNumber) => {
-    return total + (getPartStats(stats, partNumber)?.wrongQuestionCount ?? 0);
+  const selectedWrongCount = selectedParts.reduce((total, partNumber) => {
+    return total + (getPartProgress(test, partNumber)?.partWrongCount ?? 0);
   }, 0);
 
   const togglePart = (partNumber: number) => {
@@ -170,8 +170,8 @@ export function PartPickerModal({
           <div className="grid gap-2 sm:grid-cols-2">
             {LISTENING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
-              const partStats = getPartStats(stats, partNumber);
-              const wrongCount = partStats?.wrongQuestionCount ?? 0;
+              const partProgress = getPartProgress(test, partNumber);
+              const wrongCount = partProgress?.partWrongCount ?? 0;
 
               return (
                 <PartCheckboxOption
@@ -192,8 +192,8 @@ export function PartPickerModal({
           <div className="grid gap-2 sm:grid-cols-2">
             {READING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
-              const partStats = getPartStats(stats, partNumber);
-              const wrongCount = partStats?.wrongQuestionCount ?? 0;
+              const partProgress = getPartProgress(test, partNumber);
+              const wrongCount = partProgress?.partWrongCount ?? 0;
 
               return (
                 <PartCheckboxOption
@@ -216,13 +216,13 @@ export function PartPickerModal({
               isStarting ||
               selectedParts.length === 0 ||
               selectedParts.some((partNumber) => !isPartEnabled(partNumber)) ||
-              wrongQuestionCount === 0
+              selectedWrongCount === 0
             }
             onClick={() => startWithMode("review_wrong")}
             type="button"
             variant="secondary"
           >
-            Review wrong{wrongQuestionCount > 0 ? ` (${wrongQuestionCount})` : ""}
+            Review wrong{selectedWrongCount > 0 ? ` (${selectedWrongCount})` : ""}
           </Button>
           <Button
             className="gap-2 px-4 py-2"

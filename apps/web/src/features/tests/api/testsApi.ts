@@ -8,14 +8,12 @@ import {
 } from "@/shared/lib/parse";
 import type {
   CompleteSessionResult,
-  PracticeStats,
   RefreshMediaGroup,
   SubmitAnswerResult,
   ToeicPartResponse,
   ToeicQuestion,
   ToeicQuestionGroup,
   ToeicQuestionOptions,
-  ToeicTestSummary,
   WrongQuestionItem,
 } from "./types";
 
@@ -105,47 +103,6 @@ function parseGroup(value: unknown): ToeicQuestionGroup | null {
       : null,
     questions,
   };
-}
-
-function parseTestSummary(value: unknown): ToeicTestSummary | null {
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  if (
-    !isNumber(value.id) ||
-    !isNumber(value.year) ||
-    !isNumber(value.testNumber) ||
-    !isString(value.label)
-  ) {
-    return null;
-  }
-
-  return {
-    id: value.id,
-    year: value.year,
-    testNumber: value.testNumber,
-    label: value.label,
-  };
-}
-
-export async function listTests(
-  token: string,
-  year = 2026,
-  init?: RequestInit,
-) {
-  const body = await apiRequest(`/tests?year=${year}`, {
-    ...init,
-    token,
-  });
-
-  if (!isRecord(body) || !Array.isArray(body.items)) {
-    invalidApiResponse();
-  }
-
-  return body.items
-    .map(parseTestSummary)
-    .filter((item): item is ToeicTestSummary => item !== null);
 }
 
 export async function getTestPart(
@@ -374,63 +331,6 @@ export async function listWrongQuestions(
   return body.items
     .map(parseWrongQuestionItem)
     .filter((item): item is WrongQuestionItem => item !== null);
-}
-
-function parsePracticePartStats(value: unknown) {
-  if (!isRecord(value) || !isNumber(value.partNumber)) {
-    return null;
-  }
-
-  if (
-    !isNumber(value.wrongQuestionCount) ||
-    !isNumber(value.practiceCorrectCount) ||
-    !isNumber(value.practiceWrongCount)
-  ) {
-    return null;
-  }
-
-  return {
-    partNumber: value.partNumber,
-    wrongQuestionCount: value.wrongQuestionCount,
-    practiceCorrectCount: value.practiceCorrectCount,
-    practiceWrongCount: value.practiceWrongCount,
-  };
-}
-
-export async function getPracticeStats(
-  token: string,
-  testId: number,
-  init?: RequestInit,
-) {
-  const body = await apiRequest(`/tests/practice/stats?testId=${testId}`, {
-    ...init,
-    token,
-  });
-
-  if (!isRecord(body) || !Array.isArray(body.parts)) {
-    invalidApiResponse();
-  }
-
-  const parts = body.parts
-    .map(parsePracticePartStats)
-    .filter((part): part is NonNullable<ReturnType<typeof parsePracticePartStats>> => part !== null);
-
-  if (
-    !isNumber(body.testId) ||
-    !isNumber(body.wrongQuestionCount) ||
-    !isNumber(body.practiceCorrectCount) ||
-    !isNumber(body.practiceWrongCount)
-  ) {
-    invalidApiResponse();
-  }
-
-  return {
-    testId: body.testId,
-    wrongQuestionCount: body.wrongQuestionCount,
-    practiceCorrectCount: body.practiceCorrectCount,
-    practiceWrongCount: body.practiceWrongCount,
-    parts,
-  } satisfies PracticeStats;
 }
 
 function parseRefreshGroup(value: unknown): RefreshMediaGroup | null {

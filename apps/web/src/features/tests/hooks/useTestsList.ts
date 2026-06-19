@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { listTests } from "@/features/tests/api/testsApi";
+import { listToeicTests } from "@/features/tests/api/toeicTestsOverviewApi";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { ApiError } from "@/shared/api/http";
 
@@ -30,7 +30,7 @@ export function useTestsList({
       runAuthenticatedRequest({
         accessToken,
         clearSession,
-        request: (token) => listTests(token, year, { signal }),
+        request: (token) => listToeicTests(token, year, { signal }),
       }),
     enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
   });

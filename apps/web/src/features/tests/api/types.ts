@@ -2,7 +2,7 @@ export type ToeicTestSummary = {
   id: number;
   year: number;
   testNumber: number;
-  label: string;
+  parts: ToeicPartProgress[];
 };
 
 export type ToeicQuestionOptions = {
@@ -79,19 +79,10 @@ export type WrongQuestionItem = {
   lastWrongAt: string;
 };
 
-export type PracticePartStats = {
+export type ToeicPartProgress = {
   partNumber: number;
-  wrongQuestionCount: number;
-  practiceCorrectCount: number;
-  practiceWrongCount: number;
-};
-
-export type PracticeStats = {
-  testId: number;
-  wrongQuestionCount: number;
-  practiceCorrectCount: number;
-  practiceWrongCount: number;
-  parts: PracticePartStats[];
+  partCorrectCount: number;
+  partWrongCount: number;
 };
 
 export type CompleteSessionResult = {
