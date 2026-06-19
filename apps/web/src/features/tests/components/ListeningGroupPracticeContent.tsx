@@ -61,8 +61,8 @@ export function ListeningGroupPracticeContent({
   navigation,
 }: ListeningGroupPracticeContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
-  const isWrongGroupReview =
-    practiceMode === "review_wrong" && normalPractice != null;
+  const isWrongGroupReview = practiceMode === "review_wrong";
+  const reviewAnswerSource = normalPractice ?? practice;
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
   const [localSelections, setLocalSelections] = useState<
     Record<number, OptionKey>
@@ -90,10 +90,10 @@ export function ListeningGroupPracticeContent({
 
     return currentGroup.questions
       .filter(
-        (question) => normalPractice.getAnswer(question.id)?.isCorrect !== true,
+        (question) => reviewAnswerSource.getAnswer(question.id)?.isCorrect !== true,
       )
       .map((question) => question.id);
-  }, [currentGroup, isWrongGroupReview, normalPractice]);
+  }, [currentGroup, isWrongGroupReview, reviewAnswerSource]);
 
   const activeQuestionNumbers = useMemo(() => {
     const numbers = new Set<number>();
@@ -121,7 +121,8 @@ export function ListeningGroupPracticeContent({
         groups,
         activeQuestionNumbers,
         isWrongGroupReview
-          ? (questionId) => normalPractice?.getAnswer(questionId)?.isCorrect !== true
+          ? (questionId) =>
+              reviewAnswerSource.getAnswer(questionId)?.isCorrect !== true
           : undefined,
         (questionId) =>
           resolveListeningGroupQuestionGridResult({
@@ -133,7 +134,7 @@ export function ListeningGroupPracticeContent({
             currentGroupId: currentGroup.group.id,
             localSelections,
             getPracticeAnswer: practice.getAnswer,
-            getNormalAnswer: normalPractice?.getAnswer,
+            getNormalAnswer: reviewAnswerSource.getAnswer,
           }),
       ),
     ];
@@ -144,9 +145,9 @@ export function ListeningGroupPracticeContent({
     isWrongGroupReview,
     localSelections,
     lockedReviewGroupIds,
-    normalPractice,
     partNumber,
     practice.getAnswer,
+    reviewAnswerSource,
     usesDeferredGroupGrading,
   ]);
 
@@ -202,7 +203,7 @@ export function ListeningGroupPracticeContent({
   const handleSelect = (toeicQuestionId: number, key: OptionKey) => {
     if (isWrongGroupReview) {
       const wasCorrectInNormal =
-        normalPractice.getAnswer(toeicQuestionId)?.isCorrect === true;
+        reviewAnswerSource.getAnswer(toeicQuestionId)?.isCorrect === true;
 
       if (wasCorrectInNormal) {
         return;
@@ -219,16 +220,25 @@ export function ListeningGroupPracticeContent({
       setLocalSelections(nextSelections);
 
       const allEditableSelected = editableQuestionIds.every(
-        (questionId) => nextSelections[questionId] != null,
+        (questionId) =>
+          (nextSelections[questionId] ??
+            practice.getAnswer(questionId)?.selectedKey) != null,
       );
 
       if (!allEditableSelected) {
+        const existing = practice.getAnswer(toeicQuestionId);
+        practice.selectAnswer(toeicQuestionId, key, {
+          deferGrade: true,
+          replace: Boolean(existing?.selectedKey),
+          selectionOnly: true,
+        });
         return;
       }
 
       const entries = editableQuestionIds.map((questionId) => ({
         toeicQuestionId: questionId,
-        selectedKey: nextSelections[questionId]!,
+        selectedKey: (nextSelections[questionId] ??
+          practice.getAnswer(questionId)?.selectedKey)!,
       }));
       const groupId = currentGroup.group.id;
 
@@ -363,7 +373,7 @@ export function ListeningGroupPracticeContent({
 
   const questionBlocks = currentGroup.questions.map((question) => {
     const reviewAnswer = practice.getAnswer(question.id);
-    const normalAnswer = normalPractice?.getAnswer(question.id);
+    const normalAnswer = reviewAnswerSource.getAnswer(question.id);
     const wasCorrectInNormal = normalAnswer?.isCorrect === true;
 
     let selectedKey: OptionKey | null;

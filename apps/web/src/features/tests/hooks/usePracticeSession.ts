@@ -13,7 +13,10 @@ import type {
   PracticeSessionResult,
   SubmitAnswerResult,
 } from "@/features/tests/api/types";
-import type { OptionKey } from "@/features/tests/lib/answerKeyMap";
+import {
+  buildAnswerKeyMap,
+  type OptionKey,
+} from "@/features/tests/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { createToeicSessionRequest } from "@/features/tests/lib/createToeicSessionRequest";
@@ -26,7 +29,6 @@ type UsePracticeSessionParams = {
   selectedParts?: number[];
   mode?: PracticeMode;
   enabled: boolean;
-  answerKeyMap?: Map<number, OptionKey>;
 };
 
 type SelectAnswerOptions = {
@@ -182,7 +184,6 @@ export function usePracticeSession({
   selectedParts: selectedPartsInput,
   mode = "practice",
   enabled,
-  answerKeyMap,
 }: UsePracticeSessionParams) {
   const queryClient = useQueryClient();
   const selectedParts = useMemo(
@@ -217,6 +218,10 @@ export function usePracticeSession({
 
   const sessionData = sessionQuery.data;
   const sessionId = sessionData?.sessionId ?? null;
+  const answerKeyMap = useMemo(
+    () => buildAnswerKeyMap(sessionData?.groups ?? []),
+    [sessionData?.groups],
+  );
 
   const answersByQuestionId = useMemo(
     () => toAnswerMap(sessionData?.answers ?? []),
@@ -726,6 +731,7 @@ export function usePracticeSession({
 
   return {
     sessionId,
+    groups: sessionData?.groups ?? [],
     answers: sessionData?.answers ?? [],
     correctCount: sessionData?.correctCount ?? 0,
     wrongCount: sessionData?.wrongCount ?? 0,

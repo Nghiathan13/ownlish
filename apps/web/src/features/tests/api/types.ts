@@ -28,6 +28,7 @@ export type ToeicQuestion = {
 
 export type ToeicQuestionGroup = {
   id: number;
+  partNumber: number | null;
   questionStart: number;
   questionEnd: number;
   groupType: string | null;
@@ -65,8 +66,12 @@ export type PracticeSessionAnswer = {
 
 export type PracticeSessionResult = {
   sessionId: string;
+  mode: PracticeMode;
+  testId: number;
+  partNumbers: number[];
   correctCount: number;
   wrongCount: number;
+  groups: ToeicQuestionGroup[];
   answers: PracticeSessionAnswer[];
 };
 

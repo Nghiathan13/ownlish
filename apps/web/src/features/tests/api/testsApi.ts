@@ -72,7 +72,7 @@ function parseQuestion(value: unknown): ToeicQuestion | null {
   };
 }
 
-function parseGroup(value: unknown): ToeicQuestionGroup | null {
+export function parseToeicQuestionGroup(value: unknown): ToeicQuestionGroup | null {
   if (!isRecord(value)) {
     return null;
   }
@@ -87,6 +87,7 @@ function parseGroup(value: unknown): ToeicQuestionGroup | null {
 
   return {
     id: value.id,
+    partNumber: isNumber(value.partNumber) ? value.partNumber : null,
     questionStart: isNumber(value.questionStart) ? value.questionStart : 0,
     questionEnd: isNumber(value.questionEnd) ? value.questionEnd : 0,
     groupType: isNullableString(value.groupType) ? value.groupType : null,
@@ -121,7 +122,7 @@ export async function getTestPart(
   }
 
   const groups = body.groups
-    .map(parseGroup)
+    .map(parseToeicQuestionGroup)
     .filter((group): group is ToeicQuestionGroup => group !== null);
 
   if (
