@@ -11,6 +11,7 @@ import {
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
+import { BilingualIcon } from "@/shared/ui/icons/BilingualIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 export function Navbar() {
@@ -56,9 +57,18 @@ export function Navbar() {
               Exit
             </Button>
             {practiceExit?.practiceTitle ? (
-              <span className="text-base font-semibold text-foreground">
-                {practiceExit.practiceTitle}
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="text-base font-semibold text-foreground">
+                  {practiceExit.practiceTitle}
+                </span>
+                <button
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground"
+                  type="button"
+                >
+                  <BilingualIcon className="size-4" />
+                  Bilingual
+                </button>
+              </div>
             ) : null}
           </div>
           {questionNav ? (
