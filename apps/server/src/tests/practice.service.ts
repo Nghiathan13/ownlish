@@ -12,14 +12,17 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  countOptions,
   getOptionText,
   getOptionViText,
   isToeicQuestionOptionKey,
+  mapQuestionOptions,
   parseAnswerKey,
 } from './lib/toeic-question-mapper';
 import { SubmitPracticeAnswerDto } from './dto/submit-practice-answer.dto';
 import { SubmitReviewGroupAnswersDto } from './dto/submit-review-group-answers.dto';
 import { CreatePracticeSessionDto } from './dto/create-practice-session.dto';
+import { TestsStorageService } from './tests-storage.service';
 
 const DEFERRED_GROUP_GRADING_PARTS = new Set([3, 4]);
 const REVIEW_GROUP_BATCH_PARTS = new Set([3, 4, 6, 7]);
@@ -39,11 +42,40 @@ type RunQuestionForResponse = {
   toeicQuestion: { answerKey: string | null };
 };
 
+type RunQuestionWithQuestionForResponse = {
+  toeicQuestionId: number;
+  selectedKey: string | null;
+  status: ToeicRunQuestionStatus | null;
+  toeicQuestion: ToeicQuestion;
+};
+
+type RunGroupForResponse = {
+  toeicQuestionGroupId: number;
+  partNumber: number;
+  questionStart: number;
+  questionEnd: number;
+  sortOrder: number;
+  toeicQuestionGroup: {
+    id: number;
+    groupType: string | null;
+    accent: string | null;
+    content: string | null;
+    contentVi: string | null;
+    audioStoragePath: string | null;
+    imageStoragePath: string | null;
+  };
+  questions: RunQuestionWithQuestionForResponse[];
+};
+
 type RunForResponse = {
   id: string;
+  mode: ToeicRunMode;
+  toeicTestId: number;
+  selectedParts: number[];
   totalRight: number;
   totalWrong: number;
   questions: RunQuestionForResponse[];
+  groups: RunGroupForResponse[];
 };
 
 type QuestionWithGroup = ToeicQuestion & {
@@ -69,7 +101,10 @@ type RunQuestionWithQuestion = {
 
 @Injectable()
 export class PracticeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: TestsStorageService,
+  ) {}
 
   async createSession(userId: string, dto: CreatePracticeSessionDto) {
     const selectedParts = this.resolveSelectedParts(dto);
@@ -178,14 +213,81 @@ export class PracticeService {
           },
         },
       },
+      groups: {
+        orderBy: { sortOrder: 'asc' as const },
+        include: {
+          toeicQuestionGroup: {
+            select: {
+              id: true,
+              groupType: true,
+              accent: true,
+              content: true,
+              contentVi: true,
+              audioStoragePath: true,
+              imageStoragePath: true,
+            },
+          },
+          questions: {
+            orderBy: { sortOrder: 'asc' as const },
+            include: {
+              toeicQuestion: true,
+            },
+          },
+        },
+      },
     } satisfies Prisma.ToeicRunInclude;
   }
 
-  private formatSessionResponse(session: RunForResponse) {
+  private async formatSessionResponse(session: RunForResponse) {
+    const signedUrls = await this.storageService.createSignedUrls(
+      session.groups.flatMap((group) => [
+        group.toeicQuestionGroup.audioStoragePath,
+        group.toeicQuestionGroup.imageStoragePath,
+      ]),
+    );
+
     return {
       sessionId: session.id,
+      mode:
+        session.mode === ToeicRunMode.WRONG_REVIEW
+          ? 'review_wrong'
+          : 'practice',
+      testId: session.toeicTestId,
+      partNumbers: session.selectedParts,
       correctCount: session.totalRight,
       wrongCount: session.totalWrong,
+      groups: session.groups.map((group) => {
+        const audioSigned = group.toeicQuestionGroup.audioStoragePath
+          ? signedUrls.get(group.toeicQuestionGroup.audioStoragePath)
+          : null;
+        const imageSigned = group.toeicQuestionGroup.imageStoragePath
+          ? signedUrls.get(group.toeicQuestionGroup.imageStoragePath)
+          : null;
+
+        return {
+          id: group.toeicQuestionGroupId,
+          partNumber: group.partNumber,
+          questionStart: group.questionStart,
+          questionEnd: group.questionEnd,
+          groupType: group.toeicQuestionGroup.groupType,
+          accent: group.toeicQuestionGroup.accent,
+          content: group.toeicQuestionGroup.content,
+          contentVi: group.toeicQuestionGroup.contentVi,
+          audioUrl: audioSigned?.url ?? null,
+          audioUrlExpiresAt: audioSigned?.expiresAt ?? null,
+          imageUrl: imageSigned?.url ?? null,
+          imageUrlExpiresAt: imageSigned?.expiresAt ?? null,
+          questions: group.questions.map((question) => ({
+            id: question.toeicQuestionId,
+            questionNumber: question.toeicQuestion.questionNumber,
+            question: question.toeicQuestion.question,
+            questionVi: question.toeicQuestion.questionVi,
+            options: mapQuestionOptions(question.toeicQuestion),
+            optionCount: countOptions(question.toeicQuestion),
+            answerKey: parseAnswerKey(question.toeicQuestion.answerKey),
+          })),
+        };
+      }),
       answers: session.questions.flatMap((answer) => {
         const answerKey = parseAnswerKey(answer.toeicQuestion.answerKey);
         const selectedKey = answer.selectedKey?.trim().toUpperCase();
@@ -634,9 +736,7 @@ export class PracticeService {
     }
 
     if (this.usesReviewGroupBatchSubmit(runQuestion.partNumber, run.mode)) {
-      throw new BadRequestException(
-        'Use the group answers endpoint for this part in review mode.',
-      );
+      return this.selectReviewGroupAnswer(runQuestion, selectedKey);
     }
 
     if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
@@ -669,12 +769,13 @@ export class PracticeService {
         isCorrect,
       });
 
-      if (run.mode === ToeicRunMode.WRONG_REVIEW && isCorrect) {
-        await this.markLatestPracticeQuestionRight(tx, {
+      if (run.mode === ToeicRunMode.WRONG_REVIEW) {
+        await this.markLatestPracticeQuestion(tx, {
           userId,
           testId: run.toeicTestId,
           toeicQuestionId: question.id,
           selectedKey,
+          isCorrect,
         });
       }
     });
@@ -722,6 +823,22 @@ export class PracticeService {
       answerKey,
       selectedKey === answerKey,
     );
+  }
+
+  private async selectReviewGroupAnswer(
+    runQuestion: RunQuestionWithQuestion,
+    selectedKey: 'A' | 'B' | 'C' | 'D',
+  ): Promise<SubmitAnswerResponse> {
+    await this.prisma.toeicRunQuestion.update({
+      where: { id: runQuestion.id },
+      data: {
+        selectedKey,
+        status: ToeicRunQuestionStatus.SELECTED,
+        answeredAt: new Date(),
+      },
+    });
+
+    return { graded: false };
   }
 
   private async isRunGroupReadyToGrade(
@@ -783,12 +900,13 @@ export class PracticeService {
         isCorrect,
       });
 
-      if (run.mode === ToeicRunMode.WRONG_REVIEW && isCorrect) {
-        await this.markLatestPracticeQuestionRight(tx, {
+      if (run.mode === ToeicRunMode.WRONG_REVIEW) {
+        await this.markLatestPracticeQuestion(tx, {
           userId,
           testId: run.toeicTestId,
           toeicQuestionId: question.toeicQuestionId,
           selectedKey,
+          isCorrect,
         });
       }
     }
@@ -828,13 +946,14 @@ export class PracticeService {
     await this.recalculateRunTotals(tx, input.run.id);
   }
 
-  private async markLatestPracticeQuestionRight(
+  private async markLatestPracticeQuestion(
     tx: Prisma.TransactionClient,
     input: {
       userId: string;
       testId: number;
       toeicQuestionId: number;
       selectedKey: string;
+      isCorrect: boolean;
     },
   ): Promise<void> {
     const practiceRun = await tx.toeicRun.findFirst({
@@ -870,7 +989,9 @@ export class PracticeService {
       where: { id: practiceQuestion.id },
       data: {
         selectedKey: input.selectedKey,
-        status: ToeicRunQuestionStatus.RIGHT,
+        status: input.isCorrect
+          ? ToeicRunQuestionStatus.RIGHT
+          : ToeicRunQuestionStatus.WRONG,
         answeredAt: new Date(),
         gradedAt: new Date(),
       },
@@ -1034,14 +1155,13 @@ export class PracticeService {
           isCorrect,
         });
 
-        if (isCorrect) {
-          await this.markLatestPracticeQuestionRight(tx, {
-            userId,
-            testId: run.toeicTestId,
-            toeicQuestionId: runQuestion.toeicQuestionId,
-            selectedKey,
-          });
-        }
+        await this.markLatestPracticeQuestion(tx, {
+          userId,
+          testId: run.toeicTestId,
+          toeicQuestionId: runQuestion.toeicQuestionId,
+          selectedKey,
+          isCorrect,
+        });
 
         results.push({
           toeicQuestionId: runQuestion.toeicQuestionId,
