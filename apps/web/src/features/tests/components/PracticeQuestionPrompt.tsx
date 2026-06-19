@@ -1,3 +1,5 @@
+import { BilingualTranslationText } from "@/features/tests/components/BilingualTranslationText";
+
 type PracticeQuestionPromptProps = {
   questionNumber: number;
   questionText?: string | null;
@@ -21,9 +23,7 @@ export function PracticeQuestionPrompt({
         {text ? ` ${text}` : null}
       </p>
       {showBilingual && viText ? (
-        <p className="whitespace-pre-wrap text-base font-bold leading-relaxed select-text">
-          {viText}
-        </p>
+        <BilingualTranslationText variant="question">{viText}</BilingualTranslationText>
       ) : null}
     </div>
   );

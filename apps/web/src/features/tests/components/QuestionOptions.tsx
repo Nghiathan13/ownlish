@@ -1,4 +1,5 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
+import { BilingualTranslationText } from "@/features/tests/components/BilingualTranslationText";
 import { classNames } from "@/shared/lib/classNames";
 import { CircleIcon } from "@/shared/ui/icons/CircleIcon";
 import { RightIcon } from "@/shared/ui/icons/RightIcon";
@@ -60,7 +61,9 @@ function OptionLabel({
         ) : null}
       </span>
       {showBilingual && vietnameseText ? (
-        <span className="text-muted-foreground">{vietnameseText}</span>
+        <BilingualTranslationText variant="option">
+          {vietnameseText}
+        </BilingualTranslationText>
       ) : null}
     </span>
   );
@@ -79,7 +82,7 @@ function OptionAnswerIcon({
   isWrong,
   showGrading,
 }: OptionAnswerIconProps) {
-  const iconOffsetClass = "-translate-y-[0.5px]";
+  const iconOffsetClass = "-translate-y-[0px]";
 
   if (isCorrect) {
     return (
