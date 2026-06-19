@@ -17,6 +17,7 @@ import type {
 import type { OptionKey } from "@/features/tests/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 
 type UsePracticeSessionParams = {
   accessToken: string | null;
@@ -370,7 +371,12 @@ export function usePracticeSession({
         }
 
         if (usesDeferredGroupGrading(partNumber, mode)) {
-          await queryClient.refetchQueries({ queryKey });
+          await Promise.all([
+            queryClient.refetchQueries({ queryKey }),
+            queryClient.invalidateQueries({
+              queryKey: getPracticeStatsQueryKey(testId),
+            }),
+          ]);
           return result;
         }
 
@@ -381,6 +387,10 @@ export function usePracticeSession({
         }
 
         reconcileGradedResult(toeicQuestionId, selectedKey, result, syncVersion);
+
+        await queryClient.invalidateQueries({
+          queryKey: getPracticeStatsQueryKey(testId),
+        });
 
         return result;
       } catch {
@@ -666,9 +676,14 @@ export function usePracticeSession({
           return next;
         });
 
-        await queryClient.invalidateQueries({
-          queryKey: getPracticeSessionQueryKey(testId, selectedParts, "normal"),
-        });
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "normal"),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: getPracticeStatsQueryKey(testId),
+          }),
+        ]);
 
         return result;
       } catch {

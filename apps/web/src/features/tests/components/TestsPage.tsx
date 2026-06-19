@@ -178,7 +178,7 @@ export function TestsPage() {
           onStart={(partNumber, mode) => {
             if (mode === "wrong_questions") {
               router.push(
-                `/tests/${selectedTest.id}/part/${partNumber}?mode=wrong_questions`,
+                `/tests/${selectedTest.id}/review_wrong?parts=${partNumber}`,
               );
             } else {
               router.push(`/tests/${selectedTest.id}/practice?parts=${partNumber}`);
