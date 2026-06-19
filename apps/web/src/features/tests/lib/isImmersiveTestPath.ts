@@ -1,7 +1,5 @@
-import { isPartPracticePath } from "@/features/tests/lib/isPartPracticePath";
-
-const FULL_TEST_ATTEMPT_PATH = /^\/tests\/\d+\/attempt\/[^/]+$/;
+const PRACTICE_RUN_PATH = /^\/tests\/\d+\/(practice|review_wrong)$/;
 
 export function isImmersiveTestPath(pathname: string) {
-  return isPartPracticePath(pathname) || FULL_TEST_ATTEMPT_PATH.test(pathname);
+  return PRACTICE_RUN_PATH.test(pathname);
 }

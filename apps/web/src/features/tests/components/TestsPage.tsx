@@ -18,13 +18,12 @@ import {
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
 import { useTestsList } from "@/features/tests/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceStorage";
-import { areAllPartsSelected } from "@/features/tests/lib/toeicParts";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import type { ToeicTestSummary } from "@/features/tests/api/types";
 
 const TOEIC_PART_COUNT = 7;
-const PRACTICE_MODES: PracticeMode[] = ["normal", "wrong_questions"];
+const PRACTICE_MODES: PracticeMode[] = ["practice", "review_wrong"];
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -109,18 +108,18 @@ export function TestsPage() {
     }
   };
 
-  const handleStartMulti = (testId: number, partNumbers: number[]) => {
+  const handleStart = (
+    testId: number,
+    partNumbers: number[],
+    mode: PracticeMode,
+  ) => {
     if (partNumbers.length === 0) {
       return;
     }
 
     setStartingMultiTestId(testId);
 
-    const query = areAllPartsSelected(partNumbers)
-      ? ""
-      : `?parts=${partNumbers.join(",")}`;
-
-    router.push(`/tests/${testId}/practice${query}`);
+    router.push(`/tests/${testId}/${mode}?parts=${partNumbers.join(",")}`);
     setSelectedTest(null);
     setStartingMultiTestId(null);
   };
@@ -175,18 +174,8 @@ export function TestsPage() {
         <PartPickerModal
           isStarting={startingMultiTestId === selectedTest.id}
           onClose={() => setSelectedTest(null)}
-          onStart={(partNumber, mode) => {
-            if (mode === "wrong_questions") {
-              router.push(
-                `/tests/${selectedTest.id}/review_wrong?parts=${partNumber}`,
-              );
-            } else {
-              router.push(`/tests/${selectedTest.id}/practice?parts=${partNumber}`);
-            }
-            setSelectedTest(null);
-          }}
-          onStartMulti={(partNumbers) => {
-            handleStartMulti(selectedTest.id, partNumbers);
+          onStart={(partNumbers, mode) => {
+            handleStart(selectedTest.id, partNumbers, mode);
           }}
           stats={selectedTestStats}
           testLabel={selectedTest.label}

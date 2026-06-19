@@ -8,8 +8,13 @@ import { PracticeAttemptStepContent } from "@/features/tests/components/Practice
 import { PracticeContinuousShell } from "@/features/tests/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
 import { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
+import {
+  getWrongQuestionsQueryKey,
+  useWrongQuestionsForParts,
+} from "@/features/tests/hooks/useWrongQuestions";
 import { useTestPartGroups } from "@/features/tests/hooks/useTestPartGroups";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
+import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import { buildAnswerKeyMap } from "@/features/tests/lib/answerKeyMap";
 import {
   buildFullTestQuestions,
@@ -18,6 +23,7 @@ import {
 } from "@/features/tests/lib/fullTestQuestions";
 import { writeFullTestIndex } from "@/features/tests/lib/fullTestStorage";
 import { getQuestionGridResultFromAnswer } from "@/features/tests/lib/practiceAnswers";
+import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 import {
   buildFullTestGridSections,
   findStepIndexForQuestion,
@@ -33,10 +39,10 @@ import { Panel } from "@/shared/ui/Panel";
 
 type PracticeRunViewProps = {
   testId: number;
-  testLabel: string;
   selectedParts: number[];
   accessToken: string | null;
   clearSession: () => void;
+  practiceMode?: PracticeMode;
 };
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -47,12 +53,48 @@ function getPracticeStorageKey(sessionId: string) {
   return `practice-${sessionId}`;
 }
 
+function filterPartGroupsForWrongReview(
+  partGroups: Record<number, ToeicQuestionGroup[] | undefined>,
+  selectedParts: number[],
+  wrongQuestionIds: number[] | null,
+) {
+  if (wrongQuestionIds == null) {
+    return {};
+  }
+
+  const wrongIds = new Set(wrongQuestionIds);
+  const filtered: Record<number, ToeicQuestionGroup[]> = {};
+
+  for (const partNumber of selectedParts) {
+    const groups = partGroups[partNumber] ?? [];
+    const partConfig = getPartPracticeConfig(partNumber);
+
+    filtered[partNumber] = groups.flatMap((group) => {
+      const wrongQuestions = group.questions.filter((question) =>
+        wrongIds.has(question.id),
+      );
+
+      if (wrongQuestions.length === 0) {
+        return [];
+      }
+
+      if (partConfig.navigationMode === "per-group") {
+        return [group];
+      }
+
+      return [{ ...group, questions: wrongQuestions }];
+    });
+  }
+
+  return filtered;
+}
+
 export function PracticeRunView({
   testId,
-  testLabel,
   selectedParts,
   accessToken,
   clearSession,
+  practiceMode = "practice",
 }: PracticeRunViewProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -73,30 +115,86 @@ export function PracticeRunView({
     testId,
   });
 
-  const groups = useMemo(
+  const isWrongMode = practiceMode === "review_wrong";
+  const {
+    wrongQuestions,
+    isLoadingWrongQuestions,
+    wrongQuestionsError,
+  } = useWrongQuestionsForParts({
+    accessToken,
+    clearSession,
+    enabled: allPartsLoaded && isWrongMode,
+    selectedParts: normalizedSelectedParts,
+    testId,
+  });
+
+  const wrongQuestionIds = useMemo(
+    () => wrongQuestions.map((question) => question.toeicQuestionId),
+    [wrongQuestions],
+  );
+
+  const rawGroups = useMemo(
     () =>
       normalizedSelectedParts.flatMap((partNumber) => partGroups[partNumber] ?? []),
     [normalizedSelectedParts, partGroups],
   );
-
-  const answerKeyMap = useMemo(() => buildAnswerKeyMap(groups), [groups]);
-
-  const questions = useMemo(
-    () => buildFullTestQuestions(partGroups, normalizedSelectedParts),
-    [normalizedSelectedParts, partGroups],
-  );
-
-  const steps = useMemo(
-    () => buildFullTestSteps(partGroups, normalizedSelectedParts),
-    [normalizedSelectedParts, partGroups],
-  );
-
+  const rawAnswerKeyMap = useMemo(() => buildAnswerKeyMap(rawGroups), [rawGroups]);
   const primaryPartNumber = normalizedSelectedParts[0] ?? 1;
   const practice = usePracticeSession({
     accessToken,
-    answerKeyMap,
+    answerKeyMap: rawAnswerKeyMap,
     clearSession,
-    enabled: allPartsLoaded,
+    enabled: allPartsLoaded && (!isWrongMode || !isLoadingWrongQuestions),
+    mode: practiceMode,
+    partNumber: primaryPartNumber,
+    selectedParts: normalizedSelectedParts,
+    testId,
+  });
+
+  const activeWrongQuestionIds = useMemo(() => {
+    if (!isWrongMode || !practice.sessionId || isLoadingWrongQuestions) {
+      return null;
+    }
+
+    return wrongQuestionIds;
+    // Freeze the review pool when a session starts; correct answers must not shrink it mid-session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- wrongQuestionIds intentionally omitted
+  }, [isLoadingWrongQuestions, isWrongMode, practice.sessionId]);
+
+  const effectivePartGroups = useMemo(() => {
+    if (!isWrongMode) {
+      return partGroups;
+    }
+
+    return filterPartGroupsForWrongReview(
+      partGroups,
+      normalizedSelectedParts,
+      activeWrongQuestionIds,
+    );
+  }, [activeWrongQuestionIds, isWrongMode, normalizedSelectedParts, partGroups]);
+
+
+  const questions = useMemo(
+    () => buildFullTestQuestions(effectivePartGroups, normalizedSelectedParts),
+    [effectivePartGroups, normalizedSelectedParts],
+  );
+
+  const steps = useMemo(
+    () => buildFullTestSteps(effectivePartGroups, normalizedSelectedParts),
+    [effectivePartGroups, normalizedSelectedParts],
+  );
+
+  const hasReviewGroupSteps = steps.some((step) => step.kind === "group");
+  const normalPractice = usePracticeSession({
+    accessToken,
+    answerKeyMap: rawAnswerKeyMap,
+    clearSession,
+    enabled:
+      allPartsLoaded &&
+      isWrongMode &&
+      hasReviewGroupSteps &&
+      Boolean(practice.sessionId),
+    mode: "practice",
     partNumber: primaryPartNumber,
     selectedParts: normalizedSelectedParts,
     testId,
@@ -107,7 +205,11 @@ export function PracticeRunView({
     : null;
 
   useEffect(() => {
-    if (!storageKey || initializedStorageKeyRef.current === storageKey) {
+    if (
+      !storageKey ||
+      steps.length === 0 ||
+      initializedStorageKeyRef.current === storageKey
+    ) {
       return;
     }
 
@@ -144,12 +246,26 @@ export function PracticeRunView({
   );
 
   const handleExit = useCallback(async () => {
-    await queryClient.invalidateQueries({
-      queryKey: getPracticeStatsQueryKey(testId),
-    });
-  }, [queryClient, testId]);
+    if (isWrongMode && practice.sessionId) {
+      await practice.completeSession();
+    }
 
-  useRegisterPracticeExit(practice.sessionId ? handleExit : null, testLabel);
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: getPracticeStatsQueryKey(testId),
+      }),
+      ...normalizedSelectedParts.map((partNumber) =>
+        queryClient.invalidateQueries({
+          queryKey: getWrongQuestionsQueryKey(testId, partNumber),
+        }),
+      ),
+    ]);
+  }, [isWrongMode, normalizedSelectedParts, practice, queryClient, testId]);
+
+  useRegisterPracticeExit(
+    practice.sessionId ? handleExit : null,
+    isWrongMode ? `Test ${testId} · Review wrong` : `Test ${testId}`,
+  );
 
   const activeQuestionNumbers = useMemo(
     () => getActiveQuestionNumbersForStep(currentStep),
@@ -205,7 +321,13 @@ export function PracticeRunView({
     />
   );
 
-  if (isLoadingParts || practice.isStarting) {
+  if (
+    isLoadingParts ||
+    practice.isStarting ||
+    (isWrongMode && isLoadingWrongQuestions) ||
+    (isWrongMode && practice.sessionId != null && activeWrongQuestionIds == null) ||
+    (isWrongMode && hasReviewGroupSteps && normalPractice.isStarting)
+  ) {
     return (
       <PageShell>
         <Panel>
@@ -215,12 +337,13 @@ export function PracticeRunView({
     );
   }
 
-  if (partLoadError || practice.startError) {
+  if (partLoadError || practice.startError || wrongQuestionsError) {
     return (
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
             {practice.startError ??
+              wrongQuestionsError ??
               getErrorMessage(partLoadError, "Cannot load this practice.")}
           </p>
           <div className="mt-4">
@@ -238,7 +361,9 @@ export function PracticeRunView({
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
-            This practice has no questions yet. Check that TOEIC data is imported.
+            {isWrongMode
+              ? "No wrong questions left to review for the selected parts."
+              : "This practice has no questions yet. Check that TOEIC data is imported."}
           </p>
         </Panel>
       </PageShell>
@@ -260,7 +385,9 @@ export function PracticeRunView({
       <PracticeAttemptStepContent
         accessToken={accessToken}
         clearSession={clearSession}
+        normalPractice={isWrongMode ? normalPractice : undefined}
         practice={practice}
+        practiceMode={practiceMode}
         sessionId={practice.sessionId}
         step={currentStep}
         testId={testId}

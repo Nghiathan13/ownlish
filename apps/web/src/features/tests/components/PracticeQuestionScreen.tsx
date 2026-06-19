@@ -49,7 +49,7 @@ export function PracticeQuestionScreen({
   clearSession,
   navigation,
   layout = "split-plain",
-  practiceMode = "normal",
+  practiceMode = "practice",
   questionPosition,
 }: PracticeQuestionScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
@@ -164,11 +164,11 @@ export function PracticeQuestionScreen({
       <div>
         <p className="text-base text-muted-foreground">
           Test {testId} · Part {partNumber}
-          {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
+          {practiceMode === "review_wrong" ? " · Review wrong" : ""}
         </p>
         <h1 className="text-xl font-semibold">{questionLabel}</h1>
         <p className="mt-1 text-base text-muted-foreground">
-          {practiceMode === "wrong_questions"
+          {practiceMode === "review_wrong"
             ? `Fixed ${practice.correctCount} · ${questionPosition?.total ?? 0} questions`
             : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
         </p>

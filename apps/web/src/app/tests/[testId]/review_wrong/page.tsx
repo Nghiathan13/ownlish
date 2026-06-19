@@ -4,8 +4,11 @@ import { Suspense, use, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { PracticePartView } from "@/features/tests/components/PracticePartView";
-import { parseSelectedPartsParam } from "@/features/tests/lib/toeicParts";
+import { PracticeRunView } from "@/features/tests/components/PracticeRunView";
+import {
+  normalizeSelectedParts,
+  parseSelectedPartsParam,
+} from "@/features/tests/lib/toeicParts";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -17,19 +20,23 @@ type ReviewWrongPageProps = {
 
 function ReviewWrongPageContent({ testId }: { testId: number }) {
   const searchParams = useSearchParams();
-  const { accessToken, clearSession } = useAuthSession();
+  const { accessToken, clearSession, status, user } = useAuthSession();
 
   const selectedParts = useMemo(
-    () => parseSelectedPartsParam(searchParams.get("parts") ?? undefined) ?? [],
+    () => normalizeSelectedParts(parseSelectedPartsParam(searchParams.get("parts") ?? undefined)),
     [searchParams],
   );
 
-  if (selectedParts.length !== 1) {
+  if (status !== "authenticated" || !user) {
+    return null;
+  }
+
+  if (selectedParts.length === 0) {
     return (
       <PageShell>
         <Panel>
           <p className="text-muted-foreground">
-            Select exactly one part to review wrong questions.
+            Select at least one part to review wrong questions.
           </p>
         </Panel>
       </PageShell>
@@ -37,11 +44,11 @@ function ReviewWrongPageContent({ testId }: { testId: number }) {
   }
 
   return (
-    <PracticePartView
+    <PracticeRunView
       accessToken={accessToken}
       clearSession={clearSession}
-      partNumber={selectedParts[0]!}
-      practiceMode="wrong_questions"
+      practiceMode="review_wrong"
+      selectedParts={selectedParts}
       testId={testId}
     />
   );

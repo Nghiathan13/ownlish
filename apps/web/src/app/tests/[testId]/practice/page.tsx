@@ -101,7 +101,6 @@ function PracticeRunPageContent({ testId }: { testId: number }) {
       clearSession={clearSession}
       selectedParts={selectedParts}
       testId={testId}
-      testLabel={test.label}
     />
   );
 }

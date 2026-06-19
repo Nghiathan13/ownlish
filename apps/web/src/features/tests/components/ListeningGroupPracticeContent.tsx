@@ -62,7 +62,7 @@ export function ListeningGroupPracticeContent({
 }: ListeningGroupPracticeContentProps) {
   const partConfig = getPartPracticeConfig(partNumber);
   const isWrongGroupReview =
-    practiceMode === "wrong_questions" && normalPractice != null;
+    practiceMode === "review_wrong" && normalPractice != null;
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
   const [localSelections, setLocalSelections] = useState<
     Record<number, OptionKey>
@@ -520,14 +520,14 @@ export function ListeningGroupPracticeContent({
       <div>
         <p className="text-base text-muted-foreground">
           Test {testId} · Part {partNumber}
-          {practiceMode === "wrong_questions" ? " · Review wrong" : ""}
+          {practiceMode === "review_wrong" ? " · Review wrong" : ""}
         </p>
         <h1 className="text-xl font-semibold">
           Group {activeGroupIndex + 1} / {groups.length} ·{" "}
           {formatGroupLabel(currentGroup.group)}
         </h1>
         <p className="mt-1 text-base text-muted-foreground">
-          {practiceMode === "wrong_questions"
+          {practiceMode === "review_wrong"
             ? `Fixed ${practice.correctCount} · ${totalQuestions} questions`
             : `Correct ${practice.correctCount} · Wrong ${practice.wrongCount}`}
         </p>

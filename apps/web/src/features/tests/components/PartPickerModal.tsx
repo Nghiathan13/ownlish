@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
@@ -22,8 +22,7 @@ type PartPickerModalProps = {
   stats: PracticeStats | null;
   isStarting?: boolean;
   onClose: () => void;
-  onStart: (partNumber: number, mode: PracticeMode) => void;
-  onStartMulti: (partNumbers: number[]) => void;
+  onStart: (partNumbers: number[], mode: PracticeMode) => void;
 };
 
 const LISTENING_PARTS = [1, 2, 3, 4];
@@ -31,6 +30,18 @@ const READING_PARTS = [5, 6, 7];
 
 function isPartEnabled(partNumber: number) {
   return isSupportedPracticePart(partNumber);
+}
+
+function addPartToSelection(current: number[], partNumber: number) {
+  if (current.includes(partNumber)) {
+    return current;
+  }
+
+  return [...current, partNumber];
+}
+
+function removePartFromSelection(current: number[], partNumber: number) {
+  return current.filter((part) => part !== partNumber);
 }
 
 function PartCheckboxOption({
@@ -89,56 +100,58 @@ export function PartPickerModal({
   isStarting = false,
   onClose,
   onStart,
-  onStartMulti,
 }: PartPickerModalProps) {
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
 
-  const normalizedSelectedParts = useMemo(
-    () => normalizeSelectedParts(selectedParts),
-    [selectedParts],
-  );
-  const isFullTest = areAllPartsSelected(normalizedSelectedParts);
-  const isSinglePart = normalizedSelectedParts.length === 1;
-  const singlePartNumber = isSinglePart ? normalizedSelectedParts[0] : null;
-  const singlePartStats =
-    singlePartNumber !== null ? getPartStats(stats, singlePartNumber) : null;
-  const wrongQuestionCount = singlePartStats?.wrongQuestionCount ?? 0;
-
-  const setFullTestSelection = (checked: boolean) => {
-    setSelectedParts(checked ? [...ALL_TOEIC_PART_NUMBERS] : []);
-  };
+  const isFullTest = areAllPartsSelected(selectedParts);
+  const wrongQuestionCount = selectedParts.reduce((total, partNumber) => {
+    return total + (getPartStats(stats, partNumber)?.wrongQuestionCount ?? 0);
+  }, 0);
 
   const togglePart = (partNumber: number) => {
-    setSelectedParts((current) => {
-      const next = new Set(current);
+    setSelectedParts((current) =>
+      current.includes(partNumber)
+        ? removePartFromSelection(current, partNumber)
+        : addPartToSelection(current, partNumber),
+    );
+  };
 
-      if (next.has(partNumber)) {
-        next.delete(partNumber);
-      } else {
-        next.add(partNumber);
+  const toggleFullTest = () => {
+    setSelectedParts((current) => {
+      if (areAllPartsSelected(current)) {
+        let next = current;
+
+        for (const partNumber of ALL_TOEIC_PART_NUMBERS) {
+          next = removePartFromSelection(next, partNumber);
+        }
+
+        return next;
       }
 
-      return normalizeSelectedParts(Array.from(next));
+      let next = current;
+
+      for (const partNumber of ALL_TOEIC_PART_NUMBERS) {
+        next = addPartToSelection(next, partNumber);
+      }
+
+      return next;
     });
   };
 
-  const handleStart = () => {
-    if (normalizedSelectedParts.length === 0) {
+  const startWithMode = (mode: PracticeMode) => {
+    const parts = normalizeSelectedParts(selectedParts);
+
+    if (parts.length === 0) {
       return;
     }
 
-    if (normalizedSelectedParts.length === 1) {
-      onStart(normalizedSelectedParts[0]!, "normal");
-      return;
-    }
-
-    onStartMulti(normalizedSelectedParts);
+    onStart(parts, mode);
   };
 
   const startLabel = isStarting
     ? "Starting..."
-    : normalizedSelectedParts.length > 1
-      ? `Start (${normalizedSelectedParts.length} parts)`
+    : selectedParts.length > 1
+      ? `Start (${selectedParts.length} parts)`
       : "Start";
 
   return (
@@ -148,7 +161,7 @@ export function PartPickerModal({
           <PartCheckboxOption
             checked={isFullTest}
             label="Full test"
-            onToggle={() => setFullTestSelection(!isFullTest)}
+            onToggle={toggleFullTest}
           />
         </section>
 
@@ -162,7 +175,7 @@ export function PartPickerModal({
 
               return (
                 <PartCheckboxOption
-                  checked={normalizedSelectedParts.includes(partNumber)}
+                  checked={selectedParts.includes(partNumber)}
                   disabled={!enabled}
                   key={partNumber}
                   label={`Part ${partNumber}`}
@@ -184,7 +197,7 @@ export function PartPickerModal({
 
               return (
                 <PartCheckboxOption
-                  checked={normalizedSelectedParts.includes(partNumber)}
+                  checked={selectedParts.includes(partNumber)}
                   disabled={!enabled}
                   key={partNumber}
                   label={`Part ${partNumber}`}
@@ -201,16 +214,11 @@ export function PartPickerModal({
             className="px-4 py-2"
             disabled={
               isStarting ||
-              !isSinglePart ||
-              singlePartNumber === null ||
-              !isPartEnabled(singlePartNumber) ||
+              selectedParts.length === 0 ||
+              selectedParts.some((partNumber) => !isPartEnabled(partNumber)) ||
               wrongQuestionCount === 0
             }
-            onClick={() => {
-              if (singlePartNumber !== null) {
-                onStart(singlePartNumber, "wrong_questions");
-              }
-            }}
+            onClick={() => startWithMode("review_wrong")}
             type="button"
             variant="secondary"
           >
@@ -218,8 +226,8 @@ export function PartPickerModal({
           </Button>
           <Button
             className="gap-2 px-4 py-2"
-            disabled={isStarting || normalizedSelectedParts.length === 0}
-            onClick={handleStart}
+            disabled={isStarting || selectedParts.length === 0}
+            onClick={() => startWithMode("practice")}
             type="button"
           >
             <StartIcon className="size-4" />

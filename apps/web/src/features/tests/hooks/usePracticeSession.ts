@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createPracticeSession,
   submitPracticeAnswer,
   submitReviewGroupAnswers,
   completePracticeSession,
@@ -18,6 +17,7 @@ import type { OptionKey } from "@/features/tests/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { getPracticeStatsQueryKey } from "@/features/tests/hooks/usePracticeStats";
+import { createToeicSessionRequest } from "@/features/tests/lib/createToeicSessionRequest";
 
 type UsePracticeSessionParams = {
   accessToken: string | null;
@@ -54,7 +54,7 @@ function getPracticePartsKey(parts: number[]) {
 export function getPracticeSessionQueryKey(
   testId: number,
   partNumberOrParts: number | number[],
-  mode: PracticeMode = "normal",
+  mode: PracticeMode = "practice",
 ) {
   const parts = Array.isArray(partNumberOrParts)
     ? normalizePracticeParts(partNumberOrParts[0] ?? 1, partNumberOrParts)
@@ -68,7 +68,7 @@ function toAnswerMap(answers: PracticeSessionAnswer[]) {
 }
 
 function usesDeferredGroupGrading(partNumber: number, mode: PracticeMode) {
-  return (partNumber === 3 || partNumber === 4) && mode === "normal";
+  return (partNumber === 3 || partNumber === 4) && mode === "practice";
 }
 
 function applyGradedAnswer(
@@ -91,7 +91,7 @@ function applyGradedAnswer(
     const wasCorrect = existingAnswer.isCorrect ?? false;
     const correctDelta = (isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
     const wrongDelta =
-      mode === "normal"
+      mode === "practice"
         ? (isCorrect ? 0 : 1) - (wasCorrect ? 0 : 1)
         : 0;
 
@@ -109,7 +109,7 @@ function applyGradedAnswer(
     ...current,
     correctCount: current.correctCount + (isCorrect ? 1 : 0),
     wrongCount:
-      current.wrongCount + (mode === "normal" && !isCorrect ? 1 : 0),
+      current.wrongCount + (mode === "practice" && !isCorrect ? 1 : 0),
     answers: [...current.answers, gradedAnswer],
   };
 }
@@ -163,7 +163,7 @@ function revertGradedAnswer(
 
   const wasCorrect = existingAnswer.isCorrect === true;
   const correctDelta = wasCorrect ? -1 : 0;
-  const wrongDelta = mode === "normal" && !wasCorrect ? -1 : 0;
+  const wrongDelta = mode === "practice" && !wasCorrect ? -1 : 0;
 
   return {
     ...current,
@@ -181,7 +181,7 @@ export function usePracticeSession({
   testId,
   partNumber,
   selectedParts: selectedPartsInput,
-  mode = "normal",
+  mode = "practice",
   enabled,
   answerKeyMap,
 }: UsePracticeSessionParams) {
@@ -202,22 +202,17 @@ export function usePracticeSession({
   const sessionQuery = useQuery({
     queryKey,
     queryFn: () =>
-      runAuthenticatedRequest({
+      createToeicSessionRequest({
         accessToken,
         clearSession,
-        request: (token) =>
-          createPracticeSession(token, {
-            testId,
-            ...(selectedParts.length > 1
-              ? { partNumbers: selectedParts }
-              : { partNumber: selectedParts[0] ?? partNumber }),
-            mode,
-          }),
+        testId,
+        partNumbers: selectedParts,
+        mode,
       }),
     enabled: enabled && Boolean(accessToken),
     staleTime: Infinity,
-    gcTime: mode === "wrong_questions" ? 0 : 5 * 60 * 1000,
-    refetchOnMount: mode === "wrong_questions" ? false : "always",
+    gcTime: mode === "review_wrong" ? 0 : 5 * 60 * 1000,
+    refetchOnMount: mode === "review_wrong" ? false : "always",
     retry: false,
   });
 
@@ -380,9 +375,9 @@ export function usePracticeSession({
           return result;
         }
 
-        if (mode === "wrong_questions" && result.isCorrect) {
+        if (mode === "review_wrong" && result.isCorrect) {
           await queryClient.invalidateQueries({
-            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "normal"),
+            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "practice"),
           });
         }
 
@@ -678,7 +673,7 @@ export function usePracticeSession({
 
         await Promise.all([
           queryClient.invalidateQueries({
-            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "normal"),
+            queryKey: getPracticeSessionQueryKey(testId, selectedParts, "practice"),
           }),
           queryClient.invalidateQueries({
             queryKey: getPracticeStatsQueryKey(testId),
