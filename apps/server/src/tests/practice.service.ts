@@ -1,10 +1,15 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ToeicPracticeMode, type ToeicQuestion } from '@prisma/client';
+import {
+  Prisma,
+  ToeicRunGroupStatus,
+  ToeicRunMode,
+  ToeicRunQuestionStatus,
+  type ToeicQuestion,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getOptionText,
@@ -27,134 +32,169 @@ type SubmitAnswerResponse = {
   correctOptionVi?: string | null;
 };
 
+type RunQuestionForResponse = {
+  toeicQuestionId: number;
+  selectedKey: string | null;
+  status: ToeicRunQuestionStatus | null;
+  toeicQuestion: { answerKey: string | null };
+};
+
+type RunForResponse = {
+  id: string;
+  totalRight: number;
+  totalWrong: number;
+  questions: RunQuestionForResponse[];
+};
+
+type QuestionWithGroup = ToeicQuestion & {
+  group: {
+    id: number;
+    testPart: {
+      testId: number;
+      partNumber: number;
+    };
+  };
+};
+
+type RunQuestionWithQuestion = {
+  id: string;
+  runId: string;
+  runGroupId: string;
+  toeicQuestionId: number;
+  partNumber: number;
+  selectedKey: string | null;
+  status: ToeicRunQuestionStatus | null;
+  toeicQuestion: ToeicQuestion;
+};
+
 @Injectable()
 export class PracticeService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createSession(userId: string, dto: CreatePracticeSessionDto) {
+    const selectedParts = this.resolveSelectedParts(dto);
+    const mode =
+      dto.mode === 'wrong_questions'
+        ? ToeicRunMode.WRONG_REVIEW
+        : ToeicRunMode.PRACTICE;
+
+    await this.assertTestAndPartsExist(dto.testId, selectedParts);
+
+    if (mode === ToeicRunMode.WRONG_REVIEW) {
+      const run = await this.createWrongReviewRun(
+        userId,
+        dto.testId,
+        selectedParts,
+      );
+      return this.formatSessionResponse(run);
+    }
+
+    const existingRun = await this.findLatestPracticeRun(
+      userId,
+      dto.testId,
+      selectedParts,
+    );
+
+    if (existingRun) {
+      return this.formatSessionResponse(existingRun);
+    }
+
+    const run = await this.createRunWithQuestions({
+      userId,
+      testId: dto.testId,
+      mode,
+      selectedParts,
+    });
+
+    return this.formatSessionResponse(run);
+  }
+
+  private resolveSelectedParts(dto: CreatePracticeSessionDto): number[] {
+    const parts = dto.partNumbers ?? (dto.partNumber ? [dto.partNumber] : []);
+    const selectedParts = [...new Set(parts)].sort((a, b) => a - b);
+
+    if (selectedParts.length === 0) {
+      throw new BadRequestException('Select at least one test part.');
+    }
+
+    return selectedParts;
+  }
+
+  private async assertTestAndPartsExist(
+    testId: number,
+    selectedParts: number[],
+  ) {
     const test = await this.prisma.toeicTest.findUnique({
-      where: { id: dto.testId },
+      where: { id: testId },
     });
 
     if (!test) {
       throw new NotFoundException('Test not found.');
     }
 
-    const part = await this.prisma.toeicTestPart.findUnique({
+    const parts = await this.prisma.toeicTestPart.findMany({
       where: {
-        testId_partNumber: {
-          testId: dto.testId,
-          partNumber: dto.partNumber,
-        },
+        testId,
+        partNumber: { in: selectedParts },
       },
+      select: { partNumber: true },
     });
+    const foundParts = new Set(parts.map((part) => part.partNumber));
+    const missingPart = selectedParts.find((part) => !foundParts.has(part));
 
-    if (!part) {
+    if (missingPart !== undefined) {
       throw new NotFoundException('Test part not found.');
     }
-
-    const mode =
-      dto.mode === 'wrong_questions'
-        ? ToeicPracticeMode.WRONG_QUESTIONS
-        : ToeicPracticeMode.NORMAL;
-
-    if (mode === ToeicPracticeMode.WRONG_QUESTIONS) {
-      const session = await this.prisma.toeicPracticeSession.create({
-        data: {
-          userId,
-          toeicTestId: dto.testId,
-          partNumber: dto.partNumber,
-          mode,
-        },
-        include: {
-          answers: {
-            include: {
-              toeicQuestion: {
-                select: { answerKey: true },
-              },
-            },
-          },
-        },
-      });
-
-      return this.formatSessionResponse(session);
-    }
-
-    const existingSession = await this.prisma.toeicPracticeSession.findFirst({
-      where: {
-        userId,
-        toeicTestId: dto.testId,
-        partNumber: dto.partNumber,
-        mode,
-      },
-      orderBy: { startedAt: 'desc' },
-      include: {
-        answers: {
-          include: {
-            toeicQuestion: {
-              select: { answerKey: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (existingSession) {
-      if (existingSession.completedAt) {
-        await this.prisma.toeicPracticeSession.update({
-          where: { id: existingSession.id },
-          data: { completedAt: null },
-        });
-      }
-
-      return this.formatSessionResponse(existingSession);
-    }
-
-    const session = await this.prisma.toeicPracticeSession.create({
-      data: {
-        userId,
-        toeicTestId: dto.testId,
-        partNumber: dto.partNumber,
-        mode,
-      },
-      include: {
-        answers: {
-          include: {
-            toeicQuestion: {
-              select: { answerKey: true },
-            },
-          },
-        },
-      },
-    });
-
-    return this.formatSessionResponse(session);
   }
 
-  private formatSessionResponse(session: {
-    id: string;
-    correctCount: number;
-    wrongCount: number;
-    answers: Array<{
-      toeicQuestionId: number;
-      selectedKey: string;
-      isCorrect: boolean | null;
-      toeicQuestion: { answerKey: string | null };
-    }>;
-  }) {
+  private findLatestPracticeRun(
+    userId: string,
+    testId: number,
+    selectedParts: number[],
+  ): Promise<RunForResponse | null> {
+    return this.prisma.toeicRun.findFirst({
+      where: {
+        userId,
+        toeicTestId: testId,
+        mode: ToeicRunMode.PRACTICE,
+        selectedParts: { equals: selectedParts },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: this.runResponseInclude(),
+    });
+  }
+
+  private runResponseInclude() {
+    return {
+      questions: {
+        orderBy: { sortOrder: 'asc' as const },
+        include: {
+          toeicQuestion: {
+            select: { answerKey: true },
+          },
+        },
+      },
+    } satisfies Prisma.ToeicRunInclude;
+  }
+
+  private formatSessionResponse(session: RunForResponse) {
     return {
       sessionId: session.id,
-      correctCount: session.correctCount,
-      wrongCount: session.wrongCount,
-      answers: session.answers.flatMap((answer) => {
+      correctCount: session.totalRight,
+      wrongCount: session.totalWrong,
+      answers: session.questions.flatMap((answer) => {
         const answerKey = parseAnswerKey(answer.toeicQuestion.answerKey);
-        const selectedKey = answer.selectedKey.trim().toUpperCase();
+        const selectedKey = answer.selectedKey?.trim().toUpperCase();
 
-        if (!answerKey || !isToeicQuestionOptionKey(selectedKey)) {
+        if (
+          !answerKey ||
+          !selectedKey ||
+          !isToeicQuestionOptionKey(selectedKey)
+        ) {
           return [];
         }
 
-        if (answer.isCorrect === null) {
+        if (answer.status === ToeicRunQuestionStatus.SELECTED) {
           return [
             {
               toeicQuestionId: answer.toeicQuestionId,
@@ -163,34 +203,267 @@ export class PracticeService {
           ];
         }
 
-        return [
-          {
-            toeicQuestionId: answer.toeicQuestionId,
-            selectedKey,
-            answerKey,
-            isCorrect: answer.isCorrect,
-          },
-        ];
+        if (answer.status === ToeicRunQuestionStatus.RIGHT) {
+          return [
+            {
+              toeicQuestionId: answer.toeicQuestionId,
+              selectedKey,
+              answerKey,
+              isCorrect: true,
+            },
+          ];
+        }
+
+        if (answer.status === ToeicRunQuestionStatus.WRONG) {
+          return [
+            {
+              toeicQuestionId: answer.toeicQuestionId,
+              selectedKey,
+              answerKey,
+              isCorrect: false,
+            },
+          ];
+        }
+
+        return [];
       }),
     };
   }
 
-  private usesDeferredGroupGrading(
-    partNumber: number,
-    mode: ToeicPracticeMode,
+  private async createEmptyRun(input: {
+    userId: string;
+    testId: number;
+    mode: ToeicRunMode;
+    selectedParts: number[];
+  }): Promise<RunForResponse> {
+    const run = await this.prisma.toeicRun.create({
+      data: {
+        userId: input.userId,
+        toeicTestId: input.testId,
+        mode: input.mode,
+        selectedParts: input.selectedParts,
+      },
+      include: this.runResponseInclude(),
+    });
+
+    return run;
+  }
+
+  private async createRunWithQuestions(input: {
+    userId: string;
+    testId: number;
+    mode: ToeicRunMode;
+    selectedParts: number[];
+  }): Promise<RunForResponse> {
+    const groups = await this.listGroupsForRun(
+      input.testId,
+      input.selectedParts,
+    );
+
+    const run = await this.prisma.$transaction(async (tx) => {
+      const createdRun = await tx.toeicRun.create({
+        data: {
+          userId: input.userId,
+          toeicTestId: input.testId,
+          mode: input.mode,
+          selectedParts: input.selectedParts,
+        },
+      });
+
+      for (const [groupIndex, group] of groups.entries()) {
+        const runGroup = await tx.toeicRunGroup.create({
+          data: {
+            runId: createdRun.id,
+            toeicQuestionGroupId: group.id,
+            partNumber: group.testPart.partNumber,
+            questionStart: group.questionStart,
+            questionEnd: group.questionEnd,
+            sortOrder: groupIndex,
+          },
+        });
+
+        await tx.toeicRunQuestion.createMany({
+          data: group.questions.map((question) => ({
+            runId: createdRun.id,
+            runGroupId: runGroup.id,
+            toeicQuestionId: question.id,
+            partNumber: group.testPart.partNumber,
+            questionNumber: question.questionNumber,
+            sortOrder: question.questionNumber,
+          })),
+        });
+      }
+
+      return createdRun;
+    });
+
+    const created = await this.getRunForResponse(run.id);
+    if (!created) {
+      throw new NotFoundException('Practice session not found.');
+    }
+
+    return created;
+  }
+
+  private async listGroupsForRun(testId: number, selectedParts: number[]) {
+    return this.prisma.toeicQuestionGroup.findMany({
+      where: {
+        testPart: {
+          testId,
+          partNumber: { in: selectedParts },
+        },
+      },
+      include: {
+        testPart: {
+          select: { partNumber: true },
+        },
+        questions: {
+          orderBy: { questionNumber: 'asc' },
+        },
+      },
+      orderBy: [{ questionStart: 'asc' }, { id: 'asc' }],
+    });
+  }
+
+  private async createWrongReviewRun(
+    userId: string,
+    testId: number,
+    selectedParts: number[],
+  ): Promise<RunForResponse> {
+    const practiceRun = await this.findLatestPracticeRunWithGroups(
+      userId,
+      testId,
+      selectedParts,
+    );
+
+    if (!practiceRun) {
+      return this.createEmptyRun({
+        userId,
+        testId,
+        mode: ToeicRunMode.WRONG_REVIEW,
+        selectedParts,
+      });
+    }
+
+    const wrongGroups = practiceRun.groups.filter(
+      (group) =>
+        group.status === ToeicRunGroupStatus.WRONG ||
+        group.questions.some(
+          (question) => question.status === ToeicRunQuestionStatus.WRONG,
+        ),
+    );
+
+    if (wrongGroups.length === 0) {
+      return this.createEmptyRun({
+        userId,
+        testId,
+        mode: ToeicRunMode.WRONG_REVIEW,
+        selectedParts,
+      });
+    }
+
+    const run = await this.prisma.$transaction(async (tx) => {
+      const createdRun = await tx.toeicRun.create({
+        data: {
+          userId,
+          toeicTestId: testId,
+          mode: ToeicRunMode.WRONG_REVIEW,
+          selectedParts,
+        },
+      });
+
+      for (const [groupIndex, practiceGroup] of wrongGroups.entries()) {
+        const runGroup = await tx.toeicRunGroup.create({
+          data: {
+            runId: createdRun.id,
+            toeicQuestionGroupId: practiceGroup.toeicQuestionGroupId,
+            partNumber: practiceGroup.partNumber,
+            questionStart: practiceGroup.questionStart,
+            questionEnd: practiceGroup.questionEnd,
+            sortOrder: groupIndex,
+            status: practiceGroup.status,
+          },
+        });
+
+        await tx.toeicRunQuestion.createMany({
+          data: practiceGroup.questions.map((question) => {
+            const isLockedRight =
+              question.status === ToeicRunQuestionStatus.RIGHT;
+
+            return {
+              runId: createdRun.id,
+              runGroupId: runGroup.id,
+              toeicQuestionId: question.toeicQuestionId,
+              partNumber: question.partNumber,
+              questionNumber: question.questionNumber,
+              sortOrder: question.sortOrder,
+              selectedKey: isLockedRight ? question.selectedKey : null,
+              status: isLockedRight ? ToeicRunQuestionStatus.RIGHT : null,
+              answeredAt: isLockedRight ? question.answeredAt : null,
+              gradedAt: isLockedRight ? question.gradedAt : null,
+            };
+          }),
+        });
+      }
+
+      return createdRun;
+    });
+
+    await this.recalculateRunTotals(this.prisma, run.id);
+
+    const created = await this.getRunForResponse(run.id);
+    if (!created) {
+      throw new NotFoundException('Practice session not found.');
+    }
+
+    return created;
+  }
+
+  private findLatestPracticeRunWithGroups(
+    userId: string,
+    testId: number,
+    selectedParts: number[],
   ) {
+    return this.prisma.toeicRun.findFirst({
+      where: {
+        userId,
+        toeicTestId: testId,
+        mode: ToeicRunMode.PRACTICE,
+        selectedParts: { equals: selectedParts },
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        groups: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            questions: {
+              orderBy: { sortOrder: 'asc' },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  private async getRunForResponse(
+    runId: string,
+  ): Promise<RunForResponse | null> {
+    return this.prisma.toeicRun.findUnique({
+      where: { id: runId },
+      include: this.runResponseInclude(),
+    });
+  }
+
+  private usesDeferredGroupGrading(partNumber: number, mode: ToeicRunMode) {
     return (
-      mode === ToeicPracticeMode.NORMAL &&
+      mode === ToeicRunMode.PRACTICE &&
       DEFERRED_GROUP_GRADING_PARTS.has(partNumber)
     );
   }
 
-  private usesReviewGroupBatchSubmit(
-    partNumber: number,
-    mode: ToeicPracticeMode,
-  ) {
+  private usesReviewGroupBatchSubmit(partNumber: number, mode: ToeicRunMode) {
     return (
-      mode === ToeicPracticeMode.WRONG_QUESTIONS &&
+      mode === ToeicRunMode.WRONG_REVIEW &&
       REVIEW_GROUP_BATCH_PARTS.has(partNumber)
     );
   }
@@ -209,285 +482,19 @@ export class PracticeService {
     };
   }
 
-  private async isGroupReadyToGrade(
-    tx: Prisma.TransactionClient,
-    sessionId: string,
-    groupId: number,
-  ) {
-    const questions = await tx.toeicQuestion.findMany({
-      where: { groupId },
-      select: { id: true },
-    });
-
-    if (questions.length === 0) {
-      return false;
-    }
-
-    const answerCount = await tx.toeicPracticeAnswer.count({
-      where: {
-        sessionId,
-        toeicQuestionId: {
-          in: questions.map((item) => item.id),
-        },
-      },
-    });
-
-    return answerCount === questions.length;
-  }
-
-  private async gradeGroupAnswers(
-    tx: Prisma.TransactionClient,
-    userId: string,
-    session: { id: string; mode: ToeicPracticeMode },
-    groupId: number,
-  ) {
-    const questions = await tx.toeicQuestion.findMany({
-      where: { groupId },
-    });
-    const answers = await tx.toeicPracticeAnswer.findMany({
-      where: {
-        sessionId: session.id,
-        toeicQuestionId: {
-          in: questions.map((item) => item.id),
-        },
-      },
-    });
-    const isReviewMode = session.mode === ToeicPracticeMode.WRONG_QUESTIONS;
-    let correctDelta = 0;
-    let wrongDelta = 0;
-
-    for (const question of questions) {
-      const answer = answers.find(
-        (item) => item.toeicQuestionId === question.id,
-      );
-      if (!answer) {
-        continue;
-      }
-
-      const questionAnswerKey = parseAnswerKey(question.answerKey);
-      if (!questionAnswerKey) {
-        continue;
-      }
-
-      const isCorrect = answer.selectedKey === questionAnswerKey;
-
-      await tx.toeicPracticeAnswer.update({
-        where: { id: answer.id },
-        data: { isCorrect },
-      });
-
-      correctDelta += isCorrect ? 1 : 0;
-      wrongDelta += !isReviewMode && !isCorrect ? 1 : 0;
-
-      if (isCorrect) {
-        await tx.toeicWrongQuestion.deleteMany({
-          where: {
-            userId,
-            toeicQuestionId: question.id,
-          },
-        });
-      } else if (!isReviewMode) {
-        await tx.toeicWrongQuestion.upsert({
-          where: {
-            userId_toeicQuestionId: {
-              userId,
-              toeicQuestionId: question.id,
-            },
-          },
-          create: {
-            userId,
-            toeicQuestionId: question.id,
-          },
-          update: {
-            wrongCount: { increment: 1 },
-            lastWrongAt: new Date(),
-          },
-        });
-      }
-    }
-
-    if (correctDelta > 0 || wrongDelta > 0) {
-      await tx.toeicPracticeSession.update({
-        where: { id: session.id },
-        data: {
-          correctCount:
-            correctDelta > 0 ? { increment: correctDelta } : undefined,
-          wrongCount: wrongDelta > 0 ? { increment: wrongDelta } : undefined,
-        },
-      });
-    }
-  }
-
-  private async syncNormalSessionAfterReviewFix(
-    tx: Prisma.TransactionClient,
-    userId: string,
-    toeicTestId: number,
-    partNumber: number,
-    toeicQuestionId: number,
-    selectedKey: string,
-  ) {
-    await this.syncNormalSessionAfterReviewAttempt(
-      tx,
-      userId,
-      toeicTestId,
-      partNumber,
-      toeicQuestionId,
-      selectedKey,
-      true,
-    );
-  }
-
-  private async syncNormalSessionAfterReviewAttempt(
-    tx: Prisma.TransactionClient,
-    userId: string,
-    toeicTestId: number,
-    partNumber: number,
-    toeicQuestionId: number,
-    selectedKey: string,
-    isCorrect: boolean,
-  ) {
-    const normalSession = await tx.toeicPracticeSession.findFirst({
-      where: {
-        userId,
-        toeicTestId,
-        partNumber,
-        mode: ToeicPracticeMode.NORMAL,
-      },
-      orderBy: { startedAt: 'desc' },
-    });
-
-    if (!normalSession) {
-      return;
-    }
-
-    const normalAnswer = await tx.toeicPracticeAnswer.findUnique({
-      where: {
-        sessionId_toeicQuestionId: {
-          sessionId: normalSession.id,
-          toeicQuestionId,
-        },
-      },
-    });
-
-    if (!normalAnswer || normalAnswer.isCorrect === true) {
-      return;
-    }
-
-    if (isCorrect) {
-      await tx.toeicPracticeAnswer.update({
-        where: { id: normalAnswer.id },
-        data: {
-          selectedKey,
-          isCorrect: true,
-        },
-      });
-
-      await tx.toeicPracticeSession.update({
-        where: { id: normalSession.id },
-        data: {
-          correctCount: { increment: 1 },
-          wrongCount: { decrement: 1 },
-        },
-      });
-      return;
-    }
-
-    await tx.toeicPracticeAnswer.update({
-      where: { id: normalAnswer.id },
-      data: {
-        selectedKey,
-        isCorrect: false,
-      },
-    });
-  }
-
-  private async applyWrongQuestionSideEffects(
-    tx: Prisma.TransactionClient,
-    userId: string,
-    toeicQuestionId: number,
-    isCorrect: boolean,
-    isReviewMode: boolean,
-    wasCorrect: boolean | null = null,
-  ) {
-    if (isCorrect) {
-      await tx.toeicWrongQuestion.deleteMany({
-        where: {
-          userId,
-          toeicQuestionId,
-        },
-      });
-      return;
-    }
-
-    if (isReviewMode) {
-      return;
-    }
-
-    if (wasCorrect === null) {
-      await tx.toeicWrongQuestion.upsert({
-        where: {
-          userId_toeicQuestionId: {
-            userId,
-            toeicQuestionId,
-          },
-        },
-        create: {
-          userId,
-          toeicQuestionId,
-        },
-        update: {
-          wrongCount: { increment: 1 },
-          lastWrongAt: new Date(),
-        },
-      });
-      return;
-    }
-
-    if (!wasCorrect) {
-      await tx.toeicWrongQuestion.updateMany({
-        where: {
-          userId,
-          toeicQuestionId,
-        },
-        data: {
-          wrongCount: { increment: 1 },
-          lastWrongAt: new Date(),
-        },
-      });
-      return;
-    }
-
-    await tx.toeicWrongQuestion.upsert({
-      where: {
-        userId_toeicQuestionId: {
-          userId,
-          toeicQuestionId,
-        },
-      },
-      create: {
-        userId,
-        toeicQuestionId,
-      },
-      update: {
-        wrongCount: { increment: 1 },
-        lastWrongAt: new Date(),
-      },
-    });
-  }
-
   async submitAnswer(
     userId: string,
     sessionId: string,
     dto: SubmitPracticeAnswerDto,
   ) {
-    const session = await this.prisma.toeicPracticeSession.findFirst({
+    const run = await this.prisma.toeicRun.findFirst({
       where: {
         id: sessionId,
         userId,
       },
     });
 
-    if (!session) {
+    if (!run) {
       throw new NotFoundException('Practice session not found.');
     }
 
@@ -502,11 +509,7 @@ export class PracticeService {
       },
     });
 
-    if (
-      !question ||
-      question.group.testPart.testId !== session.toeicTestId ||
-      question.group.testPart.partNumber !== session.partNumber
-    ) {
+    if (!question || question.group.testPart.testId !== run.toeicTestId) {
       throw new BadRequestException(
         'Question does not belong to this session.',
       );
@@ -523,205 +526,318 @@ export class PracticeService {
       throw new BadRequestException('Invalid answer.');
     }
 
-    const existingAnswer = await this.prisma.toeicPracticeAnswer.findUnique({
+    const runQuestion = await this.prisma.toeicRunQuestion.findUnique({
       where: {
-        sessionId_toeicQuestionId: {
-          sessionId: session.id,
+        runId_toeicQuestionId: {
+          runId: run.id,
           toeicQuestionId: question.id,
         },
       },
+      include: { toeicQuestion: true },
     });
 
-    const partNumber = session.partNumber;
-    const usesDeferredGrading = this.usesDeferredGroupGrading(
-      partNumber,
-      session.mode,
-    );
+    if (!runQuestion) {
+      throw new BadRequestException(
+        'Question does not belong to this session.',
+      );
+    }
 
-    if (this.usesReviewGroupBatchSubmit(partNumber, session.mode)) {
+    if (this.usesReviewGroupBatchSubmit(runQuestion.partNumber, run.mode)) {
       throw new BadRequestException(
         'Use the group answers endpoint for this part in review mode.',
       );
     }
 
-    if (existingAnswer) {
-      if (existingAnswer.selectedKey === selectedKey) {
-        if (existingAnswer.isCorrect === null) {
-          return { graded: false };
-        }
-
-        return this.buildGradedResponse(
-          question,
-          answerKey,
-          existingAnswer.isCorrect,
-        );
-      }
-
-      if (session.completedAt) {
-        throw new ConflictException(
-          'This question was already answered in this session.',
-        );
-      }
-
-      if (usesDeferredGrading) {
-        if (existingAnswer.isCorrect !== null) {
-          throw new ConflictException(
-            'This question group was already graded in this session.',
-          );
-        }
-
-        let graded = false;
-
-        await this.prisma.$transaction(async (tx) => {
-          await tx.toeicPracticeAnswer.update({
-            where: { id: existingAnswer.id },
-            data: { selectedKey },
-          });
-
-          if (
-            await this.isGroupReadyToGrade(tx, session.id, question.groupId)
-          ) {
-            await this.gradeGroupAnswers(tx, userId, session, question.groupId);
-            graded = true;
-          }
-        });
-
-        if (!graded) {
-          return { graded: false };
-        }
-
-        return this.buildGradedResponse(
-          question,
-          answerKey,
-          selectedKey === answerKey,
-        );
-      }
-
-      const wasCorrect = existingAnswer.isCorrect;
-      const isCorrect = selectedKey === answerKey;
-      const isReviewMode = session.mode === ToeicPracticeMode.WRONG_QUESTIONS;
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.toeicPracticeAnswer.update({
-          where: { id: existingAnswer.id },
-          data: {
-            selectedKey,
-            isCorrect,
-          },
-        });
-
-        const correctDelta = (isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
-        const wrongDelta = !isReviewMode
-          ? (isCorrect ? 0 : 1) - (wasCorrect ? 0 : 1)
-          : 0;
-
-        await tx.toeicPracticeSession.update({
-          where: { id: session.id },
-          data: {
-            correctCount:
-              correctDelta === 0 ? undefined : { increment: correctDelta },
-            wrongCount:
-              wrongDelta === 0 ? undefined : { increment: wrongDelta },
-          },
-        });
-
-        await this.applyWrongQuestionSideEffects(
-          tx,
-          userId,
-          question.id,
-          isCorrect,
-          isReviewMode,
-          wasCorrect,
-        );
-
-        if (isReviewMode && isCorrect) {
-          await this.syncNormalSessionAfterReviewFix(
-            tx,
-            userId,
-            session.toeicTestId,
-            session.partNumber,
-            question.id,
-            selectedKey,
-          );
-        }
-      });
-
-      return this.buildGradedResponse(question, answerKey, isCorrect);
+    if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
+      return this.buildGradedResponse(question, answerKey, true);
     }
 
+    const usesDeferredGrading = this.usesDeferredGroupGrading(
+      runQuestion.partNumber,
+      run.mode,
+    );
+
     if (usesDeferredGrading) {
-      let graded = false;
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.toeicPracticeAnswer.create({
-          data: {
-            sessionId: session.id,
-            toeicQuestionId: question.id,
-            selectedKey,
-            isCorrect: null,
-          },
-        });
-
-        if (await this.isGroupReadyToGrade(tx, session.id, question.groupId)) {
-          await this.gradeGroupAnswers(tx, userId, session, question.groupId);
-          graded = true;
-        }
-      });
-
-      if (!graded) {
-        return { graded: false };
-      }
-
-      return this.buildGradedResponse(
+      return this.submitDeferredPracticeAnswer(
+        userId,
+        run,
+        runQuestion,
         question,
+        selectedKey,
         answerKey,
-        selectedKey === answerKey,
       );
     }
 
     const isCorrect = selectedKey === answerKey;
-    const isReviewMode = session.mode === ToeicPracticeMode.WRONG_QUESTIONS;
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.toeicPracticeAnswer.create({
-        data: {
-          sessionId: session.id,
+      await this.gradeRunQuestion(tx, {
+        run,
+        runQuestion,
+        selectedKey,
+        isCorrect,
+      });
+
+      if (run.mode === ToeicRunMode.WRONG_REVIEW && isCorrect) {
+        await this.markLatestPracticeQuestionRight(tx, {
+          userId,
+          testId: run.toeicTestId,
+          selectedParts: run.selectedParts,
           toeicQuestionId: question.id,
           selectedKey,
-          isCorrect,
-        },
-      });
-
-      await tx.toeicPracticeSession.update({
-        where: { id: session.id },
-        data: {
-          correctCount: isCorrect ? { increment: 1 } : undefined,
-          wrongCount:
-            !isReviewMode && !isCorrect ? { increment: 1 } : undefined,
-        },
-      });
-
-      await this.applyWrongQuestionSideEffects(
-        tx,
-        userId,
-        question.id,
-        isCorrect,
-        isReviewMode,
-      );
-
-      if (isReviewMode && isCorrect) {
-        await this.syncNormalSessionAfterReviewFix(
-          tx,
-          userId,
-          session.toeicTestId,
-          session.partNumber,
-          question.id,
-          selectedKey,
-        );
+        });
       }
     });
 
     return this.buildGradedResponse(question, answerKey, isCorrect);
+  }
+
+  private async submitDeferredPracticeAnswer(
+    userId: string,
+    run: {
+      id: string;
+      mode: ToeicRunMode;
+      toeicTestId: number;
+      selectedParts: number[];
+    },
+    runQuestion: RunQuestionWithQuestion,
+    question: QuestionWithGroup,
+    selectedKey: 'A' | 'B' | 'C' | 'D',
+    answerKey: 'A' | 'B' | 'C' | 'D',
+  ): Promise<SubmitAnswerResponse> {
+    let graded = false;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.toeicRunQuestion.update({
+        where: { id: runQuestion.id },
+        data: {
+          selectedKey,
+          status: ToeicRunQuestionStatus.SELECTED,
+          answeredAt: new Date(),
+        },
+      });
+
+      if (await this.isRunGroupReadyToGrade(tx, runQuestion.runGroupId)) {
+        await this.gradeRunGroup(tx, userId, run, runQuestion.runGroupId);
+        graded = true;
+      }
+    });
+
+    if (!graded) {
+      return { graded: false };
+    }
+
+    return this.buildGradedResponse(
+      question,
+      answerKey,
+      selectedKey === answerKey,
+    );
+  }
+
+  private async isRunGroupReadyToGrade(
+    tx: Prisma.TransactionClient,
+    runGroupId: string,
+  ): Promise<boolean> {
+    const questions = await tx.toeicRunQuestion.findMany({
+      where: { runGroupId },
+      select: { selectedKey: true, status: true },
+    });
+
+    return (
+      questions.length > 0 &&
+      questions.every(
+        (question) =>
+          question.status === ToeicRunQuestionStatus.RIGHT ||
+          Boolean(question.selectedKey),
+      )
+    );
+  }
+
+  private async gradeRunGroup(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    run: {
+      id: string;
+      mode: ToeicRunMode;
+      toeicTestId: number;
+      selectedParts: number[];
+    },
+    runGroupId: string,
+  ): Promise<void> {
+    const questions = await tx.toeicRunQuestion.findMany({
+      where: { runGroupId },
+      include: { toeicQuestion: true },
+    });
+
+    for (const question of questions) {
+      if (question.status === ToeicRunQuestionStatus.RIGHT) {
+        continue;
+      }
+
+      const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
+      const selectedKey = question.selectedKey?.trim().toUpperCase();
+
+      if (
+        !answerKey ||
+        !selectedKey ||
+        !isToeicQuestionOptionKey(selectedKey)
+      ) {
+        continue;
+      }
+
+      const isCorrect = selectedKey === answerKey;
+      await this.gradeRunQuestion(tx, {
+        run,
+        runQuestion: question,
+        selectedKey,
+        isCorrect,
+      });
+
+      if (run.mode === ToeicRunMode.WRONG_REVIEW && isCorrect) {
+        await this.markLatestPracticeQuestionRight(tx, {
+          userId,
+          testId: run.toeicTestId,
+          selectedParts: run.selectedParts,
+          toeicQuestionId: question.toeicQuestionId,
+          selectedKey,
+        });
+      }
+    }
+  }
+
+  private async gradeRunQuestion(
+    tx: Prisma.TransactionClient,
+    input: {
+      run: { id: string; mode: ToeicRunMode };
+      runQuestion: {
+        id: string;
+        runId: string;
+        runGroupId: string;
+        status: ToeicRunQuestionStatus | null;
+      };
+      selectedKey: string;
+      isCorrect: boolean;
+    },
+  ): Promise<void> {
+    if (input.runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
+      return;
+    }
+
+    await tx.toeicRunQuestion.update({
+      where: { id: input.runQuestion.id },
+      data: {
+        selectedKey: input.selectedKey,
+        status: input.isCorrect
+          ? ToeicRunQuestionStatus.RIGHT
+          : ToeicRunQuestionStatus.WRONG,
+        answeredAt: new Date(),
+        gradedAt: new Date(),
+      },
+    });
+
+    await this.refreshRunGroupStatus(tx, input.runQuestion.runGroupId);
+    await this.recalculateRunTotals(tx, input.run.id);
+  }
+
+  private async markLatestPracticeQuestionRight(
+    tx: Prisma.TransactionClient,
+    input: {
+      userId: string;
+      testId: number;
+      selectedParts: number[];
+      toeicQuestionId: number;
+      selectedKey: string;
+    },
+  ): Promise<void> {
+    const practiceRun = await tx.toeicRun.findFirst({
+      where: {
+        userId: input.userId,
+        toeicTestId: input.testId,
+        mode: ToeicRunMode.PRACTICE,
+        selectedParts: { equals: input.selectedParts },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!practiceRun) {
+      return;
+    }
+
+    const practiceQuestion = await tx.toeicRunQuestion.findUnique({
+      where: {
+        runId_toeicQuestionId: {
+          runId: practiceRun.id,
+          toeicQuestionId: input.toeicQuestionId,
+        },
+      },
+    });
+
+    if (
+      !practiceQuestion ||
+      practiceQuestion.status === ToeicRunQuestionStatus.RIGHT
+    ) {
+      return;
+    }
+
+    await tx.toeicRunQuestion.update({
+      where: { id: practiceQuestion.id },
+      data: {
+        selectedKey: input.selectedKey,
+        status: ToeicRunQuestionStatus.RIGHT,
+        answeredAt: new Date(),
+        gradedAt: new Date(),
+      },
+    });
+
+    await this.refreshRunGroupStatus(tx, practiceQuestion.runGroupId);
+    await this.recalculateRunTotals(tx, practiceRun.id);
+  }
+
+  private async refreshRunGroupStatus(
+    tx: Prisma.TransactionClient,
+    runGroupId: string,
+  ): Promise<void> {
+    const questions = await tx.toeicRunQuestion.findMany({
+      where: { runGroupId },
+      select: { status: true },
+    });
+
+    const status = questions.some(
+      (question) => question.status === ToeicRunQuestionStatus.WRONG,
+    )
+      ? ToeicRunGroupStatus.WRONG
+      : questions.length > 0 &&
+          questions.every(
+            (question) => question.status === ToeicRunQuestionStatus.RIGHT,
+          )
+        ? ToeicRunGroupStatus.RIGHT
+        : null;
+
+    await tx.toeicRunGroup.update({
+      where: { id: runGroupId },
+      data: { status },
+    });
+  }
+
+  private async recalculateRunTotals(
+    tx:
+      | Pick<PrismaService, 'toeicRunQuestion' | 'toeicRun'>
+      | Prisma.TransactionClient,
+    runId: string,
+  ): Promise<void> {
+    const [totalRight, totalWrong] = await Promise.all([
+      tx.toeicRunQuestion.count({
+        where: { runId, status: ToeicRunQuestionStatus.RIGHT },
+      }),
+      tx.toeicRunQuestion.count({
+        where: { runId, status: ToeicRunQuestionStatus.WRONG },
+      }),
+    ]);
+
+    await tx.toeicRun.update({
+      where: { id: runId },
+      data: { totalRight, totalWrong },
+    });
   }
 
   async submitReviewGroupAnswers(
@@ -730,53 +846,47 @@ export class PracticeService {
     groupId: number,
     dto: SubmitReviewGroupAnswersDto,
   ) {
-    const session = await this.prisma.toeicPracticeSession.findFirst({
+    const run = await this.prisma.toeicRun.findFirst({
       where: {
         id: sessionId,
         userId,
       },
     });
 
-    if (!session) {
+    if (!run) {
       throw new NotFoundException('Practice session not found.');
     }
 
-    if (session.mode !== ToeicPracticeMode.WRONG_QUESTIONS) {
+    if (run.mode !== ToeicRunMode.WRONG_REVIEW) {
       throw new BadRequestException(
         'Group answers can only be submitted in review mode.',
       );
     }
 
-    if (!this.usesReviewGroupBatchSubmit(session.partNumber, session.mode)) {
-      throw new BadRequestException(
-        'Group answers are only supported for parts 3, 4, 6, and 7 in review mode.',
-      );
-    }
-
-    if (session.completedAt) {
-      throw new ConflictException('This review session is already completed.');
-    }
-
-    const group = await this.prisma.toeicQuestionGroup.findFirst({
+    const runGroup = await this.prisma.toeicRunGroup.findFirst({
       where: {
-        id: groupId,
-        testPart: {
-          testId: session.toeicTestId,
-          partNumber: session.partNumber,
-        },
+        runId: run.id,
+        toeicQuestionGroupId: groupId,
       },
       include: {
-        questions: true,
+        questions: {
+          include: { toeicQuestion: true },
+        },
       },
     });
 
-    if (!group) {
+    if (!runGroup) {
       throw new BadRequestException(
         'Question group does not belong to this session.',
       );
     }
 
-    const groupQuestionIds = new Set(group.questions.map((item) => item.id));
+    if (!this.usesReviewGroupBatchSubmit(runGroup.partNumber, run.mode)) {
+      throw new BadRequestException(
+        'Group answers are only supported for parts 3, 4, 6, and 7 in review mode.',
+      );
+    }
+
     const submittedQuestionIds = new Set(
       dto.answers.map((item) => item.toeicQuestionId),
     );
@@ -785,67 +895,12 @@ export class PracticeService {
       throw new BadRequestException('Duplicate questions in group submission.');
     }
 
-    for (const answer of dto.answers) {
-      if (!groupQuestionIds.has(answer.toeicQuestionId)) {
-        throw new BadRequestException(
-          'All submitted questions must belong to the same group.',
-        );
-      }
-    }
-
-    const normalSession = await this.prisma.toeicPracticeSession.findFirst({
-      where: {
-        userId,
-        toeicTestId: session.toeicTestId,
-        partNumber: session.partNumber,
-        mode: ToeicPracticeMode.NORMAL,
-      },
-      orderBy: { startedAt: 'desc' },
-      include: {
-        answers: {
-          where: {
-            toeicQuestionId: {
-              in: group.questions.map((item) => item.id),
-            },
-          },
-        },
-      },
-    });
-
-    if (!normalSession) {
-      throw new BadRequestException(
-        'No normal practice session found for this part.',
-      );
-    }
-
-    const normalAnswersByQuestionId = new Map(
-      normalSession.answers.map((answer) => [answer.toeicQuestionId, answer]),
+    const editableQuestions = runGroup.questions.filter(
+      (question) => question.status !== ToeicRunQuestionStatus.RIGHT,
     );
-
-    for (const question of group.questions) {
-      const normalAnswer = normalAnswersByQuestionId.get(question.id);
-      if (
-        normalAnswer?.isCorrect === true &&
-        submittedQuestionIds.has(question.id)
-      ) {
-        throw new BadRequestException(
-          'Cannot resubmit questions that were already correct in practice.',
-        );
-      }
-    }
-
-    const editableQuestionIds = group.questions
-      .filter(
-        (question) =>
-          normalAnswersByQuestionId.get(question.id)?.isCorrect === false,
-      )
-      .map((question) => question.id);
-
-    if (editableQuestionIds.length === 0) {
-      throw new BadRequestException(
-        'This group has no wrong questions to review.',
-      );
-    }
+    const editableQuestionIds = editableQuestions.map(
+      (question) => question.toeicQuestionId,
+    );
 
     if (
       editableQuestionIds.length !== submittedQuestionIds.size ||
@@ -856,45 +911,23 @@ export class PracticeService {
       );
     }
 
-    const existingReviewAnswers =
-      await this.prisma.toeicPracticeAnswer.findMany({
-        where: {
-          sessionId: session.id,
-          toeicQuestionId: {
-            in: editableQuestionIds,
-          },
-        },
-      });
-
-    const existingReviewAnswersByQuestionId = new Map(
-      existingReviewAnswers.map((answer) => [answer.toeicQuestionId, answer]),
-    );
-
-    for (const questionId of editableQuestionIds) {
-      const existing = existingReviewAnswersByQuestionId.get(questionId);
-      if (existing && existing.isCorrect !== null) {
-        throw new ConflictException(
-          'This question group was already graded in this review session.',
-        );
-      }
-    }
-
     const questionsById = new Map(
-      group.questions.map((question) => [question.id, question]),
+      runGroup.questions.map((question) => [
+        question.toeicQuestionId,
+        question,
+      ]),
     );
-
     const results: Array<SubmitAnswerResponse & { toeicQuestionId: number }> =
       [];
-    let correctDelta = 0;
 
     await this.prisma.$transaction(async (tx) => {
       for (const answer of dto.answers) {
-        const question = questionsById.get(answer.toeicQuestionId);
-        if (!question) {
+        const runQuestion = questionsById.get(answer.toeicQuestionId);
+        if (!runQuestion) {
           continue;
         }
 
-        const answerKey = parseAnswerKey(question.answerKey);
+        const answerKey = parseAnswerKey(runQuestion.toeicQuestion.answerKey);
         const selectedKey = answer.selectedKey.trim().toUpperCase();
 
         if (!answerKey) {
@@ -906,65 +939,31 @@ export class PracticeService {
         }
 
         const isCorrect = selectedKey === answerKey;
-        const existing = existingReviewAnswersByQuestionId.get(question.id);
-        const wasCorrect = existing?.isCorrect === true;
 
-        if (existing) {
-          await tx.toeicPracticeAnswer.update({
-            where: { id: existing.id },
-            data: {
-              selectedKey,
-              isCorrect,
-            },
-          });
-        } else {
-          await tx.toeicPracticeAnswer.create({
-            data: {
-              sessionId: session.id,
-              toeicQuestionId: question.id,
-              selectedKey,
-              isCorrect,
-            },
-          });
-        }
-
-        if (isCorrect && !wasCorrect) {
-          correctDelta += 1;
-        } else if (!isCorrect && wasCorrect) {
-          correctDelta -= 1;
-        }
-
-        await this.applyWrongQuestionSideEffects(
-          tx,
-          userId,
-          question.id,
-          isCorrect,
-          true,
-          existing?.isCorrect ?? null,
-        );
-
-        await this.syncNormalSessionAfterReviewAttempt(
-          tx,
-          userId,
-          session.toeicTestId,
-          session.partNumber,
-          question.id,
+        await this.gradeRunQuestion(tx, {
+          run,
+          runQuestion,
           selectedKey,
           isCorrect,
-        );
+        });
+
+        if (isCorrect) {
+          await this.markLatestPracticeQuestionRight(tx, {
+            userId,
+            testId: run.toeicTestId,
+            selectedParts: run.selectedParts,
+            toeicQuestionId: runQuestion.toeicQuestionId,
+            selectedKey,
+          });
+        }
 
         results.push({
-          toeicQuestionId: question.id,
-          ...this.buildGradedResponse(question, answerKey, isCorrect),
-        });
-      }
-
-      if (correctDelta !== 0) {
-        await tx.toeicPracticeSession.update({
-          where: { id: session.id },
-          data: {
-            correctCount: { increment: correctDelta },
-          },
+          toeicQuestionId: runQuestion.toeicQuestionId,
+          ...this.buildGradedResponse(
+            runQuestion.toeicQuestion,
+            answerKey,
+            isCorrect,
+          ),
         });
       }
     });
@@ -973,25 +972,20 @@ export class PracticeService {
   }
 
   async completeSession(userId: string, sessionId: string) {
-    const session = await this.prisma.toeicPracticeSession.findFirst({
+    const run = await this.prisma.toeicRun.findFirst({
       where: {
         id: sessionId,
         userId,
       },
     });
 
-    if (!session) {
+    if (!run) {
       throw new NotFoundException('Practice session not found.');
     }
 
-    const updated = await this.prisma.toeicPracticeSession.update({
-      where: { id: session.id },
-      data: { completedAt: new Date() },
-    });
-
     return {
-      correctCount: updated.correctCount,
-      wrongCount: updated.wrongCount,
+      correctCount: run.totalRight,
+      wrongCount: run.totalWrong,
     };
   }
 
@@ -1004,7 +998,13 @@ export class PracticeService {
       throw new NotFoundException('Test not found.');
     }
 
-    const [sessionResult] = await this.prisma.$transaction([
+    const [runResult, legacySessionResult] = await this.prisma.$transaction([
+      this.prisma.toeicRun.deleteMany({
+        where: {
+          userId,
+          toeicTestId: testId,
+        },
+      }),
       this.prisma.toeicPracticeSession.deleteMany({
         where: {
           userId,
@@ -1025,23 +1025,27 @@ export class PracticeService {
       }),
     ]);
 
-    return { deletedSessionCount: sessionResult.count };
+    return { deletedSessionCount: runResult.count + legacySessionResult.count };
   }
 
   async listWrongQuestions(userId: string, testId: number, partNumber: number) {
     await this.assertTestPartExists(testId, partNumber);
 
-    const items = await this.prisma.toeicWrongQuestion.findMany({
+    const practiceRun = await this.findLatestPracticeRunForPart(
+      userId,
+      testId,
+      partNumber,
+    );
+
+    if (!practiceRun) {
+      return { items: [] };
+    }
+
+    const items = await this.prisma.toeicRunQuestion.findMany({
       where: {
-        userId,
-        toeicQuestion: {
-          group: {
-            testPart: {
-              testId,
-              partNumber,
-            },
-          },
-        },
+        runId: practiceRun.id,
+        partNumber,
+        status: ToeicRunQuestionStatus.WRONG,
       },
       include: {
         toeicQuestion: {
@@ -1051,15 +1055,19 @@ export class PracticeService {
           },
         },
       },
-      orderBy: [{ lastWrongAt: 'desc' }, { toeicQuestionId: 'asc' }],
+      orderBy: [{ gradedAt: 'desc' }, { toeicQuestionId: 'asc' }],
     });
 
     return {
       items: items.map((item) => ({
         toeicQuestionId: item.toeicQuestionId,
         questionNumber: item.toeicQuestion.questionNumber,
-        wrongCount: item.wrongCount,
-        lastWrongAt: item.lastWrongAt.toISOString(),
+        wrongCount: 1,
+        lastWrongAt: (
+          item.gradedAt ??
+          item.answeredAt ??
+          new Date()
+        ).toISOString(),
       })),
     };
   }
@@ -1135,43 +1143,65 @@ export class PracticeService {
     }
   }
 
+  private findLatestPracticeRunForPart(
+    userId: string,
+    testId: number,
+    partNumber: number,
+  ) {
+    return this.prisma.toeicRun.findFirst({
+      where: {
+        userId,
+        toeicTestId: testId,
+        mode: ToeicRunMode.PRACTICE,
+        selectedParts: { has: partNumber },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+  }
+
   private async getPracticeStatsForPart(
     userId: string,
     testId: number,
     partNumber: number,
   ) {
-    const wrongQuestionCount = await this.prisma.toeicWrongQuestion.count({
-      where: {
-        userId,
-        toeicQuestion: {
-          group: {
-            testPart: {
-              testId,
-              partNumber,
-            },
-          },
-        },
-      },
-    });
+    const practiceRun = await this.findLatestPracticeRunForPart(
+      userId,
+      testId,
+      partNumber,
+    );
 
-    const aggregates = await this.prisma.toeicPracticeSession.aggregate({
-      where: {
-        userId,
-        toeicTestId: testId,
+    if (!practiceRun) {
+      return {
         partNumber,
-        mode: ToeicPracticeMode.NORMAL,
-      },
-      _sum: {
-        correctCount: true,
-        wrongCount: true,
-      },
-    });
+        wrongQuestionCount: 0,
+        practiceCorrectCount: 0,
+        practiceWrongCount: 0,
+      };
+    }
+
+    const [practiceCorrectCount, practiceWrongCount] = await Promise.all([
+      this.prisma.toeicRunQuestion.count({
+        where: {
+          runId: practiceRun.id,
+          partNumber,
+          status: ToeicRunQuestionStatus.RIGHT,
+        },
+      }),
+      this.prisma.toeicRunQuestion.count({
+        where: {
+          runId: practiceRun.id,
+          partNumber,
+          status: ToeicRunQuestionStatus.WRONG,
+        },
+      }),
+    ]);
 
     return {
       partNumber,
-      wrongQuestionCount,
-      practiceCorrectCount: aggregates._sum.correctCount ?? 0,
-      practiceWrongCount: wrongQuestionCount,
+      wrongQuestionCount: practiceWrongCount,
+      practiceCorrectCount,
+      practiceWrongCount,
     };
   }
 }
