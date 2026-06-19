@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import {
-  evidenceHighlightBackgroundClassName,
+  evidenceQuestionNumberBarClassName,
   evidenceQuestionNumberTextClassName,
 } from "@/features/tests/lib/evidenceHighlightStyles";
 import { classNames } from "@/shared/lib/classNames";
@@ -22,15 +22,15 @@ export function BilingualTranslationText({
         aria-hidden
         className={classNames(
           "w-0.5 shrink-0 self-stretch rounded-full",
-          evidenceHighlightBackgroundClassName,
+          evidenceQuestionNumberBarClassName,
         )}
       />
       <span
         className={classNames(
           "min-w-0 flex-1",
-          variant === "question"
-            ? "whitespace-pre-wrap text-base font-bold leading-relaxed"
-            : evidenceQuestionNumberTextClassName,
+          evidenceQuestionNumberTextClassName,
+          variant === "question" &&
+            "whitespace-pre-wrap text-base font-bold leading-relaxed",
         )}
       >
         {children}
