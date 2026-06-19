@@ -311,7 +311,9 @@ export function PracticeGroupScreen({
       showResult = isPracticeAnswerGraded(answer);
     }
 
-    const translationVisible = showGroupReveal;
+    const translationVisible = usesDeferredGroupGrading
+      ? showGroupReveal
+      : showResult;
 
     const options = (
       <>
