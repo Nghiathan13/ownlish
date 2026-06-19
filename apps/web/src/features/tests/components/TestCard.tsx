@@ -70,8 +70,9 @@ export function TestCard({
                 : "Review wrong (all parts)"
             }
             className={classNames(
-              "relative inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent text-foreground",
-              "hover:bg-muted",
+              "relative inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
+              statusColorClasses.danger.text,
+              "hover:bg-red-200/30 dark:hover:bg-red-900/30",
               "disabled:cursor-not-allowed disabled:opacity-60",
             )}
             disabled={isClearingHistory || testWrongCount === 0}
