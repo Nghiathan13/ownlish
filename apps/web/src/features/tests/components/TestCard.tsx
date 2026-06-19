@@ -73,7 +73,7 @@ export function TestCard({
               "relative inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
               statusColorClasses.danger.text,
               "hover:bg-red-200/30 dark:hover:bg-red-900/30",
-              "disabled:cursor-not-allowed disabled:text-foreground disabled:opacity-60 disabled:bg-muted",
+              "disabled:cursor-not-allowed disabled:text-foreground disabled:opacity-60 disabled:hover:bg-muted",
             )}
             disabled={isClearingHistory || testWrongCount === 0}
             onClick={onReviewWrong}
