@@ -12,6 +12,7 @@ import { TestCard } from "@/features/tests/components/TestCard";
 import { getPracticeSessionQueryKey } from "@/features/tests/hooks/usePracticeSession";
 import { getTestsQueryKey, useTestsList } from "@/features/tests/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceStorage";
+import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/lib/toeicParts";
 import { Button } from "@/shared/ui/Button";
 import { PageShell } from "@/shared/ui/PageShell";
 import type { ToeicTestSummary } from "@/features/tests/api/types";
@@ -135,6 +136,9 @@ export function TestsPage() {
                 key={test.id}
                 onClearHistory={() => void handleClearHistory(test.id)}
                 onPractice={() => setSelectedTest(test)}
+                onReviewWrong={() =>
+                  handleStart(test.id, [...ALL_TOEIC_PART_NUMBERS], "review_wrong")
+                }
                 test={test}
               />
             ))}

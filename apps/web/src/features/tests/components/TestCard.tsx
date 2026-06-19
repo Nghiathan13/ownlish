@@ -4,6 +4,7 @@ import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
+import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { Button } from "@/shared/ui/Button";
 import { classNames } from "@/shared/lib/classNames";
 import type { ToeicTestSummary } from "@/features/tests/api/types";
@@ -18,6 +19,7 @@ type TestCardProps = {
   isClearingHistory?: boolean;
   onClearHistory: () => void;
   onPractice: () => void;
+  onReviewWrong: () => void;
 };
 
 const TOEIC_TEST_QUESTION_COUNT = 200;
@@ -27,6 +29,7 @@ export function TestCard({
   isClearingHistory = false,
   onClearHistory,
   onPractice,
+  onReviewWrong,
 }: TestCardProps) {
   const testCorrectCount = getTestCorrectCount(test);
   const testWrongCount = getTestWrongCount(test);
@@ -59,20 +62,35 @@ export function TestCard({
               </div>
             )}
         </div>
-        <button
-          aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
-          className={classNames(
-            "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md bg-transparent",
-            statusColorClasses.danger.text,
-            "hover:bg-red-200/30 dark:hover:bg-red-900/30",
-            "disabled:cursor-not-allowed disabled:opacity-60",
-          )}
-          disabled={isClearingHistory}
-          onClick={onClearHistory}
-          type="button"
-        >
-          <DeleteIcon className="size-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            aria-label="Review wrong (all parts)"
+            className={classNames(
+              "inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent text-foreground",
+              "hover:bg-muted",
+              "disabled:cursor-not-allowed disabled:opacity-60",
+            )}
+            disabled={isClearingHistory || testWrongCount === 0}
+            onClick={onReviewWrong}
+            type="button"
+          >
+            <ReplayIcon className="size-4" />
+          </button>
+          <button
+            aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
+            className={classNames(
+              "inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
+              statusColorClasses.danger.text,
+              "hover:bg-red-200/30 dark:hover:bg-red-900/30",
+              "disabled:cursor-not-allowed disabled:opacity-60",
+            )}
+            disabled={isClearingHistory}
+            onClick={onClearHistory}
+            type="button"
+          >
+            <DeleteIcon className="size-4" />
+          </button>
+        </div>
       </div>
       <Button className="gap-2 self-start px-4 py-2" onClick={onPractice} type="button">
         <PracticeIcon className="size-4" />
