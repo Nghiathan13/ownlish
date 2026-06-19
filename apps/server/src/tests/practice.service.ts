@@ -89,14 +89,21 @@ export class PracticeService {
       return this.formatSessionResponse(run);
     }
 
-    const existingRun = await this.findLatestPracticeRun(
-      userId,
-      dto.testId,
-      selectedParts,
-    );
+    const existingRun = await this.findLatestPracticeRun(userId, dto.testId);
 
     if (existingRun) {
-      return this.formatSessionResponse(existingRun);
+      await this.ensurePracticeRunIncludesParts(
+        existingRun.id,
+        dto.testId,
+        selectedParts,
+      );
+
+      const refreshedRun = await this.getRunForResponse(existingRun.id);
+      if (!refreshedRun) {
+        throw new NotFoundException('Practice session not found.');
+      }
+
+      return this.formatSessionResponse(refreshedRun);
     }
 
     const run = await this.createRunWithQuestions({
@@ -150,14 +157,12 @@ export class PracticeService {
   private findLatestPracticeRun(
     userId: string,
     testId: number,
-    selectedParts: number[],
   ): Promise<RunForResponse | null> {
     return this.prisma.toeicRun.findFirst({
       where: {
         userId,
         toeicTestId: testId,
         mode: ToeicRunMode.PRACTICE,
-        selectedParts: { equals: selectedParts },
       },
       orderBy: { createdAt: 'desc' },
       include: this.runResponseInclude(),
@@ -249,6 +254,97 @@ export class PracticeService {
     return run;
   }
 
+  private async ensurePracticeRunIncludesParts(
+    runId: string,
+    testId: number,
+    selectedParts: number[],
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const run = await tx.toeicRun.findUnique({
+        where: { id: runId },
+        include: {
+          groups: {
+            select: {
+              toeicQuestionGroupId: true,
+              partNumber: true,
+              sortOrder: true,
+            },
+          },
+        },
+      });
+
+      if (!run) {
+        return;
+      }
+
+      const nextSelectedParts = [
+        ...new Set([...run.selectedParts, ...selectedParts]),
+      ].sort((a, b) => a - b);
+      const existingGroupIds = new Set(
+        run.groups.map((group) => group.toeicQuestionGroupId),
+      );
+      let nextGroupSortOrder =
+        run.groups.reduce(
+          (highest, group) => Math.max(highest, group.sortOrder),
+          -1,
+        ) + 1;
+
+      const groups = await tx.toeicQuestionGroup.findMany({
+        where: {
+          testPart: {
+            testId,
+            partNumber: { in: selectedParts },
+          },
+        },
+        include: {
+          testPart: {
+            select: { partNumber: true },
+          },
+          questions: {
+            orderBy: { questionNumber: 'asc' },
+          },
+        },
+        orderBy: [{ questionStart: 'asc' }, { id: 'asc' }],
+      });
+
+      for (const group of groups) {
+        if (existingGroupIds.has(group.id)) {
+          continue;
+        }
+
+        const runGroup = await tx.toeicRunGroup.create({
+          data: {
+            runId,
+            toeicQuestionGroupId: group.id,
+            partNumber: group.testPart.partNumber,
+            questionStart: group.questionStart,
+            questionEnd: group.questionEnd,
+            sortOrder: nextGroupSortOrder,
+          },
+        });
+        nextGroupSortOrder += 1;
+
+        await tx.toeicRunQuestion.createMany({
+          data: group.questions.map((question) => ({
+            runId,
+            runGroupId: runGroup.id,
+            toeicQuestionId: question.id,
+            partNumber: group.testPart.partNumber,
+            questionNumber: question.questionNumber,
+            sortOrder: question.questionNumber,
+          })),
+        });
+      }
+
+      if (nextSelectedParts.join(',') !== run.selectedParts.join(',')) {
+        await tx.toeicRun.update({
+          where: { id: runId },
+          data: { selectedParts: nextSelectedParts },
+        });
+      }
+    });
+  }
+
   private async createRunWithQuestions(input: {
     userId: string;
     testId: number;
@@ -333,7 +429,6 @@ export class PracticeService {
     const practiceRun = await this.findLatestPracticeRunWithGroups(
       userId,
       testId,
-      selectedParts,
     );
 
     if (!practiceRun) {
@@ -345,12 +440,14 @@ export class PracticeService {
       });
     }
 
+    const selectedPartSet = new Set(selectedParts);
     const wrongGroups = practiceRun.groups.filter(
       (group) =>
-        group.status === ToeicRunGroupStatus.WRONG ||
-        group.questions.some(
-          (question) => question.status === ToeicRunQuestionStatus.WRONG,
-        ),
+        selectedPartSet.has(group.partNumber) &&
+        (group.status === ToeicRunGroupStatus.WRONG ||
+          group.questions.some(
+            (question) => question.status === ToeicRunQuestionStatus.WRONG,
+          )),
     );
 
     if (wrongGroups.length === 0) {
@@ -419,17 +516,12 @@ export class PracticeService {
     return created;
   }
 
-  private findLatestPracticeRunWithGroups(
-    userId: string,
-    testId: number,
-    selectedParts: number[],
-  ) {
+  private findLatestPracticeRunWithGroups(userId: string, testId: number) {
     return this.prisma.toeicRun.findFirst({
       where: {
         userId,
         toeicTestId: testId,
         mode: ToeicRunMode.PRACTICE,
-        selectedParts: { equals: selectedParts },
       },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -582,7 +674,6 @@ export class PracticeService {
         await this.markLatestPracticeQuestionRight(tx, {
           userId,
           testId: run.toeicTestId,
-          selectedParts: run.selectedParts,
           toeicQuestionId: question.id,
           selectedKey,
         });
@@ -697,7 +788,6 @@ export class PracticeService {
         await this.markLatestPracticeQuestionRight(tx, {
           userId,
           testId: run.toeicTestId,
-          selectedParts: run.selectedParts,
           toeicQuestionId: question.toeicQuestionId,
           selectedKey,
         });
@@ -744,7 +834,6 @@ export class PracticeService {
     input: {
       userId: string;
       testId: number;
-      selectedParts: number[];
       toeicQuestionId: number;
       selectedKey: string;
     },
@@ -754,7 +843,6 @@ export class PracticeService {
         userId: input.userId,
         toeicTestId: input.testId,
         mode: ToeicRunMode.PRACTICE,
-        selectedParts: { equals: input.selectedParts },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -951,7 +1039,6 @@ export class PracticeService {
           await this.markLatestPracticeQuestionRight(tx, {
             userId,
             testId: run.toeicTestId,
-            selectedParts: run.selectedParts,
             toeicQuestionId: runQuestion.toeicQuestionId,
             selectedKey,
           });
@@ -1031,11 +1118,7 @@ export class PracticeService {
   async listWrongQuestions(userId: string, testId: number, partNumber: number) {
     await this.assertTestPartExists(testId, partNumber);
 
-    const practiceRun = await this.findLatestPracticeRunForPart(
-      userId,
-      testId,
-      partNumber,
-    );
+    const practiceRun = await this.findLatestPracticeRunForPart(userId, testId);
 
     if (!practiceRun) {
       return { items: [] };
@@ -1143,17 +1226,12 @@ export class PracticeService {
     }
   }
 
-  private findLatestPracticeRunForPart(
-    userId: string,
-    testId: number,
-    partNumber: number,
-  ) {
+  private findLatestPracticeRunForPart(userId: string, testId: number) {
     return this.prisma.toeicRun.findFirst({
       where: {
         userId,
         toeicTestId: testId,
         mode: ToeicRunMode.PRACTICE,
-        selectedParts: { has: partNumber },
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
@@ -1165,11 +1243,7 @@ export class PracticeService {
     testId: number,
     partNumber: number,
   ) {
-    const practiceRun = await this.findLatestPracticeRunForPart(
-      userId,
-      testId,
-      partNumber,
-    );
+    const practiceRun = await this.findLatestPracticeRunForPart(userId, testId);
 
     if (!practiceRun) {
       return {

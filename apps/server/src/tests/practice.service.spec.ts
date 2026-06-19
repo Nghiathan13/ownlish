@@ -16,11 +16,21 @@ describe('PracticeService', () => {
       findMany: jest.fn(),
     },
     toeicRun: {
+      create: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
       deleteMany: jest.fn(),
     },
     toeicRunQuestion: {
       count: jest.fn(),
+      createMany: jest.fn(),
+      findMany: jest.fn(),
+    },
+    toeicRunGroup: {
+      create: jest.fn(),
+    },
+    toeicQuestionGroup: {
       findMany: jest.fn(),
     },
     toeicWrongQuestion: {
@@ -84,10 +94,59 @@ describe('PracticeService', () => {
         userId: 'user-id',
         toeicTestId: 1,
         mode: 'PRACTICE',
-        selectedParts: { has: 1 },
       },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
+    });
+  });
+
+  it('reuses the latest practice run for the test when selected parts change', async () => {
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([
+      { partNumber: 1 },
+      { partNumber: 2 },
+    ]);
+    prismaMock.toeicRun.findFirst.mockResolvedValue({ id: 'run-id' });
+    prismaMock.$transaction.mockImplementation(async (callback) =>
+      callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique
+      .mockResolvedValueOnce({
+        id: 'run-id',
+        selectedParts: [1],
+        groups: [],
+      })
+      .mockResolvedValueOnce({
+        id: 'run-id',
+        totalRight: 0,
+        totalWrong: 0,
+        questions: [],
+      });
+    prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([]);
+    prismaMock.toeicRun.update.mockResolvedValue({ id: 'run-id' });
+
+    await expect(
+      service.createSession('user-id', { testId: 1, partNumbers: [1, 2] }),
+    ).resolves.toEqual({
+      sessionId: 'run-id',
+      correctCount: 0,
+      wrongCount: 0,
+      answers: [],
+    });
+
+    expect(prismaMock.toeicRun.findFirst).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        toeicTestId: 1,
+        mode: 'PRACTICE',
+      },
+      orderBy: { createdAt: 'desc' },
+      include: expect.any(Object),
+    });
+    expect(prismaMock.toeicRun.create).not.toHaveBeenCalled();
+    expect(prismaMock.toeicRun.update).toHaveBeenCalledWith({
+      where: { id: 'run-id' },
+      data: { selectedParts: [1, 2] },
     });
   });
 
