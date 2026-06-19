@@ -224,7 +224,7 @@ export function PracticeGroupScreen({
       return;
     }
 
-    if (showGroupReveal) {
+    if (showGroupReveal && usesDeferredGroupGrading) {
       return;
     }
 
