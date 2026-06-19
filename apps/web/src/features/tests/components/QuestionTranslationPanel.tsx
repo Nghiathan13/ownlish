@@ -1,6 +1,10 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
 import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
 import type { PartTranslationVariant } from "@/features/tests/lib/partPracticeConfig";
+import {
+  showsOptionTranslation,
+  showsQuestionTranslation,
+} from "@/features/tests/lib/partTranslationVisibility";
 import { classNames } from "@/shared/lib/classNames";
 import { RightIcon } from "@/shared/ui/icons/RightIcon";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
@@ -28,13 +32,8 @@ export function QuestionTranslationPanel({
     return null;
   }
 
-  const showQuestion =
-    variant === "question-options" || variant === "content-question-options";
-  const showOptions =
-    variant === "options" ||
-    variant === "question-options" ||
-    variant === "content-options" ||
-    variant === "content-question-options";
+  const showQuestion = showsQuestionTranslation(variant);
+  const showOptions = showsOptionTranslation(variant);
 
   return (
     <PracticeTranslationCard>

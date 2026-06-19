@@ -10,6 +10,10 @@ import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSessi
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
 import { getPartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
+import {
+  showsOptionTranslation,
+  showsQuestionTranslation,
+} from "@/features/tests/lib/partTranslationVisibility";
 import type { PracticeGroup } from "@/features/tests/lib/practiceGroups";
 import {
   getMinQuestionNumberInSession,
@@ -24,6 +28,7 @@ import {
 import { resolveListeningGroupQuestionGridResult } from "@/features/tests/lib/resolveListeningGroupQuestionGridResult";
 import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
 import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
+import { usePracticeBilingual } from "@/features/tests/providers/PracticeExitProvider";
 
 type OptionKey = "A" | "B" | "C" | "D";
 
@@ -49,6 +54,8 @@ export function PracticeGroupScreen({
   navigation,
 }: PracticeGroupScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
+  const practiceBilingual = usePracticeBilingual();
+  const isBilingual = practiceBilingual?.isBilingual ?? false;
   const [currentGroupIndex, setCurrentGroupIndex] = useState(initialGroupIndex);
   const [localSelections, setLocalSelections] = useState<
     Record<number, OptionKey>
@@ -315,6 +322,14 @@ export function PracticeGroupScreen({
       ? showGroupReveal
       : showResult;
 
+    const showInlineBilingual = isBilingual && translationVisible;
+    const showQuestionBilingual =
+      showInlineBilingual &&
+      partConfig.showQuestionInRightPanel &&
+      showsQuestionTranslation(partConfig.translationVariant);
+    const showOptionBilingual =
+      showInlineBilingual && showsOptionTranslation(partConfig.translationVariant);
+
     const options = (
       <>
         <QuestionOptions
@@ -329,6 +344,7 @@ export function PracticeGroupScreen({
           optionCount={question.optionCount}
           options={question.options}
           selectedKey={selectedKey}
+          showBilingual={showOptionBilingual}
           showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
           showResult={showResult}
         />
@@ -339,7 +355,7 @@ export function PracticeGroupScreen({
           options={question.options}
           questionVi={question.questionVi}
           variant={partConfig.translationVariant}
-          visible={translationVisible}
+          visible={translationVisible && !isBilingual}
         />
       </>
     );
@@ -352,6 +368,8 @@ export function PracticeGroupScreen({
             questionText={
               partConfig.showQuestionInRightPanel ? question.question : null
             }
+            questionVi={question.questionVi}
+            showBilingual={showQuestionBilingual}
           />
           {options}
         </div>

@@ -33,12 +33,20 @@ type PracticeQuestionNavContextValue = {
   registerQuestionNav: (state: PracticeQuestionNavState | null) => void;
 };
 
+type PracticeBilingualContextValue = {
+  isBilingual: boolean;
+  toggleBilingual: () => void;
+};
+
 const PracticeExitContext = createContext<PracticeExitContextValue | null>(
   null,
 );
 
 const PracticeQuestionNavContext =
   createContext<PracticeQuestionNavContextValue | null>(null);
+
+const PracticeBilingualContext =
+  createContext<PracticeBilingualContextValue | null>(null);
 
 export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -47,17 +55,25 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const [questionNav, setQuestionNav] = useState<PracticeQuestionNavState | null>(
     null,
   );
+  const [isBilingual, setIsBilingual] = useState(false);
 
   const registerExitHandler = useCallback(
     (handler: ExitHandler | null, title: string | null = null) => {
       handlerRef.current = handler;
       setPracticeTitle(handler ? title : null);
+      if (!handler) {
+        setIsBilingual(false);
+      }
     },
     [],
   );
 
   const registerQuestionNav = useCallback((state: PracticeQuestionNavState | null) => {
     setQuestionNav(state);
+  }, []);
+
+  const toggleBilingual = useCallback(() => {
+    setIsBilingual((current) => !current);
   }, []);
 
   const exit = useCallback(async () => {
@@ -69,6 +85,7 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
       // Exit should not be blocked by best-effort practice cleanup.
     }
 
+    setIsBilingual(false);
     router.push("/tests");
   }, [router]);
 
@@ -89,10 +106,20 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
     [questionNav, registerQuestionNav],
   );
 
+  const bilingualValue = useMemo(
+    () => ({
+      isBilingual,
+      toggleBilingual,
+    }),
+    [isBilingual, toggleBilingual],
+  );
+
   return (
     <PracticeExitContext.Provider value={exitValue}>
       <PracticeQuestionNavContext.Provider value={questionNavValue}>
-        {children}
+        <PracticeBilingualContext.Provider value={bilingualValue}>
+          {children}
+        </PracticeBilingualContext.Provider>
       </PracticeQuestionNavContext.Provider>
     </PracticeExitContext.Provider>
   );
@@ -104,6 +131,10 @@ export function usePracticeExit() {
 
 export function usePracticeQuestionNav() {
   return useContext(PracticeQuestionNavContext);
+}
+
+export function usePracticeBilingual() {
+  return useContext(PracticeBilingualContext);
 }
 
 export function useRegisterPracticeExit(

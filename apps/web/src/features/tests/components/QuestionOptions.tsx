@@ -15,6 +15,7 @@ type QuestionOptionsProps = {
   isSubmitting?: boolean;
   isLocked?: boolean;
   showEnglishTextBeforeAnswer?: boolean;
+  showBilingual?: boolean;
   showResult?: boolean;
   onSelect: (key: "A" | "B" | "C" | "D") => void;
 };
@@ -38,15 +39,30 @@ function getOptionEnglishText(
 type OptionLabelProps = {
   optionKey: (typeof OPTION_KEYS)[number];
   englishText: string | null;
+  vietnameseText: string | null;
   showEnglishText: boolean;
+  showBilingual: boolean;
 };
 
-function OptionLabel({ optionKey, englishText, showEnglishText }: OptionLabelProps) {
+function OptionLabel({
+  optionKey,
+  englishText,
+  vietnameseText,
+  showEnglishText,
+  showBilingual,
+}: OptionLabelProps) {
   return (
-    <span className="text-base font-normal leading-snug tracking-normal">
-      {optionKey}
-      {englishText ? (
-        <span className={showEnglishText ? "" : "invisible"}>. {englishText}</span>
+    <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-base font-normal leading-snug tracking-normal">
+      <span>
+        {optionKey}
+        {englishText ? (
+          <span className={showEnglishText ? "" : "invisible"}>. {englishText}</span>
+        ) : null}
+      </span>
+      {showBilingual && vietnameseText ? (
+        <span className="text-muted-foreground">
+          {optionKey}. {vietnameseText}
+        </span>
       ) : null}
     </span>
   );
@@ -69,19 +85,31 @@ function OptionAnswerIcon({
 
   if (isCorrect) {
     return (
-      <RightIcon className={classNames(statusColorClasses.success.text, iconOffsetClass)} />
+      <RightIcon
+        className={classNames(
+          "mt-0.5 shrink-0",
+          statusColorClasses.success.text,
+          iconOffsetClass,
+        )}
+      />
     );
   }
 
   if (isWrong) {
     return (
-      <WrongIcon className={classNames(statusColorClasses.danger.text, iconOffsetClass)} />
+      <WrongIcon
+        className={classNames(
+          "mt-0.5 shrink-0",
+          statusColorClasses.danger.text,
+          iconOffsetClass,
+        )}
+      />
     );
   }
 
   return (
     <CircleIcon
-      className={classNames("text-foreground", iconOffsetClass)}
+      className={classNames("mt-0.5 shrink-0 text-foreground", iconOffsetClass)}
       selected={isSelected && !showGrading}
     />
   );
@@ -95,6 +123,7 @@ export function QuestionOptions({
   isSubmitting = false,
   isLocked = false,
   showEnglishTextBeforeAnswer = false,
+  showBilingual = false,
   showResult = true,
   onSelect,
 }: QuestionOptionsProps) {
@@ -109,12 +138,14 @@ export function QuestionOptions({
         const isWrong = showGrading && isSelected && answerKey !== null && !isCorrect;
         const isSelectedHighlight = !locked && isSelected;
         const englishText = getOptionEnglishText(key, options);
+        const viKey = `${key}_vi` as keyof ToeicQuestionOptions;
+        const vietnameseText = options[viKey]?.trim() || null;
         const showEnglishText =
           Boolean(englishText) &&
           (showEnglishTextBeforeAnswer || locked);
 
         const className = classNames(
-          "flex min-h-10 items-center gap-2 rounded-lg border px-4 py-2 text-left font-inherit select-text",
+          "flex min-h-10 items-start gap-2 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
           isCorrect && statusColorClasses.success.surface,
           isWrong && statusColorClasses.danger.surface,
@@ -140,7 +171,9 @@ export function QuestionOptions({
             <OptionLabel
               englishText={englishText}
               optionKey={key}
+              showBilingual={showBilingual}
               showEnglishText={showEnglishText}
+              vietnameseText={vietnameseText}
             />
           </>
         );

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { isImmersiveTestPath } from "@/features/tests/lib/isImmersiveTestPath";
 import {
+  usePracticeBilingual,
   usePracticeExit,
   usePracticeQuestionNav,
 } from "@/features/tests/providers/PracticeExitProvider";
@@ -20,6 +21,8 @@ export function Navbar() {
   const { logout, status, user } = useAuthSession();
   const practiceExit = usePracticeExit();
   const practiceQuestionNav = usePracticeQuestionNav();
+  const practiceBilingual = usePracticeBilingual();
+  const isBilingual = practiceBilingual?.isBilingual ?? false;
   const questionNav = practiceQuestionNav?.questionNav ?? null;
   const isImmersivePractice = isImmersiveTestPath(pathname);
 
@@ -62,7 +65,14 @@ export function Navbar() {
                   {practiceExit.practiceTitle}
                 </span>
                 <button
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground"
+                  aria-pressed={isBilingual}
+                  className={classNames(
+                    "inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-base font-normal",
+                    isBilingual
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-border bg-transparent text-foreground",
+                  )}
+                  onClick={() => practiceBilingual?.toggleBilingual()}
                   type="button"
                 >
                   <BilingualIcon className="size-4" />
