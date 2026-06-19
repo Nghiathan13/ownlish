@@ -83,9 +83,9 @@ export function TestCard({
               <span
                 aria-hidden
                 className={classNames(
-                  "pointer-events-none absolute -right-1 -top-1",
-                  "inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 py-px",
-                  "text-[10px] font-semibold leading-none tabular-nums text-background",
+                  "pointer-events-none absolute -right-0.75 -top-0.75",
+                  "inline-flex min-h-3 min-w-3 items-center justify-center rounded-full px-1 py-px",
+                  "text-[8px] font-semibold leading-none tabular-nums text-background",
                   "bg-red-700 dark:bg-red-400",
                 )}
               >
