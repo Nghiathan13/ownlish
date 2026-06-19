@@ -74,7 +74,7 @@ export class PracticeService {
   async createSession(userId: string, dto: CreatePracticeSessionDto) {
     const selectedParts = this.resolveSelectedParts(dto);
     const mode =
-      dto.mode === 'wrong_questions'
+      dto.mode === 'review_wrong'
         ? ToeicRunMode.WRONG_REVIEW
         : ToeicRunMode.PRACTICE;
 
@@ -117,8 +117,7 @@ export class PracticeService {
   }
 
   private resolveSelectedParts(dto: CreatePracticeSessionDto): number[] {
-    const parts = dto.partNumbers ?? (dto.partNumber ? [dto.partNumber] : []);
-    const selectedParts = [...new Set(parts)].sort((a, b) => a - b);
+    const selectedParts = [...new Set(dto.partNumbers)].sort((a, b) => a - b);
 
     if (selectedParts.length === 0) {
       throw new BadRequestException('Select at least one test part.');
