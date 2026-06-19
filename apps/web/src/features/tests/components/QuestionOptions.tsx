@@ -1,14 +1,9 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
-import {
-  practiceCorrectClasses,
-  practiceCorrectStatClasses,
-  practiceWrongClasses,
-  practiceWrongStatClasses,
-} from "@/features/tests/lib/practiceGradingClasses";
 import { classNames } from "@/shared/lib/classNames";
 import { CircleIcon } from "@/shared/ui/icons/CircleIcon";
 import { RightIcon } from "@/shared/ui/icons/RightIcon";
 import { WrongIcon } from "@/shared/ui/icons/WrongIcon";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
 
@@ -74,13 +69,13 @@ function OptionAnswerIcon({
 
   if (isCorrect) {
     return (
-      <RightIcon className={classNames(practiceCorrectStatClasses, iconOffsetClass)} />
+      <RightIcon className={classNames(statusColorClasses.success.text, iconOffsetClass)} />
     );
   }
 
   if (isWrong) {
     return (
-      <WrongIcon className={classNames(practiceWrongStatClasses, iconOffsetClass)} />
+      <WrongIcon className={classNames(statusColorClasses.danger.text, iconOffsetClass)} />
     );
   }
 
@@ -121,8 +116,8 @@ export function QuestionOptions({
         const className = classNames(
           "flex min-h-10 items-center gap-2 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
-          isCorrect && practiceCorrectClasses,
-          isWrong && practiceWrongClasses,
+          isCorrect && statusColorClasses.success.surface,
+          isWrong && statusColorClasses.danger.surface,
           isSelectedHighlight && "border-foreground bg-muted",
           locked &&
             !isCorrect &&

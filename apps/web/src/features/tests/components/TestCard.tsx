@@ -5,16 +5,13 @@ import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { Button } from "@/shared/ui/Button";
-import {
-  practiceCorrectStatClasses,
-  practiceWrongStatClasses,
-} from "@/features/tests/lib/practiceGradingClasses";
 import { classNames } from "@/shared/lib/classNames";
 import type { ToeicTestSummary } from "@/features/tests/api/types";
 import {
   getTestCorrectCount,
   getTestWrongCount,
 } from "@/features/tests/lib/toeicTestProgress";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type TestCardProps = {
   test: ToeicTestSummary;
@@ -48,14 +45,14 @@ export function TestCard({
                   {answeredQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CheckIcon className={classNames("size-4", practiceCorrectStatClasses)} />
-                  <span className={practiceCorrectStatClasses}>
+                  <CheckIcon className={classNames("size-4", statusColorClasses.success.text)} />
+                  <span className={statusColorClasses.success.text}>
                     {testCorrectCount}
                   </span>
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <CloseIcon className={classNames("size-4", practiceWrongStatClasses)} />
-                  <span className={practiceWrongStatClasses}>
+                  <CloseIcon className={classNames("size-4", statusColorClasses.danger.text)} />
+                  <span className={statusColorClasses.danger.text}>
                     {testWrongCount}
                   </span>
                 </span>

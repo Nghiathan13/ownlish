@@ -3,10 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { classNames } from "@/shared/lib/classNames";
-import {
-  practiceCorrectClasses,
-  practiceWrongClasses,
-} from "@/features/tests/lib/practiceGradingClasses";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import type { QuestionGridSection } from "@/features/tests/lib/practiceQuestionGrid";
 
 type PracticeQuestionGridPanelProps = {
@@ -58,8 +55,8 @@ export function PracticeQuestionGridPanel({
                   <button
                     className={classNames(
                       "flex size-10 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums",
-                      cell.result === "correct" && practiceCorrectClasses,
-                      cell.result === "wrong" && practiceWrongClasses,
+                      cell.result === "correct" && statusColorClasses.success.surface,
+                      cell.result === "wrong" && statusColorClasses.danger.surface,
                       cell.isActive &&
                         "ring-1 ring-foreground ring-offset-2 ring-offset-background",
                       cell.isActive &&

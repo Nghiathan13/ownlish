@@ -5,6 +5,7 @@ import type { ToeicQuestionGroup } from "../api/types";
 const groups: ToeicQuestionGroup[] = [
   {
     id: 1,
+    partNumber: 1,
     questionStart: 1,
     questionEnd: 2,
     groupType: null,

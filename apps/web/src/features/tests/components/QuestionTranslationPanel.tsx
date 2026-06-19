@@ -1,9 +1,9 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
 import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
-import { practiceCorrectStatClasses } from "@/features/tests/lib/practiceGradingClasses";
 import type { PartTranslationVariant } from "@/features/tests/lib/partPracticeConfig";
 import { classNames } from "@/shared/lib/classNames";
 import { RightIcon } from "@/shared/ui/icons/RightIcon";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type QuestionTranslationPanelProps = {
   options: ToeicQuestionOptions;
@@ -55,14 +55,14 @@ export function QuestionTranslationPanel({
               <p
                 className={classNames(
                   "flex items-center gap-2",
-                  isCorrect && practiceCorrectStatClasses,
+                  isCorrect && statusColorClasses.success.text,
                 )}
                 key={key}
               >
                 {isCorrect ? (
                   <RightIcon
                     className={classNames(
-                      practiceCorrectStatClasses,
+                      statusColorClasses.success.text,
                       "-translate-y-[0.5px]",
                     )}
                   />

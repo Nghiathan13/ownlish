@@ -8,9 +8,9 @@ import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { classNames } from "@/shared/lib/classNames";
 import type { PracticeMode, ToeicTestSummary } from "@/features/tests/api/types";
-import { practiceWrongStatClasses } from "@/features/tests/lib/practiceGradingClasses";
 import { isSupportedPracticePart } from "@/features/tests/lib/partPracticeConfig";
 import { getPartProgress } from "@/features/tests/lib/toeicTestProgress";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import {
   ALL_TOEIC_PART_NUMBERS,
   areAllPartsSelected,
@@ -85,8 +85,8 @@ function PartCheckboxOption({
         <span className="text-base font-normal">{label}</span>
         {wrongCount > 0 ? (
           <span className="inline-flex shrink-0 items-center gap-1">
-            <CloseIcon className={classNames("size-4", practiceWrongStatClasses)} />
-            <span className={practiceWrongStatClasses}>{wrongCount}</span>
+            <CloseIcon className={classNames("size-4", statusColorClasses.danger.text)} />
+            <span className={statusColorClasses.danger.text}>{wrongCount}</span>
           </span>
         ) : null}
       </span>
