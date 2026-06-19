@@ -21,7 +21,7 @@ export function PracticeQuestionPrompt({
         {text ? ` ${text}` : null}
       </p>
       {showBilingual && viText ? (
-        <p className="whitespace-pre-wrap text-base leading-relaxed text-muted-foreground select-text">
+        <p className="whitespace-pre-wrap text-base font-bold leading-relaxed select-text">
           {viText}
         </p>
       ) : null}

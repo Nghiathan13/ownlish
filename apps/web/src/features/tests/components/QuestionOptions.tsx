@@ -60,9 +60,7 @@ function OptionLabel({
         ) : null}
       </span>
       {showBilingual && vietnameseText ? (
-        <span className="text-muted-foreground">
-          {optionKey}. {vietnameseText}
-        </span>
+        <span className="text-muted-foreground">{vietnameseText}</span>
       ) : null}
     </span>
   );
