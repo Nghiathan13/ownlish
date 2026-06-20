@@ -114,7 +114,6 @@ export function useTestsOverview() {
       );
 
       router.push(`/tests/${testId}/${mode}?parts=${normalizedParts.join(",")}`);
-      setSelectedTest(null);
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start practice."));
     } finally {
