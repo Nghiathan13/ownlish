@@ -16,8 +16,9 @@ export function BilingualTranslationText({
   return (
     <div
       className={classNames(
-        "min-w-0 flex-1 border-l-[3px] pl-2 select-text",
+        "min-w-0 flex-1 rounded-r-md border-l-[3px] py-1 pl-2 pr-2 select-text",
         statusColorClasses.skyblue.border,
+        statusColorClasses.skyblue.background,
         statusColorClasses.skyblue.text,
         variant === "question" &&
           "whitespace-pre-wrap text-base font-bold",
