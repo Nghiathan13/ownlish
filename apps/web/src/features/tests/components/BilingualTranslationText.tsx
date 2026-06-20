@@ -16,7 +16,7 @@ export function BilingualTranslationText({
   return (
     <div
       className={classNames(
-        "min-w-0 flex-1 rounded-r-md border-l-[3px] py-1 pl-2 pr-2 select-text",
+        "w-fit max-w-full self-start rounded-r-md border-l-[3px] py-1 pl-2 pr-2 select-text",
         statusColorClasses.skyblue.border,
         statusColorClasses.skyblue.background,
         statusColorClasses.skyblue.text,
