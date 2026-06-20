@@ -5,6 +5,7 @@ import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
+import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { Button } from "@/shared/ui/Button";
 import { classNames } from "@/shared/lib/classNames";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
@@ -110,10 +111,21 @@ export function TestCard({
           </button>
         </div>
       </div>
-      <Button className="gap-2 self-start px-4 py-2" onClick={onPractice} type="button">
-        <PracticeIcon className="size-5" />
-        Practice
-      </Button>
+      <div className="flex items-center gap-2 self-start">
+        <button
+          className={classNames(
+            "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground transition hover:border-foreground",
+          )}
+          type="button"
+        >
+          <StartIcon className="size-5" />
+          Mock
+        </button>
+        <Button className="gap-2 px-4 py-2" onClick={onPractice} type="button">
+          <PracticeIcon className="size-5" />
+          Practice
+        </Button>
+      </div>
     </article>
   );
 }
