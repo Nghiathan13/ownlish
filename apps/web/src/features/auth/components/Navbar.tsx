@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { isImmersiveTestPath } from "@/features/tests/lib/isImmersiveTestPath";
+import { isImmersiveTestPath } from "@/features/tests/shared/lib/isImmersiveTestPath";
 import {
   usePracticeBilingual,
   usePracticeExit,
   usePracticeQuestionNav,
-} from "@/features/tests/providers/PracticeExitProvider";
+} from "@/features/tests/run/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";

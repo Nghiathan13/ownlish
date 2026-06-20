@@ -1,5 +1,5 @@
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { TestsPage } from "@/features/tests/components/overview/TestsPage";
+import { TestsPage } from "@/features/tests/overview/components/TestsPage";
 
 export default function TestsRoute() {
   return (
