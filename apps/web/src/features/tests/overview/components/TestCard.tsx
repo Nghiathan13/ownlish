@@ -111,17 +111,17 @@ export function TestCard({
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-2 self-start">
+      <div className="flex w-full gap-2">
         <button
           className={classNames(
-            "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground transition hover:border-foreground",
+            "inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground transition hover:border-foreground",
           )}
           type="button"
         >
           <StartIcon className="size-5" />
           Mock
         </button>
-        <Button className="gap-2 px-4 py-2" onClick={onPractice} type="button">
+        <Button className="flex-1 gap-2 px-4 py-2" onClick={onPractice} type="button">
           <PracticeIcon className="size-5" />
           Practice
         </Button>

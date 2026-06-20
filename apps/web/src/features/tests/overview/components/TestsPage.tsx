@@ -45,7 +45,7 @@ export function TestsPage() {
         ) : overview.tests.length === 0 ? (
           <p className="text-muted-foreground">No tests available yet.</p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {overview.tests.map((test) => (
               <TestCard
                 isClearingHistory={overview.clearingTestId === test.id}
