@@ -1,9 +1,11 @@
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import type { PartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
 
 type PracticeLeftPanelProps = {
   partConfig: PartPracticeConfig;
+  partNumber: number;
   group: ToeicQuestionGroup;
   questionText: string | null;
   questionNumber: number;
@@ -18,6 +20,7 @@ type PracticeLeftPanelProps = {
 
 export function PracticeLeftPanel({
   partConfig,
+  partNumber,
   group,
   questionText,
   questionNumber,
@@ -29,6 +32,7 @@ export function PracticeLeftPanel({
   showContextTranslation = false,
   plain = false,
 }: PracticeLeftPanelProps) {
+  const instruction = getPartInstruction(partNumber, group);
   const showAudio =
     partConfig.leftPanel !== "none" &&
     (partConfig.leftPanel === "audio-image" ||
@@ -41,6 +45,10 @@ export function PracticeLeftPanel({
 
   const content = (
     <>
+      {instruction ? (
+        <p className="text-base text-muted-foreground select-text">{instruction}</p>
+      ) : null}
+
       {showAudio ? (
         audioUrl ? (
           <audio

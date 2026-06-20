@@ -275,6 +275,7 @@ export function PracticeGroupScreen({
       mediaError={signedMedia.mediaError}
       onMediaError={signedMedia.handleMediaError}
       partConfig={partConfig}
+      partNumber={partNumber}
       plain={usesSplitPlainLayout}
       questionNumber={currentGroup.group.questionStart}
       questionText={null}
