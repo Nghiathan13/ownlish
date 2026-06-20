@@ -1,23 +1,26 @@
-import type { PracticeSessionAnswer } from "@/features/tests/shared/api/types";
+import type { ToeicQuestion } from "@/features/tests/shared/api/types";
+
+export type PracticeAnswer = Pick<
+  ToeicQuestion,
+  "answerKey" | "isCorrect" | "selectedKey" | "status"
+>;
 
 export function hasPracticeSelection(
-  answer?: PracticeSessionAnswer | null,
+  answer?: PracticeAnswer | null,
 ): boolean {
   return answer?.selectedKey != null;
 }
 
 export function isPracticeAnswerGraded(
-  answer?: PracticeSessionAnswer | null,
+  answer?: PracticeAnswer | null,
 ): boolean {
-  return (
-    answer?.isCorrect !== undefined && answer.answerKey !== undefined
-  );
+  return answer?.status === "right" || answer?.status === "wrong";
 }
 
 export type QuestionGridResult = "correct" | "wrong" | null;
 
 export function getQuestionGridResultFromAnswer(
-  answer?: PracticeSessionAnswer | null,
+  answer?: PracticeAnswer | null,
 ): QuestionGridResult {
   if (!answer || !isPracticeAnswerGraded(answer)) {
     return null;

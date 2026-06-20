@@ -1,4 +1,5 @@
-import {
+ import {
+  isBoolean,
   isNullableString,
   isNumber,
   isRecord,
@@ -8,6 +9,29 @@ import type {
   ToeicQuestionGroup,
   ToeicQuestionOptions,
 } from "@/features/tests/shared/api/types";
+
+function parseOptionKey(value: unknown): "A" | "B" | "C" | "D" | null {
+  const normalized = typeof value === "string" ? value.trim().toUpperCase() : "";
+
+  return normalized === "A" ||
+    normalized === "B" ||
+    normalized === "C" ||
+    normalized === "D"
+    ? normalized
+    : null;
+}
+
+function parseQuestionStatus(
+  value: unknown,
+): "selected" | "right" | "wrong" | null {
+  return value === "selected" || value === "right" || value === "wrong"
+    ? value
+    : null;
+}
+
+function parseGroupStatus(value: unknown): "right" | "wrong" | null {
+  return value === "right" || value === "wrong" ? value : null;
+}
 
 function parseOptions(value: unknown): ToeicQuestionOptions | null {
   if (!isRecord(value)) {
@@ -32,17 +56,8 @@ function parseQuestion(value: unknown): ToeicQuestion | null {
   }
 
   const options = parseOptions(value.options);
-  const rawAnswerKey =
-    typeof value.answerKey === "string"
-      ? value.answerKey.trim().toUpperCase()
-      : null;
-  const answerKey =
-    rawAnswerKey === "A" ||
-    rawAnswerKey === "B" ||
-    rawAnswerKey === "C" ||
-    rawAnswerKey === "D"
-      ? rawAnswerKey
-      : null;
+  const answerKey = parseOptionKey(value.answerKey);
+  const selectedKey = parseOptionKey(value.selectedKey);
 
   if (
     !isNumber(value.id) ||
@@ -61,6 +76,9 @@ function parseQuestion(value: unknown): ToeicQuestion | null {
     options,
     optionCount: value.optionCount,
     answerKey,
+    selectedKey,
+    status: parseQuestionStatus(value.status),
+    isCorrect: isBoolean(value.isCorrect) ? value.isCorrect : null,
   };
 }
 
@@ -84,6 +102,7 @@ export function parseToeicQuestionGroup(
     partNumber: isNumber(value.partNumber) ? value.partNumber : null,
     questionStart: isNumber(value.questionStart) ? value.questionStart : 0,
     questionEnd: isNumber(value.questionEnd) ? value.questionEnd : 0,
+    groupStatus: parseGroupStatus(value.groupStatus),
     groupType: isNullableString(value.groupType) ? value.groupType : null,
     accent: isNullableString(value.accent) ? value.accent : null,
     content: isNullableString(value.content) ? value.content : null,

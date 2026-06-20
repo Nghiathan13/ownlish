@@ -24,6 +24,9 @@ export type ToeicQuestion = {
   options: ToeicQuestionOptions;
   optionCount: number;
   answerKey: "A" | "B" | "C" | "D" | null;
+  selectedKey: "A" | "B" | "C" | "D" | null;
+  status: "selected" | "right" | "wrong" | null;
+  isCorrect: boolean | null;
 };
 
 export type ToeicQuestionGroup = {
@@ -31,6 +34,7 @@ export type ToeicQuestionGroup = {
   partNumber: number | null;
   questionStart: number;
   questionEnd: number;
+  groupStatus: "right" | "wrong" | null;
   groupType: string | null;
   accent: string | null;
   content: string | null;
@@ -57,13 +61,6 @@ export type SubmitAnswerResult = {
   correctOptionVi?: string | null;
 };
 
-export type PracticeSessionAnswer = {
-  toeicQuestionId: number;
-  selectedKey: "A" | "B" | "C" | "D";
-  answerKey?: "A" | "B" | "C" | "D";
-  isCorrect?: boolean;
-};
-
 export type PracticeSessionResult = {
   sessionId: string;
   mode: PracticeMode;
@@ -72,7 +69,6 @@ export type PracticeSessionResult = {
   correctCount: number;
   wrongCount: number;
   groups: ToeicQuestionGroup[];
-  answers: PracticeSessionAnswer[];
 };
 
 export type PracticeMode = "practice" | "review_wrong";

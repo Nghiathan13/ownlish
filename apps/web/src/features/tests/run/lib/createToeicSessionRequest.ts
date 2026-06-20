@@ -1,10 +1,9 @@
 import { invalidApiResponse } from "@/shared/api/http";
-import { isBoolean, isNumber, isRecord, isString } from "@/shared/lib/parse";
+import { isNumber, isRecord, isString } from "@/shared/lib/parse";
 import { postToeicSession } from "@/features/tests/run/api/postToeicSession";
 import { parseToeicQuestionGroup } from "@/features/tests/shared/api/parseToeicQuestionGroup";
 import type {
   PracticeMode,
-  PracticeSessionAnswer,
   PracticeSessionResult,
   ToeicQuestionGroup,
 } from "@/features/tests/shared/api/types";
@@ -15,52 +14,6 @@ type CreateToeicSessionRequestParams = {
   partNumbers: number[];
   mode: PracticeMode;
 };
-
-function isOptionKey(value: string): value is "A" | "B" | "C" | "D" {
-  return value === "A" || value === "B" || value === "C" || value === "D";
-}
-
-function parseToeicSessionAnswers(value: unknown): PracticeSessionAnswer[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.flatMap((answer) => {
-    if (!isRecord(answer)) {
-      return [];
-    }
-
-    const selectedKey = isString(answer.selectedKey)
-      ? answer.selectedKey.trim().toUpperCase()
-      : "";
-
-    if (!isNumber(answer.toeicQuestionId) || !isOptionKey(selectedKey)) {
-      return [];
-    }
-
-    const answerKey = isString(answer.answerKey)
-      ? answer.answerKey.trim().toUpperCase()
-      : "";
-
-    if (!isOptionKey(answerKey) || !isBoolean(answer.isCorrect)) {
-      return [
-        {
-          toeicQuestionId: answer.toeicQuestionId,
-          selectedKey,
-        },
-      ];
-    }
-
-    return [
-      {
-        toeicQuestionId: answer.toeicQuestionId,
-        selectedKey,
-        answerKey,
-        isCorrect: answer.isCorrect,
-      },
-    ];
-  });
-}
 
 function parseToeicSessionResult(body: unknown): PracticeSessionResult {
   if (
@@ -89,7 +42,6 @@ function parseToeicSessionResult(body: unknown): PracticeSessionResult {
     correctCount: body.correctCount,
     wrongCount: body.wrongCount,
     groups,
-    answers: parseToeicSessionAnswers(body.answers),
   };
 }
 

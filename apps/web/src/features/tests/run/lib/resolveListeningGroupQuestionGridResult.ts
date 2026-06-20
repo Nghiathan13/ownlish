@@ -1,7 +1,7 @@
-import type { PracticeSessionAnswer } from "@/features/tests/shared/api/types";
 import {
   getQuestionGridResultFromAnswer,
   isPracticeAnswerGraded,
+  type PracticeAnswer,
   type QuestionGridResult,
 } from "@/features/tests/run/lib/practiceAnswers";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
@@ -14,7 +14,7 @@ type ResolveListeningGroupQuestionGridResultParams = {
   usesDeferredGroupGrading: boolean;
   currentGroupId: number | null;
   localSelections: Readonly<Record<number, OptionKey>>;
-  getPracticeAnswer: (questionId: number) => PracticeSessionAnswer | undefined;
+  getPracticeAnswer: (questionId: number) => PracticeAnswer | undefined;
 };
 
 function findGroupForQuestion(groups: PracticeGroup[], questionId: number) {
@@ -27,7 +27,7 @@ function isGroupRevealedForGrid(
   group: PracticeGroup,
   currentGroupId: number | null,
   localSelections: Readonly<Record<number, OptionKey>>,
-  getPracticeAnswer: (questionId: number) => PracticeSessionAnswer | undefined,
+  getPracticeAnswer: (questionId: number) => PracticeAnswer | undefined,
 ) {
   if (group.group.id === currentGroupId) {
     const allQuestionsSelected = group.questions.every((question) => {

@@ -6,15 +6,18 @@ import { completeToeicSession } from "@/features/tests/run/api/completeToeicSess
 import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
 import type {
   PracticeMode,
-  PracticeSessionAnswer,
   PracticeSessionResult,
   SubmitAnswerResult,
+  ToeicQuestion,
+  ToeicQuestionGroup,
 } from "@/features/tests/shared/api/types";
 import {
   buildAnswerKeyMap,
   type OptionKey,
 } from "@/features/tests/run/lib/answerKeyMap";
-import { isPracticeAnswerGraded } from "@/features/tests/run/lib/practiceAnswers";
+import {
+  isPracticeAnswerGraded,
+} from "@/features/tests/run/lib/practiceAnswers";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import { createToeicSessionRequest } from "@/features/tests/run/lib/createToeicSessionRequest";
@@ -58,92 +61,108 @@ export function getPracticeSessionQueryKey(
   return ["practice-session", testId, getPracticePartsKey(parts), mode] as const;
 }
 
-function toAnswerMap(answers: PracticeSessionAnswer[]) {
-  return new Map(answers.map((answer) => [answer.toeicQuestionId, answer]));
+function toAnswerMap(groups: ToeicQuestionGroup[]) {
+  return new Map(
+    groups.flatMap((group) =>
+      group.questions.map((question) => [question.id, question] as const),
+    ),
+  );
+}
+
+function getNextGroupStatus(
+  questions: ToeicQuestion[],
+): ToeicQuestionGroup["groupStatus"] {
+  if (!questions.every((question) => isPracticeAnswerGraded(question))) {
+    return null;
+  }
+
+  return questions.some((question) => question.status === "wrong")
+    ? "wrong"
+    : "right";
+}
+
+function updateQuestion(
+  current: PracticeSessionResult,
+  toeicQuestionId: number,
+  updater: (question: ToeicQuestion) => ToeicQuestion,
+  options?: { updateGroupStatus?: boolean },
+): PracticeSessionResult {
+  return {
+    ...current,
+    groups: current.groups.map((group) => {
+      let changed = false;
+      const questions = group.questions.map((question) => {
+        if (question.id !== toeicQuestionId) {
+          return question;
+        }
+
+        changed = true;
+        return updater(question);
+      });
+
+      if (!changed) {
+        return group;
+      }
+
+      return {
+        ...group,
+        groupStatus: options?.updateGroupStatus
+          ? getNextGroupStatus(questions)
+          : group.groupStatus,
+        questions,
+      };
+    }),
+  };
 }
 
 function applyGradedAnswer(
   current: PracticeSessionResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-  answerKey: OptionKey,
   isCorrect: boolean,
-  existingAnswer?: PracticeSessionAnswer,
 ): PracticeSessionResult {
-  const gradedAnswer: PracticeSessionAnswer = {
+  return updateQuestion(
+    current,
     toeicQuestionId,
-    selectedKey,
-    answerKey,
-    isCorrect,
-  };
-
-  if (existingAnswer) {
-    return {
-      ...current,
-      answers: current.answers.map((answer) =>
-        answer.toeicQuestionId === toeicQuestionId ? gradedAnswer : answer,
-      ),
-    };
-  }
-
-  return {
-    ...current,
-    answers: [...current.answers, gradedAnswer],
-  };
+    (question) => ({
+      ...question,
+      selectedKey,
+      status: isCorrect ? "right" : "wrong",
+      isCorrect,
+    }),
+    { updateGroupStatus: true },
+  );
 }
 
 function applySelectionOnly(
   current: PracticeSessionResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-  existingAnswer?: PracticeSessionAnswer,
 ): PracticeSessionResult {
-  const nextAnswer: PracticeSessionAnswer = {
-    toeicQuestionId,
+  return updateQuestion(current, toeicQuestionId, (question) => ({
+    ...question,
     selectedKey,
-  };
-
-  if (existingAnswer) {
-    return {
-      ...current,
-      answers: current.answers.map((answer) =>
-        answer.toeicQuestionId === toeicQuestionId ? nextAnswer : answer,
-      ),
-    };
-  }
-
-  return {
-    ...current,
-    answers: [...current.answers, nextAnswer],
-  };
+    status: "selected",
+    isCorrect: null,
+  }));
 }
 
 function revertGradedAnswer(
   current: PracticeSessionResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-  existingAnswer?: PracticeSessionAnswer,
 ): PracticeSessionResult {
-  const nextAnswer: PracticeSessionAnswer = {
+  return updateQuestion(
+    current,
     toeicQuestionId,
-    selectedKey,
-  };
-
-  if (!existingAnswer || !isPracticeAnswerGraded(existingAnswer)) {
-    return applySelectionOnly(
-      current,
-      toeicQuestionId,
+    (question) => ({
+      ...question,
       selectedKey,
-      existingAnswer,
-    );
-  }
-
-  return {
-    ...current,
-    answers: current.answers.map((answer) =>
-      answer.toeicQuestionId === toeicQuestionId ? nextAnswer : answer,
-    ),
-  };
+      status: "selected",
+      isCorrect: null,
+    }),
+    { updateGroupStatus: true },
+  );
 }
 
 export function usePracticeSession({
@@ -197,8 +216,8 @@ export function usePracticeSession({
   );
 
   const answersByQuestionId = useMemo(
-    () => toAnswerMap(sessionData?.answers ?? []),
-    [sessionData?.answers],
+    () => toAnswerMap(sessionData?.groups ?? []),
+    [sessionData?.groups],
   );
 
   const getAnswer = useCallback(
@@ -261,16 +280,7 @@ export function usePracticeSession({
               return current;
             }
 
-            const existing = current.answers.find(
-              (answer) => answer.toeicQuestionId === toeicQuestionId,
-            );
-
-            return applySelectionOnly(
-              current,
-              toeicQuestionId,
-              selectedKey,
-              existing,
-            );
+            return applySelectionOnly(current, toeicQuestionId, selectedKey);
           });
 
           return result;
@@ -332,36 +342,20 @@ export function usePracticeSession({
           return current;
         }
 
-        const existingAnswer = current.answers.find(
-          (answer) => answer.toeicQuestionId === toeicQuestionId,
-        );
-
         if (options?.deferGrade) {
-          return applySelectionOnly(
-            current,
-            toeicQuestionId,
-            selectedKey,
-            existingAnswer,
-          );
+          return applySelectionOnly(current, toeicQuestionId, selectedKey);
         }
 
         const answerKey = answerKeyMap?.get(toeicQuestionId);
         if (!answerKey) {
-          return applySelectionOnly(
-            current,
-            toeicQuestionId,
-            selectedKey,
-            existingAnswer,
-          );
+          return applySelectionOnly(current, toeicQuestionId, selectedKey);
         }
 
         return applyGradedAnswer(
           current,
           toeicQuestionId,
           selectedKey,
-          answerKey,
           selectedKey === answerKey,
-          existingAnswer,
         );
       });
     },
@@ -389,17 +383,11 @@ export function usePracticeSession({
             continue;
           }
 
-          const existingAnswer = next.answers.find(
-            (answer) => answer.toeicQuestionId === entry.toeicQuestionId,
-          );
-
           next = applyGradedAnswer(
             next,
             entry.toeicQuestionId,
             entry.selectedKey,
-            answerKey,
             entry.selectedKey === answerKey,
-            existingAnswer,
           );
         }
 
@@ -421,15 +409,10 @@ export function usePracticeSession({
         let next = current;
 
         for (const entry of entries) {
-          const existingAnswer = next.answers.find(
-            (answer) => answer.toeicQuestionId === entry.toeicQuestionId,
-          );
-
           next = revertGradedAnswer(
             next,
             entry.toeicQuestionId,
             entry.selectedKey,
-            existingAnswer,
           );
         }
 
@@ -524,7 +507,6 @@ export function usePracticeSession({
   return {
     sessionId,
     groups: sessionData?.groups ?? [],
-    answers: sessionData?.answers ?? [],
     getAnswer,
     isStarting: sessionQuery.isLoading,
     startError: sessionQuery.error
