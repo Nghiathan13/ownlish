@@ -16,11 +16,11 @@ export function BilingualTranslationText({
   return (
     <div
       className={classNames(
-        "min-w-0 flex-1 border-l-2 pl-2 select-text",
+        "min-w-0 flex-1 border-l-[3px] pl-2 select-text",
         statusColorClasses.amber.border,
         statusColorClasses.amber.text,
         variant === "question" &&
-          "whitespace-pre-wrap text-base font-bold leading-relaxed",
+          "whitespace-pre-wrap text-base font-bold",
         className,
       )}
     >

@@ -386,7 +386,7 @@ export function PracticeGroupScreen({
             <h3 className="mb-2 text-base font-semibold">
               Question {question.questionNumber}
             </h3>
-            <p className="text-base leading-relaxed select-text">
+            <p className="text-base select-text">
               {question.question}
             </p>
           </div>

@@ -18,7 +18,7 @@ export function PracticeQuestionPrompt({
 
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-base font-bold leading-relaxed select-text">
+      <p className="text-base font-bold select-text">
         <span className="tabular-nums">{questionNumber}.</span>
         {text ? ` ${text}` : null}
       </p>

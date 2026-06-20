@@ -92,7 +92,7 @@ export function PracticeLeftPanel({
       {partConfig.leftPanel === "question" ? (
         <div className="space-y-2">
           <h3 className="text-base font-semibold">Question</h3>
-          <p className="whitespace-pre-wrap text-base leading-relaxed select-text">
+          <p className="whitespace-pre-wrap text-base select-text">
             {questionText?.trim() || "No question text available."}
           </p>
         </div>
