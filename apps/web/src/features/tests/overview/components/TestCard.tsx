@@ -12,13 +12,14 @@ import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
 import {
   getTestCorrectCount,
   getTestWrongCount,
-} from "@/features/tests/overview/lib/toeicTestProgress";
+} from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type TestCardProps = {
   test: ToeicTestSummary;
   isClearingHistory?: boolean;
   onClearHistory: () => void;
+  onMock: () => void;
   onPractice: () => void;
   onReviewWrong: () => void;
 };
@@ -29,6 +30,7 @@ export function TestCard({
   test,
   isClearingHistory = false,
   onClearHistory,
+  onMock,
   onPractice,
   onReviewWrong,
 }: TestCardProps) {
@@ -116,6 +118,7 @@ export function TestCard({
           className={classNames(
             "inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground transition hover:border-foreground",
           )}
+          onClick={onMock}
           type="button"
         >
           <StartIcon className="size-5" />

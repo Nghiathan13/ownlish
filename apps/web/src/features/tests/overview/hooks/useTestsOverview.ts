@@ -21,6 +21,7 @@ import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 
 const TOEIC_PART_COUNT = 7;
 const PRACTICE_MODES: PracticeMode[] = ["practice", "review_wrong"];
+type PartPickerIntent = "practice" | "mock";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -33,6 +34,8 @@ export function useTestsOverview() {
   const [selectedTest, setSelectedTest] = useState<ToeicTestSummary | null>(
     null,
   );
+  const [partPickerIntent, setPartPickerIntent] =
+    useState<PartPickerIntent>("practice");
   const [clearingTestId, setClearingTestId] = useState<number | null>(null);
   const [startingTestId, setStartingTestId] = useState<number | null>(null);
   const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
@@ -121,13 +124,29 @@ export function useTestsOverview() {
     }
   };
 
+  const openPartPicker = (test: ToeicTestSummary, intent: PartPickerIntent) => {
+    setPartPickerIntent(intent);
+    setSelectedTest(test);
+  };
+
+  const closePartPicker = () => {
+    setSelectedTest(null);
+  };
+
+  const startMock = () => {
+    closePartPicker();
+  };
+
   return {
     clearingTestId,
     clearHistory,
     isLoadingTests,
     reloadTests,
+    openPartPicker,
+    partPickerIntent,
     selectedTest,
-    selectTest: setSelectedTest,
+    closePartPicker,
+    startMock,
     startTest,
     startingTestId,
     tests,

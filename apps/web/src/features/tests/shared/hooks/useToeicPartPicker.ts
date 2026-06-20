@@ -5,12 +5,12 @@ import type {
   PracticeMode,
   ToeicTestSummary,
 } from "@/features/tests/shared/api/types";
-import { getPartProgress } from "@/features/tests/overview/lib/toeicTestProgress";
+import { getPartProgress } from "@/features/tests/shared/lib/toeicTestProgress";
 import {
   addPartToSelection,
   isPartEnabled,
   removePartFromSelection,
-} from "@/features/tests/overview/lib/toeicPartPicker";
+} from "@/features/tests/shared/lib/toeicPartPicker";
 import {
   ALL_TOEIC_PART_NUMBERS,
   areAllPartsSelected,
@@ -18,14 +18,18 @@ import {
 } from "@/features/tests/shared/lib/toeicParts";
 
 type UsePartPickerParams = {
+  intent: "practice" | "mock";
   isStarting: boolean;
   onStart: (partNumbers: number[], mode: PracticeMode) => void;
+  onStartMock?: (partNumbers: number[]) => void;
   test: ToeicTestSummary;
 };
 
-export function usePartPicker({
+export function useToeicPartPicker({
+  intent,
   isStarting,
   onStart,
+  onStartMock,
   test,
 }: UsePartPickerParams) {
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
@@ -66,6 +70,16 @@ export function usePartPicker({
     onStart(parts, mode);
   };
 
+  const startMock = () => {
+    const parts = normalizeSelectedParts(selectedParts);
+
+    if (parts.length === 0) {
+      return;
+    }
+
+    onStartMock?.(parts);
+  };
+
   const startLabel = isStarting
     ? "Starting..."
     : selectedParts.length > 1
@@ -74,6 +88,7 @@ export function usePartPicker({
 
   return {
     areAllPartsChecked,
+    intent,
     isPracticeDisabled: isStarting || selectedParts.length === 0,
     isReviewWrongDisabled:
       isStarting ||
@@ -82,6 +97,7 @@ export function usePartPicker({
       selectedWrongCount === 0,
     selectedParts,
     selectedWrongCount,
+    startMock,
     startLabel,
     startWithMode,
     toggleAllParts,

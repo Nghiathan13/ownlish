@@ -1,6 +1,6 @@
 "use client";
 
-import { PartPickerModal } from "@/features/tests/overview/components/PartPickerModal";
+import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPartPickerModal";
 import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
@@ -51,7 +51,8 @@ export function TestsPage() {
                 isClearingHistory={overview.clearingTestId === test.id}
                 key={test.id}
                 onClearHistory={() => void overview.clearHistory(test.id)}
-                onPractice={() => overview.selectTest(test)}
+                onMock={() => overview.openPartPicker(test, "mock")}
+                onPractice={() => overview.openPartPicker(test, "practice")}
                 onReviewWrong={() =>
                   void overview.startTest(
                     test.id,
@@ -67,11 +68,15 @@ export function TestsPage() {
       </div>
 
       {selectedTest ? (
-        <PartPickerModal
+        <ToeicPartPickerModal
+          intent={overview.partPickerIntent}
           isStarting={overview.startingTestId === selectedTest.id}
-          onClose={() => overview.selectTest(null)}
+          onClose={overview.closePartPicker}
           onStart={(partNumbers, mode) => {
             void overview.startTest(selectedTest.id, partNumbers, mode);
+          }}
+          onStartMock={() => {
+            overview.startMock();
           }}
           test={selectedTest}
           testLabel={`Test ${selectedTest.id}`}
