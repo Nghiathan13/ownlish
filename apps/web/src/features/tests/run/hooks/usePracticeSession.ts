@@ -185,7 +185,7 @@ export function usePracticeSession({
     enabled: enabled && Boolean(accessToken),
     staleTime: Infinity,
     gcTime: mode === "review_wrong" ? 0 : 5 * 60 * 1000,
-    refetchOnMount: mode === "review_wrong" ? false : "always",
+    refetchOnMount: false,
     retry: false,
   });
 

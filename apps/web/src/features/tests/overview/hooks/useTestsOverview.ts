@@ -10,12 +10,14 @@ import type {
   PracticeMode,
   ToeicTestSummary,
 } from "@/features/tests/shared/api/types";
+import { createToeicSessionRequest } from "@/features/tests/run/lib/createToeicSessionRequest";
 import { getPracticeSessionQueryKey } from "@/features/tests/run/hooks/usePracticeSession";
 import {
   getTestsQueryKey,
   useTestsList,
 } from "@/features/tests/overview/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/run/lib/practiceStorage";
+import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 
 const TOEIC_PART_COUNT = 7;
 const PRACTICE_MODES: PracticeMode[] = ["practice", "review_wrong"];
@@ -81,19 +83,43 @@ export function useTestsOverview() {
     }
   };
 
-  const startTest = (
+  const startTest = async (
     testId: number,
     partNumbers: number[],
     mode: PracticeMode,
   ) => {
-    if (partNumbers.length === 0) {
+    const normalizedParts = normalizeSelectedParts(partNumbers);
+
+    if (!accessToken || normalizedParts.length === 0) {
       return;
     }
 
     setStartingTestId(testId);
-    router.push(`/tests/${testId}/${mode}?parts=${partNumbers.join(",")}`);
-    setSelectedTest(null);
-    setStartingTestId(null);
+    try {
+      const session = await runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) =>
+          createToeicSessionRequest({
+            token,
+            testId,
+            partNumbers: normalizedParts,
+            mode,
+          }),
+      });
+
+      queryClient.setQueryData(
+        getPracticeSessionQueryKey(testId, normalizedParts, mode),
+        session,
+      );
+
+      router.push(`/tests/${testId}/${mode}?parts=${normalizedParts.join(",")}`);
+      setSelectedTest(null);
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Cannot start practice."));
+    } finally {
+      setStartingTestId(null);
+    }
   };
 
   return {

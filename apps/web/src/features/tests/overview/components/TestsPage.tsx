@@ -53,7 +53,7 @@ export function TestsPage() {
                 onClearHistory={() => void overview.clearHistory(test.id)}
                 onPractice={() => overview.selectTest(test)}
                 onReviewWrong={() =>
-                  overview.startTest(
+                  void overview.startTest(
                     test.id,
                     [...ALL_TOEIC_PART_NUMBERS],
                     "review_wrong",
@@ -71,7 +71,7 @@ export function TestsPage() {
           isStarting={overview.startingTestId === selectedTest.id}
           onClose={() => overview.selectTest(null)}
           onStart={(partNumbers, mode) => {
-            overview.startTest(selectedTest.id, partNumbers, mode);
+            void overview.startTest(selectedTest.id, partNumbers, mode);
           }}
           test={selectedTest}
           testLabel={`Test ${selectedTest.id}`}
