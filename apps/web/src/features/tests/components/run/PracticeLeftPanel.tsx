@@ -1,5 +1,5 @@
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
-import { PassagePanel } from "@/features/tests/components/PassagePanel";
+import { PassagePanel } from "@/features/tests/components/run/PassagePanel";
 import type { PartPracticeConfig } from "@/features/tests/lib/partPracticeConfig";
 
 type PracticeLeftPanelProps = {

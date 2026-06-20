@@ -1,6 +1,6 @@
 "use client";
 
-import { PracticeGroupScreen } from "@/features/tests/components/PracticeGroupScreen";
+import { PracticeGroupScreen } from "@/features/tests/components/run/PracticeGroupScreen";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import type { PracticeRunStep } from "@/features/tests/lib/practiceRunSteps";
 

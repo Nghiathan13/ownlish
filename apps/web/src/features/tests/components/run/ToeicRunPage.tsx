@@ -4,7 +4,7 @@ import { Suspense, use, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { PracticeRunView } from "@/features/tests/components/PracticeRunView";
+import { PracticeRunView } from "@/features/tests/components/run/PracticeRunView";
 import type { PracticeMode } from "@/features/tests/api/types";
 import { useTestsList } from "@/features/tests/hooks/useTestsList";
 import {

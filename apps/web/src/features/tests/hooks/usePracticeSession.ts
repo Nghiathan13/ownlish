@@ -2,10 +2,8 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  submitPracticeAnswer,
-  completePracticeSession,
-} from "@/features/tests/api/testsApi";
+import { completeToeicSession } from "@/features/tests/api/completeToeicSession";
+import { submitToeicAnswer } from "@/features/tests/api/submitToeicAnswer";
 import type {
   PracticeMode,
   PracticeSessionAnswer,
@@ -245,7 +243,7 @@ export function usePracticeSession({
           accessToken,
           clearSession,
           request: (token) =>
-            submitPracticeAnswer(token, sessionId, {
+            submitToeicAnswer(token, sessionId, {
               toeicQuestionId,
               selectedKey,
             }),
@@ -505,7 +503,7 @@ export function usePracticeSession({
     return runAuthenticatedRequest({
       accessToken,
       clearSession,
-      request: (token) => completePracticeSession(token, sessionId),
+      request: (token) => completeToeicSession(token, sessionId),
     });
   }, [accessToken, clearSession, sessionId]);
 

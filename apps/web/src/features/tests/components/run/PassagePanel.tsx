@@ -1,7 +1,7 @@
 "use client";
 
-import { ContextEvidenceText } from "@/features/tests/components/ContextEvidenceText";
-import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
+import { ContextEvidenceText } from "@/features/tests/components/run/ContextEvidenceText";
+import { PracticeTranslationCard } from "@/features/tests/components/run/PracticeTranslationCard";
 import { useEvidenceHighlightPreference } from "@/features/tests/hooks/useEvidenceHighlightPreference";
 import { hasContextEvidenceMarkers, stripContextEvidenceMarkup } from "@/features/tests/lib/parseContextEvidence";
 import { classNames } from "@/shared/lib/classNames";

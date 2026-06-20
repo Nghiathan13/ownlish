@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { refreshTestPartMedia } from "@/features/tests/api/testsApi";
+import { refreshToeicPartMedia } from "@/features/tests/api/refreshToeicPartMedia";
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
@@ -73,7 +73,7 @@ export function useSignedMedia({
       accessToken,
       clearSession,
       request: (token) =>
-        refreshTestPartMedia(token, testId, partNumber, [group.id]),
+        refreshToeicPartMedia(token, testId, partNumber, [group.id]),
     });
     const next = refreshed.find((item) => item.id === group.id);
     if (!next) {

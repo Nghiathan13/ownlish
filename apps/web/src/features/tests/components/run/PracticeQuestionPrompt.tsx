@@ -1,4 +1,4 @@
-import { BilingualTranslationText } from "@/features/tests/components/BilingualTranslationText";
+import { BilingualTranslationText } from "@/features/tests/components/run/BilingualTranslationText";
 
 type PracticeQuestionPromptProps = {
   questionNumber: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PracticeQuestionGridPanel } from "@/features/tests/components/PracticeQuestionGridPanel";
+import { PracticeQuestionGridPanel } from "@/features/tests/components/run/PracticeQuestionGridPanel";
 import type { QuestionGridSection } from "@/features/tests/lib/practiceQuestionGrid";
 import { classNames } from "@/shared/lib/classNames";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";

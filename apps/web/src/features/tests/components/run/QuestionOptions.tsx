@@ -1,5 +1,5 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
-import { BilingualTranslationText } from "@/features/tests/components/BilingualTranslationText";
+import { BilingualTranslationText } from "@/features/tests/components/run/BilingualTranslationText";
 import { classNames } from "@/shared/lib/classNames";
 import { CircleIcon } from "@/shared/ui/icons/CircleIcon";
 import { RightIcon } from "@/shared/ui/icons/RightIcon";

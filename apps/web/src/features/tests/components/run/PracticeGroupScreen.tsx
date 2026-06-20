@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PracticeLeftPanel } from "@/features/tests/components/PracticeLeftPanel";
-import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
-import { PracticeQuestionPrompt } from "@/features/tests/components/PracticeQuestionPrompt";
-import { QuestionOptions } from "@/features/tests/components/QuestionOptions";
-import { QuestionTranslationPanel } from "@/features/tests/components/QuestionTranslationPanel";
+import { PracticeLeftPanel } from "@/features/tests/components/run/PracticeLeftPanel";
+import { PracticeTranslationCard } from "@/features/tests/components/run/PracticeTranslationCard";
+import { PracticeQuestionPrompt } from "@/features/tests/components/run/PracticeQuestionPrompt";
+import { QuestionOptions } from "@/features/tests/components/run/QuestionOptions";
+import { QuestionTranslationPanel } from "@/features/tests/components/run/QuestionTranslationPanel";
 import type { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import { useSignedMedia } from "@/features/tests/hooks/useSignedMedia";
 import { isPracticeAnswerGraded } from "@/features/tests/lib/practiceAnswers";
@@ -26,8 +26,8 @@ import {
   findGroupIndexForQuestion,
 } from "@/features/tests/lib/practiceQuestionGrid";
 import { resolveListeningGroupQuestionGridResult } from "@/features/tests/lib/resolveListeningGroupQuestionGridResult";
-import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
-import { PracticeSplitPlainLayout } from "@/features/tests/components/PracticeSplitPlainLayout";
+import { PracticeNavigationButtons } from "@/features/tests/components/run/PracticeNavigationButtons";
+import { PracticeSplitPlainLayout } from "@/features/tests/components/run/PracticeSplitPlainLayout";
 import { usePracticeBilingual } from "@/features/tests/providers/PracticeExitProvider";
 
 type OptionKey = "A" | "B" | "C" | "D";

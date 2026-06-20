@@ -3,9 +3,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PracticeStepContent } from "@/features/tests/components/PracticeStepContent";
-import { PracticeContinuousShell } from "@/features/tests/components/PracticeContinuousShell";
-import { PracticeNavigationButtons } from "@/features/tests/components/PracticeNavigationButtons";
+import { PracticeStepContent } from "@/features/tests/components/run/PracticeStepContent";
+import { PracticeContinuousShell } from "@/features/tests/components/run/PracticeContinuousShell";
+import { PracticeNavigationButtons } from "@/features/tests/components/run/PracticeNavigationButtons";
 import { usePracticeSession } from "@/features/tests/hooks/usePracticeSession";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/api/types";
 import {

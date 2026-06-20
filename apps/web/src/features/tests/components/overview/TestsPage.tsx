@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { clearTestPracticeHistory } from "@/features/tests/api/testsApi";
+import { clearToeicPracticeHistory } from "@/features/tests/api/clearToeicPracticeHistory";
 import type { PracticeMode } from "@/features/tests/api/types";
-import { PartPickerModal } from "@/features/tests/components/PartPickerModal";
-import { TestCard } from "@/features/tests/components/TestCard";
+import { PartPickerModal } from "@/features/tests/components/overview/PartPickerModal";
+import { TestCard } from "@/features/tests/components/overview/TestCard";
 import { getPracticeSessionQueryKey } from "@/features/tests/hooks/usePracticeSession";
 import { getTestsQueryKey, useTestsList } from "@/features/tests/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/lib/practiceStorage";
@@ -57,7 +57,7 @@ export function TestsPage() {
       await runAuthenticatedRequest({
         accessToken,
         clearSession,
-        request: (token) => clearTestPracticeHistory(token, testId),
+        request: (token) => clearToeicPracticeHistory(token, testId),
       });
       clearAllPracticeProgressForTest(testId);
 

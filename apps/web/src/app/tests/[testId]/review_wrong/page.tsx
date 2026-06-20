@@ -1,4 +1,4 @@
-import { ToeicRunPage } from "@/features/tests/components/ToeicRunPage";
+import { ToeicRunPage } from "@/features/tests/components/run/ToeicRunPage";
 
 type ReviewWrongPageProps = {
   params: Promise<{

@@ -1,5 +1,5 @@
 import type { ToeicQuestionOptions } from "@/features/tests/api/types";
-import { PracticeTranslationCard } from "@/features/tests/components/PracticeTranslationCard";
+import { PracticeTranslationCard } from "@/features/tests/components/run/PracticeTranslationCard";
 import type { PartTranslationVariant } from "@/features/tests/lib/partPracticeConfig";
 import {
   showsOptionTranslation,

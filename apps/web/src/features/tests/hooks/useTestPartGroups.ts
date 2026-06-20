@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { getTestPart } from "@/features/tests/api/testsApi";
+import { getToeicTestPart } from "@/features/tests/api/getToeicTestPart";
 import type { ToeicQuestionGroup } from "@/features/tests/api/types";
 import { normalizeSelectedParts } from "@/features/tests/lib/toeicParts";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
@@ -32,7 +32,8 @@ export function useTestPartGroups({
         runAuthenticatedRequest({
           accessToken,
           clearSession,
-          request: (token) => getTestPart(token, testId, partNumber, { signal }),
+          request: (token) =>
+            getToeicTestPart(token, testId, partNumber, { signal }),
         }),
       enabled: Boolean(accessToken),
     })),

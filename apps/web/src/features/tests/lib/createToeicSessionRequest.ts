@@ -1,7 +1,7 @@
 import { invalidApiResponse } from "@/shared/api/http";
 import { isBoolean, isNumber, isRecord, isString } from "@/shared/lib/parse";
 import { postToeicSession } from "@/features/tests/api/postToeicSession";
-import { parseToeicQuestionGroup } from "@/features/tests/api/testsApi";
+import { parseToeicQuestionGroup } from "@/features/tests/api/parseToeicQuestionGroup";
 import type {
   PracticeMode,
   PracticeSessionAnswer,
