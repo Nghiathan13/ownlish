@@ -323,10 +323,14 @@ export function PracticeGroupScreen({
       : showResult;
 
     const showInlineBilingual = isBilingual && translationVisible;
+    const questionEnVisible =
+      Boolean(question.question?.trim()) &&
+      (partConfig.showQuestionInRightPanel || translationVisible);
     const showQuestionBilingual =
       showInlineBilingual &&
-      partConfig.showQuestionInRightPanel &&
+      translationVisible &&
       showsQuestionTranslation(partConfig.translationVariant);
+    const showQuestionPrompt = questionEnVisible || showQuestionBilingual;
     const showOptionBilingual =
       showInlineBilingual && showsOptionTranslation(partConfig.translationVariant);
 
@@ -363,14 +367,14 @@ export function PracticeGroupScreen({
     if (usesSplitPlainLayout) {
       return (
         <div className="flex flex-col gap-4" key={question.id}>
-          <PracticeQuestionPrompt
-            questionNumber={question.questionNumber}
-            questionText={
-              partConfig.showQuestionInRightPanel ? question.question : null
-            }
-            questionVi={question.questionVi}
-            showBilingual={showQuestionBilingual}
-          />
+          {showQuestionPrompt ? (
+            <PracticeQuestionPrompt
+              questionNumber={question.questionNumber}
+              questionText={questionEnVisible ? question.question : null}
+              questionVi={question.questionVi}
+              showBilingual={showQuestionBilingual}
+            />
+          ) : null}
           {options}
         </div>
       );
@@ -381,15 +385,13 @@ export function PracticeGroupScreen({
         className="space-y-3 rounded-xl border border-border p-4"
         key={question.id}
       >
-        {partConfig.showQuestionInRightPanel && question.question?.trim() ? (
-          <div>
-            <h3 className="mb-2 text-base font-semibold">
-              Question {question.questionNumber}
-            </h3>
-            <p className="text-base select-text">
-              {question.question}
-            </p>
-          </div>
+        {showQuestionPrompt ? (
+          <PracticeQuestionPrompt
+            questionNumber={question.questionNumber}
+            questionText={questionEnVisible ? question.question : null}
+            questionVi={question.questionVi}
+            showBilingual={showQuestionBilingual}
+          />
         ) : (
           <h3 className="text-base font-semibold">
             Question {question.questionNumber}
