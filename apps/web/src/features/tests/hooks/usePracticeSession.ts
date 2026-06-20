@@ -34,12 +34,10 @@ type SelectAnswerOptions = {
   replace?: boolean;
   deferGrade?: boolean;
   skipLocalGrade?: boolean;
-  selectionOnly?: boolean;
 };
 
 type SyncAnswerOptions = {
   replace?: boolean;
-  selectionOnly?: boolean;
 };
 
 function normalizePracticeParts(partNumber: number, selectedParts?: number[]) {
@@ -65,10 +63,6 @@ export function getPracticeSessionQueryKey(
 
 function toAnswerMap(answers: PracticeSessionAnswer[]) {
   return new Map(answers.map((answer) => [answer.toeicQuestionId, answer]));
-}
-
-function usesGroupGrading(partNumber: number) {
-  return partNumber === 3 || partNumber === 4 || partNumber === 6 || partNumber === 7;
 }
 
 function applyGradedAnswer(
@@ -218,50 +212,6 @@ export function usePracticeSession({
     return nextVersion;
   }, []);
 
-  const reconcileGradedResult = useCallback(
-    (
-      toeicQuestionId: number,
-      selectedKey: OptionKey,
-      result: SubmitAnswerResult,
-      syncVersion: number,
-    ) => {
-      if ((syncVersionsRef.current.get(toeicQuestionId) ?? 0) !== syncVersion) {
-        return;
-      }
-
-      if (
-        result.isCorrect === undefined ||
-        !result.answerKey ||
-        !result.graded
-      ) {
-        return;
-      }
-
-      const answerKey = result.answerKey;
-      const isCorrect = result.isCorrect;
-
-      queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
-        if (!current) {
-          return current;
-        }
-
-        const existingAnswer = current.answers.find(
-          (answer) => answer.toeicQuestionId === toeicQuestionId,
-        );
-
-        return applyGradedAnswer(
-          current,
-          toeicQuestionId,
-          selectedKey,
-          answerKey,
-          isCorrect,
-          existingAnswer,
-        );
-      });
-    },
-    [queryClient, queryKey],
-  );
-
   const syncAnswerToServer = useCallback(
     async (
       toeicQuestionId: number,
@@ -326,41 +276,12 @@ export function usePracticeSession({
           return result;
         }
 
-        if (options?.selectionOnly) {
-          queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
-            if (!current) {
-              return current;
-            }
-
-            const existing = current.answers.find(
-              (answer) => answer.toeicQuestionId === toeicQuestionId,
-            );
-
-            return applySelectionOnly(
-              current,
-              toeicQuestionId,
-              selectedKey,
-              existing,
-            );
-          });
-
-          return result;
-        }
-
-        if (usesGroupGrading(partNumber)) {
-          await Promise.all([
-            queryClient.refetchQueries({ queryKey }),
-            queryClient.invalidateQueries({
-              queryKey: ["tests"],
-            }),
-          ]);
-        } else {
-          reconcileGradedResult(toeicQuestionId, selectedKey, result, syncVersion);
-
-          await queryClient.invalidateQueries({
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey }),
+          queryClient.invalidateQueries({
             queryKey: ["tests"],
-          });
-        }
+          }),
+        ]);
 
         if (mode === "review_wrong") {
           await queryClient.invalidateQueries({
@@ -392,11 +313,9 @@ export function usePracticeSession({
       bumpSyncVersion,
       clearSession,
       mode,
-      partNumber,
       selectedParts,
       queryClient,
       queryKey,
-      reconcileGradedResult,
       sessionId,
       testId,
     ],
@@ -547,7 +466,6 @@ export function usePracticeSession({
 
       void syncAnswerToServer(toeicQuestionId, selectedKey, {
         replace: options?.replace,
-        selectionOnly: options?.selectionOnly,
       });
     },
     [answersByQuestionId, gradeLocally, syncAnswerToServer],

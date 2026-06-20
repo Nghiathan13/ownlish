@@ -216,7 +216,6 @@ export function PracticeGroupScreen({
       practice.selectAnswer(toeicQuestionId, key, {
         deferGrade: true,
         replace: Boolean(existing?.selectedKey),
-        selectionOnly: true,
       });
       return;
     }
