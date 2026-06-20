@@ -17,4 +17,10 @@ export const statusColorClasses = {
     border: "border-amber-900 dark:border-amber-200",
     backgroundHover: "hover:bg-amber-200/60 dark:hover:bg-amber-900/60",
   },
+  skyblue: {
+    text: "text-sky-800 dark:text-sky-200",
+    background: "bg-sky-200/60 dark:bg-sky-900/60",
+    border: "border-sky-800 dark:border-sky-200",
+    backgroundHover: "hover:bg-sky-200/60 dark:hover:bg-sky-900/60",
+  },
 } as const;
