@@ -157,6 +157,7 @@ describe('PracticeService', () => {
           partNumber: 1,
           questionStart: 1,
           questionEnd: 1,
+          groupStatus: null,
           groupType: 'photo',
           accent: null,
           content: 'Look at the picture.',
@@ -183,11 +184,13 @@ describe('PracticeService', () => {
               },
               optionCount: 4,
               answerKey: 'A',
+              selectedKey: null,
+              status: null,
+              isCorrect: null,
             },
           ],
         },
       ],
-      answers: [],
     });
 
     expect(prismaMock.toeicRun.findFirst).toHaveBeenCalledWith({

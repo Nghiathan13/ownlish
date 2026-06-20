@@ -51,6 +51,7 @@ type RunGroupForResponse = {
   questionStart: number;
   questionEnd: number;
   sortOrder: number;
+  status: ToeicRunGroupStatus | null;
   toeicQuestionGroup: {
     id: number;
     groupType: string | null;
@@ -242,6 +243,10 @@ export class PracticeService {
       ]),
     );
 
+    const answerByQuestionId = new Map(
+      session.questions.map((answer) => [answer.toeicQuestionId, answer]),
+    );
+
     return {
       sessionId: session.id,
       mode:
@@ -265,6 +270,7 @@ export class PracticeService {
           partNumber: group.partNumber,
           questionStart: group.questionStart,
           questionEnd: group.questionEnd,
+          groupStatus: this.formatGroupStatus(group.status),
           groupType: group.toeicQuestionGroup.groupType,
           accent: group.toeicQuestionGroup.accent,
           content: group.toeicQuestionGroup.content,
@@ -273,63 +279,69 @@ export class PracticeService {
           audioUrlExpiresAt: audioSigned?.expiresAt ?? null,
           imageUrl: imageSigned?.url ?? null,
           imageUrlExpiresAt: imageSigned?.expiresAt ?? null,
-          questions: group.questions.map((question) => ({
-            id: question.toeicQuestionId,
-            questionNumber: question.toeicQuestion.questionNumber,
-            question: question.toeicQuestion.question,
-            questionVi: question.toeicQuestion.questionVi,
-            options: mapQuestionOptions(question.toeicQuestion),
-            optionCount: countOptions(question.toeicQuestion),
-            answerKey: parseAnswerKey(question.toeicQuestion.answerKey),
-          })),
+          questions: group.questions.map((question) => {
+            const answer = answerByQuestionId.get(question.toeicQuestionId);
+            const selectedKey = answer?.selectedKey?.trim().toUpperCase();
+            const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
+
+            return {
+              id: question.toeicQuestionId,
+              questionNumber: question.toeicQuestion.questionNumber,
+              question: question.toeicQuestion.question,
+              questionVi: question.toeicQuestion.questionVi,
+              options: mapQuestionOptions(question.toeicQuestion),
+              optionCount: countOptions(question.toeicQuestion),
+              answerKey,
+              selectedKey: selectedKey && isToeicQuestionOptionKey(selectedKey)
+                ? selectedKey
+                : null,
+              status: this.formatQuestionStatus(answer?.status ?? null),
+              isCorrect: this.formatQuestionCorrectness(answer?.status ?? null),
+            };
+          }),
         };
       }),
-      answers: session.questions.flatMap((answer) => {
-        const answerKey = parseAnswerKey(answer.toeicQuestion.answerKey);
-        const selectedKey = answer.selectedKey?.trim().toUpperCase();
-
-        if (
-          !answerKey ||
-          !selectedKey ||
-          !isToeicQuestionOptionKey(selectedKey)
-        ) {
-          return [];
-        }
-
-        if (answer.status === ToeicRunQuestionStatus.SELECTED) {
-          return [
-            {
-              toeicQuestionId: answer.toeicQuestionId,
-              selectedKey,
-            },
-          ];
-        }
-
-        if (answer.status === ToeicRunQuestionStatus.RIGHT) {
-          return [
-            {
-              toeicQuestionId: answer.toeicQuestionId,
-              selectedKey,
-              answerKey,
-              isCorrect: true,
-            },
-          ];
-        }
-
-        if (answer.status === ToeicRunQuestionStatus.WRONG) {
-          return [
-            {
-              toeicQuestionId: answer.toeicQuestionId,
-              selectedKey,
-              answerKey,
-              isCorrect: false,
-            },
-          ];
-        }
-
-        return [];
-      }),
     };
+  }
+
+  private formatGroupStatus(status: ToeicRunGroupStatus | null) {
+    if (status === ToeicRunGroupStatus.RIGHT) {
+      return 'right';
+    }
+
+    if (status === ToeicRunGroupStatus.WRONG) {
+      return 'wrong';
+    }
+
+    return null;
+  }
+
+  private formatQuestionStatus(status: ToeicRunQuestionStatus | null) {
+    if (status === ToeicRunQuestionStatus.SELECTED) {
+      return 'selected';
+    }
+
+    if (status === ToeicRunQuestionStatus.RIGHT) {
+      return 'right';
+    }
+
+    if (status === ToeicRunQuestionStatus.WRONG) {
+      return 'wrong';
+    }
+
+    return null;
+  }
+
+  private formatQuestionCorrectness(status: ToeicRunQuestionStatus | null) {
+    if (status === ToeicRunQuestionStatus.RIGHT) {
+      return true;
+    }
+
+    if (status === ToeicRunQuestionStatus.WRONG) {
+      return false;
+    }
+
+    return null;
   }
 
   private async createEmptyRun(input: {
