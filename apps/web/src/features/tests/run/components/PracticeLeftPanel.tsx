@@ -46,7 +46,7 @@ export function PracticeLeftPanel({
   const content = (
     <>
       {instruction ? (
-        <p className="text-base text-muted-foreground select-text">{instruction}</p>
+        <p className="text-base font-bold text-foreground select-text">{instruction}</p>
       ) : null}
 
       {showAudio ? (
