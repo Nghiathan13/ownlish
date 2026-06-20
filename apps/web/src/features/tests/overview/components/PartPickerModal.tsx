@@ -1,21 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { classNames } from "@/shared/lib/classNames";
-import type { PracticeMode, ToeicTestSummary } from "@/features/tests/shared/api/types";
-import { isSupportedPracticePart } from "@/features/tests/shared/lib/partPracticeConfig";
+import type {
+  PracticeMode,
+  ToeicTestSummary,
+} from "@/features/tests/shared/api/types";
+import { usePartPicker } from "@/features/tests/overview/hooks/usePartPicker";
 import { getPartProgress } from "@/features/tests/overview/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import {
-  ALL_TOEIC_PART_NUMBERS,
-  areAllPartsSelected,
-  normalizeSelectedParts,
-} from "@/features/tests/shared/lib/toeicParts";
+  isPartEnabled,
+  LISTENING_PARTS,
+  READING_PARTS,
+} from "@/features/tests/overview/lib/toeicPartPicker";
 
 type PartPickerModalProps = {
   testLabel: string;
@@ -24,25 +26,6 @@ type PartPickerModalProps = {
   onClose: () => void;
   onStart: (partNumbers: number[], mode: PracticeMode) => void;
 };
-
-const LISTENING_PARTS = [1, 2, 3, 4];
-const READING_PARTS = [5, 6, 7];
-
-function isPartEnabled(partNumber: number) {
-  return isSupportedPracticePart(partNumber);
-}
-
-function addPartToSelection(current: number[], partNumber: number) {
-  if (current.includes(partNumber)) {
-    return current;
-  }
-
-  return [...current, partNumber];
-}
-
-function removePartFromSelection(current: number[], partNumber: number) {
-  return current.filter((part) => part !== partNumber);
-}
 
 function PartCheckboxOption({
   checked,
@@ -79,13 +62,15 @@ function PartCheckboxOption({
             : "border-border bg-background",
         )}
       >
-        {checked ? <CheckIcon className="size-3" /> : null}
+        {checked ? <CheckIcon className="size-4" /> : null}
       </span>
       <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
         <span className="text-base font-normal">{label}</span>
         {wrongCount > 0 ? (
           <span className="inline-flex shrink-0 items-center gap-1">
-            <CloseIcon className={classNames("size-4", statusColorClasses.danger.text)} />
+            <CloseIcon
+              className={classNames("size-4", statusColorClasses.danger.text)}
+            />
             <span className={statusColorClasses.danger.text}>{wrongCount}</span>
           </span>
         ) : null}
@@ -101,67 +86,16 @@ export function PartPickerModal({
   onClose,
   onStart,
 }: PartPickerModalProps) {
-  const [selectedParts, setSelectedParts] = useState<number[]>([]);
-
-  const areAllPartsChecked = areAllPartsSelected(selectedParts);
-  const selectedWrongCount = selectedParts.reduce((total, partNumber) => {
-    return total + (getPartProgress(test, partNumber)?.partWrongCount ?? 0);
-  }, 0);
-
-  const togglePart = (partNumber: number) => {
-    setSelectedParts((current) =>
-      current.includes(partNumber)
-        ? removePartFromSelection(current, partNumber)
-        : addPartToSelection(current, partNumber),
-    );
-  };
-
-  const toggleAllParts = () => {
-    setSelectedParts((current) => {
-      if (areAllPartsSelected(current)) {
-        let next = current;
-
-        for (const partNumber of ALL_TOEIC_PART_NUMBERS) {
-          next = removePartFromSelection(next, partNumber);
-        }
-
-        return next;
-      }
-
-      let next = current;
-
-      for (const partNumber of ALL_TOEIC_PART_NUMBERS) {
-        next = addPartToSelection(next, partNumber);
-      }
-
-      return next;
-    });
-  };
-
-  const startWithMode = (mode: PracticeMode) => {
-    const parts = normalizeSelectedParts(selectedParts);
-
-    if (parts.length === 0) {
-      return;
-    }
-
-    onStart(parts, mode);
-  };
-
-  const startLabel = isStarting
-    ? "Starting..."
-    : selectedParts.length > 1
-      ? `Start (${selectedParts.length} parts)`
-      : "Start";
+  const partPicker = usePartPicker({ isStarting, onStart, test });
 
   return (
     <Modal onClose={onClose} title={`Practice ${testLabel}`}>
       <div className="flex flex-col gap-4">
         <section className="flex flex-col gap-2">
           <PartCheckboxOption
-            checked={areAllPartsChecked}
+            checked={partPicker.areAllPartsChecked}
             label="All parts"
-            onToggle={toggleAllParts}
+            onToggle={partPicker.toggleAllParts}
           />
         </section>
 
@@ -175,11 +109,11 @@ export function PartPickerModal({
 
               return (
                 <PartCheckboxOption
-                  checked={selectedParts.includes(partNumber)}
+                  checked={partPicker.selectedParts.includes(partNumber)}
                   disabled={!enabled}
                   key={partNumber}
                   label={`Part ${partNumber}`}
-                  onToggle={() => enabled && togglePart(partNumber)}
+                  onToggle={() => enabled && partPicker.togglePart(partNumber)}
                   wrongCount={enabled ? wrongCount : 0}
                 />
               );
@@ -197,11 +131,11 @@ export function PartPickerModal({
 
               return (
                 <PartCheckboxOption
-                  checked={selectedParts.includes(partNumber)}
+                  checked={partPicker.selectedParts.includes(partNumber)}
                   disabled={!enabled}
                   key={partNumber}
                   label={`Part ${partNumber}`}
-                  onToggle={() => enabled && togglePart(partNumber)}
+                  onToggle={() => enabled && partPicker.togglePart(partNumber)}
                   wrongCount={enabled ? wrongCount : 0}
                 />
               );
@@ -212,26 +146,24 @@ export function PartPickerModal({
         <div className="flex flex-wrap justify-end gap-2">
           <Button
             className="px-4 py-2"
-            disabled={
-              isStarting ||
-              selectedParts.length === 0 ||
-              selectedParts.some((partNumber) => !isPartEnabled(partNumber)) ||
-              selectedWrongCount === 0
-            }
-            onClick={() => startWithMode("review_wrong")}
+            disabled={partPicker.isReviewWrongDisabled}
+            onClick={() => partPicker.startWithMode("review_wrong")}
             type="button"
             variant="secondary"
           >
-            Review wrong{selectedWrongCount > 0 ? ` (${selectedWrongCount})` : ""}
+            Review wrong
+            {partPicker.selectedWrongCount > 0
+              ? ` (${partPicker.selectedWrongCount})`
+              : ""}
           </Button>
           <Button
             className="gap-2 px-4 py-2"
-            disabled={isStarting || selectedParts.length === 0}
-            onClick={() => startWithMode("practice")}
+            disabled={partPicker.isPracticeDisabled}
+            onClick={() => partPicker.startWithMode("practice")}
             type="button"
           >
             <StartIcon className="size-4" />
-            {startLabel}
+            {partPicker.startLabel}
           </Button>
         </div>
       </div>

@@ -34,8 +34,6 @@ import { Panel } from "@/shared/ui/Panel";
 type PracticeRunViewProps = {
   testId: number;
   selectedParts: number[];
-  accessToken: string | null;
-  clearSession: () => void;
   practiceMode?: PracticeMode;
 };
 
@@ -46,8 +44,6 @@ function getPracticeStorageKey(sessionId: string) {
 export function PracticeRunView({
   testId,
   selectedParts,
-  accessToken,
-  clearSession,
   practiceMode = "practice",
 }: PracticeRunViewProps) {
   const router = useRouter();
@@ -61,8 +57,6 @@ export function PracticeRunView({
   const primaryPartNumber = normalizedSelectedParts[0] ?? 1;
   const isWrongMode = practiceMode === "review_wrong";
   const practice = usePracticeSession({
-    accessToken,
-    clearSession,
     enabled: normalizedSelectedParts.length > 0,
     mode: practiceMode,
     partNumber: primaryPartNumber,
@@ -266,8 +260,6 @@ export function PracticeRunView({
   return (
     <PracticeContinuousShell navigation={navigationBar}>
       <PracticeStepContent
-        accessToken={accessToken}
-        clearSession={clearSession}
         practice={practice}
         sessionId={practice.sessionId}
         step={currentStep}

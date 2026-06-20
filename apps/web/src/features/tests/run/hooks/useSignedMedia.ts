@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { refreshToeicPartMedia } from "@/features/tests/run/api/refreshToeicPartMedia";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 const REFRESH_BUFFER_MS = 2 * 60 * 1000;
@@ -18,8 +19,6 @@ type UseSignedMediaParams = {
   testId: number;
   partNumber: number;
   group: ToeicQuestionGroup | null;
-  accessToken: string | null;
-  clearSession: () => void;
 };
 
 function getEmptyMedia(): SignedMediaState {
@@ -48,9 +47,8 @@ export function useSignedMedia({
   testId,
   partNumber,
   group,
-  accessToken,
-  clearSession,
 }: UseSignedMediaParams) {
+  const { accessToken, clearSession } = useAuthSession();
   const [overrides, setOverrides] = useState<Record<number, SignedMediaState>>(
     {},
   );

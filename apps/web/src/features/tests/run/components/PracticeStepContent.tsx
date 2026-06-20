@@ -9,8 +9,6 @@ type PracticeStepContentProps = {
   step: PracticeRunStep;
   practice: ReturnType<typeof usePracticeSession>;
   sessionId: string;
-  accessToken: string | null;
-  clearSession: () => void;
 };
 
 export function PracticeStepContent({
@@ -18,14 +16,10 @@ export function PracticeStepContent({
   step,
   practice,
   sessionId,
-  accessToken,
-  clearSession,
 }: PracticeStepContentProps) {
   if (step.kind === "group") {
     return (
       <PracticeGroupScreen
-        accessToken={accessToken}
-        clearSession={clearSession}
         groups={[step.practiceGroup]}
         initialGroupIndex={0}
         key={`${step.practiceGroup.group.id}-${sessionId}`}
@@ -39,8 +33,6 @@ export function PracticeStepContent({
 
   return (
     <PracticeGroupScreen
-      accessToken={accessToken}
-      clearSession={clearSession}
       groups={[
         {
           group: step.item.group,

@@ -38,8 +38,6 @@ type PracticeGroupScreenProps = {
   groups: PracticeGroup[];
   initialGroupIndex: number;
   practice: ReturnType<typeof usePracticeSession>;
-  accessToken: string | null;
-  clearSession: () => void;
   navigation?: React.ReactNode;
 };
 
@@ -49,8 +47,6 @@ export function PracticeGroupScreen({
   groups,
   initialGroupIndex,
   practice,
-  accessToken,
-  clearSession,
   navigation,
 }: PracticeGroupScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
@@ -69,8 +65,6 @@ export function PracticeGroupScreen({
     testId,
     partNumber,
     group: currentGroup?.group ?? null,
-    accessToken,
-    clearSession,
   });
 
   const selectableQuestionIds = useMemo(() => {

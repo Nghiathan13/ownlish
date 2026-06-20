@@ -8,11 +8,9 @@ import type {
   PracticeSessionResult,
   ToeicQuestionGroup,
 } from "@/features/tests/shared/api/types";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 
 type CreateToeicSessionRequestParams = {
-  accessToken: string | null;
-  clearSession: () => void;
+  token: string;
   testId: number;
   partNumbers: number[];
   mode: PracticeMode;
@@ -96,23 +94,14 @@ function parseToeicSessionResult(body: unknown): PracticeSessionResult {
 }
 
 export function createToeicSessionRequest({
-  accessToken,
-  clearSession,
+  token,
   testId,
   partNumbers,
   mode,
 }: CreateToeicSessionRequestParams): Promise<PracticeSessionResult> {
-  return runAuthenticatedRequest({
-    accessToken,
-    clearSession,
-    request: async (token) => {
-      const body = await postToeicSession(token, {
-        testId,
-        partNumbers,
-        mode,
-      });
-
-      return parseToeicSessionResult(body);
-    },
-  });
+  return postToeicSession(token, {
+    testId,
+    partNumbers,
+    mode,
+  }).then(parseToeicSessionResult);
 }

@@ -120,8 +120,6 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
 
   return (
     <PracticeRunView
-      accessToken={accessToken}
-      clearSession={clearSession}
       practiceMode={mode}
       selectedParts={selectedParts}
       testId={testId}
