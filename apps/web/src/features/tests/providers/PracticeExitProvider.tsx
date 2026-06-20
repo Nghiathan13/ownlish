@@ -11,6 +11,10 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import {
+  readBilingualEnabled,
+  writeBilingualEnabled,
+} from "@/features/tests/lib/bilingualStorage";
 
 type ExitHandler = () => void | Promise<void>;
 
@@ -55,15 +59,12 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const [questionNav, setQuestionNav] = useState<PracticeQuestionNavState | null>(
     null,
   );
-  const [isBilingual, setIsBilingual] = useState(false);
+  const [isBilingual, setIsBilingual] = useState(() => readBilingualEnabled());
 
   const registerExitHandler = useCallback(
     (handler: ExitHandler | null, title: string | null = null) => {
       handlerRef.current = handler;
       setPracticeTitle(handler ? title : null);
-      if (!handler) {
-        setIsBilingual(false);
-      }
     },
     [],
   );
@@ -73,7 +74,11 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleBilingual = useCallback(() => {
-    setIsBilingual((current) => !current);
+    setIsBilingual((current) => {
+      const next = !current;
+      writeBilingualEnabled(next);
+      return next;
+    });
   }, []);
 
   const exit = useCallback(async () => {
@@ -85,7 +90,6 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
       // Exit should not be blocked by best-effort practice cleanup.
     }
 
-    setIsBilingual(false);
     router.push("/tests");
   }, [router]);
 
