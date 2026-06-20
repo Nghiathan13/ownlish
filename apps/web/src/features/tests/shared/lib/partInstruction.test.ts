@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   formatGroupTypeList,
   getPartInstruction,
+  mergeConsecutiveGroupTypes,
+  normalizeGroupTypeLabel,
   parseGroupTypes,
 } from "./partInstruction";
 
@@ -21,14 +23,46 @@ describe("parseGroupTypes", () => {
   });
 });
 
+describe("normalizeGroupTypeLabel", () => {
+  it("replaces underscores with spaces", () => {
+    expect(normalizeGroupTypeLabel("press_release")).toBe("press release");
+  });
+});
+
+describe("mergeConsecutiveGroupTypes", () => {
+  it("pluralizes consecutive runs of the same type", () => {
+    expect(
+      mergeConsecutiveGroupTypes([
+        "email",
+        "email",
+        "email",
+        "form",
+        "form",
+        "email",
+      ]),
+    ).toEqual(["emails", "forms", "email"]);
+  });
+
+  it("merges short consecutive runs", () => {
+    expect(mergeConsecutiveGroupTypes(["email", "email", "form"])).toEqual([
+      "emails",
+      "form",
+    ]);
+  });
+
+  it("keeps single values unchanged", () => {
+    expect(mergeConsecutiveGroupTypes(["flyer"])).toEqual(["flyer"]);
+  });
+});
+
 describe("formatGroupTypeList", () => {
   it("joins two values with and", () => {
     expect(formatGroupTypeList(["article", "email"])).toBe("article and email");
   });
 
-  it("joins three or more values with oxford comma", () => {
+  it("joins three or more values without oxford comma", () => {
     expect(formatGroupTypeList(["article", "email", "press release"])).toBe(
-      "article, email, and press release",
+      "article, email and press release",
     );
   });
 });
@@ -77,6 +111,34 @@ describe("getPartInstruction", () => {
         groupType: '["article", "email"]',
       }),
     ).toBe("Questions 176-180 refer to the following article and email.");
+  });
+
+  it("merges consecutive duplicate group types", () => {
+    expect(
+      getPartInstruction(7, {
+        questionStart: 191,
+        questionEnd: 195,
+        groupType: '["email", "email", "form"]',
+      }),
+    ).toBe("Questions 191-195 refer to the following emails and form.");
+
+    expect(
+      getPartInstruction(7, {
+        questionStart: 196,
+        questionEnd: 200,
+        groupType: '["email", "review", "notice"]',
+      }),
+    ).toBe("Questions 196-200 refer to the following email, review and notice.");
+  });
+
+  it("normalizes snake_case group types", () => {
+    expect(
+      getPartInstruction(6, {
+        questionStart: 131,
+        questionEnd: 134,
+        groupType: '["press_release"]',
+      }),
+    ).toBe("Questions 131-134 refer to the following press release.");
   });
 
   it("omits group type when missing", () => {

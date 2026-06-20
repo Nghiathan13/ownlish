@@ -26,8 +26,36 @@ export function parseGroupTypes(groupType: string | null): string[] {
   }
 }
 
-export function formatGroupTypeLabel(type: string): string {
+export function normalizeGroupTypeLabel(type: string): string {
   return type.replace(/_/g, " ");
+}
+
+function pluralizeGroupTypeLabel(label: string, count: number): string {
+  return count > 1 ? `${label}s` : label;
+}
+
+export function mergeConsecutiveGroupTypes(types: string[]): string[] {
+  if (types.length === 0) {
+    return [];
+  }
+
+  const merged: string[] = [];
+  let current = types[0];
+  let count = 1;
+
+  for (let index = 1; index < types.length; index += 1) {
+    if (types[index] === current) {
+      count += 1;
+      continue;
+    }
+
+    merged.push(pluralizeGroupTypeLabel(current, count));
+    current = types[index];
+    count = 1;
+  }
+
+  merged.push(pluralizeGroupTypeLabel(current, count));
+  return merged;
 }
 
 export function formatGroupTypeList(types: string[]): string {
@@ -43,7 +71,7 @@ export function formatGroupTypeList(types: string[]): string {
     return `${types[0]} and ${types[1]}`;
   }
 
-  return `${types.slice(0, -1).join(", ")}, and ${types[types.length - 1]}`;
+  return `${types.slice(0, -1).join(", ")} and ${types[types.length - 1]}`;
 }
 
 function getReadingPartInstruction(
@@ -51,7 +79,9 @@ function getReadingPartInstruction(
 ) {
   const range = `Questions ${group.questionStart}-${group.questionEnd}`;
   const types = formatGroupTypeList(
-    parseGroupTypes(group.groupType).map(formatGroupTypeLabel),
+    mergeConsecutiveGroupTypes(
+      parseGroupTypes(group.groupType).map(normalizeGroupTypeLabel),
+    ),
   );
 
   if (!types) {
