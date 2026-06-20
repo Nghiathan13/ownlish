@@ -330,7 +330,6 @@ export function PracticeGroupScreen({
       showInlineBilingual &&
       translationVisible &&
       showsQuestionTranslation(partConfig.translationVariant);
-    const showQuestionPrompt = questionEnVisible || showQuestionBilingual;
     const showOptionBilingual =
       showInlineBilingual && showsOptionTranslation(partConfig.translationVariant);
 
@@ -367,14 +366,12 @@ export function PracticeGroupScreen({
     if (usesSplitPlainLayout) {
       return (
         <div className="flex flex-col gap-4" key={question.id}>
-          {showQuestionPrompt ? (
-            <PracticeQuestionPrompt
-              questionNumber={question.questionNumber}
-              questionText={questionEnVisible ? question.question : null}
-              questionVi={question.questionVi}
-              showBilingual={showQuestionBilingual}
-            />
-          ) : null}
+          <PracticeQuestionPrompt
+            questionNumber={question.questionNumber}
+            questionText={questionEnVisible ? question.question : null}
+            questionVi={question.questionVi}
+            showBilingual={showQuestionBilingual}
+          />
           {options}
         </div>
       );
@@ -385,18 +382,12 @@ export function PracticeGroupScreen({
         className="space-y-3 rounded-xl border border-border p-4"
         key={question.id}
       >
-        {showQuestionPrompt ? (
-          <PracticeQuestionPrompt
-            questionNumber={question.questionNumber}
-            questionText={questionEnVisible ? question.question : null}
-            questionVi={question.questionVi}
-            showBilingual={showQuestionBilingual}
-          />
-        ) : (
-          <h3 className="text-base font-semibold">
-            Question {question.questionNumber}
-          </h3>
-        )}
+        <PracticeQuestionPrompt
+          questionNumber={question.questionNumber}
+          questionText={questionEnVisible ? question.question : null}
+          questionVi={question.questionVi}
+          showBilingual={showQuestionBilingual}
+        />
 
         {options}
       </section>
