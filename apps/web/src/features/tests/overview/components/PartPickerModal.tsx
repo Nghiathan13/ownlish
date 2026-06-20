@@ -162,7 +162,7 @@ export function PartPickerModal({
             onClick={() => partPicker.startWithMode("practice")}
             type="button"
           >
-            <StartIcon className="size-4" />
+            <StartIcon className="size-5" />
             {partPicker.startLabel}
           </Button>
         </div>

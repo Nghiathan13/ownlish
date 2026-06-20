@@ -111,7 +111,7 @@ export function TestCard({
         </div>
       </div>
       <Button className="gap-2 self-start px-4 py-2" onClick={onPractice} type="button">
-        <PracticeIcon className="size-4" />
+        <PracticeIcon className="size-5" />
         Practice
       </Button>
     </article>
