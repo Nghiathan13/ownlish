@@ -55,8 +55,18 @@ export function PracticeQuestionGridPanel({
                   <button
                     className={classNames(
                       "flex size-10 shrink-0 items-center justify-center rounded-md border text-sm font-normal tabular-nums",
-                      cell.result === "correct" && statusColorClasses.success.surface,
-                      cell.result === "wrong" && statusColorClasses.danger.surface,
+                      cell.result === "correct" &&
+                        classNames(
+                          statusColorClasses.success.border,
+                          statusColorClasses.success.background,
+                          statusColorClasses.success.text,
+                        ),
+                      cell.result === "wrong" &&
+                        classNames(
+                          statusColorClasses.danger.border,
+                          statusColorClasses.danger.background,
+                          statusColorClasses.danger.text,
+                        ),
                       cell.isActive &&
                         "ring-1 ring-foreground ring-offset-2 ring-offset-background",
                       cell.isActive &&

@@ -72,7 +72,7 @@ export function TestCard({
             className={classNames(
               "relative inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
               statusColorClasses.danger.text,
-              "hover:bg-red-200/30 dark:hover:bg-red-900/30",
+              statusColorClasses.danger.backgroundHover,
               "disabled:cursor-not-allowed disabled:text-foreground disabled:opacity-60 disabled:hover:bg-muted",
             )}
             disabled={isClearingHistory || testWrongCount === 0}
@@ -99,7 +99,7 @@ export function TestCard({
             className={classNames(
               "inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
               statusColorClasses.danger.text,
-              "hover:bg-red-200/30 dark:hover:bg-red-900/30",
+              statusColorClasses.danger.backgroundHover,
               "disabled:cursor-not-allowed disabled:opacity-60",
             )}
             disabled={isClearingHistory}

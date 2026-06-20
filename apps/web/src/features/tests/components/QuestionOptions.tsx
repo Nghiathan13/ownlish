@@ -148,8 +148,18 @@ export function QuestionOptions({
         const className = classNames(
           "flex min-h-10 items-start gap-2 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
-          isCorrect && statusColorClasses.success.surface,
-          isWrong && statusColorClasses.danger.surface,
+          isCorrect &&
+            classNames(
+              statusColorClasses.success.border,
+              statusColorClasses.success.background,
+              statusColorClasses.success.text,
+            ),
+          isWrong &&
+            classNames(
+              statusColorClasses.danger.border,
+              statusColorClasses.danger.background,
+              statusColorClasses.danger.text,
+            ),
           isSelectedHighlight && "border-foreground bg-muted",
           locked &&
             !isCorrect &&

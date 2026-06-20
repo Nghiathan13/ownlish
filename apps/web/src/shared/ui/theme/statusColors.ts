@@ -3,14 +3,18 @@ export const statusColorClasses = {
     text: "text-emerald-700 dark:text-emerald-400",
     background: "bg-emerald-200/30 dark:bg-emerald-900/30",
     border: "border-emerald-700 dark:border-emerald-400",
-    surface:
-      "border-emerald-700 bg-emerald-200/30 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-900/20 dark:text-emerald-400",
+    backgroundHover: "hover:bg-emerald-200/30 dark:hover:bg-emerald-900/30",
   },
   danger: {
     text: "text-red-700 dark:text-red-400",
     background: "bg-red-200/30 dark:bg-red-900/30",
     border: "border-red-700 dark:border-red-400",
-    surface:
-      "border-red-700 bg-red-200/30 text-red-700 dark:border-red-400 dark:bg-red-900/20 dark:text-red-400",
+    backgroundHover: "hover:bg-red-200/30 dark:hover:bg-red-900/30",
+  },
+  amber: {
+    text: "text-amber-900 dark:text-amber-200",
+    background: "bg-amber-200/60 dark:bg-amber-900/60",
+    border: "border-amber-900 dark:border-amber-200",
+    backgroundHover: "hover:bg-amber-200/60 dark:hover:bg-amber-900/60",
   },
 } as const;
