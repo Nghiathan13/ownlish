@@ -6,7 +6,7 @@ import { MockGroupScreen } from "@/features/tests/run/components/MockGroupScreen
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { useMockTestRun } from "@/features/tests/run/hooks/useMockTestRun";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
-import { useRegisterPracticeFinish } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useRegisterPracticeFinish, useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
@@ -298,7 +298,15 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
     await mock.finishRun();
   }, [mock]);
 
-  useRegisterPracticeFinish(handleFinish, `Test ${testId}`);
+  useRegisterPracticeFinish(
+    mock.isFinished ? null : handleFinish,
+    mock.isFinished ? null : `Test ${testId}`,
+  );
+
+  useRegisterPracticeExit(
+    mock.isFinished ? () => undefined : null,
+    mock.isFinished ? `Test ${testId}` : null,
+  );
 
   const questionGridSections = useMemo(
     () => buildMockGridSections(groups, activeGroup, mock.isFinished),

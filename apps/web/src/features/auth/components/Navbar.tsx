@@ -56,18 +56,31 @@ export function Navbar() {
             )}
           >
             <div className="flex items-center gap-4">
-              <Button
-                className="py-2 text-base font-normal"
-                onClick={() => {
-                  void practiceFinish?.finish();
-                }}
-                type="button"
-              >
-                Finish
-              </Button>
-              {practiceFinish?.mockTitle ? (
+              {practiceExit?.practiceTitle ? (
+                <Button
+                  className="gap-2 py-2 text-base font-normal"
+                  onClick={() => {
+                    void (practiceExit?.exit() ?? router.push("/tests"));
+                  }}
+                  type="button"
+                >
+                  <ArrowBackIcon className="size-4" />
+                  Exit
+                </Button>
+              ) : (
+                <Button
+                  className="py-2 text-base font-normal"
+                  onClick={() => {
+                    void practiceFinish?.finish();
+                  }}
+                  type="button"
+                >
+                  Finish
+                </Button>
+              )}
+              {practiceExit?.practiceTitle || practiceFinish?.mockTitle ? (
                 <span className="text-base font-semibold text-foreground">
-                  {practiceFinish.mockTitle}
+                  {practiceExit?.practiceTitle ?? practiceFinish?.mockTitle}
                 </span>
               ) : null}
             </div>
