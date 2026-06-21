@@ -15,6 +15,7 @@ import {
 } from "@/features/tests/run/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
+import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { BilingualIcon } from "@/shared/ui/icons/BilingualIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
@@ -57,16 +58,18 @@ export function Navbar() {
           >
             <div className="flex items-center gap-4">
               {practiceExit?.practiceTitle ? (
-                <Button
-                  className="gap-2 py-2 text-base font-normal"
+                <button
+                  className={iconTextButtonClassName(
+                    "border-foreground bg-foreground text-background",
+                  )}
                   onClick={() => {
                     void (practiceExit?.exit() ?? router.push("/tests"));
                   }}
                   type="button"
                 >
-                  <ArrowBackIcon className="size-4" />
+                  <ArrowBackIcon />
                   Exit
-                </Button>
+                </button>
               ) : (
                 <Button
                   className="py-2 text-base font-normal"
@@ -121,16 +124,18 @@ export function Navbar() {
           )}
         >
           <div className="flex items-center gap-4">
-            <Button
-              className="gap-2 py-2 text-base font-normal"
+            <button
+              className={iconTextButtonClassName(
+                "border-foreground bg-foreground text-background",
+              )}
               onClick={() => {
                 void (practiceExit?.exit() ?? router.push("/tests"));
               }}
               type="button"
             >
-              <ArrowBackIcon className="size-4" />
+              <ArrowBackIcon />
               Exit
-            </Button>
+            </button>
             {practiceExit?.practiceTitle ? (
               <div className="flex items-center gap-4">
                 <span className="text-base font-semibold text-foreground">
