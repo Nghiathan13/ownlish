@@ -77,10 +77,6 @@ export function PracticeQuestionGridPanel({
                         "border-border bg-background font-normal text-foreground hover:border-foreground",
                       cell.isActive &&
                         "ring-1 ring-foreground ring-offset-2 ring-offset-background",
-                      cell.isActive &&
-                        cell.result == null &&
-                        !cell.isSelected &&
-                        "border-foreground text-foreground",
                     )}
                     key={cell.questionNumber}
                     onClick={() => onSelect(cell.questionNumber)}
