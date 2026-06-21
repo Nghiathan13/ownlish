@@ -219,6 +219,218 @@ describe('PracticeService', () => {
     });
   });
 
+  it('uses the latest practice run as a filtered review wrong session', async () => {
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([{ partNumber: 1 }]);
+    prismaMock.toeicRun.findFirst.mockResolvedValue({ id: 'practice-run-id' });
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique
+      .mockResolvedValueOnce({
+        id: 'practice-run-id',
+        selectedParts: [1],
+        groups: [
+          {
+            toeicQuestionGroupId: 101,
+            partNumber: 1,
+            sortOrder: 0,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'practice-run-id',
+        mode: 'PRACTICE',
+        toeicTestId: 1,
+        selectedParts: [1],
+        totalRight: 1,
+        totalWrong: 1,
+        completedAt: null,
+        questions: [
+          {
+            toeicQuestionId: 1001,
+            selectedKey: 'B',
+            status: 'WRONG',
+            toeicQuestion: { answerKey: 'A' },
+          },
+          {
+            toeicQuestionId: 1002,
+            selectedKey: 'C',
+            status: 'RIGHT',
+            toeicQuestion: { answerKey: 'C' },
+          },
+        ],
+        groups: [
+          {
+            toeicQuestionGroupId: 101,
+            partNumber: 1,
+            questionStart: 1,
+            questionEnd: 1,
+            sortOrder: 0,
+            status: 'WRONG',
+            toeicQuestionGroup: {
+              id: 101,
+              groupType: 'photo',
+              accent: null,
+              content: null,
+              contentVi: null,
+              audioStoragePath: null,
+              imageStoragePath: null,
+            },
+            questions: [
+              {
+                toeicQuestionId: 1001,
+                selectedKey: 'B',
+                status: 'WRONG',
+                toeicQuestion: {
+                  id: 1001,
+                  groupId: 101,
+                  questionNumber: 1,
+                  question: 'Question 1',
+                  questionVi: null,
+                  questionType: null,
+                  optionA: 'A',
+                  optionB: 'B',
+                  optionC: 'C',
+                  optionD: 'D',
+                  optionAVi: null,
+                  optionBVi: null,
+                  optionCVi: null,
+                  optionDVi: null,
+                  answerKey: 'A',
+                  explanationVi: null,
+                  createdAt: new Date('2026-06-01T00:00:00.000Z'),
+                  updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+                },
+              },
+            ],
+          },
+          {
+            toeicQuestionGroupId: 102,
+            partNumber: 1,
+            questionStart: 2,
+            questionEnd: 2,
+            sortOrder: 1,
+            status: 'RIGHT',
+            toeicQuestionGroup: {
+              id: 102,
+              groupType: 'photo',
+              accent: null,
+              content: null,
+              contentVi: null,
+              audioStoragePath: null,
+              imageStoragePath: null,
+            },
+            questions: [
+              {
+                toeicQuestionId: 1002,
+                selectedKey: 'C',
+                status: 'RIGHT',
+                toeicQuestion: {
+                  id: 1002,
+                  groupId: 102,
+                  questionNumber: 2,
+                  question: 'Question 2',
+                  questionVi: null,
+                  questionType: null,
+                  optionA: 'A',
+                  optionB: 'B',
+                  optionC: 'C',
+                  optionD: 'D',
+                  optionAVi: null,
+                  optionBVi: null,
+                  optionCVi: null,
+                  optionDVi: null,
+                  answerKey: 'C',
+                  explanationVi: null,
+                  createdAt: new Date('2026-06-01T00:00:00.000Z'),
+                  updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+                },
+              },
+            ],
+          },
+        ],
+      });
+    prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([]);
+
+    await expect(
+      service.createSession('user-id', {
+        testId: 1,
+        partNumbers: [1],
+        mode: 'review_wrong',
+      }),
+    ).resolves.toMatchObject({
+      sessionId: 'practice-run-id',
+      mode: 'review_wrong',
+      testId: 1,
+      partNumbers: [1],
+      totalQuestions: 1,
+      correctCount: 1,
+      wrongCount: 1,
+      groups: [
+        {
+          id: 101,
+          groupStatus: 'wrong',
+          questions: [
+            {
+              id: 1001,
+              sessionQuestionNumber: 1,
+              selectedKey: 'B',
+              status: 'wrong',
+              isCorrect: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(prismaMock.toeicRun.create).not.toHaveBeenCalled();
+  });
+
+  it('creates an empty practice run when review wrong has no practice session', async () => {
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([{ partNumber: 1 }]);
+    prismaMock.toeicRun.findFirst.mockResolvedValue(null);
+    prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([]);
+    prismaMock.toeicRun.create.mockResolvedValue({ id: 'practice-run-id' });
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique.mockResolvedValue({
+      id: 'practice-run-id',
+      mode: 'PRACTICE',
+      toeicTestId: 1,
+      selectedParts: [1],
+      totalRight: 0,
+      totalWrong: 0,
+      completedAt: null,
+      questions: [],
+      groups: [],
+    });
+
+    await expect(
+      service.createSession('user-id', {
+        testId: 1,
+        partNumbers: [1],
+        mode: 'review_wrong',
+      }),
+    ).resolves.toMatchObject({
+      sessionId: 'practice-run-id',
+      mode: 'review_wrong',
+      totalQuestions: 0,
+      groups: [],
+    });
+
+    expect(prismaMock.toeicRun.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-id',
+        toeicTestId: 1,
+        mode: 'PRACTICE',
+        selectedParts: [1],
+      },
+    });
+  });
+
   it('creates a new mock test run every time', async () => {
     prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
     prismaMock.toeicTestPart.findMany.mockResolvedValue([{ partNumber: 1 }]);

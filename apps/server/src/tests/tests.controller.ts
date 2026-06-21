@@ -42,15 +42,6 @@ export class TestsController {
     return this.practiceService.createSession(request.user.id, dto);
   }
 
-  @Post('practice/sessions/:sessionId/answers')
-  submitAnswer(
-    @Req() request: AuthRequest,
-    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-    @Body() dto: SubmitToeicAnswerDto,
-  ) {
-    return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
-  }
-
   @Get('runs/:sessionId')
   getRun(
     @Req() request: AuthRequest,
@@ -74,14 +65,6 @@ export class TestsController {
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
   ) {
     return this.practiceService.finishRun(request.user.id, sessionId);
-  }
-
-  @Patch('practice/sessions/:sessionId/complete')
-  completeSession(
-    @Req() request: AuthRequest,
-    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-  ) {
-    return this.practiceService.completeSession(request.user.id, sessionId);
   }
 
   @Delete(':testId/practice-history')
