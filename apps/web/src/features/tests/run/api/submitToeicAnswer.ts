@@ -5,7 +5,10 @@ import {
   isRecord,
   isString,
 } from "@/shared/lib/parse";
-import type { SubmitAnswerResult } from "@/features/tests/shared/api/types";
+import type {
+  SubmitAnswerResult,
+  ToeicRunMode,
+} from "@/features/tests/shared/api/types";
 
 export async function submitToeicAnswer(
   token: string,
@@ -13,6 +16,7 @@ export async function submitToeicAnswer(
   payload: {
     toeicQuestionId: number;
     selectedKey: "A" | "B" | "C" | "D";
+    mode?: ToeicRunMode;
   },
 ) {
   const body = await apiRequest(`/tests/runs/${sessionId}/answers`, {

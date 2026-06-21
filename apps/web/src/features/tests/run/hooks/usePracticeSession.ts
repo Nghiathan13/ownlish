@@ -266,6 +266,7 @@ export function usePracticeSession({
             submitToeicAnswer(token, sessionId, {
               toeicQuestionId,
               selectedKey,
+              mode,
             }),
         });
 
