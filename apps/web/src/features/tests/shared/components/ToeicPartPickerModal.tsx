@@ -176,7 +176,6 @@ export function ToeicPartPickerModal({
           <button
             className={iconTextButtonClassName(
               "border-foreground bg-foreground text-background",
-              "disabled:cursor-not-allowed disabled:opacity-60",
             )}
             disabled={partPicker.isPracticeDisabled}
             onClick={() => {
