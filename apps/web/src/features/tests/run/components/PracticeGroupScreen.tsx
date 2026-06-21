@@ -15,10 +15,6 @@ import {
   showsQuestionTranslation,
 } from "@/features/tests/shared/lib/partTranslationVisibility";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
-import {
-  getMinQuestionNumberInSession,
-  toSessionQuestionDisplayNumber,
-} from "@/features/tests/run/lib/practiceRunSteps";
 import { writePracticeIndex } from "@/features/tests/run/lib/practiceStorage";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import {
@@ -29,6 +25,7 @@ import { resolveListeningGroupQuestionGridResult } from "@/features/tests/run/li
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
 import { usePracticeBilingual } from "@/features/tests/run/providers/PracticeExitProvider";
+import { getSessionQuestionPosition } from "@/features/tests/run/lib/sessionQuestionPosition";
 
 type OptionKey = "A" | "B" | "C" | "D";
 
@@ -132,20 +129,10 @@ export function PracticeGroupScreen({
     [groups],
   );
 
-  const minSessionQuestionNumber = useMemo(
-    () =>
-      getMinQuestionNumberInSession(
-        groups.flatMap((group) =>
-          group.questions.map((question) => question.questionNumber),
-        ),
-      ),
-    [groups],
-  );
-
   useRegisterPracticeQuestionNav({
-    currentQuestionNumber: toSessionQuestionDisplayNumber(
-      currentGroup?.group.questionStart ?? minSessionQuestionNumber,
-      minSessionQuestionNumber,
+    currentQuestionNumber: getSessionQuestionPosition(
+      groups,
+      currentGroup?.questions[0]?.id,
     ),
     enabled: navigation === undefined && groups.length > 0,
     totalQuestions,

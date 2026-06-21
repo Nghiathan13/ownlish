@@ -75,8 +75,8 @@ export function TestsPage() {
           onStart={(partNumbers, mode) => {
             void overview.startTest(selectedTest.id, partNumbers, mode);
           }}
-          onStartMock={() => {
-            overview.startMock();
+          onStartMock={(partNumbers) => {
+            void overview.startMock(selectedTest.id, partNumbers);
           }}
           test={selectedTest}
           testLabel={`Test ${selectedTest.id}`}

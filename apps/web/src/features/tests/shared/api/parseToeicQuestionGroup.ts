@@ -1,14 +1,14 @@
- import {
+import {
   isBoolean,
   isNullableString,
   isNumber,
   isRecord,
-} from "@/shared/lib/parse";
+} from "../../../../shared/lib/parse";
 import type {
   ToeicQuestion,
   ToeicQuestionGroup,
   ToeicQuestionOptions,
-} from "@/features/tests/shared/api/types";
+} from "./types";
 
 function parseOptionKey(value: unknown): "A" | "B" | "C" | "D" | null {
   const normalized = typeof value === "string" ? value.trim().toUpperCase() : "";

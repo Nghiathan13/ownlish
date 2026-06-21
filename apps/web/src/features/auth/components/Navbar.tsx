@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { isImmersiveTestPath } from "@/features/tests/shared/lib/isImmersiveTestPath";
+import {
+  isImmersiveTestPath,
+  isMockTestPath,
+} from "@/features/tests/shared/lib/isImmersiveTestPath";
 import {
   usePracticeBilingual,
   usePracticeExit,
+  usePracticeFinish,
   usePracticeQuestionNav,
 } from "@/features/tests/run/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
@@ -20,11 +24,13 @@ export function Navbar() {
   const router = useRouter();
   const { logout, status, user } = useAuthSession();
   const practiceExit = usePracticeExit();
+  const practiceFinish = usePracticeFinish();
   const practiceQuestionNav = usePracticeQuestionNav();
   const practiceBilingual = usePracticeBilingual();
   const isBilingual = practiceBilingual?.isBilingual ?? false;
   const questionNav = practiceQuestionNav?.questionNav ?? null;
   const isImmersivePractice = isImmersiveTestPath(pathname);
+  const isMockTest = isMockTestPath(pathname);
 
   const isAuth = status === "authenticated";
 
@@ -40,6 +46,41 @@ export function Navbar() {
   };
 
   if (isImmersivePractice) {
+    if (isMockTest) {
+      return (
+        <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+          <div
+            className={classNames(
+              APP_CONTAINER_CLASS,
+              "flex items-center justify-between gap-4 py-4",
+            )}
+          >
+            <div className="flex items-center gap-4">
+              <Button
+                className="py-2 text-base font-normal"
+                onClick={() => {
+                  void practiceFinish?.finish();
+                }}
+                type="button"
+              >
+                Finish
+              </Button>
+              {practiceFinish?.mockTitle ? (
+                <span className="text-base font-semibold text-foreground">
+                  {practiceFinish.mockTitle}
+                </span>
+              ) : null}
+            </div>
+            {questionNav ? (
+              <span className="rounded-lg border border-border px-4 py-2 text-base font-normal">
+                {questionNav.currentQuestionNumber}/{questionNav.totalQuestions}
+              </span>
+            ) : null}
+          </div>
+        </nav>
+      );
+    }
+
     return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div

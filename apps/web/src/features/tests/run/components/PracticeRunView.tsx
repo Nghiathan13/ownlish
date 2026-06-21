@@ -11,10 +11,7 @@ import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/shared/a
 import {
   buildPracticeRunQuestions,
   buildPracticeRunSteps,
-  getMinQuestionNumberInSession,
-  getStepQuestionStart,
   resolveInitialStepIndex,
-  toSessionQuestionDisplayNumber,
 } from "@/features/tests/run/lib/practiceRunSteps";
 import { writePracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
 import { getQuestionGridResultFromAnswer } from "@/features/tests/run/lib/practiceAnswers";
@@ -22,8 +19,11 @@ import {
   buildPracticeRunGridSections,
   findStepIndexForQuestion,
   getActiveQuestionNumbersForStep,
-  getTotalQuestionCountFromSections,
 } from "@/features/tests/run/lib/practiceQuestionGrid";
+import {
+  getSessionQuestionCount,
+  getSessionQuestionPosition,
+} from "@/features/tests/run/lib/sessionQuestionPosition";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
@@ -157,22 +157,16 @@ export function PracticeRunView({
     [activeQuestionNumbers, normalizedSelectedParts, practice, steps],
   );
 
-  const totalQuestions = getTotalQuestionCountFromSections(questionGridSections);
-  const minSessionQuestionNumber = useMemo(
-    () =>
-      getMinQuestionNumberInSession(
-        questionGridSections.flatMap((section) =>
-          section.cells.map((cell) => cell.questionNumber),
-        ),
-      ),
-    [questionGridSections],
+  const totalQuestions = getSessionQuestionCount(practice.groups);
+  const currentStepQuestionId = currentStep
+    ? currentStep.kind === "group"
+      ? currentStep.practiceGroup.questions[0]?.id
+      : currentStep.item.question.id
+    : null;
+  const currentQuestionNumber = getSessionQuestionPosition(
+    practice.groups,
+    currentStepQuestionId,
   );
-  const currentQuestionNumber = currentStep
-    ? toSessionQuestionDisplayNumber(
-        getStepQuestionStart(currentStep),
-        minSessionQuestionNumber,
-      )
-    : 1;
 
   useRegisterPracticeQuestionNav({
     currentQuestionNumber,

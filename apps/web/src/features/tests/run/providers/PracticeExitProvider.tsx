@@ -17,6 +17,7 @@ import {
 } from "@/features/tests/run/lib/bilingualStorage";
 
 type ExitHandler = () => void | Promise<void>;
+type FinishHandler = () => void | Promise<void>;
 
 export type PracticeQuestionNavState = {
   currentQuestionNumber: number;
@@ -37,6 +38,15 @@ type PracticeQuestionNavContextValue = {
   registerQuestionNav: (state: PracticeQuestionNavState | null) => void;
 };
 
+type PracticeFinishContextValue = {
+  finish: () => Promise<void>;
+  mockTitle: string | null;
+  registerFinishHandler: (
+    handler: FinishHandler | null,
+    title?: string | null,
+  ) => void;
+};
+
 type PracticeBilingualContextValue = {
   isBilingual: boolean;
   toggleBilingual: () => void;
@@ -49,13 +59,19 @@ const PracticeExitContext = createContext<PracticeExitContextValue | null>(
 const PracticeQuestionNavContext =
   createContext<PracticeQuestionNavContextValue | null>(null);
 
+const PracticeFinishContext = createContext<PracticeFinishContextValue | null>(
+  null,
+);
+
 const PracticeBilingualContext =
   createContext<PracticeBilingualContextValue | null>(null);
 
 export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const handlerRef = useRef<ExitHandler | null>(null);
+  const finishHandlerRef = useRef<FinishHandler | null>(null);
   const [practiceTitle, setPracticeTitle] = useState<string | null>(null);
+  const [mockTitle, setMockTitle] = useState<string | null>(null);
   const [questionNav, setQuestionNav] = useState<PracticeQuestionNavState | null>(
     null,
   );
@@ -72,6 +88,14 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const registerQuestionNav = useCallback((state: PracticeQuestionNavState | null) => {
     setQuestionNav(state);
   }, []);
+
+  const registerFinishHandler = useCallback(
+    (handler: FinishHandler | null, title: string | null = null) => {
+      finishHandlerRef.current = handler;
+      setMockTitle(handler ? title : null);
+    },
+    [],
+  );
 
   const toggleBilingual = useCallback(() => {
     setIsBilingual((current) => {
@@ -93,6 +117,12 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
     router.push("/tests");
   }, [router]);
 
+  const finish = useCallback(async () => {
+    if (finishHandlerRef.current) {
+      await finishHandlerRef.current();
+    }
+  }, []);
+
   const exitValue = useMemo(
     () => ({
       exit,
@@ -110,6 +140,15 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
     [questionNav, registerQuestionNav],
   );
 
+  const finishValue = useMemo(
+    () => ({
+      finish,
+      mockTitle,
+      registerFinishHandler,
+    }),
+    [finish, mockTitle, registerFinishHandler],
+  );
+
   const bilingualValue = useMemo(
     () => ({
       isBilingual,
@@ -121,9 +160,11 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   return (
     <PracticeExitContext.Provider value={exitValue}>
       <PracticeQuestionNavContext.Provider value={questionNavValue}>
-        <PracticeBilingualContext.Provider value={bilingualValue}>
-          {children}
-        </PracticeBilingualContext.Provider>
+        <PracticeFinishContext.Provider value={finishValue}>
+          <PracticeBilingualContext.Provider value={bilingualValue}>
+            {children}
+          </PracticeBilingualContext.Provider>
+        </PracticeFinishContext.Provider>
       </PracticeQuestionNavContext.Provider>
     </PracticeExitContext.Provider>
   );
@@ -139,6 +180,10 @@ export function usePracticeQuestionNav() {
 
 export function usePracticeBilingual() {
   return useContext(PracticeBilingualContext);
+}
+
+export function usePracticeFinish() {
+  return useContext(PracticeFinishContext);
 }
 
 export function useRegisterPracticeExit(
@@ -159,4 +204,24 @@ export function useRegisterPracticeExit(
       registerExitHandler(null, null);
     };
   }, [handler, registerExitHandler, title]);
+}
+
+export function useRegisterPracticeFinish(
+  handler: FinishHandler | null,
+  title: string | null = null,
+) {
+  const context = usePracticeFinish();
+  const registerFinishHandler = context?.registerFinishHandler;
+
+  useEffect(() => {
+    if (!registerFinishHandler) {
+      return;
+    }
+
+    registerFinishHandler(handler, title);
+
+    return () => {
+      registerFinishHandler(null, null);
+    };
+  }, [handler, registerFinishHandler, title]);
 }

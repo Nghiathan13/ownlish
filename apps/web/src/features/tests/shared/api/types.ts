@@ -63,15 +63,18 @@ export type SubmitAnswerResult = {
 
 export type PracticeSessionResult = {
   sessionId: string;
-  mode: PracticeMode;
+  mode: ToeicRunMode;
   testId: number;
   partNumbers: number[];
   correctCount: number;
   wrongCount: number;
+  completedAt: string | null;
   groups: ToeicQuestionGroup[];
 };
 
-export type PracticeMode = "practice" | "review_wrong";
+export type ToeicRunMode = "practice" | "review_wrong" | "mock_test";
+
+export type PracticeMode = Exclude<ToeicRunMode, "mock_test">;
 
 export type ToeicPartProgress = {
   partNumber: number;

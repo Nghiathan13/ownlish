@@ -3,7 +3,7 @@ import { apiRequest } from "@/shared/api/http";
 export type PostToeicSessionPayload = {
   testId: number;
   partNumbers: number[];
-  mode?: "practice" | "review_wrong";
+  mode?: "practice" | "review_wrong" | "mock_test";
 };
 
 export function postToeicSession(

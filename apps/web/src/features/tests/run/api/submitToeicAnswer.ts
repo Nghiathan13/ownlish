@@ -15,14 +15,11 @@ export async function submitToeicAnswer(
     selectedKey: "A" | "B" | "C" | "D";
   },
 ) {
-  const body = await apiRequest(
-    `/tests/practice/sessions/${sessionId}/answers`,
-    {
-      method: "POST",
-      token,
-      body: JSON.stringify(payload),
-    },
-  );
+  const body = await apiRequest(`/tests/runs/${sessionId}/answers`, {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
 
   if (!isRecord(body) || !isBoolean(body.graded)) {
     invalidApiResponse();

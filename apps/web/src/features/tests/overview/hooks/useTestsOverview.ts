@@ -12,6 +12,7 @@ import type {
 } from "@/features/tests/shared/api/types";
 import { createToeicSessionRequest } from "@/features/tests/run/lib/createToeicSessionRequest";
 import { getPracticeSessionQueryKey } from "@/features/tests/run/hooks/usePracticeSession";
+import { getToeicRunQueryKey } from "@/features/tests/run/hooks/useMockTestRun";
 import {
   getTestsQueryKey,
   useTestsList,
@@ -133,8 +134,34 @@ export function useTestsOverview() {
     setSelectedTest(null);
   };
 
-  const startMock = () => {
-    closePartPicker();
+  const startMock = async (testId: number, partNumbers: number[]) => {
+    const normalizedParts = normalizeSelectedParts(partNumbers);
+
+    if (!accessToken || normalizedParts.length === 0) {
+      return;
+    }
+
+    setStartingTestId(testId);
+    try {
+      const session = await runAuthenticatedRequest({
+        accessToken,
+        clearSession,
+        request: (token) =>
+          createToeicSessionRequest({
+            token,
+            testId,
+            partNumbers: normalizedParts,
+            mode: "mock_test",
+          }),
+      });
+
+      queryClient.setQueryData(getToeicRunQueryKey(session.sessionId), session);
+      router.push(`/tests/${testId}/mock_test/${session.sessionId}`);
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Cannot start mock test."));
+    } finally {
+      setStartingTestId(null);
+    }
   };
 
   return {
