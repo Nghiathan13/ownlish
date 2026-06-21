@@ -259,7 +259,7 @@ function VocabularyPageContent() {
               <div
                 className={`min-h-0 flex-1 overflow-auto ${
                   isRefreshing ? "opacity-50 pointer-events-none" : "opacity-100"
-                } transition-opacity duration-200`}
+                }`}
               >
                 <VocabularyTable
                   allDefinitionsSelected={allDefinitionsSelected}
