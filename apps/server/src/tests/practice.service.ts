@@ -118,7 +118,7 @@ export class PracticeService {
         selectedParts,
       });
 
-      return this.formatSessionResponse(run);
+      return this.formatSessionResponse(run, selectedParts);
     }
 
     if (mode === ToeicRunMode.WRONG_REVIEW) {
@@ -127,7 +127,7 @@ export class PracticeService {
         dto.testId,
         selectedParts,
       );
-      return this.formatSessionResponse(run);
+      return this.formatSessionResponse(run, selectedParts);
     }
 
     const existingRun = await this.findLatestPracticeRun(userId, dto.testId);
@@ -144,7 +144,7 @@ export class PracticeService {
         throw new NotFoundException('Practice session not found.');
       }
 
-      return this.formatSessionResponse(refreshedRun);
+      return this.formatSessionResponse(refreshedRun, selectedParts);
     }
 
     const run = await this.createRunWithQuestions({
@@ -154,7 +154,7 @@ export class PracticeService {
       selectedParts,
     });
 
-    return this.formatSessionResponse(run);
+    return this.formatSessionResponse(run, selectedParts);
   }
 
   private resolveRunMode(mode: CreateToeicSessionDto['mode']): ToeicRunMode {
@@ -256,9 +256,29 @@ export class PracticeService {
     } satisfies Prisma.ToeicRunInclude;
   }
 
-  private async formatSessionResponse(session: RunForResponse) {
+  private async formatSessionResponse(
+    session: RunForResponse,
+    visibleParts = session.selectedParts,
+  ) {
+    const visiblePartSet = new Set(visibleParts);
+    const visibleGroups = session.groups
+      .filter((group) => visiblePartSet.has(group.partNumber))
+      .map((group) => ({
+        ...group,
+        questions: [...group.questions].sort(
+          (left, right) =>
+            left.toeicQuestion.questionNumber - right.toeicQuestion.questionNumber,
+        ),
+      }))
+      .sort(
+        (left, right) =>
+          left.partNumber - right.partNumber ||
+          left.questionStart - right.questionStart ||
+          left.questionEnd - right.questionEnd ||
+          left.toeicQuestionGroupId - right.toeicQuestionGroupId,
+      );
     const signedUrls = await this.storageService.createSignedUrls(
-      session.groups.flatMap((group) => [
+      visibleGroups.flatMap((group) => [
         group.toeicQuestionGroup.audioStoragePath,
         group.toeicQuestionGroup.imageStoragePath,
       ]),
@@ -267,6 +287,7 @@ export class PracticeService {
     const answerByQuestionId = new Map(
       session.questions.map((answer) => [answer.toeicQuestionId, answer]),
     );
+    let nextSessionQuestionNumber = 1;
 
     return {
       sessionId: session.id,
@@ -277,17 +298,44 @@ export class PracticeService {
             ? 'mock_test'
           : 'practice',
       testId: session.toeicTestId,
-      partNumbers: session.selectedParts,
+      partNumbers: visibleParts,
+      totalQuestions: visibleGroups.reduce(
+        (total, group) => total + group.questions.length,
+        0,
+      ),
       correctCount: session.totalRight,
       wrongCount: session.totalWrong,
       completedAt: session.completedAt?.toISOString() ?? null,
-      groups: session.groups.map((group) => {
+      groups: visibleGroups.map((group) => {
         const audioSigned = group.toeicQuestionGroup.audioStoragePath
           ? signedUrls.get(group.toeicQuestionGroup.audioStoragePath)
           : null;
         const imageSigned = group.toeicQuestionGroup.imageStoragePath
           ? signedUrls.get(group.toeicQuestionGroup.imageStoragePath)
           : null;
+        const questions = group.questions.map((question) => {
+          const answer = answerByQuestionId.get(question.toeicQuestionId);
+          const selectedKey = answer?.selectedKey?.trim().toUpperCase();
+          const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
+          const sessionQuestionNumber = nextSessionQuestionNumber;
+          nextSessionQuestionNumber += 1;
+
+          return {
+            id: question.toeicQuestionId,
+            questionNumber: question.toeicQuestion.questionNumber,
+            sessionQuestionNumber,
+            question: question.toeicQuestion.question,
+            questionVi: question.toeicQuestion.questionVi,
+            options: mapQuestionOptions(question.toeicQuestion),
+            optionCount: countOptions(question.toeicQuestion),
+            answerKey,
+            selectedKey: selectedKey && isToeicQuestionOptionKey(selectedKey)
+              ? selectedKey
+              : null,
+            status: this.formatQuestionStatus(answer?.status ?? null),
+            isCorrect: this.formatQuestionCorrectness(answer?.status ?? null),
+          };
+        });
 
         return {
           id: group.toeicQuestionGroupId,
@@ -303,26 +351,7 @@ export class PracticeService {
           audioUrlExpiresAt: audioSigned?.expiresAt ?? null,
           imageUrl: imageSigned?.url ?? null,
           imageUrlExpiresAt: imageSigned?.expiresAt ?? null,
-          questions: group.questions.map((question) => {
-            const answer = answerByQuestionId.get(question.toeicQuestionId);
-            const selectedKey = answer?.selectedKey?.trim().toUpperCase();
-            const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-
-            return {
-              id: question.toeicQuestionId,
-              questionNumber: question.toeicQuestion.questionNumber,
-              question: question.toeicQuestion.question,
-              questionVi: question.toeicQuestion.questionVi,
-              options: mapQuestionOptions(question.toeicQuestion),
-              optionCount: countOptions(question.toeicQuestion),
-              answerKey,
-              selectedKey: selectedKey && isToeicQuestionOptionKey(selectedKey)
-                ? selectedKey
-                : null,
-              status: this.formatQuestionStatus(answer?.status ?? null),
-              isCorrect: this.formatQuestionCorrectness(answer?.status ?? null),
-            };
-          }),
+          questions,
         };
       }),
     };

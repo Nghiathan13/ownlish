@@ -156,6 +156,7 @@ describe('PracticeService', () => {
       mode: 'practice',
       testId: 1,
       partNumbers: [1, 2],
+      totalQuestions: 1,
       correctCount: 0,
       wrongCount: 0,
       completedAt: null,
@@ -178,6 +179,7 @@ describe('PracticeService', () => {
             {
               id: 1001,
               questionNumber: 1,
+              sessionQuestionNumber: 1,
               question: 'Question 1',
               questionVi: null,
               options: {
@@ -378,6 +380,7 @@ describe('PracticeService', () => {
       mode: 'mock_test',
       testId: 1,
       partNumbers: [1],
+      totalQuestions: 0,
       correctCount: 0,
       wrongCount: 1,
       completedAt: completedAt.toISOString(),
