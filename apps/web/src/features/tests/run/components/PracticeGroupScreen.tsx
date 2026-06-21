@@ -130,7 +130,7 @@ export function PracticeGroupScreen({
     groups,
     localSelections,
     partNumber,
-    practice.getAnswer,
+    practice,
     usesDeferredGroupGrading,
   ]);
 
