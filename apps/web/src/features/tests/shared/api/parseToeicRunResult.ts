@@ -2,7 +2,7 @@ import { invalidApiResponse } from "../../../../shared/api/http";
 import { isNullableString, isNumber, isRecord, isString } from "../../../../shared/lib/parse";
 import { parseToeicQuestionGroup } from "./parseToeicQuestionGroup";
 import type {
-  PracticeSessionResult,
+  ToeicRunResult,
   ToeicQuestionGroup,
   ToeicRunMode,
 } from "./types";
@@ -13,7 +13,7 @@ function parseRunMode(value: unknown): ToeicRunMode | null {
     : null;
 }
 
-export function parseToeicSessionResult(body: unknown): PracticeSessionResult {
+export function parseToeicRunResult(body: unknown): ToeicRunResult {
   const mode = isRecord(body) ? parseRunMode(body.mode) : null;
 
   if (

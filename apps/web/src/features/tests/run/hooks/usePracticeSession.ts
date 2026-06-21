@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
 import type {
   PracticeMode,
-  PracticeSessionResult,
+  ToeicRunResult,
   SubmitAnswerResult,
   ToeicQuestion,
   ToeicQuestionGroup,
@@ -19,7 +19,7 @@ import {
 } from "@/features/tests/run/lib/practiceAnswers";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
-import { createToeicSessionRequest } from "@/features/tests/run/lib/createToeicSessionRequest";
+import { createToeicRunRequest } from "@/features/tests/run/lib/createToeicRunRequest";
 
 type UsePracticeSessionParams = {
   testId: number;
@@ -81,11 +81,11 @@ function getNextGroupStatus(
 }
 
 function updateQuestion(
-  current: PracticeSessionResult,
+  current: ToeicRunResult,
   toeicQuestionId: number,
   updater: (question: ToeicQuestion) => ToeicQuestion,
   options?: { updateGroupStatus?: boolean },
-): PracticeSessionResult {
+): ToeicRunResult {
   return {
     ...current,
     groups: current.groups.map((group) => {
@@ -115,11 +115,11 @@ function updateQuestion(
 }
 
 function applyGradedAnswer(
-  current: PracticeSessionResult,
+  current: ToeicRunResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
   isCorrect: boolean,
-): PracticeSessionResult {
+): ToeicRunResult {
   return updateQuestion(
     current,
     toeicQuestionId,
@@ -134,10 +134,10 @@ function applyGradedAnswer(
 }
 
 function applySelectionOnly(
-  current: PracticeSessionResult,
+  current: ToeicRunResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-): PracticeSessionResult {
+): ToeicRunResult {
   return updateQuestion(current, toeicQuestionId, (question) => ({
     ...question,
     selectedKey,
@@ -147,10 +147,10 @@ function applySelectionOnly(
 }
 
 function revertGradedAnswer(
-  current: PracticeSessionResult,
+  current: ToeicRunResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-): PracticeSessionResult {
+): ToeicRunResult {
   return updateQuestion(
     current,
     toeicQuestionId,
@@ -193,7 +193,7 @@ export function usePracticeSession({
         accessToken,
         clearSession,
         request: (token) =>
-          createToeicSessionRequest({
+          createToeicRunRequest({
             token,
             testId,
             partNumbers: selectedParts,
@@ -275,7 +275,7 @@ export function usePracticeSession({
         }
 
         if (!result.graded) {
-          queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+          queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
             if (!current) {
               return current;
             }
@@ -342,7 +342,7 @@ export function usePracticeSession({
       selectedKey: OptionKey,
       options?: { deferGrade?: boolean },
     ) => {
-      queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
         if (!current) {
           return current;
         }
@@ -375,7 +375,7 @@ export function usePracticeSession({
         return;
       }
 
-      queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
         if (!current) {
           return current;
         }
@@ -406,7 +406,7 @@ export function usePracticeSession({
     (
       entries: Array<{ toeicQuestionId: number; selectedKey: OptionKey }>,
     ) => {
-      queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
         if (!current) {
           return current;
         }

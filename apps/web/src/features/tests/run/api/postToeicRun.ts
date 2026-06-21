@@ -1,16 +1,16 @@
 import { apiRequest } from "@/shared/api/http";
 
-export type PostToeicSessionPayload = {
+export type PostToeicRunPayload = {
   testId: number;
   partNumbers: number[];
   mode?: "practice" | "review_wrong" | "mock_test";
 };
 
-export function postToeicSession(
+export function postToeicRun(
   token: string,
-  payload: PostToeicSessionPayload,
+  payload: PostToeicRunPayload,
 ) {
-  return apiRequest("/tests/practice/sessions", {
+  return apiRequest("/tests/runs", {
     method: "POST",
     token,
     body: JSON.stringify(payload),

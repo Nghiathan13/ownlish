@@ -8,7 +8,7 @@ import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
 import type {
-  PracticeSessionResult,
+  ToeicRunResult,
   ToeicQuestion,
 } from "@/features/tests/shared/api/types";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
@@ -18,10 +18,10 @@ export function getToeicRunQueryKey(sessionId: string) {
 }
 
 function updateQuestionSelection(
-  current: PracticeSessionResult,
+  current: ToeicRunResult,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-): PracticeSessionResult {
+): ToeicRunResult {
   return {
     ...current,
     groups: current.groups.map((group) => ({
@@ -42,7 +42,7 @@ function updateQuestionSelection(
   };
 }
 
-function toAnswerMap(groups: PracticeSessionResult["groups"]) {
+function toAnswerMap(groups: ToeicRunResult["groups"]) {
   return new Map(
     groups.flatMap((group) =>
       group.questions.map((question) => [question.id, question] as const),
@@ -98,7 +98,7 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
         return;
       }
 
-      queryClient.setQueryData<PracticeSessionResult>(queryKey, (current) => {
+      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
         if (!current) {
           return current;
         }

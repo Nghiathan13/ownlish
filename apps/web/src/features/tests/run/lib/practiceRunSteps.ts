@@ -5,7 +5,6 @@ import type { PracticeGroup, PracticeItem } from "@/features/tests/run/lib/pract
 
 export type PracticeRunQuestionItem = PracticeItem & {
   partNumber: number;
-  globalIndex: number;
 };
 
 export type PracticeRunQuestionStep = {
@@ -22,31 +21,10 @@ export type PracticeRunGroupStep = {
 
 export type PracticeRunStep = PracticeRunQuestionStep | PracticeRunGroupStep;
 
-export function getStepQuestionStart(step: PracticeRunStep): number {
-  return step.kind === "group"
-    ? step.practiceGroup.group.questionStart
-    : step.item.group.questionStart;
-}
-
-export function getMinQuestionNumberInSession(questionNumbers: number[]) {
-  if (questionNumbers.length === 0) {
-    return 1;
-  }
-
-  return Math.min(...questionNumbers);
-}
-
-export function toSessionQuestionDisplayNumber(
-  questionNumber: number,
-  minQuestionNumberInSession: number,
-) {
-  return questionNumber - minQuestionNumberInSession + 1;
-}
-
 function flattenPartItems(
   partNumber: number,
   groups: ToeicQuestionGroup[],
-): Omit<PracticeRunQuestionItem, "globalIndex">[] {
+): PracticeRunQuestionItem[] {
   return groups.flatMap((group) =>
     group.questions.map((question) => ({ group, question, partNumber })),
   );
@@ -61,7 +39,7 @@ export function buildPracticeRunQuestions(
       ? selectedParts
       : [1, 2, 3, 4, 5, 6, 7],
   );
-  const items: Omit<PracticeRunQuestionItem, "globalIndex">[] = [];
+  const items: PracticeRunQuestionItem[] = [];
 
   for (let partNumber = 1; partNumber <= 7; partNumber += 1) {
     if (!allowedParts.has(partNumber)) {
@@ -80,7 +58,7 @@ export function buildPracticeRunQuestions(
     (left, right) => left.question.questionNumber - right.question.questionNumber,
   );
 
-  return items.map((item, globalIndex) => ({ ...item, globalIndex }));
+  return items;
 }
 
 export function buildPracticeRunSteps(

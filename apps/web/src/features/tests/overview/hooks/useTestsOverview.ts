@@ -10,7 +10,7 @@ import type {
   PracticeMode,
   ToeicTestSummary,
 } from "@/features/tests/shared/api/types";
-import { createToeicSessionRequest } from "@/features/tests/run/lib/createToeicSessionRequest";
+import { createToeicRunRequest } from "@/features/tests/run/lib/createToeicRunRequest";
 import { getPracticeSessionQueryKey } from "@/features/tests/run/hooks/usePracticeSession";
 import { getToeicRunQueryKey } from "@/features/tests/run/hooks/useMockTestRun";
 import {
@@ -104,7 +104,7 @@ export function useTestsOverview() {
         accessToken,
         clearSession,
         request: (token) =>
-          createToeicSessionRequest({
+          createToeicRunRequest({
             token,
             testId,
             partNumbers: normalizedParts,
@@ -147,7 +147,7 @@ export function useTestsOverview() {
         accessToken,
         clearSession,
         request: (token) =>
-          createToeicSessionRequest({
+          createToeicRunRequest({
             token,
             testId,
             partNumbers: normalizedParts,

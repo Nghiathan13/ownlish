@@ -1,9 +1,9 @@
 import { apiRequest } from "@/shared/api/http";
-import { parseToeicSessionResult } from "@/features/tests/shared/api/parseToeicSessionResult";
+import { parseToeicRunResult } from "@/features/tests/shared/api/parseToeicRunResult";
 
 export function finishToeicRun(token: string, sessionId: string) {
   return apiRequest(`/tests/runs/${sessionId}/finish`, {
     method: "PATCH",
     token,
-  }).then(parseToeicSessionResult);
+  }).then(parseToeicRunResult);
 }

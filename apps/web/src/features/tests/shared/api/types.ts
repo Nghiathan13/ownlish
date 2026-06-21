@@ -55,7 +55,7 @@ export type SubmitAnswerResult = {
   correctOptionVi?: string | null;
 };
 
-export type PracticeSessionResult = {
+export type ToeicRunResult = {
   sessionId: string;
   mode: ToeicRunMode;
   testId: number;

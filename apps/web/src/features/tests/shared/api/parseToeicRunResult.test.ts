@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { parseToeicSessionResult } from "./parseToeicSessionResult";
+import { parseToeicRunResult } from "./parseToeicRunResult";
 
 vi.mock("../../../../shared/api/http", () => ({
   invalidApiResponse: () => {
@@ -7,10 +7,10 @@ vi.mock("../../../../shared/api/http", () => ({
   },
 }));
 
-describe("parseToeicSessionResult", () => {
+describe("parseToeicRunResult", () => {
   it("parses mock test sessions with question state inside groups", () => {
     expect(
-      parseToeicSessionResult({
+      parseToeicRunResult({
         sessionId: "session-id",
         mode: "mock_test",
         testId: 1,
