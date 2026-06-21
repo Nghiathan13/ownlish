@@ -293,11 +293,12 @@ export class PracticeService {
     const answerByQuestionId = new Map(
       session.questions.map((answer) => [answer.toeicQuestionId, answer]),
     );
+    const responseMode = options?.mode ?? this.formatRunMode(session.mode);
     let nextSessionQuestionNumber = 1;
 
     return {
       sessionId: session.id,
-      mode: options?.mode ?? this.formatRunMode(session.mode),
+      mode: responseMode,
       testId: session.toeicTestId,
       partNumbers: visibleParts,
       totalQuestions: visibleGroups.reduce(
@@ -316,7 +317,13 @@ export class PracticeService {
           : null;
         const questions = group.questions.map((question) => {
           const answer = answerByQuestionId.get(question.toeicQuestionId);
-          const selectedKey = answer?.selectedKey?.trim().toUpperCase();
+          const answerStatus = answer?.status ?? null;
+          const isReviewRetryQuestion =
+            responseMode === 'review_wrong' &&
+            answerStatus !== ToeicRunQuestionStatus.RIGHT;
+          const selectedKey = isReviewRetryQuestion
+            ? null
+            : answer?.selectedKey?.trim().toUpperCase();
           const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
           const sessionQuestionNumber = nextSessionQuestionNumber;
           nextSessionQuestionNumber += 1;
@@ -333,8 +340,12 @@ export class PracticeService {
             selectedKey: selectedKey && isToeicQuestionOptionKey(selectedKey)
               ? selectedKey
               : null,
-            status: this.formatQuestionStatus(answer?.status ?? null),
-            isCorrect: this.formatQuestionCorrectness(answer?.status ?? null),
+            status: isReviewRetryQuestion
+              ? null
+              : this.formatQuestionStatus(answerStatus),
+            isCorrect: isReviewRetryQuestion
+              ? null
+              : this.formatQuestionCorrectness(answerStatus),
           };
         });
 
@@ -757,6 +768,7 @@ export class PracticeService {
       question,
       selectedKey,
       answerKey,
+      dto.mode === 'review_wrong',
     );
   }
 
@@ -787,6 +799,7 @@ export class PracticeService {
     question: QuestionWithGroup,
     selectedKey: 'A' | 'B' | 'C' | 'D',
     answerKey: 'A' | 'B' | 'C' | 'D',
+    isReviewWrongSubmission: boolean,
   ): Promise<SubmitAnswerResponse> {
     let graded = false;
 
@@ -800,7 +813,13 @@ export class PracticeService {
         },
       });
 
-      if (await this.isRunGroupReadyToGrade(tx, runQuestion.runGroupId)) {
+      if (
+        await this.isRunGroupReadyToGrade(
+          tx,
+          runQuestion.runGroupId,
+          isReviewWrongSubmission,
+        )
+      ) {
         await this.gradeRunGroup(tx, run, runQuestion.runGroupId);
         graded = true;
       }
@@ -820,6 +839,7 @@ export class PracticeService {
   private async isRunGroupReadyToGrade(
     tx: Prisma.TransactionClient,
     runGroupId: string,
+    isReviewWrongSubmission = false,
   ): Promise<boolean> {
     const questions = await tx.toeicRunQuestion.findMany({
       where: { runGroupId },
@@ -831,7 +851,9 @@ export class PracticeService {
       questions.every(
         (question) =>
           question.status === ToeicRunQuestionStatus.RIGHT ||
-          Boolean(question.selectedKey),
+          (isReviewWrongSubmission
+            ? question.status === ToeicRunQuestionStatus.SELECTED
+            : Boolean(question.selectedKey)),
       )
     );
   }

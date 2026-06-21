@@ -375,9 +375,9 @@ describe('PracticeService', () => {
             {
               id: 1001,
               sessionQuestionNumber: 1,
-              selectedKey: 'B',
-              status: 'wrong',
-              isCorrect: false,
+              selectedKey: null,
+              status: null,
+              isCorrect: null,
             },
           ],
         },
@@ -511,6 +511,58 @@ describe('PracticeService', () => {
       where: { id: 'run-question-id' },
       data: {
         selectedKey: 'B',
+        status: 'SELECTED',
+        answeredAt: expect.any(Date) as Date,
+      },
+    });
+    expect(prismaMock.toeicRunQuestion.count).not.toHaveBeenCalled();
+  });
+
+  it('does not grade a review wrong group until every non-right question is selected again', async () => {
+    const question = {
+      id: 1001,
+      answerKey: 'A',
+      group: { testPart: { testId: 1 } },
+    };
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'practice-run-id',
+      userId: 'user-id',
+      toeicTestId: 1,
+      mode: 'PRACTICE',
+      selectedParts: [3],
+      completedAt: null,
+    });
+    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
+    prismaMock.toeicRunQuestion.findUnique.mockResolvedValue({
+      id: 'run-question-id',
+      runId: 'practice-run-id',
+      runGroupId: 'run-group-id',
+      toeicQuestionId: 1001,
+      partNumber: 3,
+      selectedKey: 'B',
+      status: 'WRONG',
+      toeicQuestion: question,
+    });
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRunQuestion.findMany.mockResolvedValue([
+      { selectedKey: 'A', status: 'SELECTED' },
+      { selectedKey: 'D', status: 'WRONG' },
+    ]);
+
+    await expect(
+      service.submitAnswer('user-id', 'practice-run-id', {
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+        mode: 'review_wrong',
+      }),
+    ).resolves.toEqual({ graded: false });
+
+    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledWith({
+      where: { id: 'run-question-id' },
+      data: {
+        selectedKey: 'A',
         status: 'SELECTED',
         answeredAt: expect.any(Date) as Date,
       },
