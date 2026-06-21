@@ -21,9 +21,6 @@ import {
 } from "@/entities/auth/api/auth";
 import { isUnauthorizedError } from "@/shared/api/http";
 
-const ACCESS_TOKEN_KEY = "engvocab.accessToken";
-const REFRESH_TOKEN_KEY = "engvocab.refreshToken";
-
 export type AuthStatus = "checking" | "authenticated" | "guest";
 
 type AuthSessionContextValue = {
@@ -44,8 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
     setAccessToken(null);
     setUser(null);
     setStatus("guest");
