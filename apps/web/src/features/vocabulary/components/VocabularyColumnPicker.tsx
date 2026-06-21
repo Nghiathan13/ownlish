@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { vocabularyToolbarControlClassName } from "@/features/vocabulary/lib/vocabularyToolbarStyles";
 import {
   VOCABULARY_TOGGLEABLE_COLUMNS,
   type VocabularyColumnVisibility,
@@ -59,7 +58,6 @@ export function VocabularyColumnPicker({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         className={iconTextButtonClassName(
-          vocabularyToolbarControlClassName,
           "w-fit shrink-0",
           "border-border bg-transparent text-foreground hover:bg-muted",
         )}

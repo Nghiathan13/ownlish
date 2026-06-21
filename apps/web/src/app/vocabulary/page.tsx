@@ -20,7 +20,6 @@ import {
   getSelectableDefinitions,
   getSelectedDefinitions,
 } from "@/features/vocabulary/lib/vocabularySelection";
-import { vocabularyToolbarControlClassName } from "@/features/vocabulary/lib/vocabularyToolbarStyles";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { classNames } from "@/shared/lib/classNames";
 import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
@@ -168,7 +167,6 @@ function VocabularyPageContent() {
           <button
             type="button"
             className={iconTextButtonClassName(
-              vocabularyToolbarControlClassName,
               "w-fit shrink-0",
               "border-foreground bg-foreground text-background",
             )}
@@ -188,7 +186,6 @@ function VocabularyPageContent() {
             <button
               type="button"
               className={iconTextButtonClassName(
-                vocabularyToolbarControlClassName,
                 "w-fit shrink-0 sm:ml-auto",
                 "border-foreground bg-foreground text-background",
               )}

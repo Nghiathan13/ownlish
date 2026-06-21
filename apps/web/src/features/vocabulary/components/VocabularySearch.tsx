@@ -1,4 +1,3 @@
-import { vocabularyToolbarControlClassName } from "@/features/vocabulary/lib/vocabularyToolbarStyles";
 import { classNames } from "@/shared/lib/classNames";
 import { SearchIcon } from "@/shared/ui/icons/SearchIcon";
 import { TextInput } from "@/shared/ui/TextInput";
@@ -18,10 +17,7 @@ export function VocabularySearch({
       <TextInput
         id="vocabulary-search"
         aria-label="Search the word"
-        className={classNames(
-          vocabularyToolbarControlClassName,
-          "pl-10 pr-3",
-        )}
+        className={classNames("rounded-md px-2.5 py-1.5 text-sm", "pl-10 pr-3")}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search the word"
