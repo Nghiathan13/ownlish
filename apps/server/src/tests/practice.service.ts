@@ -124,11 +124,7 @@ export class PracticeService {
     }
 
     if (mode === 'review_wrong') {
-      return this.createReviewWrongSession(
-        userId,
-        dto.testId,
-        selectedParts,
-      );
+      return this.createReviewWrongSession(userId, dto.testId, selectedParts);
     }
 
     const existingRun = await this.findLatestPracticeRun(userId, dto.testId);
@@ -261,7 +257,8 @@ export class PracticeService {
         ...group,
         questions: [...group.questions].sort(
           (left, right) =>
-            left.toeicQuestion.questionNumber - right.toeicQuestion.questionNumber,
+            left.toeicQuestion.questionNumber -
+            right.toeicQuestion.questionNumber,
         ),
       }))
       .sort(
@@ -325,9 +322,10 @@ export class PracticeService {
             options: mapQuestionOptions(question.toeicQuestion),
             optionCount: countOptions(question.toeicQuestion),
             answerKey,
-            selectedKey: selectedKey && isToeicQuestionOptionKey(selectedKey)
-              ? selectedKey
-              : null,
+            selectedKey:
+              selectedKey && isToeicQuestionOptionKey(selectedKey)
+                ? selectedKey
+                : null,
             status: isReviewRetryQuestion
               ? null
               : this.formatQuestionStatus(answerStatus),
@@ -961,25 +959,34 @@ export class PracticeService {
           runGroupIds.add(question.runGroupId);
 
           const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-          const selectedKey = question.selectedKey?.trim().toUpperCase();
+          if (!answerKey) {
+            continue;
+          }
 
-          if (
-            !answerKey ||
-            !selectedKey ||
-            !isToeicQuestionOptionKey(selectedKey)
-          ) {
+          const selectedKey = question.selectedKey?.trim().toUpperCase();
+          const hasValidSelection =
+            selectedKey != null && isToeicQuestionOptionKey(selectedKey);
+
+          if (hasValidSelection) {
+            await tx.toeicRunQuestion.update({
+              where: { id: question.id },
+              data: {
+                selectedKey,
+                status:
+                  selectedKey === answerKey
+                    ? ToeicRunQuestionStatus.RIGHT
+                    : ToeicRunQuestionStatus.WRONG,
+                answeredAt: question.answeredAt ?? now,
+                gradedAt: now,
+              },
+            });
             continue;
           }
 
           await tx.toeicRunQuestion.update({
             where: { id: question.id },
             data: {
-              selectedKey,
-              status:
-                selectedKey === answerKey
-                  ? ToeicRunQuestionStatus.RIGHT
-                  : ToeicRunQuestionStatus.WRONG,
-              answeredAt: question.answeredAt ?? now,
+              status: ToeicRunQuestionStatus.WRONG,
               gradedAt: now,
             },
           });

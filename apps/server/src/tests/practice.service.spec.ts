@@ -588,7 +588,7 @@ describe('PracticeService', () => {
     ).rejects.toThrow('TOEIC run is already completed.');
   });
 
-  it('finishes mock runs by grading selected answers only', async () => {
+  it('finishes mock runs by grading selected answers and marking unanswered as wrong', async () => {
     const completedAt = new Date('2026-06-21T00:00:00.000Z');
     jest.useFakeTimers().setSystemTime(completedAt);
     prismaMock.toeicRun.findFirst.mockResolvedValue({
@@ -623,17 +623,17 @@ describe('PracticeService', () => {
           toeicQuestion: { answerKey: 'C' },
         },
       ])
-      .mockResolvedValueOnce([{ status: 'WRONG' }, { status: null }]);
+      .mockResolvedValueOnce([{ status: 'WRONG' }, { status: 'WRONG' }]);
     prismaMock.toeicRunQuestion.count
       .mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(1);
+      .mockResolvedValueOnce(2);
     prismaMock.toeicRun.findUnique.mockResolvedValue({
       id: 'mock-run-id',
       mode: 'MOCK_TEST',
       toeicTestId: 1,
       selectedParts: [1],
       totalRight: 0,
-      totalWrong: 1,
+      totalWrong: 2,
       completedAt,
       questions: [],
       groups: [],
@@ -646,18 +646,25 @@ describe('PracticeService', () => {
       partNumbers: [1],
       totalQuestions: 0,
       correctCount: 0,
-      wrongCount: 1,
+      wrongCount: 2,
       completedAt: completedAt.toISOString(),
       groups: [],
     });
 
-    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledTimes(1);
+    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledTimes(2);
     expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledWith({
       where: { id: 'selected-question-id' },
       data: {
         selectedKey: 'B',
         status: 'WRONG',
         answeredAt: new Date('2026-06-20T00:00:00.000Z'),
+        gradedAt: completedAt,
+      },
+    });
+    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledWith({
+      where: { id: 'unanswered-question-id' },
+      data: {
+        status: 'WRONG',
         gradedAt: completedAt,
       },
     });

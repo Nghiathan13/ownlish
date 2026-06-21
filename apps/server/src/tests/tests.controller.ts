@@ -35,10 +35,7 @@ export class TestsController {
   }
 
   @Post('runs')
-  createRun(
-    @Req() request: AuthRequest,
-    @Body() dto: CreateToeicRunDto,
-  ) {
+  createRun(@Req() request: AuthRequest, @Body() dto: CreateToeicRunDto) {
     return this.practiceService.createRun(request.user.id, dto);
   }
 
