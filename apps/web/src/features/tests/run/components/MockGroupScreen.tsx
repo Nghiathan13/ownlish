@@ -11,7 +11,6 @@ import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 type MockGroupScreenProps = {
   group: ToeicQuestionGroup;
   isFinished: boolean;
-  isQuestionPending: (toeicQuestionId: number) => boolean;
   mediaError: string | null;
   onSelect: (toeicQuestionId: number, selectedKey: OptionKey) => void;
   partNumber: number;
@@ -20,7 +19,6 @@ type MockGroupScreenProps = {
 export function MockGroupScreen({
   group,
   isFinished,
-  isQuestionPending,
   mediaError,
   onSelect,
   partNumber,
@@ -46,7 +44,6 @@ export function MockGroupScreen({
           <QuestionOptions
             answerKey={isFinished ? question.answerKey : null}
             isLocked={isFinished}
-            isSubmitting={isQuestionPending(question.id)}
             onSelect={(key) => onSelect(question.id, key)}
             optionCount={question.optionCount}
             options={question.options}

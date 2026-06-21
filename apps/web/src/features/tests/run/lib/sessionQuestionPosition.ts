@@ -1,5 +1,5 @@
 type SessionQuestionGroup = {
-  questions: Array<{ id: number }>;
+  questions: Array<{ id: number; sessionQuestionNumber?: number | null }>;
 };
 
 export function getSessionQuestionCount(groups: SessionQuestionGroup[]) {
@@ -27,4 +27,23 @@ export function getSessionQuestionPosition(
   }
 
   return 1;
+}
+
+export function getSessionQuestionNumber(
+  groups: SessionQuestionGroup[],
+  questionId: number | null | undefined,
+) {
+  if (questionId == null) {
+    return 1;
+  }
+
+  for (const group of groups) {
+    for (const question of group.questions) {
+      if (question.id === questionId && question.sessionQuestionNumber != null) {
+        return question.sessionQuestionNumber;
+      }
+    }
+  }
+
+  return getSessionQuestionPosition(groups, questionId);
 }

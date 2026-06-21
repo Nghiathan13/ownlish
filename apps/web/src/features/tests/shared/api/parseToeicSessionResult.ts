@@ -22,6 +22,7 @@ export function parseToeicSessionResult(body: unknown): PracticeSessionResult {
     !mode ||
     !isNumber(body.testId) ||
     !Array.isArray(body.partNumbers) ||
+    !isNumber(body.totalQuestions) ||
     !isNumber(body.correctCount) ||
     !isNumber(body.wrongCount) ||
     !Array.isArray(body.groups)
@@ -39,6 +40,7 @@ export function parseToeicSessionResult(body: unknown): PracticeSessionResult {
     mode,
     testId: body.testId,
     partNumbers,
+    totalQuestions: body.totalQuestions,
     correctCount: body.correctCount,
     wrongCount: body.wrongCount,
     completedAt: isNullableString(body.completedAt) ? body.completedAt : null,

@@ -19,6 +19,7 @@ export type ToeicQuestionOptions = {
 export type ToeicQuestion = {
   id: number;
   questionNumber: number;
+  sessionQuestionNumber: number | null;
   question: string | null;
   questionVi: string | null;
   options: ToeicQuestionOptions;
@@ -66,6 +67,7 @@ export type PracticeSessionResult = {
   mode: ToeicRunMode;
   testId: number;
   partNumbers: number[];
+  totalQuestions: number;
   correctCount: number;
   wrongCount: number;
   completedAt: string | null;

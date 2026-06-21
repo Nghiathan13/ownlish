@@ -15,6 +15,7 @@ describe("parseToeicSessionResult", () => {
         mode: "mock_test",
         testId: 1,
         partNumbers: [1],
+        totalQuestions: 1,
         correctCount: 1,
         wrongCount: 0,
         completedAt: "2026-06-21T00:00:00.000Z",
@@ -37,6 +38,7 @@ describe("parseToeicSessionResult", () => {
               {
                 id: 1001,
                 questionNumber: 1,
+                sessionQuestionNumber: 1,
                 question: null,
                 questionVi: null,
                 options: {
@@ -62,12 +64,14 @@ describe("parseToeicSessionResult", () => {
     ).toMatchObject({
       sessionId: "session-id",
       mode: "mock_test",
+      totalQuestions: 1,
       completedAt: "2026-06-21T00:00:00.000Z",
       groups: [
         {
           groupStatus: "right",
           questions: [
             {
+              sessionQuestionNumber: 1,
               selectedKey: "A",
               status: "right",
               isCorrect: true,

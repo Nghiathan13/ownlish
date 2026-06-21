@@ -25,7 +25,7 @@ import { resolveListeningGroupQuestionGridResult } from "@/features/tests/run/li
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
 import { usePracticeBilingual } from "@/features/tests/run/providers/PracticeExitProvider";
-import { getSessionQuestionPosition } from "@/features/tests/run/lib/sessionQuestionPosition";
+import { getSessionQuestionNumber } from "@/features/tests/run/lib/sessionQuestionPosition";
 
 type OptionKey = "A" | "B" | "C" | "D";
 
@@ -130,7 +130,7 @@ export function PracticeGroupScreen({
   );
 
   useRegisterPracticeQuestionNav({
-    currentQuestionNumber: getSessionQuestionPosition(
+    currentQuestionNumber: getSessionQuestionNumber(
       groups,
       currentGroup?.questions[0]?.id,
     ),

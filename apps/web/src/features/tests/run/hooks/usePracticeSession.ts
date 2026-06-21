@@ -507,6 +507,7 @@ export function usePracticeSession({
   return {
     sessionId,
     groups: sessionData?.groups ?? [],
+    totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isStarting: sessionQuery.isLoading,
     startError: sessionQuery.error

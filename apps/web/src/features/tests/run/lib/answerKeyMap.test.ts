@@ -8,6 +8,7 @@ const groups: ToeicQuestionGroup[] = [
     partNumber: 1,
     questionStart: 1,
     questionEnd: 2,
+    groupStatus: null,
     groupType: null,
     accent: null,
     content: null,
@@ -20,10 +21,14 @@ const groups: ToeicQuestionGroup[] = [
       {
         id: 10,
         questionNumber: 1,
+        sessionQuestionNumber: 1,
         question: "Q1",
         questionVi: null,
         optionCount: 4,
         answerKey: "A",
+        selectedKey: null,
+        status: null,
+        isCorrect: null,
         options: {
           A: "a",
           B: "b",
@@ -38,10 +43,14 @@ const groups: ToeicQuestionGroup[] = [
       {
         id: 11,
         questionNumber: 2,
+        sessionQuestionNumber: 2,
         question: "Q2",
         questionVi: null,
         optionCount: 4,
         answerKey: null,
+        selectedKey: null,
+        status: null,
+        isCorrect: null,
         options: {
           A: "a",
           B: "b",

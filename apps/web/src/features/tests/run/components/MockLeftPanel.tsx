@@ -25,7 +25,7 @@ export function MockLeftPanel({
   const showReadingPassage = partNumber >= 5 && partConfig.leftPanel === "passage";
 
   return (
-    <div className="space-y-4 rounded-xl border border-border p-4">
+    <div className="space-y-4">
       {instruction ? (
         <p className="text-base font-bold text-foreground select-text">
           {instruction}

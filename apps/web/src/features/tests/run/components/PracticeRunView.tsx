@@ -21,8 +21,7 @@ import {
   getActiveQuestionNumbersForStep,
 } from "@/features/tests/run/lib/practiceQuestionGrid";
 import {
-  getSessionQuestionCount,
-  getSessionQuestionPosition,
+  getSessionQuestionNumber,
 } from "@/features/tests/run/lib/sessionQuestionPosition";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
@@ -157,14 +156,23 @@ export function PracticeRunView({
     [activeQuestionNumbers, normalizedSelectedParts, practice, steps],
   );
 
-  const totalQuestions = getSessionQuestionCount(practice.groups);
+  const visibleQuestionGroups = useMemo(
+    () =>
+      steps.map((step) =>
+        step.kind === "group"
+          ? { questions: step.practiceGroup.questions }
+          : { questions: [step.item.question] },
+      ),
+    [steps],
+  );
+  const totalQuestions = practice.totalQuestions;
   const currentStepQuestionId = currentStep
     ? currentStep.kind === "group"
       ? currentStep.practiceGroup.questions[0]?.id
       : currentStep.item.question.id
     : null;
-  const currentQuestionNumber = getSessionQuestionPosition(
-    practice.groups,
+  const currentQuestionNumber = getSessionQuestionNumber(
+    visibleQuestionGroups,
     currentStepQuestionId,
   );
 

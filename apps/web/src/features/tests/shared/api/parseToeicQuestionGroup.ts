@@ -71,6 +71,9 @@ function parseQuestion(value: unknown): ToeicQuestion | null {
   return {
     id: value.id,
     questionNumber: value.questionNumber,
+    sessionQuestionNumber: isNumber(value.sessionQuestionNumber)
+      ? value.sessionQuestionNumber
+      : null,
     question: isNullableString(value.question) ? value.question : null,
     questionVi: isNullableString(value.questionVi) ? value.questionVi : null,
     options,

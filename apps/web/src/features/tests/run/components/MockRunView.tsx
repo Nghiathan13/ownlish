@@ -11,8 +11,7 @@ import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {
-  getSessionQuestionCount,
-  getSessionQuestionPosition,
+  getSessionQuestionNumber,
 } from "@/features/tests/run/lib/sessionQuestionPosition";
 import { Button } from "@/shared/ui/Button";
 import { Modal } from "@/shared/ui/Modal";
@@ -131,18 +130,29 @@ function HiddenMockAudio({
   onError,
 }: HiddenMockAudioProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const callbacksRef = useRef({ onAutoplayBlocked, onEnded, onError });
+  const playedAudioUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    callbacksRef.current = { onAutoplayBlocked, onEnded, onError };
+  }, [onAutoplayBlocked, onEnded, onError]);
 
   useEffect(() => {
     if (!enabled || !audioUrl || !audioRef.current) {
       return;
     }
 
+    if (playedAudioUrlRef.current === audioUrl) {
+      return;
+    }
+
+    playedAudioUrlRef.current = audioUrl;
     audioRef.current.currentTime = 0;
     const playPromise = audioRef.current.play();
     if (playPromise) {
-      void playPromise.catch(onAutoplayBlocked);
+      void playPromise.catch(() => callbacksRef.current.onAutoplayBlocked());
     }
-  }, [audioUrl, enabled, onAutoplayBlocked]);
+  }, [audioUrl, enabled]);
 
   if (!enabled || !audioUrl) {
     return null;
@@ -152,8 +162,8 @@ function HiddenMockAudio({
     <audio
       hidden
       key={audioUrl}
-      onEnded={onEnded}
-      onError={onError}
+      onEnded={() => callbacksRef.current.onEnded()}
+      onError={() => callbacksRef.current.onError()}
       preload="auto"
       ref={audioRef}
       src={audioUrl}
@@ -290,8 +300,8 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
     () => buildMockGridSections(groups, activeGroup, mock.isFinished),
     [activeGroup, groups, mock.isFinished],
   );
-  const totalQuestions = getSessionQuestionCount(groups);
-  const currentQuestionNumber = getSessionQuestionPosition(
+  const totalQuestions = mock.totalQuestions;
+  const currentQuestionNumber = getSessionQuestionNumber(
     groups,
     activeGroup?.questions[0]?.id,
   );
@@ -369,7 +379,6 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
           <MockGroupScreen
             group={activeGroup}
             isFinished={mock.isFinished}
-            isQuestionPending={mock.isQuestionPending}
             mediaError={mediaMessage ?? mock.finishError}
             onSelect={handleSelect}
             partNumber={activeGroup.partNumber ?? 1}

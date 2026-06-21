@@ -167,6 +167,7 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
     correctCount: sessionData?.correctCount ?? 0,
     wrongCount: sessionData?.wrongCount ?? 0,
     groups: sessionData?.groups ?? [],
+    totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isFinished,
     isLoading: runQuery.isLoading,
