@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { clearToeicPracticeHistory } from "@/features/tests/overview/api/clearToeicPracticeHistory";
 import type {
@@ -32,7 +32,7 @@ export function useTestsOverview() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { status, user } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const [selectedTest, setSelectedTest] = useState<ToeicTestSummary | null>(
     null,
   );

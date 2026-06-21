@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import { classNames } from "@/shared/lib/classNames";
 import { Panel } from "@/shared/ui/Panel";
@@ -18,17 +18,17 @@ const secondaryLinkClassName =
 
 export function HomeDashboard() {
   const { status, user } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const { error, isLoading, reload, stats } = useVocabStats({
     isAuthenticated,
     userId: user?.id ?? null,
   });
 
-  if (status === "checking") {
+  if (isLoadingStatus(status)) {
     return (
       <PageShell centered>
         <Panel className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}>
-          <p className="text-muted-foreground">Checking your session...</p>
+          <p className="text-muted-foreground">Loading session...</p>
         </Panel>
       </PageShell>
     );

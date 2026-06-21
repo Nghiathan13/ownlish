@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { CatalogDefinition, CatalogWord } from "@/entities/collection/api/collections";
 import { findCollectionBySlug } from "@/entities/collection/lib/collectionDisplay";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import {
   useCollectionDetail,
   useCollectionsList,
@@ -26,7 +26,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
     null,
   );
   const authParams = {
-    isAuthenticated: status === "authenticated",
+    isAuthenticated: isAuthenticatedStatus(status),
     userId: user?.id ?? null,
   };
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =

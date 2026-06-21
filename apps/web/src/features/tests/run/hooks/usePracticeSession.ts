@@ -17,7 +17,7 @@ import {
 import {
   isPracticeAnswerGraded,
 } from "@/features/tests/run/lib/practiceAnswers";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { createToeicRunRequest } from "@/features/tests/run/lib/createToeicRunRequest";
 
@@ -172,7 +172,7 @@ export function usePracticeSession({
   enabled,
 }: UsePracticeSessionParams) {
   const { status } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const queryClient = useQueryClient();
   const selectedParts = useMemo(
     () => normalizePracticeParts(partNumber, selectedPartsInput),

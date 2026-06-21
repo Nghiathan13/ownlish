@@ -3,7 +3,7 @@
 import { Suspense, use, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { PracticeRunView } from "@/features/tests/run/components/PracticeRunView";
 import type { PracticeMode } from "@/features/tests/shared/api/types";
 import { useTestsList } from "@/features/tests/overview/hooks/useTestsList";
@@ -55,7 +55,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
   }, [searchParams]);
 
   const { tests, isLoadingTests, testsError } = useTestsList({
-    isAuthenticated: status === "authenticated",
+    isAuthenticated: isAuthenticatedStatus(status),
     userId: user?.id ?? null,
   });
 

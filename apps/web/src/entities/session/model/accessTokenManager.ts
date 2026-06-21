@@ -53,7 +53,7 @@ function refreshSessionDeduped(): Promise<AuthResponse> {
 }
 
 /** Bootstrap session on app mount via HttpOnly refresh cookie; stores token in memory. */
-export async function refreshClientSession(): Promise<AuthResponse> {
+export async function bootstrapClientSession(): Promise<AuthResponse> {
   return refreshSessionDeduped();
 }
 

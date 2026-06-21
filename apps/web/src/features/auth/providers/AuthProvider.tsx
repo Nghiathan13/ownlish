@@ -19,13 +19,14 @@ import {
 import type { AuthUser } from "@/entities/auth/types";
 import {
   clearClientSession,
+  bootstrapClientSession,
   establishSession,
-  refreshClientSession,
   setSessionInvalidHandler,
 } from "@/entities/session/model/accessTokenManager";
 import { isUnauthorizedError } from "@/shared/api/http";
+import type { AuthStatus } from "@/features/auth/lib/authStatus";
 
-export type AuthStatus = "checking" | "authenticated" | "guest";
+export type { AuthStatus } from "@/features/auth/lib/authStatus";
 
 type AuthSessionContextValue = {
   clearSession: () => void;
@@ -39,7 +40,7 @@ type AuthSessionContextValue = {
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>("checking");
+  const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const clearSession = useCallback(() => {
@@ -60,9 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
-    async function bootstrapClientSession() {
+    async function bootstrapSession() {
       try {
-        const session = await refreshClientSession();
+        const session = await bootstrapClientSession();
 
         if (!cancelled) {
           setUser(session.user);
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    void bootstrapClientSession();
+    void bootstrapSession();
 
     return () => {
       cancelled = true;
@@ -103,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await logoutSession().catch(() => undefined);
     clearSession();
+    setUser(null);
+    setStatus("guest");
   }, [clearSession]);
 
   const value = useMemo<AuthSessionContextValue>(

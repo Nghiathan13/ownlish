@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
-import { useAuthSession } from "../hooks/useAuthSession";
+import { useAuthSession, isLoadingStatus } from "../hooks/useAuthSession";
 
 type RequireAuthProps = {
   children: ReactNode;
@@ -22,11 +22,11 @@ export function RequireAuth({ children }: RequireAuthProps) {
     }
   }, [pathname, router, status]);
 
-  if (status === "checking") {
+  if (isLoadingStatus(status)) {
     return (
       <PageShell>
         <Panel>
-          <p className="text-muted-foreground">Checking your session...</p>
+          <p className="text-muted-foreground">Loading session...</p>
         </Panel>
       </PageShell>
     );

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 
 export function AuthQueryReset() {
   const { status, user } = useAuthSession();
@@ -10,7 +10,7 @@ export function AuthQueryReset() {
   const previousUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (isAuthenticatedStatus(status)) {
       const previousUserId = previousUserIdRef.current;
       const nextUserId = user?.id ?? null;
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
 import { useReviewQueue } from "@/features/review/hooks/useReviewQueue";
 import type { ReviewGrade } from "@/features/review/lib/reviewSchedule";
@@ -19,7 +19,7 @@ export default function ReviewPage() {
 
 function ReviewPageContent() {
   const { status, user } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const [showMeaning, setShowMeaning] = useState(false);
   const {
     currentWord,

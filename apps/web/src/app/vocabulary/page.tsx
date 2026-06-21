@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { VocabWord } from "@/entities/vocab/api/vocab";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import {
   AddWordForm,
   DeleteDefinitionsConfirm,
@@ -47,7 +47,7 @@ type EditingTarget = {
 
 function VocabularyPageContent() {
   const { status, user } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const {

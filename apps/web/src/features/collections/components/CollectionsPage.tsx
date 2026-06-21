@@ -8,7 +8,7 @@ import {
   getCollectionSlug,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { classNames } from "@/shared/lib/classNames";
 import { Button } from "@/shared/ui/Button";
@@ -21,7 +21,7 @@ export function CollectionsPage() {
     useState<CollectionCategory>("oxford");
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
-      isAuthenticated: status === "authenticated",
+      isAuthenticated: isAuthenticatedStatus(status),
       userId: user?.id ?? null,
     });
   const activeCollections = useMemo(() => {

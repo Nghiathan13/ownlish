@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getToeicRun } from "@/features/tests/run/api/getToeicRun";
 import { finishToeicRun } from "@/features/tests/run/api/finishToeicRun";
 import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import type {
   ToeicRunResult,
@@ -56,7 +56,7 @@ type UseMockTestRunParams = {
 
 export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
   const { status } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const queryClient = useQueryClient();
   const queryKey = getToeicRunQueryKey(sessionId);
   const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(

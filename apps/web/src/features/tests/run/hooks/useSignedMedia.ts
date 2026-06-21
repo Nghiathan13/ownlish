@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { refreshToeicPartMedia } from "@/features/tests/run/api/refreshToeicPartMedia";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 
 const REFRESH_BUFFER_MS = 2 * 60 * 1000;
@@ -49,7 +49,7 @@ export function useSignedMedia({
   group,
 }: UseSignedMediaParams) {
   const { status } = useAuthSession();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = isAuthenticatedStatus(status);
   const [overrides, setOverrides] = useState<Record<number, SignedMediaState>>(
     {},
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
 import {
   isImmersiveTestPath,
   isMockTestPath,
@@ -32,7 +32,7 @@ export function Navbar() {
   const isImmersivePractice = isImmersiveTestPath(pathname);
   const isMockTest = isMockTestPath(pathname);
 
-  const isAuth = status === "authenticated";
+  const isAuth = isAuthenticatedStatus(status);
 
   const linkClass = (href: string) => {
     const isActive =
@@ -199,7 +199,7 @@ export function Navbar() {
         ) : null}
 
         <div className="order-2 flex shrink-0 items-center gap-3 sm:order-none sm:gap-4">
-          {status === "checking" ? null : isAuth ? (
+          {isLoadingStatus(status) ? null : isAuth ? (
             <>
               <span className="hidden text-xs text-muted-foreground sm:inline">
                 {user?.email}

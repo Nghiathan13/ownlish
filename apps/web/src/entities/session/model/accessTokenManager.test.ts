@@ -29,6 +29,7 @@ import {
   setStoredAccessToken,
 } from "./accessTokenStore";
 import {
+  bootstrapClientSession,
   clearClientSession,
   establishSession,
   getValidAccessToken,
@@ -121,6 +122,20 @@ describe("accessTokenManager", () => {
     await expect(getValidAccessToken()).rejects.toBeInstanceOf(ApiError);
     expect(getStoredAccessToken()).toBeNull();
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("bootstrapClientSession returns refreshed session", async () => {
+    const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
+    const session = {
+      accessToken: freshToken,
+      user: { id: "user-1", email: "user@example.com", name: null },
+    };
+
+    refreshSessionMock.mockResolvedValue(session);
+
+    await expect(bootstrapClientSession()).resolves.toEqual(session);
+    expect(getStoredAccessToken()).toBe(freshToken);
+    expect(refreshSessionMock).toHaveBeenCalledTimes(1);
   });
 
   it("clears session through clearClientSession", () => {
