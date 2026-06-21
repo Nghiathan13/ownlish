@@ -185,6 +185,7 @@ model CollectionUserWordItem {
 enum ToeicRunMode {
   PRACTICE
   WRONG_REVIEW
+  MOCK_TEST
 }
 
 enum ToeicRunGroupStatus {
@@ -283,6 +284,7 @@ model ToeicRun {
   currentQuestionIndex Int                @default(0) @map("current_question_index")
   totalRight           Int                @default(0) @map("total_right")
   totalWrong           Int                @default(0) @map("total_wrong")
+  completedAt          DateTime?          @map("completed_at")
   createdAt            DateTime           @default(now()) @map("created_at")
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   test                 ToeicTest          @relation(fields: [toeicTestId], references: [id], onDelete: Cascade)

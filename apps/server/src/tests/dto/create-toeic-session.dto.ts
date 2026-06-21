@@ -21,6 +21,6 @@ export class CreateToeicSessionDto {
   testId!: number;
 
   @IsOptional()
-  @IsIn(['practice', 'review_wrong'])
-  mode?: 'practice' | 'review_wrong';
+  @IsIn(['practice', 'review_wrong', 'mock_test'])
+  mode?: 'practice' | 'review_wrong' | 'mock_test';
 }

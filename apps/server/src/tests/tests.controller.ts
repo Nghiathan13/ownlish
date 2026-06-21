@@ -51,6 +51,31 @@ export class TestsController {
     return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
   }
 
+  @Get('runs/:sessionId')
+  getRun(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+  ) {
+    return this.practiceService.getRun(request.user.id, sessionId);
+  }
+
+  @Post('runs/:sessionId/answers')
+  submitRunAnswer(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Body() dto: SubmitToeicAnswerDto,
+  ) {
+    return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
+  }
+
+  @Patch('runs/:sessionId/finish')
+  finishRun(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+  ) {
+    return this.practiceService.finishRun(request.user.id, sessionId);
+  }
+
   @Patch('practice/sessions/:sessionId/complete')
   completeSession(
     @Req() request: AuthRequest,

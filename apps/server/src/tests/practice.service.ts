@@ -71,6 +71,7 @@ type RunForResponse = {
   selectedParts: number[];
   totalRight: number;
   totalWrong: number;
+  completedAt: Date | null;
   questions: RunQuestionForResponse[];
   groups: RunGroupForResponse[];
 };
@@ -105,12 +106,20 @@ export class PracticeService {
 
   async createSession(userId: string, dto: CreateToeicSessionDto) {
     const selectedParts = this.resolveSelectedParts(dto);
-    const mode =
-      dto.mode === 'review_wrong'
-        ? ToeicRunMode.WRONG_REVIEW
-        : ToeicRunMode.PRACTICE;
+    const mode = this.resolveRunMode(dto.mode);
 
     await this.assertTestAndPartsExist(dto.testId, selectedParts);
+
+    if (mode === ToeicRunMode.MOCK_TEST) {
+      const run = await this.createRunWithQuestions({
+        userId,
+        testId: dto.testId,
+        mode,
+        selectedParts,
+      });
+
+      return this.formatSessionResponse(run);
+    }
 
     if (mode === ToeicRunMode.WRONG_REVIEW) {
       const run = await this.createWrongReviewRun(
@@ -146,6 +155,18 @@ export class PracticeService {
     });
 
     return this.formatSessionResponse(run);
+  }
+
+  private resolveRunMode(mode: CreateToeicSessionDto['mode']): ToeicRunMode {
+    if (mode === 'review_wrong') {
+      return ToeicRunMode.WRONG_REVIEW;
+    }
+
+    if (mode === 'mock_test') {
+      return ToeicRunMode.MOCK_TEST;
+    }
+
+    return ToeicRunMode.PRACTICE;
   }
 
   private resolveSelectedParts(dto: CreateToeicSessionDto): number[] {
@@ -252,11 +273,14 @@ export class PracticeService {
       mode:
         session.mode === ToeicRunMode.WRONG_REVIEW
           ? 'review_wrong'
+          : session.mode === ToeicRunMode.MOCK_TEST
+            ? 'mock_test'
           : 'practice',
       testId: session.toeicTestId,
       partNumbers: session.selectedParts,
       correctCount: session.totalRight,
       wrongCount: session.totalWrong,
+      completedAt: session.completedAt?.toISOString() ?? null,
       groups: session.groups.map((group) => {
         const audioSigned = group.toeicQuestionGroup.audioStoragePath
           ? signedUrls.get(group.toeicQuestionGroup.audioStoragePath)
@@ -655,6 +679,19 @@ export class PracticeService {
     });
   }
 
+  async getRun(userId: string, sessionId: string) {
+    const run = await this.prisma.toeicRun.findFirst({
+      where: { id: sessionId, userId },
+      include: this.runResponseInclude(),
+    });
+
+    if (!run) {
+      throw new NotFoundException('TOEIC run not found.');
+    }
+
+    return this.formatSessionResponse(run);
+  }
+
   private buildGradedResponse(
     question: ToeicQuestion,
     answerKey: 'A' | 'B' | 'C' | 'D',
@@ -683,6 +720,10 @@ export class PracticeService {
 
     if (!run) {
       throw new NotFoundException('Practice session not found.');
+    }
+
+    if (run.completedAt) {
+      throw new BadRequestException('TOEIC run is already completed.');
     }
 
     const question = await this.prisma.toeicQuestion.findUnique({
@@ -729,6 +770,10 @@ export class PracticeService {
       );
     }
 
+    if (run.mode === ToeicRunMode.MOCK_TEST) {
+      return this.submitMockAnswer(runQuestion, selectedKey);
+    }
+
     if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
       return this.buildGradedResponse(question, answerKey, true);
     }
@@ -741,6 +786,22 @@ export class PracticeService {
       selectedKey,
       answerKey,
     );
+  }
+
+  private async submitMockAnswer(
+    runQuestion: RunQuestionWithQuestion,
+    selectedKey: 'A' | 'B' | 'C' | 'D',
+  ): Promise<SubmitAnswerResponse> {
+    await this.prisma.toeicRunQuestion.update({
+      where: { id: runQuestion.id },
+      data: {
+        selectedKey,
+        status: ToeicRunQuestionStatus.SELECTED,
+        answeredAt: new Date(),
+      },
+    });
+
+    return { graded: false };
   }
 
   private async submitGroupAnswer(
@@ -990,6 +1051,76 @@ export class PracticeService {
       where: { id: runId },
       data: { totalRight, totalWrong },
     });
+  }
+
+  async finishRun(userId: string, sessionId: string) {
+    const run = await this.prisma.toeicRun.findFirst({
+      where: { id: sessionId, userId },
+    });
+
+    if (!run) {
+      throw new NotFoundException('TOEIC run not found.');
+    }
+
+    if (run.mode !== ToeicRunMode.MOCK_TEST) {
+      throw new BadRequestException('Only mock test runs can be finished.');
+    }
+
+    if (!run.completedAt) {
+      await this.prisma.$transaction(async (tx) => {
+        const questions = await tx.toeicRunQuestion.findMany({
+          where: { runId: run.id },
+          include: { toeicQuestion: true },
+        });
+        const now = new Date();
+        const runGroupIds = new Set<string>();
+
+        for (const question of questions) {
+          runGroupIds.add(question.runGroupId);
+
+          const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
+          const selectedKey = question.selectedKey?.trim().toUpperCase();
+
+          if (
+            !answerKey ||
+            !selectedKey ||
+            !isToeicQuestionOptionKey(selectedKey)
+          ) {
+            continue;
+          }
+
+          await tx.toeicRunQuestion.update({
+            where: { id: question.id },
+            data: {
+              selectedKey,
+              status:
+                selectedKey === answerKey
+                  ? ToeicRunQuestionStatus.RIGHT
+                  : ToeicRunQuestionStatus.WRONG,
+              answeredAt: question.answeredAt ?? now,
+              gradedAt: now,
+            },
+          });
+        }
+
+        for (const runGroupId of runGroupIds) {
+          await this.refreshRunGroupStatus(tx, runGroupId);
+        }
+
+        await this.recalculateRunTotals(tx, run.id);
+        await tx.toeicRun.update({
+          where: { id: run.id },
+          data: { completedAt: now },
+        });
+      });
+    }
+
+    const finishedRun = await this.getRunForResponse(run.id);
+    if (!finishedRun) {
+      throw new NotFoundException('TOEIC run not found.');
+    }
+
+    return this.formatSessionResponse(finishedRun);
   }
 
   async completeSession(userId: string, sessionId: string) {

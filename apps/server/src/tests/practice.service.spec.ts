@@ -25,9 +25,15 @@ describe('PracticeService', () => {
       count: jest.fn(),
       createMany: jest.fn(),
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
     toeicRunGroup: {
       create: jest.fn(),
+      update: jest.fn(),
+    },
+    toeicQuestion: {
+      findUnique: jest.fn(),
     },
     toeicQuestionGroup: {
       findMany: jest.fn(),
@@ -92,6 +98,7 @@ describe('PracticeService', () => {
         selectedParts: [1, 2],
         totalRight: 0,
         totalWrong: 0,
+        completedAt: null,
         questions: [],
         groups: [
           {
@@ -151,6 +158,7 @@ describe('PracticeService', () => {
       partNumbers: [1, 2],
       correctCount: 0,
       wrongCount: 0,
+      completedAt: null,
       groups: [
         {
           id: 101,
@@ -207,6 +215,194 @@ describe('PracticeService', () => {
       where: { id: 'run-id' },
       data: { selectedParts: [1, 2] },
     });
+  });
+
+  it('creates a new mock test run every time', async () => {
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([{ partNumber: 1 }]);
+    prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([]);
+    prismaMock.toeicRun.create.mockResolvedValue({ id: 'mock-run-id' });
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique.mockResolvedValue({
+      id: 'mock-run-id',
+      mode: 'MOCK_TEST',
+      toeicTestId: 1,
+      selectedParts: [1],
+      totalRight: 0,
+      totalWrong: 0,
+      completedAt: null,
+      questions: [],
+      groups: [],
+    });
+
+    await expect(
+      service.createSession('user-id', {
+        testId: 1,
+        partNumbers: [1],
+        mode: 'mock_test',
+      }),
+    ).resolves.toMatchObject({
+      sessionId: 'mock-run-id',
+      mode: 'mock_test',
+      completedAt: null,
+    });
+
+    expect(prismaMock.toeicRun.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.toeicRun.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-id',
+        toeicTestId: 1,
+        mode: 'MOCK_TEST',
+        selectedParts: [1],
+      },
+    });
+  });
+
+  it('stores mock answers as selected without grading', async () => {
+    const question = {
+      id: 1001,
+      answerKey: 'A',
+      group: { testPart: { testId: 1 } },
+    };
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'mock-run-id',
+      userId: 'user-id',
+      toeicTestId: 1,
+      mode: 'MOCK_TEST',
+      selectedParts: [1],
+      completedAt: null,
+    });
+    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
+    prismaMock.toeicRunQuestion.findUnique.mockResolvedValue({
+      id: 'run-question-id',
+      runId: 'mock-run-id',
+      runGroupId: 'run-group-id',
+      toeicQuestionId: 1001,
+      partNumber: 1,
+      selectedKey: null,
+      status: null,
+      toeicQuestion: question,
+    });
+
+    await expect(
+      service.submitAnswer('user-id', 'mock-run-id', {
+        toeicQuestionId: 1001,
+        selectedKey: 'B',
+      }),
+    ).resolves.toEqual({ graded: false });
+
+    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledWith({
+      where: { id: 'run-question-id' },
+      data: {
+        selectedKey: 'B',
+        status: 'SELECTED',
+        answeredAt: expect.any(Date) as Date,
+      },
+    });
+    expect(prismaMock.toeicRunQuestion.count).not.toHaveBeenCalled();
+  });
+
+  it('rejects mock answer submissions after finish', async () => {
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'mock-run-id',
+      userId: 'user-id',
+      toeicTestId: 1,
+      mode: 'MOCK_TEST',
+      selectedParts: [1],
+      completedAt: new Date('2026-06-21T00:00:00.000Z'),
+    });
+
+    await expect(
+      service.submitAnswer('user-id', 'mock-run-id', {
+        toeicQuestionId: 1001,
+        selectedKey: 'B',
+      }),
+    ).rejects.toThrow('TOEIC run is already completed.');
+  });
+
+  it('finishes mock runs by grading selected answers only', async () => {
+    const completedAt = new Date('2026-06-21T00:00:00.000Z');
+    jest.useFakeTimers().setSystemTime(completedAt);
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'mock-run-id',
+      userId: 'user-id',
+      toeicTestId: 1,
+      mode: 'MOCK_TEST',
+      selectedParts: [1],
+      completedAt: null,
+    });
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRunQuestion.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'selected-question-id',
+          runId: 'mock-run-id',
+          runGroupId: 'run-group-id',
+          toeicQuestionId: 1001,
+          selectedKey: 'B',
+          answeredAt: new Date('2026-06-20T00:00:00.000Z'),
+          toeicQuestion: { answerKey: 'A' },
+        },
+        {
+          id: 'unanswered-question-id',
+          runId: 'mock-run-id',
+          runGroupId: 'run-group-id',
+          toeicQuestionId: 1002,
+          selectedKey: null,
+          answeredAt: null,
+          toeicQuestion: { answerKey: 'C' },
+        },
+      ])
+      .mockResolvedValueOnce([{ status: 'WRONG' }, { status: null }]);
+    prismaMock.toeicRunQuestion.count
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(1);
+    prismaMock.toeicRun.findUnique.mockResolvedValue({
+      id: 'mock-run-id',
+      mode: 'MOCK_TEST',
+      toeicTestId: 1,
+      selectedParts: [1],
+      totalRight: 0,
+      totalWrong: 1,
+      completedAt,
+      questions: [],
+      groups: [],
+    });
+
+    await expect(service.finishRun('user-id', 'mock-run-id')).resolves.toEqual({
+      sessionId: 'mock-run-id',
+      mode: 'mock_test',
+      testId: 1,
+      partNumbers: [1],
+      correctCount: 0,
+      wrongCount: 1,
+      completedAt: completedAt.toISOString(),
+      groups: [],
+    });
+
+    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledTimes(1);
+    expect(prismaMock.toeicRunQuestion.update).toHaveBeenCalledWith({
+      where: { id: 'selected-question-id' },
+      data: {
+        selectedKey: 'B',
+        status: 'WRONG',
+        answeredAt: new Date('2026-06-20T00:00:00.000Z'),
+        gradedAt: completedAt,
+      },
+    });
+    expect(prismaMock.toeicRunGroup.update).toHaveBeenCalledWith({
+      where: { id: 'run-group-id' },
+      data: { status: 'WRONG' },
+    });
+    expect(prismaMock.toeicRun.update).toHaveBeenCalledWith({
+      where: { id: 'mock-run-id' },
+      data: { completedAt },
+    });
+    jest.useRealTimers();
   });
 
   it('clears practice runs for a test', async () => {
