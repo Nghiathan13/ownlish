@@ -8,7 +8,7 @@ import {
   type VocabularyToggleableColumnId,
 } from "@/features/vocabulary/lib/vocabularyTableColumns";
 import { classNames } from "@/shared/lib/classNames";
-import { Button } from "@/shared/ui/Button";
+import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { SwapColumnIcon } from "@/shared/ui/icons/SwapColumnIcon";
 
@@ -53,21 +53,21 @@ export function VocabularyColumnPicker({
 
   return (
     <div className="relative shrink-0" ref={rootRef}>
-      <Button
+      <button
         type="button"
-        variant="secondary"
         aria-controls={menuId}
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className={classNames(
+        className={iconTextButtonClassName(
           vocabularyToolbarControlClassName,
-          "w-fit shrink-0 cursor-pointer gap-3 px-3",
+          "w-fit shrink-0",
+          "border-border bg-transparent text-foreground hover:bg-muted",
         )}
         onClick={() => setIsOpen((current) => !current)}
       >
-        <SwapColumnIcon className="size-4" />
+        <SwapColumnIcon />
         Column
-      </Button>
+      </button>
 
       {isOpen ? (
         <div

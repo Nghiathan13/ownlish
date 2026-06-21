@@ -6,7 +6,7 @@ import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
-import { Button } from "@/shared/ui/Button";
+import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { classNames } from "@/shared/lib/classNames";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
 import {
@@ -115,19 +115,25 @@ export function TestCard({
       </div>
       <div className="flex w-full gap-2">
         <button
-          className={classNames(
-            "inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-base font-normal text-foreground transition hover:border-foreground",
+          className={iconTextButtonClassName(
+            "flex-1 border-border bg-transparent text-foreground hover:border-foreground",
           )}
           onClick={onMock}
           type="button"
         >
-          <StartIcon className="size-5" />
+          <StartIcon />
           Mock
         </button>
-        <Button className="flex-1 gap-2 px-4 py-2" onClick={onPractice} type="button">
-          <PracticeIcon className="size-5" />
+        <button
+          className={iconTextButtonClassName(
+            "flex-1 border-foreground bg-foreground text-background",
+          )}
+          onClick={onPractice}
+          type="button"
+        >
+          <PracticeIcon />
           Practice
-        </Button>
+        </button>
       </div>
     </article>
   );

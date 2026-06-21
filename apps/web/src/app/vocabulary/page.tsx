@@ -23,7 +23,7 @@ import {
 import { vocabularyToolbarControlClassName } from "@/features/vocabulary/lib/vocabularyToolbarStyles";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { classNames } from "@/shared/lib/classNames";
-import { Button } from "@/shared/ui/Button";
+import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { Modal } from "@/shared/ui/Modal";
@@ -165,17 +165,18 @@ function VocabularyPageContent() {
     <PageShell fillViewport>
       <Panel className="flex min-h-0 flex-1 flex-col">
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
-          <Button
+          <button
             type="button"
-            className={classNames(
+            className={iconTextButtonClassName(
               vocabularyToolbarControlClassName,
-              "w-fit shrink-0 cursor-pointer gap-3 px-3",
+              "w-fit shrink-0",
+              "border-foreground bg-foreground text-background",
             )}
             onClick={() => setIsAddWordOpen(true)}
           >
-            <AddIcon className="size-4" />
+            <AddIcon />
             Add word
-          </Button>
+          </button>
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <VocabularySearch search={search} onSearchChange={setSearch} />
             <VocabularyColumnPicker
@@ -184,17 +185,18 @@ function VocabularyPageContent() {
             />
           </div>
           {selectedDefinitions.length > 0 ? (
-            <Button
+            <button
               type="button"
-              className={classNames(
+              className={iconTextButtonClassName(
                 vocabularyToolbarControlClassName,
-                "w-fit shrink-0 cursor-pointer gap-3 px-3 sm:ml-auto",
+                "w-fit shrink-0 sm:ml-auto",
+                "border-foreground bg-foreground text-background",
               )}
               onClick={() => setIsBulkDeleteOpen(true)}
             >
-              <DeleteIcon className="size-4" />
+              <DeleteIcon />
               Delete ({selectedDefinitions.length})
-            </Button>
+            </button>
           ) : null}
         </div>
 

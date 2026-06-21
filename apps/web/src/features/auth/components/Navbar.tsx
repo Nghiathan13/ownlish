@@ -89,8 +89,7 @@ export function Navbar() {
                   {practiceExit?.practiceTitle ? (
                     <button
                       aria-pressed={isBilingual}
-                      className={classNames(
-                        "inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-base font-normal",
+                      className={iconTextButtonClassName(
                         isBilingual
                           ? "border-foreground bg-foreground text-background"
                           : "border-border bg-transparent text-foreground",
@@ -98,7 +97,7 @@ export function Navbar() {
                       onClick={() => practiceBilingual?.toggleBilingual()}
                       type="button"
                     >
-                      <BilingualIcon className="size-4" />
+                      <BilingualIcon />
                       Bilingual
                     </button>
                   ) : null}
@@ -143,8 +142,7 @@ export function Navbar() {
                 </span>
                 <button
                   aria-pressed={isBilingual}
-                  className={classNames(
-                    "inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-base font-normal",
+                  className={iconTextButtonClassName(
                     isBilingual
                       ? "border-foreground bg-foreground text-background"
                       : "border-border bg-transparent text-foreground",
@@ -152,7 +150,7 @@ export function Navbar() {
                   onClick={() => practiceBilingual?.toggleBilingual()}
                   type="button"
                 >
-                  <BilingualIcon className="size-4" />
+                  <BilingualIcon />
                   Bilingual
                 </button>
               </div>

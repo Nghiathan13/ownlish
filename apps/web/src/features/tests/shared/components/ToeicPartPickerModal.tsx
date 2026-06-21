@@ -2,6 +2,7 @@
 
 import { Modal } from "@/shared/ui/Modal";
 import { Button } from "@/shared/ui/Button";
+import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
@@ -172,8 +173,11 @@ export function ToeicPartPickerModal({
                 : ""}
             </Button>
           ) : null}
-          <Button
-            className="gap-2 px-4 py-2"
+          <button
+            className={iconTextButtonClassName(
+              "border-foreground bg-foreground text-background",
+              "disabled:cursor-not-allowed disabled:opacity-60",
+            )}
             disabled={partPicker.isPracticeDisabled}
             onClick={() => {
               if (partPicker.intent === "mock") {
@@ -185,9 +189,9 @@ export function ToeicPartPickerModal({
             }}
             type="button"
           >
-            <StartIcon className="size-5" />
+            <StartIcon />
             {partPicker.startLabel}
-          </Button>
+          </button>
         </div>
       </div>
     </Modal>
