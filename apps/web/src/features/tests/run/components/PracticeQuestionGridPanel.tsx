@@ -78,10 +78,6 @@ export function PracticeQuestionGridPanel({
                       cell.isActive &&
                         cell.result == null &&
                         "ring-1 ring-foreground ring-offset-2 ring-offset-background",
-                      cell.isActive &&
-                        cell.result == null &&
-                        !cell.isSelected &&
-                        "border-foreground text-foreground",
                     )}
                     key={cell.questionNumber}
                     onClick={() => onSelect(cell.questionNumber)}
