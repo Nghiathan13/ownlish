@@ -79,9 +79,27 @@ export function Navbar() {
                 </Button>
               )}
               {practiceExit?.practiceTitle || practiceFinish?.mockTitle ? (
-                <span className="text-base font-semibold text-foreground">
-                  {practiceExit?.practiceTitle ?? practiceFinish?.mockTitle}
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="text-base font-semibold text-foreground">
+                    {practiceExit?.practiceTitle ?? practiceFinish?.mockTitle}
+                  </span>
+                  {practiceExit?.practiceTitle ? (
+                    <button
+                      aria-pressed={isBilingual}
+                      className={classNames(
+                        "inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-base font-normal",
+                        isBilingual
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-border bg-transparent text-foreground",
+                      )}
+                      onClick={() => practiceBilingual?.toggleBilingual()}
+                      type="button"
+                    >
+                      <BilingualIcon className="size-4" />
+                      Bilingual
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
             </div>
             {questionNav ? (
