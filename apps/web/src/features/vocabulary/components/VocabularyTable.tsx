@@ -81,7 +81,7 @@ export function VocabularyTable({
                 ) : null}
               </div>
 
-              <div className="text-sm">
+              <div className="text-base">
                 {wordRows.map((row) => {
                   const definition = row.definition;
 
@@ -196,7 +196,7 @@ export function VocabularyTable({
         })}
       </div>
 
-      <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-sm md:table">
+      <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-base md:table">
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="bg-surface w-10 px-3 py-3 align-middle">
