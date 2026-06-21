@@ -47,13 +47,6 @@ export type ToeicQuestionGroup = {
   questions: ToeicQuestion[];
 };
 
-export type ToeicPartResponse = {
-  testId: number;
-  partNumber: number;
-  skill: "listening" | "reading";
-  groups: ToeicQuestionGroup[];
-};
-
 export type SubmitAnswerResult = {
   graded: boolean;
   isCorrect?: boolean;
@@ -82,11 +75,6 @@ export type ToeicPartProgress = {
   partNumber: number;
   partCorrectCount: number;
   partWrongCount: number;
-};
-
-export type CompleteSessionResult = {
-  correctCount: number;
-  wrongCount: number;
 };
 
 export type RefreshMediaGroup = {

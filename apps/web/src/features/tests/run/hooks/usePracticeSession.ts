@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { completeToeicSession } from "@/features/tests/run/api/completeToeicSession";
 import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
 import type {
   PracticeMode,
@@ -286,22 +285,27 @@ export function usePracticeSession({
           return result;
         }
 
+        if (mode === "review_wrong") {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["tests"] }),
+            queryClient.invalidateQueries({
+              queryKey: getPracticeSessionQueryKey(
+                testId,
+                selectedParts,
+                "practice",
+              ),
+            }),
+          ]);
+
+          return result;
+        }
+
         await Promise.all([
           queryClient.refetchQueries({ queryKey }),
           queryClient.invalidateQueries({
             queryKey: ["tests"],
           }),
         ]);
-
-        if (mode === "review_wrong") {
-          await queryClient.invalidateQueries({
-            queryKey: getPracticeSessionQueryKey(
-              testId,
-              selectedParts,
-              "practice",
-            ),
-          });
-        }
 
         return result;
       } catch {
@@ -480,18 +484,6 @@ export function usePracticeSession({
     [selectAnswer],
   );
 
-  const completeSession = useCallback(async () => {
-    if (!accessToken || !sessionId) {
-      return null;
-    }
-
-    return runAuthenticatedRequest({
-      accessToken,
-      clearSession,
-      request: (token) => completeToeicSession(token, sessionId),
-    });
-  }, [accessToken, clearSession, sessionId]);
-
   const isQuestionPending = useCallback(
     (toeicQuestionId: number) => pendingQuestionIds.has(toeicQuestionId),
     [pendingQuestionIds],
@@ -526,6 +518,5 @@ export function usePracticeSession({
     syncAnswerToServer,
     retrySync,
     submitAnswer,
-    completeSession,
   };
 }
