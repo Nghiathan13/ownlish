@@ -100,7 +100,7 @@ function PaginationIconButton({
       aria-label={label}
       disabled={disabled}
       className={iconOnlyButtonClassName(
-        "border border-border bg-transparent text-foreground",
+        "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
       )}
       onClick={onClick}
     >

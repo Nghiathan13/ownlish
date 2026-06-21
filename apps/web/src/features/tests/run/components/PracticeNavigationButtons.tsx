@@ -54,7 +54,7 @@ export function PracticeNavigationButtons({
         <button
           aria-label="Previous"
           className={iconOnlyButtonClassName(
-            "border border-border bg-transparent text-foreground",
+            "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
           )}
           disabled={previousDisabled}
           onClick={onPrevious}
@@ -77,7 +77,7 @@ export function PracticeNavigationButtons({
         <button
           aria-label={nextAriaLabel}
           className={iconOnlyButtonClassName(
-            "border border-border bg-transparent text-foreground",
+            "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
           )}
           disabled={nextDisabled}
           onClick={onNext}
