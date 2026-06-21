@@ -3,19 +3,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { getVocabStats } from "@/entities/vocab/api/vocab";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 
 type UseVocabStatsParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   isAuthenticated: boolean;
   userId: string | null;
 };
 
 export function useVocabStats({
-  accessToken,
-  clearSession,
   isAuthenticated,
   userId,
 }: UseVocabStatsParams) {
@@ -23,12 +19,10 @@ export function useVocabStats({
     queryKey: getVocabStatsQueryKey(userId),
     queryFn: async ({ signal }) => {
       return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => getVocabStats(token, { signal }),
       });
     },
-    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId),
   });
 
   return {

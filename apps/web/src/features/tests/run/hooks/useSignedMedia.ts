@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { refreshToeicPartMedia } from "@/features/tests/run/api/refreshToeicPartMedia";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 
 const REFRESH_BUFFER_MS = 2 * 60 * 1000;
 
@@ -48,7 +48,8 @@ export function useSignedMedia({
   partNumber,
   group,
 }: UseSignedMediaParams) {
-  const { accessToken, clearSession } = useAuthSession();
+  const { status } = useAuthSession();
+  const isAuthenticated = status === "authenticated";
   const [overrides, setOverrides] = useState<Record<number, SignedMediaState>>(
     {},
   );
@@ -63,13 +64,11 @@ export function useSignedMedia({
   }, [group, overrides]);
 
   const refresh = useCallback(async () => {
-    if (!group || !accessToken) {
+    if (!group || !isAuthenticated) {
       return;
     }
 
     const refreshed = await runAuthenticatedRequest({
-      accessToken,
-      clearSession,
       request: (token) =>
         refreshToeicPartMedia(token, testId, partNumber, [group.id]),
     });
@@ -89,7 +88,7 @@ export function useSignedMedia({
       },
     }));
     setMediaError(null);
-  }, [accessToken, clearSession, group, partNumber, testId]);
+  }, [group, isAuthenticated, partNumber, testId]);
 
   useEffect(() => {
     if (!group) {

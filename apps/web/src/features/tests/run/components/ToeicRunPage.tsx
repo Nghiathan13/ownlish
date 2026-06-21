@@ -46,7 +46,7 @@ function getCopy(mode: PracticeMode) {
 function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { accessToken, clearSession, status, user } = useAuthSession();
+  const { status, user } = useAuthSession();
   const copy = getCopy(mode);
 
   const selectedParts = useMemo(() => {
@@ -55,8 +55,6 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
   }, [searchParams]);
 
   const { tests, isLoadingTests, testsError } = useTestsList({
-    accessToken,
-    clearSession,
     isAuthenticated: status === "authenticated",
     userId: user?.id ?? null,
   });

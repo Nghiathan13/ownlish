@@ -16,13 +16,11 @@ import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
 export function CollectionsPage() {
-  const { accessToken, clearSession, status, user } = useAuthSession();
+  const { status, user } = useAuthSession();
   const [activeCategory, setActiveCategory] =
     useState<CollectionCategory>("oxford");
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
-      accessToken,
-      clearSession,
       isAuthenticated: status === "authenticated",
       userId: user?.id ?? null,
     });

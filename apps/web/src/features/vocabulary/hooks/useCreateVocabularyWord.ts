@@ -7,11 +7,9 @@ import {
 } from "@/entities/vocab/api/vocab";
 import type { VocabPageState } from "@/entities/vocab/lib/vocabCache";
 import { invalidateVocabMutationQueries } from "@/entities/vocab/lib/vocabCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 
 type UseCreateVocabularyWordParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   pageState: VocabPageState;
   queryClient: QueryClient;
   queryKey: QueryKey;
@@ -20,8 +18,6 @@ type UseCreateVocabularyWordParams = {
 };
 
 export function useCreateVocabularyWord({
-  accessToken,
-  clearSession,
   pageState,
   queryClient,
   queryKey,
@@ -31,8 +27,6 @@ export function useCreateVocabularyWord({
   const { mutateAsync: createWordMutation } = useMutation({
     mutationFn: (input: CreateVocabWordInput) => {
       return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => createVocabWord(token, input),
       });
     },

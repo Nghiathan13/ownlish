@@ -17,11 +17,9 @@ const secondaryLinkClassName =
   "border-border bg-transparent text-foreground hover:bg-muted";
 
 export function HomeDashboard() {
-  const { accessToken, clearSession, status, user } = useAuthSession();
+  const { status, user } = useAuthSession();
   const isAuthenticated = status === "authenticated";
   const { error, isLoading, reload, stats } = useVocabStats({
-    accessToken,
-    clearSession,
     isAuthenticated,
     userId: user?.id ?? null,
   });

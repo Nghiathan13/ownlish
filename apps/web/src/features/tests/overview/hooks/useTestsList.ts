@@ -2,12 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { listToeicTests } from "@/features/tests/overview/api/toeicTestsOverviewApi";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 
 type UseTestsListParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   isAuthenticated: boolean;
   userId: string | null;
   year?: number;
@@ -18,8 +16,6 @@ export function getTestsQueryKey(userId: string | null, year: number) {
 }
 
 export function useTestsList({
-  accessToken,
-  clearSession,
   isAuthenticated,
   userId,
   year = 2026,
@@ -28,11 +24,9 @@ export function useTestsList({
     queryKey: getTestsQueryKey(userId, year),
     queryFn: ({ signal }) =>
       runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => listToeicTests(token, year, { signal }),
       }),
-    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId),
   });
 
   return {

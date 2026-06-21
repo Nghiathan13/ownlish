@@ -6,7 +6,7 @@ import { getToeicRun } from "@/features/tests/run/api/getToeicRun";
 import { finishToeicRun } from "@/features/tests/run/api/finishToeicRun";
 import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import type {
   ToeicRunResult,
   ToeicQuestion,
@@ -55,7 +55,8 @@ type UseMockTestRunParams = {
 };
 
 export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
-  const { accessToken, clearSession } = useAuthSession();
+  const { status } = useAuthSession();
+  const isAuthenticated = status === "authenticated";
   const queryClient = useQueryClient();
   const queryKey = getToeicRunQueryKey(sessionId);
   const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(
@@ -69,11 +70,9 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
     queryKey,
     queryFn: () =>
       runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => getToeicRun(token, sessionId),
       }),
-    enabled: Boolean(accessToken && sessionId),
+    enabled: Boolean(isAuthenticated && sessionId),
     staleTime: Infinity,
     refetchOnMount: false,
     retry: false,
@@ -94,7 +93,7 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
 
   const selectAnswer = useCallback(
     (toeicQuestionId: number, selectedKey: OptionKey) => {
-      if (!accessToken || isFinished) {
+      if (!isAuthenticated || isFinished) {
         return;
       }
 
@@ -109,8 +108,6 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
       setPendingQuestionIds((current) => new Set(current).add(toeicQuestionId));
 
       const submitRequest = runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           submitToeicAnswer(token, sessionId, {
             toeicQuestionId,
@@ -137,11 +134,11 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
 
       pendingSubmitRequestsRef.current.add(submitRequest);
     },
-    [accessToken, clearSession, isFinished, queryClient, queryKey, sessionId],
+    [isAuthenticated, isFinished, queryClient, queryKey, sessionId],
   );
 
   const finishRun = useCallback(async () => {
-    if (!accessToken || !sessionId) {
+    if (!isAuthenticated || !sessionId) {
       return;
     }
 
@@ -149,8 +146,6 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
     try {
       await Promise.allSettled(pendingSubmitRequestsRef.current);
       const result = await runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => finishToeicRun(token, sessionId),
       });
       queryClient.setQueryData(queryKey, result);
@@ -161,7 +156,7 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
         error instanceof Error ? error.message : "Cannot finish mock test.",
       );
     }
-  }, [accessToken, clearSession, queryClient, queryKey, sessionId]);
+  }, [isAuthenticated, queryClient, queryKey, sessionId]);
 
   return {
     correctCount: sessionData?.correctCount ?? 0,

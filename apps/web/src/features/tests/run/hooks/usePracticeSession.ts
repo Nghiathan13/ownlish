@@ -18,7 +18,7 @@ import {
   isPracticeAnswerGraded,
 } from "@/features/tests/run/lib/practiceAnswers";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { createToeicRunRequest } from "@/features/tests/run/lib/createToeicRunRequest";
 
 type UsePracticeSessionParams = {
@@ -171,7 +171,8 @@ export function usePracticeSession({
   mode = "practice",
   enabled,
 }: UsePracticeSessionParams) {
-  const { accessToken, clearSession } = useAuthSession();
+  const { status } = useAuthSession();
+  const isAuthenticated = status === "authenticated";
   const queryClient = useQueryClient();
   const selectedParts = useMemo(
     () => normalizePracticeParts(partNumber, selectedPartsInput),
@@ -190,8 +191,6 @@ export function usePracticeSession({
     queryKey,
     queryFn: () =>
       runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           createToeicRunRequest({
             token,
@@ -200,7 +199,7 @@ export function usePracticeSession({
             mode,
           }),
       }),
-    enabled: enabled && Boolean(accessToken),
+    enabled: enabled && isAuthenticated,
     staleTime: Infinity,
     gcTime: mode === "review_wrong" ? 0 : 5 * 60 * 1000,
     refetchOnMount: false,
@@ -236,7 +235,7 @@ export function usePracticeSession({
       selectedKey: OptionKey,
       options?: SyncAnswerOptions,
     ): Promise<SubmitAnswerResult | null> => {
-      if (!accessToken || !sessionId) {
+      if (!isAuthenticated || !sessionId) {
         return null;
       }
 
@@ -260,8 +259,6 @@ export function usePracticeSession({
 
       try {
         const result = await runAuthenticatedRequest({
-          accessToken,
-          clearSession,
           request: (token) =>
             submitToeicAnswer(token, sessionId, {
               toeicQuestionId,
@@ -323,10 +320,9 @@ export function usePracticeSession({
       }
     },
     [
-      accessToken,
+      isAuthenticated,
       answersByQuestionId,
       bumpSyncVersion,
-      clearSession,
       mode,
       selectedParts,
       queryClient,

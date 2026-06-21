@@ -15,7 +15,7 @@ import {
   invalidateVocabMutationQueries,
   type VocabPageState,
 } from "@/entities/vocab/lib/vocabCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 
 export type DeleteVocabularyDefinitionTarget = {
   word: VocabWord;
@@ -23,8 +23,6 @@ export type DeleteVocabularyDefinitionTarget = {
 };
 
 type UseDeleteVocabularyDefinitionParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   moveBackOnePage: () => void;
   pageState: VocabPageState;
   queryClient: QueryClient;
@@ -57,8 +55,6 @@ function countRemovedWords(
 }
 
 export function useDeleteVocabularyDefinition({
-  accessToken,
-  clearSession,
   moveBackOnePage,
   pageState,
   queryClient,
@@ -76,8 +72,6 @@ export function useDeleteVocabularyDefinition({
       return Promise.all(
         targets.map((target) =>
           runAuthenticatedRequest<DeleteVocabDefinitionResult>({
-            accessToken,
-            clearSession,
             request: (token) =>
               deleteVocabDefinition(token, target.definition.id),
           }),

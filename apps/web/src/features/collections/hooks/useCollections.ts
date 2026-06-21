@@ -9,12 +9,10 @@ import {
 import { getReviewQueueQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 
 type UseCollectionsParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   isAuthenticated: boolean;
   userId: string | null;
 };
@@ -39,8 +37,6 @@ function toErrorMessage(error: unknown, fallback: string) {
 }
 
 export function useCollectionsList({
-  accessToken,
-  clearSession,
   isAuthenticated,
   userId,
 }: UseCollectionsParams) {
@@ -48,11 +44,9 @@ export function useCollectionsList({
     queryKey: getCollectionsQueryKey(userId),
     queryFn: ({ signal }) =>
       runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => listCollections(token, { signal }),
       }),
-    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId),
   });
 
   return {
@@ -67,8 +61,6 @@ export function useCollectionsList({
 }
 
 export function useCollectionDetail({
-  accessToken,
-  clearSession,
   collectionId,
   isAuthenticated,
   userId,
@@ -77,18 +69,12 @@ export function useCollectionDetail({
     queryKey: getCollectionDetailQueryKey(userId, collectionId),
     queryFn: ({ signal }) =>
       runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           getCollection(token, collectionId as string, {
             signal,
           }),
       }),
-    enabled:
-      isAuthenticated &&
-      Boolean(accessToken) &&
-      Boolean(userId) &&
-      Boolean(collectionId),
+    enabled: isAuthenticated && Boolean(userId) && Boolean(collectionId),
   });
 
   return {
@@ -103,16 +89,12 @@ export function useCollectionDetail({
 }
 
 export function useImportCollection({
-  accessToken,
-  clearSession,
   userId,
-}: Pick<UseCollectionsParams, "accessToken" | "clearSession" | "userId">) {
+}: Pick<UseCollectionsParams, "userId">) {
   const queryClient = useQueryClient();
   const importMutation = useMutation({
     mutationFn: (collectionId: string) =>
       runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => importCollection(token, collectionId),
       }),
     onSuccess: () => {

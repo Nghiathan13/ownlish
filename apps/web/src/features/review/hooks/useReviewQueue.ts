@@ -14,20 +14,16 @@ import {
 } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
 type UseReviewQueueParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   isAuthenticated: boolean;
   userId: string | null;
 };
 
 export function useReviewQueue({
-  accessToken,
-  clearSession,
   isAuthenticated,
   userId,
 }: UseReviewQueueParams) {
@@ -37,8 +33,6 @@ export function useReviewQueue({
     queryKey: getReviewQueueQueryKey(userId),
     queryFn: async ({ signal }) => {
       return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           listDueReviewWords(token, {
             offset: 0,
@@ -46,7 +40,7 @@ export function useReviewQueue({
           }),
       });
     },
-    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId),
   });
 
   const reviewItems = data?.items;
@@ -66,8 +60,6 @@ export function useReviewQueue({
   } = useMutation({
     mutationFn: ({ word, grade }: { word: VocabReviewItem; grade: ReviewGrade }) => {
       return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           updateVocabReview(token, word.id, buildReviewUpdate(word, grade)),
       });

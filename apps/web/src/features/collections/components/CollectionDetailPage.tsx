@@ -20,14 +20,12 @@ type CollectionDetailPageProps = {
 };
 
 export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
-  const { accessToken, clearSession, status, user } = useAuthSession();
+  const { status, user } = useAuthSession();
   const [wordSearch, setWordSearch] = useState("");
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
     null,
   );
   const authParams = {
-    accessToken,
-    clearSession,
     isAuthenticated: status === "authenticated",
     userId: user?.id ?? null,
   };
@@ -47,8 +45,6 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   });
   const { importCollection, importError, isImporting, resetImportState } =
     useImportCollection({
-      accessToken,
-      clearSession,
       userId: user?.id ?? null,
     });
   const filteredWords = useMemo(() => {

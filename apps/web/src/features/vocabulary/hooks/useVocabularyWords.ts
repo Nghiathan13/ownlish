@@ -8,16 +8,12 @@ import { useVocabularyListQuery } from "./useVocabularyListQuery";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
 type UseVocabularyWordsParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   isAuthenticated: boolean;
   search: string;
   userId: string | null;
 };
 
 export function useVocabularyWords({
-  accessToken,
-  clearSession,
   isAuthenticated,
   search,
   userId,
@@ -44,8 +40,6 @@ export function useVocabularyWords({
     totalWords,
     words,
   } = useVocabularyListQuery({
-    accessToken,
-    clearSession,
     isAuthenticated,
     pageSize: pageState.pageSize,
     pageState,
@@ -53,8 +47,6 @@ export function useVocabularyWords({
   });
 
   const createWord = useCreateVocabularyWord({
-    accessToken,
-    clearSession,
     pageState,
     queryClient,
     queryKey,
@@ -64,24 +56,20 @@ export function useVocabularyWords({
 
   const { updateWord, updatingDefinitionId, updatingWordId } =
     useUpdateVocabularyWord({
-    accessToken,
-    clearSession,
-    queryClient,
-    queryKey,
-    userId,
-  });
+      queryClient,
+      queryKey,
+      userId,
+    });
 
   const { deleteDefinition, deleteDefinitions, isDeletingDefinitions } =
     useDeleteVocabularyDefinition({
-    accessToken,
-    clearSession,
-    moveBackOnePage,
-    pageState,
-    queryClient,
-    queryKey,
-    userId,
-    words,
-  });
+      moveBackOnePage,
+      pageState,
+      queryClient,
+      queryKey,
+      userId,
+      words,
+    });
 
   return {
     canGoNext: pageState.offset + words.length < totalWords,

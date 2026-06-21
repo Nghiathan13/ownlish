@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { clearToeicPracticeHistory } from "@/features/tests/overview/api/clearToeicPracticeHistory";
 import type {
   PracticeMode,
@@ -31,7 +31,8 @@ function getErrorMessage(error: unknown, fallback: string) {
 export function useTestsOverview() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { accessToken, clearSession, status, user } = useAuthSession();
+  const { status, user } = useAuthSession();
+  const isAuthenticated = status === "authenticated";
   const [selectedTest, setSelectedTest] = useState<ToeicTestSummary | null>(
     null,
   );
@@ -40,15 +41,13 @@ export function useTestsOverview() {
   const [clearingTestId, setClearingTestId] = useState<number | null>(null);
   const [startingTestId, setStartingTestId] = useState<number | null>(null);
   const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
-    accessToken,
-    clearSession,
-    isAuthenticated: status === "authenticated",
+    isAuthenticated,
     userId: user?.id ?? null,
   });
 
   const clearHistory = async (testId: number) => {
     if (
-      !accessToken ||
+      !isAuthenticated ||
       !window.confirm(
         "Clear all practice history for this test? This cannot be undone.",
       )
@@ -59,8 +58,6 @@ export function useTestsOverview() {
     setClearingTestId(testId);
     try {
       await runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) => clearToeicPracticeHistory(token, testId),
       });
       clearAllPracticeProgressForTest(testId);
@@ -94,15 +91,13 @@ export function useTestsOverview() {
   ) => {
     const normalizedParts = normalizeSelectedParts(partNumbers);
 
-    if (!accessToken || normalizedParts.length === 0) {
+    if (!isAuthenticated || normalizedParts.length === 0) {
       return;
     }
 
     setStartingTestId(testId);
     try {
       const session = await runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           createToeicRunRequest({
             token,
@@ -137,15 +132,13 @@ export function useTestsOverview() {
   const startMock = async (testId: number, partNumbers: number[]) => {
     const normalizedParts = normalizeSelectedParts(partNumbers);
 
-    if (!accessToken || normalizedParts.length === 0) {
+    if (!isAuthenticated || normalizedParts.length === 0) {
       return;
     }
 
     setStartingTestId(testId);
     try {
       const session = await runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           createToeicRunRequest({
             token,

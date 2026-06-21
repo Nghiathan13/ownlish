@@ -3,12 +3,10 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { listVocabWords } from "@/entities/vocab/api/vocab";
 import type { VocabPageState } from "@/entities/vocab/lib/vocabCache";
 import { getVocabQueryKey } from "@/entities/vocab/lib/vocabCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 
 type UseVocabularyListQueryParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   isAuthenticated: boolean;
   pageSize: number;
   pageState: VocabPageState;
@@ -16,8 +14,6 @@ type UseVocabularyListQueryParams = {
 };
 
 export function useVocabularyListQuery({
-  accessToken,
-  clearSession,
   isAuthenticated,
   pageSize,
   pageState,
@@ -34,8 +30,6 @@ export function useVocabularyListQuery({
     queryKey,
     queryFn: async ({ signal }) => {
       return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           listVocabWords(token, {
             limit: pageSize,
@@ -45,7 +39,7 @@ export function useVocabularyListQuery({
           }),
       });
     },
-    enabled: isAuthenticated && Boolean(accessToken) && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId),
     placeholderData: keepPreviousData,
   });
 

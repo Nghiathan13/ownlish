@@ -18,7 +18,8 @@ export default function ReviewPage() {
 }
 
 function ReviewPageContent() {
-  const { accessToken, clearSession, user } = useAuthSession();
+  const { status, user } = useAuthSession();
+  const isAuthenticated = status === "authenticated";
   const [showMeaning, setShowMeaning] = useState(false);
   const {
     currentWord,
@@ -29,9 +30,7 @@ function ReviewPageContent() {
     isSubmittingGrade,
     reload,
   } = useReviewQueue({
-    accessToken,
-    clearSession,
-    isAuthenticated: Boolean(accessToken),
+    isAuthenticated,
     userId: user?.id ?? null,
   });
 

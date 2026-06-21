@@ -10,21 +10,24 @@ import {
   type ReactNode,
 } from "react";
 import {
-  AuthUser,
   login as loginRequest,
   logoutSession,
-  refreshSession,
   register as registerRequest,
-  type AuthResponse,
   type LoginInput,
   type RegisterInput,
 } from "@/entities/auth/api/auth";
+import type { AuthUser } from "@/entities/auth/types";
+import {
+  clearClientSession,
+  establishSession,
+  refreshClientSession,
+  setSessionInvalidHandler,
+} from "@/entities/session/model/accessTokenManager";
 import { isUnauthorizedError } from "@/shared/api/http";
 
 export type AuthStatus = "checking" | "authenticated" | "guest";
 
 type AuthSessionContextValue = {
-  accessToken: string | null;
   clearSession: () => void;
   login: (input: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
@@ -38,34 +41,37 @@ const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("checking");
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const clearSession = useCallback(() => {
-    setAccessToken(null);
-    setUser(null);
-    setStatus("guest");
+    clearClientSession();
   }, []);
 
-  const saveSession = useCallback((session: AuthResponse) => {
-    setAccessToken(session.accessToken);
-    setUser(session.user);
-    setStatus("authenticated");
+  useEffect(() => {
+    setSessionInvalidHandler(() => {
+      setUser(null);
+      setStatus("guest");
+    });
+
+    return () => {
+      setSessionInvalidHandler(null);
+    };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function restoreSession() {
+    async function bootstrapClientSession() {
       try {
-        const session = await refreshSession();
+        const session = await refreshClientSession();
 
         if (!cancelled) {
-          saveSession(session);
+          setUser(session.user);
+          setStatus("authenticated");
         }
       } catch (error) {
         if (!cancelled) {
           if (isUnauthorizedError(error)) {
-            clearSession();
+            clearClientSession();
           } else {
             setStatus("guest");
           }
@@ -73,28 +79,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    void restoreSession();
+    void bootstrapClientSession();
 
     return () => {
       cancelled = true;
     };
-  }, [clearSession, saveSession]);
+  }, []);
 
-  const login = useCallback(
-    async (input: LoginInput) => {
-      const response = await loginRequest(input);
-      saveSession(response);
-    },
-    [saveSession],
-  );
+  const login = useCallback(async (input: LoginInput) => {
+    const response = await loginRequest(input);
+    establishSession({ accessToken: response.accessToken });
+    setUser(response.user);
+    setStatus("authenticated");
+  }, []);
 
-  const register = useCallback(
-    async (input: RegisterInput) => {
-      const response = await registerRequest(input);
-      saveSession(response);
-    },
-    [saveSession],
-  );
+  const register = useCallback(async (input: RegisterInput) => {
+    const response = await registerRequest(input);
+    establishSession({ accessToken: response.accessToken });
+    setUser(response.user);
+    setStatus("authenticated");
+  }, []);
 
   const logout = useCallback(async () => {
     await logoutSession().catch(() => undefined);
@@ -103,7 +107,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthSessionContextValue>(
     () => ({
-      accessToken,
       clearSession,
       login,
       logout,
@@ -111,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user,
     }),
-    [accessToken, clearSession, login, logout, register, status, user],
+    [clearSession, login, logout, register, status, user],
   );
 
   return (

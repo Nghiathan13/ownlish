@@ -46,7 +46,8 @@ type EditingTarget = {
 };
 
 function VocabularyPageContent() {
-  const { accessToken, clearSession, user } = useAuthSession();
+  const { status, user } = useAuthSession();
+  const isAuthenticated = status === "authenticated";
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const {
@@ -69,9 +70,7 @@ function VocabularyPageContent() {
     updatingDefinitionId,
     words,
   } = useVocabularyWords({
-    accessToken,
-    clearSession,
-    isAuthenticated: Boolean(accessToken),
+    isAuthenticated,
     search: debouncedSearch,
     userId: user?.id ?? null,
   });

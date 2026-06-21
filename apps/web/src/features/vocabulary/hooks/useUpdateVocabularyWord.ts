@@ -7,7 +7,7 @@ import {
   type VocabWordListResponse,
 } from "@/entities/vocab/api/vocab";
 import { invalidateVocabMutationQueries } from "@/entities/vocab/lib/vocabCache";
-import { runAuthenticatedRequest } from "@/features/auth/lib/authRequest";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 
 type UpdateVocabularyWordVariables = {
   wordToUpdate: VocabWord;
@@ -16,16 +16,12 @@ type UpdateVocabularyWordVariables = {
 };
 
 type UseUpdateVocabularyWordParams = {
-  accessToken: string | null;
-  clearSession: () => void;
   queryClient: QueryClient;
   queryKey: QueryKey;
   userId: string | null;
 };
 
 export function useUpdateVocabularyWord({
-  accessToken,
-  clearSession,
   queryClient,
   queryKey,
   userId,
@@ -41,8 +37,6 @@ export function useUpdateVocabularyWord({
       input,
     }: UpdateVocabularyWordVariables) => {
       return runAuthenticatedRequest({
-        accessToken,
-        clearSession,
         request: (token) =>
           updateVocabWord(token, wordToUpdate.id, {
             ...input,
