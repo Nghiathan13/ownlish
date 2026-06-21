@@ -112,6 +112,16 @@ export function PracticeGroupScreen({
             localSelections,
             getPracticeAnswer: practice.getAnswer,
           }),
+        (questionId) => {
+          const answer = practice.getAnswer(questionId);
+          if (isPracticeAnswerGraded(answer)) {
+            return false;
+          }
+
+          return (
+            localSelections[questionId] != null || answer?.selectedKey != null
+          );
+        },
       ),
     ];
   }, [

@@ -104,6 +104,10 @@ function buildMockGridSections(
       section.cells.push({
         questionNumber: question.questionNumber,
         isActive: activeQuestionNumbers.has(question.questionNumber),
+        isSelected:
+          !isFinished &&
+          question.selectedKey != null &&
+          question.isCorrect == null,
         result: isFinished
           ? question.isCorrect === true
             ? "correct"

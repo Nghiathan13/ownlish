@@ -14,7 +14,10 @@ import {
   resolveInitialStepIndex,
 } from "@/features/tests/run/lib/practiceRunSteps";
 import { writePracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
-import { getQuestionGridResultFromAnswer } from "@/features/tests/run/lib/practiceAnswers";
+import {
+  getQuestionGridResultFromAnswer,
+  isQuestionGridSelected,
+} from "@/features/tests/run/lib/practiceAnswers";
 import {
   buildPracticeRunGridSections,
   findStepIndexForQuestion,
@@ -152,6 +155,7 @@ export function PracticeRunView({
         normalizedSelectedParts,
         activeQuestionNumbers,
         (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
+        (questionId) => isQuestionGridSelected(practice.getAnswer(questionId)),
       ),
     [activeQuestionNumbers, normalizedSelectedParts, practice, steps],
   );

@@ -28,3 +28,13 @@ export function getQuestionGridResultFromAnswer(
 
   return answer.isCorrect ? "correct" : "wrong";
 }
+
+export function isQuestionGridSelected(
+  answer?: PracticeAnswer | null,
+): boolean {
+  if (!answer || isPracticeAnswerGraded(answer)) {
+    return false;
+  }
+
+  return hasPracticeSelection(answer);
+}

@@ -5,10 +5,12 @@ import type { PracticeGroup, PracticeItem } from "@/features/tests/run/lib/pract
 export type QuestionGridCell = {
   questionNumber: number;
   isActive: boolean;
+  isSelected: boolean;
   result: QuestionGridResult;
 };
 
 type GetQuestionGridResult = (questionId: number) => QuestionGridResult;
+type GetQuestionGridSelected = (questionId: number) => boolean;
 
 function resolveCellResult(
   questionId: number,
@@ -27,12 +29,14 @@ export function buildItemGridSection(
   items: PracticeItem[],
   activeQuestionNumbers: ReadonlySet<number>,
   getQuestionResult?: GetQuestionGridResult,
+  getQuestionSelected?: GetQuestionGridSelected,
 ): QuestionGridSection {
   return {
     partNumber,
     cells: items.map((item) => ({
       questionNumber: item.question.questionNumber,
       isActive: activeQuestionNumbers.has(item.question.questionNumber),
+      isSelected: getQuestionSelected?.(item.question.id) ?? false,
       result: resolveCellResult(item.question.id, getQuestionResult),
     })),
   };
@@ -44,6 +48,7 @@ export function buildGroupGridSection(
   activeQuestionNumbers: ReadonlySet<number>,
   shouldIncludeQuestion?: (questionId: number) => boolean,
   getQuestionResult?: GetQuestionGridResult,
+  getQuestionSelected?: GetQuestionGridSelected,
 ): QuestionGridSection {
   const cells: QuestionGridCell[] = [];
 
@@ -56,6 +61,7 @@ export function buildGroupGridSection(
       cells.push({
         questionNumber: question.questionNumber,
         isActive: activeQuestionNumbers.has(question.questionNumber),
+        isSelected: getQuestionSelected?.(question.id) ?? false,
         result: resolveCellResult(question.id, getQuestionResult),
       });
     }
@@ -108,12 +114,17 @@ type GetPracticeRunQuestionGridResult = (
   questionId: number,
   partNumber: number,
 ) => QuestionGridResult;
+type GetPracticeRunQuestionGridSelected = (
+  questionId: number,
+  partNumber: number,
+) => boolean;
 
 export function buildPracticeRunGridSections(
   steps: PracticeRunStep[],
   selectedParts: number[],
   activeQuestionNumbers: ReadonlySet<number>,
   getQuestionResult?: GetPracticeRunQuestionGridResult,
+  getQuestionSelected?: GetPracticeRunQuestionGridSelected,
 ): QuestionGridSection[] {
   const sections: QuestionGridSection[] = [];
 
@@ -129,6 +140,9 @@ export function buildPracticeRunGridSections(
         cells.push({
           questionNumber: step.item.question.questionNumber,
           isActive: activeQuestionNumbers.has(step.item.question.questionNumber),
+          isSelected: getQuestionSelected
+            ? getQuestionSelected(step.item.question.id, step.partNumber)
+            : false,
           result: getQuestionResult
             ? getQuestionResult(step.item.question.id, step.partNumber)
             : null,
@@ -140,6 +154,9 @@ export function buildPracticeRunGridSections(
         cells.push({
           questionNumber: question.questionNumber,
           isActive: activeQuestionNumbers.has(question.questionNumber),
+          isSelected: getQuestionSelected
+            ? getQuestionSelected(question.id, step.partNumber)
+            : false,
           result: getQuestionResult
             ? getQuestionResult(question.id, step.partNumber)
             : null,
