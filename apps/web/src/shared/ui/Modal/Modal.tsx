@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useId } from "react";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
+import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
 
 type ModalProps = {
   children: ReactNode;
@@ -55,11 +56,13 @@ export function Modal({ children, description, onClose, title }: ModalProps) {
           </div>
           <button
             aria-label="Close"
-            className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200 hover:border-foreground"
+            className={iconOnlyButtonClassName(
+              "border border-border bg-transparent text-foreground transition-colors duration-200 hover:border-foreground",
+            )}
             onClick={onClose}
             type="button"
           >
-            <CloseIcon className="size-4" />
+            <CloseIcon />
           </button>
         </div>
 

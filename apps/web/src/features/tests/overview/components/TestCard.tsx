@@ -6,7 +6,7 @@ import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
-import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconOnlyButtonClassName, iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { classNames } from "@/shared/lib/classNames";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
 import {
@@ -72,17 +72,17 @@ export function TestCard({
                 ? `Review wrong (${testWrongCount})`
                 : "Review wrong (all parts)"
             }
-            className={classNames(
-              "relative inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
+            className={iconOnlyButtonClassName(
+              "relative bg-transparent",
               statusColorClasses.danger.text,
               statusColorClasses.danger.backgroundHover,
-              "disabled:cursor-not-allowed disabled:text-foreground disabled:opacity-60 disabled:hover:bg-muted",
+              "disabled:opacity-60 disabled:hover:bg-muted",
             )}
             disabled={isClearingHistory || testWrongCount === 0}
             onClick={onReviewWrong}
             type="button"
           >
-            <ReplayIcon className="size-4" />
+            <ReplayIcon />
             {testWrongCount > 0 ? (
               <span
                 aria-hidden
@@ -99,17 +99,16 @@ export function TestCard({
           </button>
           <button
             aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
-            className={classNames(
-              "inline-flex size-8 cursor-pointer items-center justify-center rounded-md bg-transparent",
+            className={iconOnlyButtonClassName(
+              "bg-transparent",
               statusColorClasses.danger.text,
               statusColorClasses.danger.backgroundHover,
-              "disabled:cursor-not-allowed disabled:opacity-60",
             )}
             disabled={isClearingHistory}
             onClick={onClearHistory}
             type="button"
           >
-            <DeleteIcon className="size-4" />
+            <DeleteIcon />
           </button>
         </div>
       </div>

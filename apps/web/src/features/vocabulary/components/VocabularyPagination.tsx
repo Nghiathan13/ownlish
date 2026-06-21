@@ -4,7 +4,7 @@ import {
   isVocabularyPageSize,
   type VocabularyPageSize,
 } from "@/entities/vocab/lib/vocabPagination";
-import { classNames } from "@/shared/lib/classNames";
+import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 
@@ -43,7 +43,7 @@ export function VocabularyPagination({
         label="Previous page"
         onClick={onPrevious}
       >
-        <ArrowBackIcon className="size-4" />
+        <ArrowBackIcon />
       </PaginationIconButton>
 
       <p className="text-sm text-muted-foreground">
@@ -55,7 +55,7 @@ export function VocabularyPagination({
         label="Next page"
         onClick={onNext}
       >
-        <ArrowForwardIcon className="size-4" />
+        <ArrowForwardIcon />
       </PaginationIconButton>
 
       <div className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
@@ -99,11 +99,8 @@ function PaginationIconButton({
       type="button"
       aria-label={label}
       disabled={disabled}
-      className={classNames(
-        "inline-flex size-7 items-center justify-center rounded-md border border-border bg-transparent text-foreground transition-colors duration-200",
-        disabled
-          ? "cursor-not-allowed opacity-50"
-          : "cursor-pointer hover:border-foreground",
+      className={iconOnlyButtonClassName(
+        "border border-border bg-transparent text-foreground transition-colors duration-200 hover:border-foreground",
       )}
       onClick={onClick}
     >

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PracticeQuestionGridPanel } from "@/features/tests/run/components/PracticeQuestionGridPanel";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
-import { classNames } from "@/shared/lib/classNames";
+import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { GridViewIcon } from "@/shared/ui/icons/GridViewIcon";
@@ -53,41 +53,37 @@ export function PracticeNavigationButtons({
       <div className="flex items-center justify-end gap-2">
         <button
           aria-label="Previous"
-          className={classNames(
-            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground",
-            previousDisabled
-              ? "cursor-not-allowed opacity-50"
-              : "cursor-pointer hover:border-foreground",
+          className={iconOnlyButtonClassName(
+            "border border-border bg-transparent text-foreground hover:border-foreground",
           )}
           disabled={previousDisabled}
           onClick={onPrevious}
           type="button"
         >
-          <ArrowBackIcon className="size-4" />
+          <ArrowBackIcon />
         </button>
         {showQuestionGrid ? (
           <button
             aria-label="Question list"
-            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-transparent text-foreground hover:border-foreground"
+            className={iconOnlyButtonClassName(
+              "border border-border bg-transparent text-foreground hover:border-foreground",
+            )}
             onClick={() => setIsGridOpen(true)}
             type="button"
           >
-            <GridViewIcon className="size-4" />
+            <GridViewIcon />
           </button>
         ) : null}
         <button
           aria-label={nextAriaLabel}
-          className={classNames(
-            "inline-flex size-8 items-center justify-center rounded-md border border-border bg-transparent text-foreground",
-            nextDisabled
-              ? "cursor-not-allowed opacity-50"
-              : "cursor-pointer hover:border-foreground",
+          className={iconOnlyButtonClassName(
+            "border border-border bg-transparent text-foreground hover:border-foreground",
           )}
           disabled={nextDisabled}
           onClick={onNext}
           type="button"
         >
-          <ArrowForwardIcon className="size-4" />
+          <ArrowForwardIcon />
         </button>
       </div>
     </>

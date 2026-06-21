@@ -20,6 +20,7 @@ import {
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
+import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type VocabularyTableProps = {
@@ -506,10 +507,12 @@ function EditDefinitionButton({
     <button
       type="button"
       aria-label={label}
-      className="inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className={iconOnlyButtonClassName(
+        "text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      )}
       onClick={onClick}
     >
-      <EditIcon className="size-4" />
+      <EditIcon />
     </button>
   );
 }
