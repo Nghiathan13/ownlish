@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
-import { CreateToeicSessionDto } from './dto/create-toeic-session.dto';
+import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
@@ -34,12 +34,12 @@ export class TestsController {
     return this.testsService.listTests(request.user.id, query.year);
   }
 
-  @Post('practice/sessions')
-  createSession(
+  @Post('runs')
+  createRun(
     @Req() request: AuthRequest,
-    @Body() dto: CreateToeicSessionDto,
+    @Body() dto: CreateToeicRunDto,
   ) {
-    return this.practiceService.createSession(request.user.id, dto);
+    return this.practiceService.createRun(request.user.id, dto);
   }
 
   @Get('runs/:sessionId')
@@ -73,14 +73,6 @@ export class TestsController {
     @Param('testId', ParseIntPipe) testId: number,
   ) {
     return this.practiceService.clearTestHistory(request.user.id, testId);
-  }
-
-  @Get(':testId/parts/:partNumber')
-  getPart(
-    @Param('testId', ParseIntPipe) testId: number,
-    @Param('partNumber', ParseIntPipe) partNumber: number,
-  ) {
-    return this.testsService.getPart(testId, partNumber);
   }
 
   @Post(':testId/parts/:partNumber/refresh-media')

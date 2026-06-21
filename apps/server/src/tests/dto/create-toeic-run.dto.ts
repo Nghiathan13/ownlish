@@ -8,7 +8,7 @@ import {
   IsPositive,
 } from 'class-validator';
 
-export class CreateToeicSessionDto {
+export class CreateToeicRunDto {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayUnique()

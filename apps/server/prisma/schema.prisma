@@ -184,7 +184,6 @@ model CollectionUserWordItem {
 
 enum ToeicRunMode {
   PRACTICE
-  WRONG_REVIEW
   MOCK_TEST
 }
 

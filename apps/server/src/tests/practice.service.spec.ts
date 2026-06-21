@@ -150,7 +150,7 @@ describe('PracticeService', () => {
     prismaMock.toeicRun.update.mockResolvedValue({ id: 'run-id' });
 
     await expect(
-      service.createSession('user-id', { testId: 1, partNumbers: [1, 2] }),
+      service.createRun('user-id', { testId: 1, partNumbers: [1, 2] }),
     ).resolves.toEqual({
       sessionId: 'run-id',
       mode: 'practice',
@@ -354,7 +354,7 @@ describe('PracticeService', () => {
     prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([]);
 
     await expect(
-      service.createSession('user-id', {
+      service.createRun('user-id', {
         testId: 1,
         partNumbers: [1],
         mode: 'review_wrong',
@@ -409,7 +409,7 @@ describe('PracticeService', () => {
     });
 
     await expect(
-      service.createSession('user-id', {
+      service.createRun('user-id', {
         testId: 1,
         partNumbers: [1],
         mode: 'review_wrong',
@@ -452,7 +452,7 @@ describe('PracticeService', () => {
     });
 
     await expect(
-      service.createSession('user-id', {
+      service.createRun('user-id', {
         testId: 1,
         partNumbers: [1],
         mode: 'mock_test',

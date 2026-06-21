@@ -1,11 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ToeicRunMode, ToeicRunQuestionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  countOptions,
-  mapQuestionOptions,
-  parseAnswerKey,
-} from './lib/toeic-question-mapper';
 import { TestsStorageService } from './tests-storage.service';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 
@@ -92,76 +87,6 @@ export class TestsService {
           };
         }),
       })),
-    };
-  }
-
-  async getPart(testId: number, partNumber: number) {
-    const part = await this.prisma.toeicTestPart.findUnique({
-      where: {
-        testId_partNumber: {
-          testId,
-          partNumber,
-        },
-      },
-      include: {
-        test: true,
-        groups: {
-          orderBy: { questionStart: 'asc' },
-          include: {
-            questions: {
-              orderBy: { questionNumber: 'asc' },
-            },
-          },
-        },
-      },
-    });
-
-    if (!part) {
-      throw new NotFoundException('Test part not found.');
-    }
-
-    const skill = partNumber <= 4 ? 'listening' : 'reading';
-    const storagePaths = part.groups.flatMap((group) => [
-      group.audioStoragePath,
-      group.imageStoragePath,
-    ]);
-    const signedUrls = await this.storageService.createSignedUrls(storagePaths);
-
-    return {
-      testId: part.testId,
-      partNumber: part.partNumber,
-      skill,
-      groups: part.groups.map((group) => {
-        const audioSigned = group.audioStoragePath
-          ? signedUrls.get(group.audioStoragePath)
-          : null;
-        const imageSigned = group.imageStoragePath
-          ? signedUrls.get(group.imageStoragePath)
-          : null;
-
-        return {
-          id: group.id,
-          questionStart: group.questionStart,
-          questionEnd: group.questionEnd,
-          groupType: group.groupType,
-          accent: group.accent,
-          content: group.content,
-          contentVi: group.contentVi,
-          audioUrl: audioSigned?.url ?? null,
-          audioUrlExpiresAt: audioSigned?.expiresAt ?? null,
-          imageUrl: imageSigned?.url ?? null,
-          imageUrlExpiresAt: imageSigned?.expiresAt ?? null,
-          questions: group.questions.map((question) => ({
-            id: question.id,
-            questionNumber: question.questionNumber,
-            question: question.question,
-            questionVi: question.questionVi,
-            options: mapQuestionOptions(question),
-            optionCount: countOptions(question),
-            answerKey: parseAnswerKey(question.answerKey),
-          })),
-        };
-      }),
     };
   }
 

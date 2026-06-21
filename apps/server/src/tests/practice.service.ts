@@ -20,7 +20,7 @@ import {
   parseAnswerKey,
 } from './lib/toeic-question-mapper';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
-import { CreateToeicSessionDto } from './dto/create-toeic-session.dto';
+import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
 import { TestsStorageService } from './tests-storage.service';
 
 type SubmitAnswerResponse = {
@@ -106,24 +106,24 @@ export class PracticeService {
     private readonly storageService: TestsStorageService,
   ) {}
 
-  async createSession(userId: string, dto: CreateToeicSessionDto) {
+  async createRun(userId: string, dto: CreateToeicRunDto) {
     const selectedParts = this.resolveSelectedParts(dto);
-    const mode = this.resolveRunMode(dto.mode);
+    const mode = dto.mode ?? 'practice';
 
     await this.assertTestAndPartsExist(dto.testId, selectedParts);
 
-    if (mode === ToeicRunMode.MOCK_TEST) {
+    if (mode === 'mock_test') {
       const run = await this.createRunWithQuestions({
         userId,
         testId: dto.testId,
-        mode,
+        mode: ToeicRunMode.MOCK_TEST,
         selectedParts,
       });
 
       return this.formatSessionResponse(run, selectedParts);
     }
 
-    if (mode === ToeicRunMode.WRONG_REVIEW) {
+    if (mode === 'review_wrong') {
       return this.createReviewWrongSession(
         userId,
         dto.testId,
@@ -151,26 +151,14 @@ export class PracticeService {
     const run = await this.createRunWithQuestions({
       userId,
       testId: dto.testId,
-      mode,
+      mode: ToeicRunMode.PRACTICE,
       selectedParts,
     });
 
     return this.formatSessionResponse(run, selectedParts);
   }
 
-  private resolveRunMode(mode: CreateToeicSessionDto['mode']): ToeicRunMode {
-    if (mode === 'review_wrong') {
-      return ToeicRunMode.WRONG_REVIEW;
-    }
-
-    if (mode === 'mock_test') {
-      return ToeicRunMode.MOCK_TEST;
-    }
-
-    return ToeicRunMode.PRACTICE;
-  }
-
-  private resolveSelectedParts(dto: CreateToeicSessionDto): number[] {
+  private resolveSelectedParts(dto: CreateToeicRunDto): number[] {
     const selectedParts = [...new Set(dto.partNumbers)].sort((a, b) => a - b);
 
     if (selectedParts.length === 0) {
@@ -370,10 +358,6 @@ export class PracticeService {
   }
 
   private formatRunMode(mode: ToeicRunMode): SessionResponseMode {
-    if (mode === ToeicRunMode.WRONG_REVIEW) {
-      return 'review_wrong';
-    }
-
     if (mode === ToeicRunMode.MOCK_TEST) {
       return 'mock_test';
     }
@@ -428,25 +412,6 @@ export class PracticeService {
     }
 
     return null;
-  }
-
-  private async createEmptyRun(input: {
-    userId: string;
-    testId: number;
-    mode: ToeicRunMode;
-    selectedParts: number[];
-  }): Promise<RunForResponse> {
-    const run = await this.prisma.toeicRun.create({
-      data: {
-        userId: input.userId,
-        toeicTestId: input.testId,
-        mode: input.mode,
-        selectedParts: input.selectedParts,
-      },
-      include: this.runResponseInclude(),
-    });
-
-    return run;
   }
 
   private async ensurePracticeRunIncludesParts(
@@ -763,7 +728,7 @@ export class PracticeService {
     }
 
     return this.submitGroupAnswer(
-      run,
+      run.id,
       runQuestion,
       question,
       selectedKey,
@@ -789,12 +754,7 @@ export class PracticeService {
   }
 
   private async submitGroupAnswer(
-    run: {
-      id: string;
-      mode: ToeicRunMode;
-      toeicTestId: number;
-      selectedParts: number[];
-    },
+    runId: string,
     runQuestion: RunQuestionWithQuestion,
     question: QuestionWithGroup,
     selectedKey: 'A' | 'B' | 'C' | 'D',
@@ -820,7 +780,7 @@ export class PracticeService {
           isReviewWrongSubmission,
         )
       ) {
-        await this.gradeRunGroup(tx, run, runQuestion.runGroupId);
+        await this.gradeRunGroup(tx, runId, runQuestion.runGroupId);
         graded = true;
       }
     });
@@ -860,12 +820,7 @@ export class PracticeService {
 
   private async gradeRunGroup(
     tx: Prisma.TransactionClient,
-    run: {
-      id: string;
-      mode: ToeicRunMode;
-      toeicTestId: number;
-      selectedParts: number[];
-    },
+    runId: string,
     runGroupId: string,
   ): Promise<void> {
     const questions = await tx.toeicRunQuestion.findMany({
@@ -891,7 +846,7 @@ export class PracticeService {
 
       const isCorrect = selectedKey === answerKey;
       await this.gradeRunQuestion(tx, {
-        run,
+        runId,
         runQuestion: question,
         selectedKey,
         isCorrect,
@@ -902,7 +857,7 @@ export class PracticeService {
   private async gradeRunQuestion(
     tx: Prisma.TransactionClient,
     input: {
-      run: { id: string; mode: ToeicRunMode };
+      runId: string;
       runQuestion: {
         id: string;
         runId: string;
@@ -930,7 +885,7 @@ export class PracticeService {
     });
 
     await this.refreshRunGroupStatus(tx, input.runQuestion.runGroupId);
-    await this.recalculateRunTotals(tx, input.run.id);
+    await this.recalculateRunTotals(tx, input.runId);
   }
 
   private async refreshRunGroupStatus(
