@@ -16,7 +16,6 @@ import {
   VocabularyPagination,
   VocabularySearch,
 } from "@/features/collections/words/components";
-import { classNames } from "@/shared/lib/classNames";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 const EMPTY_DEFINITION_SELECTION = new Set<string>();
@@ -230,26 +229,20 @@ export function SystemCollectionWordsPanel({
         </div>
       ) : null}
 
-      <div
-        className={classNames(
-          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-border",
-          className,
-        )}
-      >
-        <CatalogWordsTable
-          allDefinitionsSelected={allDefinitionsSelected}
-          columnVisibility={columnVisibility}
-          error={loadError}
-          hasSearch={hasSearch}
-          isLoading={isLoading}
-          onRetry={onRetry}
-          onToggleAllDefinitions={toggleAllDefinitions}
-          onToggleDefinition={toggleDefinition}
-          selectedDefinitionIds={selectedDefinitionIds}
-          someDefinitionsSelected={someDefinitionsSelected}
-          words={paginatedWords}
-        />
-      </div>
+      <CatalogWordsTable
+        className={className}
+        allDefinitionsSelected={allDefinitionsSelected}
+        columnVisibility={columnVisibility}
+        error={loadError}
+        hasSearch={hasSearch}
+        isLoading={isLoading}
+        onRetry={onRetry}
+        onToggleAllDefinitions={toggleAllDefinitions}
+        onToggleDefinition={toggleDefinition}
+        selectedDefinitionIds={selectedDefinitionIds}
+        someDefinitionsSelected={someDefinitionsSelected}
+        words={paginatedWords}
+      />
 
       {totalWords > 0 && !isLoading && !loadError ? (
         <VocabularyPagination

@@ -24,6 +24,7 @@ import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type CatalogWordsTableProps = {
   allDefinitionsSelected: boolean;
+  className?: string;
   columnVisibility: CatalogColumnVisibility;
   error?: string | null;
   hasSearch?: boolean;
@@ -38,6 +39,7 @@ type CatalogWordsTableProps = {
 
 export function CatalogWordsTable({
   allDefinitionsSelected,
+  className,
   columnVisibility,
   error = null,
   hasSearch = false,
@@ -58,10 +60,14 @@ export function CatalogWordsTable({
   const emptyDescription = hasSearch
     ? "Try a different search term."
     : "This collection does not have any catalog words yet.";
+  const tableShellClassName = classNames(
+    "mx-4 mb-4 min-h-0 flex-1 overflow-auto rounded-xl border border-border",
+    className,
+  );
 
   return (
     <>
-      <div className="grid gap-3 md:hidden">
+      <div className={classNames("grid gap-3 md:hidden", tableShellClassName)}>
         {showBodyState ? (
           <TableMobileState
             emptyDescription={emptyDescription}
@@ -194,7 +200,12 @@ export function CatalogWordsTable({
         )}
       </div>
 
-      <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-base md:table">
+      <table
+        className={classNames(
+          "hidden w-full min-w-[920px] table-fixed border-collapse text-left text-base md:table",
+          tableShellClassName,
+        )}
+      >
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="w-10 bg-surface px-3 py-3 align-middle">

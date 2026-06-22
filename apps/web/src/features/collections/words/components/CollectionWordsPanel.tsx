@@ -259,37 +259,33 @@ export function CollectionWordsPanel({
         </Modal>
       ) : null}
 
-      <div
+      <VocabularyTable
         className={classNames(
-          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-border",
           className,
           isRefreshing && !isInitialLoading && !loadError && words.length > 0
             ? "pointer-events-none opacity-50"
             : "opacity-100",
         )}
-      >
-        <VocabularyTable
-          allDefinitionsSelected={allDefinitionsSelected}
-          columnVisibility={columnVisibility}
-          error={loadError}
-          hasSearch={Boolean(debouncedSearch.trim())}
-          isLoading={isInitialLoading}
-          onEdit={(word, definition) => {
-            if (definition) {
-              setEditingTarget({
-                word,
-                definitionId: definition.id,
-              });
-            }
-          }}
-          onRetry={reload}
-          onToggleAllDefinitions={toggleAllDefinitions}
-          onToggleDefinition={toggleDefinition}
-          selectedDefinitionIds={selectedDefinitionIds}
-          someDefinitionsSelected={someDefinitionsSelected}
-          words={words}
-        />
-      </div>
+        allDefinitionsSelected={allDefinitionsSelected}
+        columnVisibility={columnVisibility}
+        error={loadError}
+        hasSearch={Boolean(debouncedSearch.trim())}
+        isLoading={isInitialLoading}
+        onEdit={(word, definition) => {
+          if (definition) {
+            setEditingTarget({
+              word,
+              definitionId: definition.id,
+            });
+          }
+        }}
+        onRetry={reload}
+        onToggleAllDefinitions={toggleAllDefinitions}
+        onToggleDefinition={toggleDefinition}
+        selectedDefinitionIds={selectedDefinitionIds}
+        someDefinitionsSelected={someDefinitionsSelected}
+        words={words}
+      />
 
       {!isInitialLoading && !loadError && words.length > 0 ? (
         <VocabularyPagination
