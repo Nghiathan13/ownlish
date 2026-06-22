@@ -26,7 +26,6 @@ import { iconTextButtonClassName } from "@/shared/ui/button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { Modal } from "@/shared/ui/Modal";
-import { classNames } from "@/shared/lib/classNames";
 
 const EMPTY_DEFINITION_SELECTION = new Set<string>();
 
@@ -36,14 +35,12 @@ type EditingTarget = {
 };
 
 type CollectionWordsPanelProps = {
-  className?: string;
   collectionId: string;
   onCollectionChange: (collectionId: string) => void;
   userCollections: CollectionSummary[];
 };
 
 export function CollectionWordsPanel({
-  className,
   collectionId,
   onCollectionChange,
   userCollections,
@@ -165,7 +162,7 @@ export function CollectionWordsPanel({
   }
 
   return (
-    <div className={classNames("flex min-h-0 flex-1 flex-col", className)}>
+    <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 items-center gap-2">
           {userCollections.length > 0 ? (
@@ -299,6 +296,6 @@ export function CollectionWordsPanel({
           total={totalWords}
         />
       ) : null}
-    </div>
+    </>
   );
 }

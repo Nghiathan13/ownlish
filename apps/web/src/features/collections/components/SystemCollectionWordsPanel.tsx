@@ -16,13 +16,11 @@ import {
   VocabularyPagination,
   VocabularySearch,
 } from "@/features/collections/words/components";
-import { classNames } from "@/shared/lib/classNames";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 const EMPTY_DEFINITION_SELECTION = new Set<string>();
 
 type SystemCollectionWordsPanelProps = {
-  className?: string;
   importError: string | null;
   importResultMessage: string | null;
   isImporting: boolean;
@@ -37,7 +35,6 @@ type SystemCollectionWordsPanelProps = {
 };
 
 export function SystemCollectionWordsPanel({
-  className,
   importError,
   importResultMessage,
   isImporting,
@@ -163,7 +160,7 @@ export function SystemCollectionWordsPanel({
   }
 
   return (
-    <div className={classNames("flex min-h-0 flex-1 flex-col", className)}>
+    <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         {canImport ? (
           <div className="flex shrink-0 items-center gap-2">
@@ -257,6 +254,6 @@ export function SystemCollectionWordsPanel({
           total={totalWords}
         />
       ) : null}
-    </div>
+    </>
   );
 }
