@@ -29,22 +29,23 @@ export function MyVocabularyCard({
     return (
       <article className="rounded-xl border border-border p-4 opacity-50">
         <h2 className="text-xl font-bold">My Vocabulary</h2>
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold">{wordCountLabel}</p>
-        </div>
+        <p className="mt-5 text-sm font-semibold">{wordCountLabel}</p>
       </article>
     );
   }
 
   return (
-    <article className="rounded-xl border border-border hover:bg-muted">
-      <Link className="block p-4 pb-0" href={href}>
+    <article className="relative rounded-xl border border-border hover:bg-muted">
+      <Link
+        aria-label="View My Vocabulary"
+        className="absolute inset-0 rounded-xl"
+        href={href}
+      />
+      <div className="pointer-events-none relative p-4 pb-14">
         <h2 className="text-xl font-bold">My Vocabulary</h2>
-      </Link>
-      <div className="flex items-center justify-between gap-4 p-4">
-        <Link className="text-sm font-semibold" href={href}>
-          {wordCountLabel}
-        </Link>
+        <p className="mt-5 text-sm font-semibold">{wordCountLabel}</p>
+      </div>
+      <div className="absolute bottom-4 right-4">
         <CollectionReviewLink
           collectionId={collectionId}
           isAuthenticated={isAuthenticated}

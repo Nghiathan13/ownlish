@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
-import { secondaryTextButtonClassName } from "@/shared/ui/button";
+import { iconTextButtonClassName } from "@/shared/ui/button";
+import { QuizIcon } from "@/shared/ui/icons/QuizIcon";
 
 type CollectionReviewLinkProps = {
   collectionId: string;
@@ -21,17 +22,38 @@ export function CollectionReviewLink({
     userId,
   });
   const dueCount = stats?.due;
+  const isDisabled = !isLoading && dueCount === 0;
   const label =
-    isLoading || dueCount == null ? "Review (...)" : `Review (${dueCount})`;
+    isLoading || dueCount == null
+      ? "Review (...)"
+      : dueCount === 0
+        ? "Review"
+        : `Review (${dueCount})`;
+  const enabledClassName = iconTextButtonClassName(
+    "relative z-20 shrink-0 border-foreground bg-foreground text-background",
+  );
+  const disabledClassName = iconTextButtonClassName(
+    "relative z-20 shrink-0 border-border bg-muted text-muted-foreground",
+  );
+
+  if (isDisabled) {
+    return (
+      <button className={disabledClassName} disabled type="button">
+        <QuizIcon />
+        {label}
+      </button>
+    );
+  }
 
   return (
     <Link
-      className={secondaryTextButtonClassName("shrink-0")}
+      className={enabledClassName}
       href={`/review?collectionId=${collectionId}`}
       onClick={(event) => {
         event.stopPropagation();
       }}
     >
+      <QuizIcon />
       {label}
     </Link>
   );

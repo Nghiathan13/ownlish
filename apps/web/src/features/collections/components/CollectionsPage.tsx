@@ -185,12 +185,17 @@ function UserCollectionCard({
 
   return (
     <article className="relative rounded-xl border border-border hover:bg-muted">
+      <Link
+        aria-label={`View ${collection.name}`}
+        className="absolute inset-0 rounded-xl"
+        href={collectionHref}
+      />
       <button
         aria-label={
           isDeleting ? "Deleting collection" : `Delete ${collection.name}`
         }
         className={iconOnlyButtonClassName(
-          "absolute right-3 top-3 z-10 bg-transparent",
+          "absolute right-3 top-3 z-20 bg-transparent",
           statusColorClasses.danger.text,
           statusColorClasses.danger.backgroundHover,
         )}
@@ -204,13 +209,11 @@ function UserCollectionCard({
       >
         <DeleteForeverIcon />
       </button>
-      <Link className="block p-4 pb-0" href={collectionHref}>
+      <div className="pointer-events-none relative p-4 pb-14">
         <h2 className="pr-10 text-xl font-bold">{collection.name}</h2>
-      </Link>
-      <div className="flex items-center justify-between gap-4 p-4">
-        <Link className="text-sm font-semibold" href={collectionHref}>
-          {collection.itemCount} words
-        </Link>
+        <p className="mt-5 text-sm font-semibold">{collection.itemCount} words</p>
+      </div>
+      <div className="absolute bottom-4 right-4">
         <CollectionReviewLink
           collectionId={collection.id}
           isAuthenticated={isAuthenticated}
