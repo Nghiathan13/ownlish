@@ -120,6 +120,7 @@ export function useDeleteVocabularyDefinition({
           optimisticallyRemoveFromReviewQueue(
             queryClient,
             userId,
+            collectionId,
             target.definition.id,
           ),
         ),
@@ -142,6 +143,7 @@ export function useDeleteVocabularyDefinition({
       restoreReviewQueue(
         queryClient,
         userId,
+        collectionId,
         context?.previousReviewQueues[0],
       );
     },
