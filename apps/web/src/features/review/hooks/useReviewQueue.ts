@@ -19,28 +19,31 @@ import { ApiError } from "@/shared/api/http";
 import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
 
 type UseReviewQueueParams = {
+  collectionId: string | null;
   isAuthenticated: boolean;
   userId: string | null;
 };
 
 export function useReviewQueue({
+  collectionId,
   isAuthenticated,
   userId,
 }: UseReviewQueueParams) {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error: queryError } = useQuery({
-    queryKey: getReviewQueueQueryKey(userId),
+    queryKey: getReviewQueueQueryKey(userId, collectionId),
     queryFn: async ({ signal }) => {
       return runAuthenticatedRequest({
         request: (token) =>
           listDueReviewWords(token, {
+            collectionId: collectionId as string,
             offset: 0,
             signal,
           }),
       });
     },
-    enabled: isAuthenticated && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId) && Boolean(collectionId),
   });
 
   const reviewItems = data?.items;
@@ -68,6 +71,7 @@ export function useReviewQueue({
       const previousQueue = await optimisticallyRemoveFromReviewQueue(
         queryClient,
         userId,
+        collectionId,
         word.id,
         { decrementTotal: false },
       );
@@ -75,19 +79,26 @@ export function useReviewQueue({
       return { previousQueue };
     },
     onError: (error, variables, context) => {
-      restoreReviewQueue(queryClient, userId, context?.previousQueue);
+      restoreReviewQueue(
+        queryClient,
+        userId,
+        collectionId,
+        context?.previousQueue,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: getVocabUserQueryKey(userId) });
       queryClient.invalidateQueries({
-        queryKey: getVocabStatsQueryKey(userId),
+        queryKey: getVocabStatsQueryKey(userId, collectionId),
       });
     },
   });
 
   const reload = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: getReviewQueueQueryKey(userId) });
-  }, [queryClient, userId]);
+    queryClient.invalidateQueries({
+      queryKey: getReviewQueueQueryKey(userId, collectionId),
+    });
+  }, [collectionId, queryClient, userId]);
 
   const gradeCurrentWord = useCallback(
     (grade: ReviewGrade) => {

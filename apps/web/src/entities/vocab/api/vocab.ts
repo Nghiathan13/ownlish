@@ -401,13 +401,16 @@ export function getVocabStats(token: string, params: VocabStatsParams) {
 }
 
 type ListDueReviewWordsParams = {
+  collectionId: string;
   limit?: number;
   offset?: number;
   signal?: AbortSignal;
 };
 
-function buildDueReviewQuery(params: ListDueReviewWordsParams = {}) {
-  const searchParams = new URLSearchParams();
+function buildDueReviewQuery(params: ListDueReviewWordsParams) {
+  const searchParams = new URLSearchParams({
+    collectionId: params.collectionId,
+  });
 
   if (params.limit !== undefined) {
     searchParams.set("limit", String(params.limit));
@@ -424,7 +427,7 @@ function buildDueReviewQuery(params: ListDueReviewWordsParams = {}) {
 
 export function listDueReviewWords(
   token: string,
-  params: ListDueReviewWordsParams = {},
+  params: ListDueReviewWordsParams,
 ) {
   return apiRequest(`/vocab/review/due${buildDueReviewQuery(params)}`, {
     signal: params.signal,

@@ -45,7 +45,7 @@ export function invalidateVocabMutationQueries({
 }: InvalidateVocabMutationQueriesParams) {
   void queryClient.invalidateQueries({ queryKey: vocabQueryKey, exact: true });
   void queryClient.invalidateQueries({
-    queryKey: getReviewQueueQueryKey(userId),
+    queryKey: getReviewQueueQueryKey(userId, collectionId),
     exact: true,
   });
   void queryClient.invalidateQueries({

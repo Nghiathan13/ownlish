@@ -6,6 +6,7 @@ import type {
 } from "@/entities/vocab/api/vocab";
 import {
   getReviewQueueQueryKey,
+  getReviewQueueUserQueryKey,
   optimisticallyRemoveFromReviewQueue,
   restoreReviewQueue,
 } from "./reviewQueueCache";
@@ -64,8 +65,15 @@ function makeQueue(items: VocabReviewItem[]): VocabReviewListResponse {
 }
 
 describe("getReviewQueueQueryKey", () => {
-  it("builds a stable user scoped query key", () => {
-    expect(getReviewQueueQueryKey("user-id")).toEqual([
+  it("builds a stable user and collection scoped query key", () => {
+    expect(getReviewQueueQueryKey("user-id", "collection-id")).toEqual([
+      "review-queue",
+      { userId: "user-id", collectionId: "collection-id" },
+    ]);
+  });
+
+  it("builds a user scoped prefix query key", () => {
+    expect(getReviewQueueUserQueryKey("user-id")).toEqual([
       "review-queue",
       { userId: "user-id" },
     ]);
@@ -75,13 +83,14 @@ describe("getReviewQueueQueryKey", () => {
 describe("optimisticallyRemoveFromReviewQueue", () => {
   it("removes a definition and decrements total by default", async () => {
     const queryClient = createQueryClient();
-    const queryKey = getReviewQueueQueryKey("user-id");
+    const queryKey = getReviewQueueQueryKey("user-id", "collection-id");
     const queue = makeQueue([makeItem("one"), makeItem("two")]);
     queryClient.setQueryData(queryKey, queue);
 
     const previousQueue = await optimisticallyRemoveFromReviewQueue(
       queryClient,
       "user-id",
+      "collection-id",
       "one",
     );
 
@@ -98,11 +107,16 @@ describe("optimisticallyRemoveFromReviewQueue", () => {
 
   it("can remove a definition without decrementing total", async () => {
     const queryClient = createQueryClient();
-    const queryKey = getReviewQueueQueryKey("user-id");
+    const queryKey = getReviewQueueQueryKey("user-id", "collection-id");
     const queue = makeQueue([makeItem("one"), makeItem("two")]);
     queryClient.setQueryData(queryKey, queue);
 
-    await optimisticallyRemoveFromReviewQueue(queryClient, "user-id", "one", {
+    await optimisticallyRemoveFromReviewQueue(
+      queryClient,
+      "user-id",
+      "collection-id",
+      "one",
+      {
       decrementTotal: false,
     });
 
@@ -115,13 +129,14 @@ describe("optimisticallyRemoveFromReviewQueue", () => {
 
   it("leaves queue unchanged when definition is not in queue", async () => {
     const queryClient = createQueryClient();
-    const queryKey = getReviewQueueQueryKey("user-id");
+    const queryKey = getReviewQueueQueryKey("user-id", "collection-id");
     const queue = makeQueue([makeItem("one")]);
     queryClient.setQueryData(queryKey, queue);
 
     const previousQueue = await optimisticallyRemoveFromReviewQueue(
       queryClient,
       "user-id",
+      "collection-id",
       "missing",
     );
 
@@ -133,7 +148,12 @@ describe("optimisticallyRemoveFromReviewQueue", () => {
     const queryClient = createQueryClient();
 
     await expect(
-      optimisticallyRemoveFromReviewQueue(queryClient, "user-id", "one"),
+      optimisticallyRemoveFromReviewQueue(
+        queryClient,
+        "user-id",
+        "collection-id",
+        "one",
+      ),
     ).resolves.toBeUndefined();
   });
 });
@@ -141,21 +161,21 @@ describe("optimisticallyRemoveFromReviewQueue", () => {
 describe("restoreReviewQueue", () => {
   it("restores a previous queue", () => {
     const queryClient = createQueryClient();
-    const queryKey = getReviewQueueQueryKey("user-id");
+    const queryKey = getReviewQueueQueryKey("user-id", "collection-id");
     const queue = makeQueue([makeItem("one")]);
 
-    restoreReviewQueue(queryClient, "user-id", queue);
+    restoreReviewQueue(queryClient, "user-id", "collection-id", queue);
 
     expect(queryClient.getQueryData(queryKey)).toEqual(queue);
   });
 
   it("does nothing when previous queue is undefined", () => {
     const queryClient = createQueryClient();
-    const queryKey = getReviewQueueQueryKey("user-id");
+    const queryKey = getReviewQueueQueryKey("user-id", "collection-id");
     const queue = makeQueue([makeItem("one")]);
     queryClient.setQueryData(queryKey, queue);
 
-    restoreReviewQueue(queryClient, "user-id", undefined);
+    restoreReviewQueue(queryClient, "user-id", "collection-id", undefined);
 
     expect(queryClient.getQueryData(queryKey)).toEqual(queue);
   });

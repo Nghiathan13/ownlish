@@ -1,17 +1,25 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { VocabReviewListResponse } from "@/entities/vocab/api/vocab";
 
-export function getReviewQueueQueryKey(userId: string | null) {
+export function getReviewQueueQueryKey(
+  userId: string | null,
+  collectionId: string | null,
+) {
+  return ["review-queue", { userId, collectionId }] as const;
+}
+
+export function getReviewQueueUserQueryKey(userId: string | null) {
   return ["review-queue", { userId }] as const;
 }
 
 export async function optimisticallyRemoveFromReviewQueue(
   queryClient: QueryClient,
   userId: string | null,
+  collectionId: string | null,
   definitionId: string,
   { decrementTotal = true }: { decrementTotal?: boolean } = {},
 ) {
-  const queryKey = getReviewQueueQueryKey(userId);
+  const queryKey = getReviewQueueQueryKey(userId, collectionId);
 
   await queryClient.cancelQueries({ queryKey });
 
@@ -47,11 +55,15 @@ export async function optimisticallyRemoveFromReviewQueue(
 export function restoreReviewQueue(
   queryClient: QueryClient,
   userId: string | null,
+  collectionId: string | null,
   previousQueue: VocabReviewListResponse | undefined,
 ) {
   if (previousQueue === undefined) {
     return;
   }
 
-  queryClient.setQueryData(getReviewQueueQueryKey(userId), previousQueue);
+  queryClient.setQueryData(
+    getReviewQueueQueryKey(userId, collectionId),
+    previousQueue,
+  );
 }

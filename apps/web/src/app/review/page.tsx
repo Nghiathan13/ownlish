@@ -1,8 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  getDefaultUserCollection,
+  getUserOwnedCollections,
+} from "@/entities/collection/lib/collectionDisplay";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
+import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
 import { useReviewQueue } from "@/features/review/hooks/useReviewQueue";
 import type { ReviewGrade } from "@/features/review/lib/reviewSchedule";
@@ -20,7 +26,22 @@ export default function ReviewPage() {
 function ReviewPageContent() {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
+    null,
+  );
   const [showMeaning, setShowMeaning] = useState(false);
+  const { collections, isLoadingCollections } = useCollectionsList({
+    isAuthenticated,
+    userId: user?.id ?? null,
+  });
+  const userCollections = useMemo(() => {
+    return getUserOwnedCollections(collections);
+  }, [collections]);
+  const defaultCollection = useMemo(() => {
+    return getDefaultUserCollection(collections);
+  }, [collections]);
+  const resolvedCollectionId =
+    selectedCollectionId ?? defaultCollection?.id ?? null;
   const {
     currentWord,
     error,
@@ -30,9 +51,15 @@ function ReviewPageContent() {
     isSubmittingGrade,
     reload,
   } = useReviewQueue({
+    collectionId: resolvedCollectionId,
     isAuthenticated,
     userId: user?.id ?? null,
   });
+
+  const handleCollectionChange = useCallback((collectionId: string) => {
+    setSelectedCollectionId(collectionId);
+    setShowMeaning(false);
+  }, []);
 
   const handleGrade = useCallback(async (grade: ReviewGrade) => {
     if (!showMeaning) {
@@ -81,15 +108,30 @@ function ReviewPageContent() {
   return (
     <PageShell>
       <Panel>
+        {userCollections.length > 0 && resolvedCollectionId ? (
+          <div className="mb-4 px-4">
+            <ImportTargetCollectionSelect
+              ariaLabel="Review collection"
+              collections={userCollections}
+              onChange={handleCollectionChange}
+              value={resolvedCollectionId}
+              variant="toolbar"
+            />
+          </div>
+        ) : isLoadingCollections ? (
+          <p className="mb-4 px-4 text-muted-foreground">Loading collections...</p>
+        ) : null}
+
         {isLoading || error || isEmpty || !currentWord ? (
           <ReviewStateBlock
             error={error}
             isEmpty={isEmpty}
-            isLoading={isLoading}
+            isLoading={isLoading || isLoadingCollections || !resolvedCollectionId}
             onRetry={reload}
           />
         ) : (
           <ReviewCard
+            key={resolvedCollectionId}
             isSubmitting={isSubmittingGrade}
             onGrade={handleGrade}
             onToggleMeaning={() => setShowMeaning((current) => !current)}

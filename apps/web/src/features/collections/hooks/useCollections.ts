@@ -10,7 +10,7 @@ import {
   type CreateCollectionInput,
   type ImportCollectionInput,
 } from "@/entities/collection/api/collections";
-import { getReviewQueueQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
+import { getReviewQueueUserQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
@@ -136,8 +136,7 @@ export function useDeleteCollection({
         queryKey: getVocabUserQueryKey(userId),
       });
       void queryClient.invalidateQueries({
-        queryKey: getReviewQueueQueryKey(userId),
-        exact: true,
+        queryKey: getReviewQueueUserQueryKey(userId),
       });
       void queryClient.invalidateQueries({
         queryKey: getVocabStatsQueryKey(userId),
@@ -198,8 +197,7 @@ export function useImportCollection({
         queryKey: getVocabUserQueryKey(userId),
       });
       void queryClient.invalidateQueries({
-        queryKey: getReviewQueueQueryKey(userId),
-        exact: true,
+        queryKey: getReviewQueueUserQueryKey(userId),
       });
       void queryClient.invalidateQueries({
         queryKey: getVocabStatsQueryKey(userId),
