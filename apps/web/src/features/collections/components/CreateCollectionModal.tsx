@@ -33,7 +33,9 @@ export function CreateCollectionModal({
       title="New collection"
     >
       <CreateCollectionForm
-        onCreate={createCollection}
+        onCreate={async (input) => {
+          await createCollection(input);
+        }}
         onCreated={() => {
           resetCreateState();
           onClose();
