@@ -52,7 +52,7 @@ export function Navbar() {
   if (isImmersivePractice) {
     if (isMockTest) {
       return (
-        <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+        <nav className="sticky top-0 z-50 mb-4 w-full border-b border-border bg-background/80 backdrop-blur-md">
           <div
             className={classNames(
               APP_CONTAINER_CLASS,
@@ -118,7 +118,7 @@ export function Navbar() {
     }
 
     return (
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 mb-4 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div
           className={classNames(
             APP_CONTAINER_CLASS,
@@ -171,7 +171,7 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 mb-4 w-full border-b border-border bg-background/80 backdrop-blur-md">
       <div
         className={classNames(
           APP_CONTAINER_CLASS,

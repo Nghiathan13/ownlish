@@ -56,7 +56,7 @@ export function CollectionsPage() {
   return (
     <PageShell>
       <Panel>
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap gap-2 px-4">
           {collectionCategoryTabs.map((tab) => (
             <button
               className={
@@ -80,7 +80,7 @@ export function CollectionsPage() {
         ) : collectionsError ? (
           <StateMessage message={collectionsError} onRetry={reloadCollections} />
         ) : isUserTab ? (
-          <div className="grid gap-4">
+          <div className="mb-4 grid gap-4 px-4">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <MyVocabularyCard
                 href={myVocabularyHref}
@@ -108,7 +108,7 @@ export function CollectionsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3">
             {activeCollections.map((collection) => (
               <SystemCollectionCard
                 activeTabLabel={activeTabLabel}
