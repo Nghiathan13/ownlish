@@ -42,8 +42,13 @@ describe("collection display helpers", () => {
     ).toBe("ielts");
   });
 
-  it("builds a collection path from id", () => {
-    expect(getCollectionPath(makeCollection())).toBe("/collections/collection-id");
+  it("builds a collection path from id and kind", () => {
+    expect(getCollectionPath(makeCollection())).toBe(
+      "/collections/collection-id?kind=system",
+    );
+    expect(
+      getCollectionPath(makeCollection({ kind: "USER", isDefault: true })),
+    ).toBe("/collections/collection-id?kind=user");
   });
 
   it("finds a collection by id", () => {
@@ -133,8 +138,12 @@ describe("collection display helpers", () => {
       isPublic: false,
     });
 
-    expect(getCollectionPath(firstStudyList)).toBe("/collections/study-list-1");
-    expect(getCollectionPath(secondStudyList)).toBe("/collections/study-list-2");
+    expect(getCollectionPath(firstStudyList)).toBe(
+      "/collections/study-list-1?kind=user",
+    );
+    expect(getCollectionPath(secondStudyList)).toBe(
+      "/collections/study-list-2?kind=user",
+    );
     expect(findCollectionById([firstStudyList, secondStudyList], "study-list-2"))
       .toBe(secondStudyList);
   });

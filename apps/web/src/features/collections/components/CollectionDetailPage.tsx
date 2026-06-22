@@ -1,12 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   findCollectionById,
   getCollectionPath,
   getDefaultUserCollection,
   getUserOwnedCollections,
+  parseCollectionKindHint,
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { SystemCollectionWordsPanel } from "@/features/collections/components/SystemCollectionWordsPanel";
@@ -26,6 +27,8 @@ type CollectionDetailPageProps = {
 
 export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const kindHint = parseCollectionKindHint(searchParams.get("kind"));
   const { status, user } = useAuthSession();
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
     null,
@@ -46,7 +49,9 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
   const collectionSummary = useMemo(() => {
     return findCollectionById(collections, collectionId);
   }, [collectionId, collections]);
-  const isSystemCollection = collectionSummary?.kind === "SYSTEM";
+  const isSystemCollection =
+    collectionSummary?.kind === "SYSTEM" ||
+    (collectionSummary == null && kindHint === "SYSTEM");
   const {
     collectionDetail,
     collectionDetailError,

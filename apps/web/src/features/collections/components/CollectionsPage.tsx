@@ -18,6 +18,7 @@ import {
   useCollectionsList,
   useDeleteCollection,
 } from "@/features/collections/hooks/useCollections";
+import { usePrefetchCollectionDetail } from "@/features/collections/hooks/usePrefetchCollectionDetail";
 import {
   iconOnlyButtonClassName,
   primaryTextButtonClassName,
@@ -53,9 +54,6 @@ export function CollectionsPage() {
   const activeCollections = useMemo(() => {
     return filterCollectionsByCategory(collections, activeCategory);
   }, [activeCategory, collections]);
-  const myVocabularyHref = defaultCollection
-    ? getCollectionPath(defaultCollection)
-    : null;
   const activeTabLabel =
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
     "Collections";
@@ -105,8 +103,7 @@ export function CollectionsPage() {
             ) : null}
             <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3">
               <MyVocabularyCard
-                collectionId={defaultCollection?.id ?? null}
-                href={myVocabularyHref}
+                collection={defaultCollection}
                 isAuthenticated={isAuthenticated}
                 userId={user?.id ?? null}
               />
@@ -180,6 +177,7 @@ function UserCollectionCard({
 }) {
   const isDeleting = deletingCollectionId === collection.id;
   const collectionHref = getCollectionPath(collection);
+  const prefetchCollectionDetail = usePrefetchCollectionDetail();
 
   return (
     <article className="relative rounded-xl border border-border hover:bg-muted">
@@ -187,6 +185,12 @@ function UserCollectionCard({
         aria-label={`View ${collection.name}`}
         className="absolute inset-0 rounded-xl"
         href={collectionHref}
+        onFocus={() => {
+          prefetchCollectionDetail(collection);
+        }}
+        onMouseEnter={() => {
+          prefetchCollectionDetail(collection);
+        }}
       />
       <button
         aria-label={
@@ -227,10 +231,18 @@ function SystemCollectionCard({
 }: {
   collection: CollectionSummary;
 }) {
+  const prefetchCollectionDetail = usePrefetchCollectionDetail();
+
   return (
     <Link
       className="block rounded-xl border border-border p-4 hover:bg-muted"
       href={getCollectionPath(collection)}
+      onFocus={() => {
+        prefetchCollectionDetail(collection);
+      }}
+      onMouseEnter={() => {
+        prefetchCollectionDetail(collection);
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-xl font-bold">{collection.name}</h2>

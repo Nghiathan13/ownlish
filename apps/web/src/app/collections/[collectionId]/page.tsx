@@ -1,20 +1,17 @@
-import { RequireAuth } from "@/features/auth/components/RequireAuth";
+"use client";
+
+import { useParams } from "next/navigation";
 import { CollectionDetailPage } from "@/features/collections/components/CollectionDetailPage";
 
-type CollectionDetailRouteProps = {
-  params: Promise<{
-    collectionId: string;
-  }>;
-};
+export default function CollectionDetailRoute() {
+  const params = useParams<{ collectionId: string | string[] }>();
+  const collectionId = Array.isArray(params.collectionId)
+    ? params.collectionId[0]
+    : params.collectionId;
 
-export default async function CollectionDetailRoute({
-  params,
-}: CollectionDetailRouteProps) {
-  const { collectionId } = await params;
+  if (!collectionId) {
+    return null;
+  }
 
-  return (
-    <RequireAuth>
-      <CollectionDetailPage collectionId={collectionId} />
-    </RequireAuth>
-  );
+  return <CollectionDetailPage collectionId={collectionId} />;
 }
