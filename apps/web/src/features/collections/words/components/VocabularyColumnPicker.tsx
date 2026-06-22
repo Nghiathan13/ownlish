@@ -1,34 +1,26 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import {
-  VOCABULARY_TOGGLEABLE_COLUMNS,
-  type VocabularyToggleableColumnId,
-} from "@/features/collections/words/lib/vocabularyTableColumns";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { SwapColumnIcon } from "@/shared/ui/icons/SwapColumnIcon";
 
-type ColumnOption<T extends string> = {
-  id: T;
+type ColumnOption<Id extends string> = {
+  id: Id;
   label: string;
 };
 
-type VocabularyColumnPickerProps<
-  T extends string = VocabularyToggleableColumnId,
-> = {
-  columnVisibility: Record<T, boolean>;
-  columns?: ReadonlyArray<ColumnOption<T>>;
-  onToggleColumn: (columnId: T) => void;
+type VocabularyColumnPickerProps<Id extends string> = {
+  columnVisibility: Record<Id, boolean>;
+  columns: ReadonlyArray<ColumnOption<Id>>;
+  onToggleColumn: (columnId: Id) => void;
 };
 
-export function VocabularyColumnPicker<
-  T extends string = VocabularyToggleableColumnId,
->({
+export function VocabularyColumnPicker<Id extends string>({
   columnVisibility,
-  columns = VOCABULARY_TOGGLEABLE_COLUMNS as ReadonlyArray<ColumnOption<T>>,
+  columns,
   onToggleColumn,
-}: VocabularyColumnPickerProps<T>) {
+}: VocabularyColumnPickerProps<Id>) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);

@@ -15,6 +15,7 @@ import {
 } from "@/features/collections/words/components";
 import { useVocabularyTableColumnVisibility } from "@/features/collections/words/hooks/useVocabularyTableColumnVisibility";
 import { useVocabularyWords } from "@/features/collections/words/hooks/useVocabularyWords";
+import { VOCABULARY_TOGGLEABLE_COLUMNS } from "@/features/collections/words/lib/vocabularyTableColumns";
 import {
   getSelectableDefinitions,
   getSelectedDefinitions,
@@ -176,6 +177,7 @@ export function CollectionWordsPanel({
           <VocabularySearch search={search} onSearchChange={setSearch} />
           <VocabularyColumnPicker
             columnVisibility={columnVisibility}
+            columns={VOCABULARY_TOGGLEABLE_COLUMNS}
             onToggleColumn={toggleColumn}
           />
         </div>
