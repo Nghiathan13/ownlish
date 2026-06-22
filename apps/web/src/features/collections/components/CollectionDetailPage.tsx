@@ -107,13 +107,10 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
             </p>
           </div>
         ) : isUserCollection ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-6">
-            <UserCollectionHeader collection={collectionSummary} />
-            <CollectionWordsPanel
-              className="min-h-0 flex-1"
-              collectionId={collectionSummary.id}
-            />
-          </div>
+          <CollectionWordsPanel
+            className="min-h-0 flex-1"
+            collectionId={collectionSummary.id}
+          />
         ) : isLoadingCollectionDetail ? (
           <p className="text-muted-foreground">Loading words...</p>
         ) : collectionDetailError ? (
@@ -122,21 +119,18 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
             onRetry={reloadCollectionDetail}
           />
         ) : collectionDetail ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-6">
-            <SystemCollectionHeader collectionDetail={collectionDetail} />
-            <SystemCollectionWordsPanel
-              key={collectionDetail.id}
-              className="min-h-0 flex-1"
-              importError={importError}
-              importResultMessage={importResultMessage}
-              isImporting={isImporting}
-              onImportClick={handleImportClick}
-              onImportTargetChange={setImportTargetCollectionId}
-              resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
-              userOwnedCollections={userOwnedCollections}
-              words={collectionDetail.catalogWords}
-            />
-          </div>
+          <SystemCollectionWordsPanel
+            key={collectionDetail.id}
+            className="min-h-0 flex-1"
+            importError={importError}
+            importResultMessage={importResultMessage}
+            isImporting={isImporting}
+            onImportClick={handleImportClick}
+            onImportTargetChange={setImportTargetCollectionId}
+            resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
+            userOwnedCollections={userOwnedCollections}
+            words={collectionDetail.catalogWords}
+          />
         ) : null}
       </Panel>
     </PageShell>
@@ -151,49 +145,6 @@ function BackToCollectionsLink() {
     >
       Back to collections
     </Link>
-  );
-}
-
-function UserCollectionHeader({
-  collection,
-}: {
-  collection: NonNullable<ReturnType<typeof findCollectionBySlug>>;
-}) {
-  const title = collection.isDefault ? "My Vocabulary" : collection.name;
-  const description =
-    collection.description ??
-    (collection.isDefault
-      ? "All words in your personal vocabulary list."
-      : `Review ${collection.itemCount} words in this collection.`);
-
-  return (
-    <div>
-      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        {collection.isDefault ? "Default" : "My collection"}
-      </p>
-      <h1 className="text-3xl font-bold leading-tight">{title}</h1>
-      <p className="mt-2 max-w-3xl text-muted-foreground">{description}</p>
-    </div>
-  );
-}
-
-function SystemCollectionHeader({
-  collectionDetail,
-}: {
-  collectionDetail: NonNullable<ReturnType<typeof useCollectionDetail>["collectionDetail"]>;
-}) {
-  return (
-    <div>
-      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        {collectionDetail.cefrLevel ?? collectionDetail.source}
-      </p>
-      <h1 className="text-3xl font-bold leading-tight">
-        {collectionDetail.name}
-      </h1>
-      <p className="mt-2 max-w-3xl text-muted-foreground">
-        {collectionDetail.description}
-      </p>
-    </div>
   );
 }
 

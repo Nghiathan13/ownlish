@@ -3,22 +3,32 @@
 import { useEffect, useId, useRef, useState } from "react";
 import {
   VOCABULARY_TOGGLEABLE_COLUMNS,
-  type VocabularyColumnVisibility,
   type VocabularyToggleableColumnId,
 } from "@/features/collections/words/lib/vocabularyTableColumns";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { SwapColumnIcon } from "@/shared/ui/icons/SwapColumnIcon";
 
-type VocabularyColumnPickerProps = {
-  columnVisibility: VocabularyColumnVisibility;
-  onToggleColumn: (columnId: VocabularyToggleableColumnId) => void;
+type ColumnOption<T extends string> = {
+  id: T;
+  label: string;
 };
 
-export function VocabularyColumnPicker({
+type VocabularyColumnPickerProps<
+  T extends string = VocabularyToggleableColumnId,
+> = {
+  columnVisibility: Record<T, boolean>;
+  columns?: ReadonlyArray<ColumnOption<T>>;
+  onToggleColumn: (columnId: T) => void;
+};
+
+export function VocabularyColumnPicker<
+  T extends string = VocabularyToggleableColumnId,
+>({
   columnVisibility,
+  columns = VOCABULARY_TOGGLEABLE_COLUMNS as ReadonlyArray<ColumnOption<T>>,
   onToggleColumn,
-}: VocabularyColumnPickerProps) {
+}: VocabularyColumnPickerProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -73,7 +83,7 @@ export function VocabularyColumnPicker({
           aria-label="Toggle table columns"
           className="absolute top-[calc(100%+0.25rem)] right-0 z-20 min-w-[12rem] rounded-md border border-border bg-background p-1 shadow-lg"
         >
-          {VOCABULARY_TOGGLEABLE_COLUMNS.map((column) => {
+          {columns.map((column) => {
             const isVisible = columnVisibility[column.id];
 
             return (

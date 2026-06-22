@@ -5,7 +5,10 @@ import type { CatalogWord, CollectionSummary } from "@/entities/collection/api/c
 import { CatalogWordsTable } from "@/features/collections/components/CatalogWordsTable";
 import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
 import { useCatalogWordsPagination } from "@/features/collections/hooks/useCatalogWordsPagination";
+import { useCatalogTableColumnVisibility } from "@/features/collections/hooks/useCatalogTableColumnVisibility";
+import { CATALOG_TOGGLEABLE_COLUMNS } from "@/features/collections/lib/catalogTableColumns";
 import {
+  VocabularyColumnPicker,
   VocabularyPagination,
   VocabularySearch,
 } from "@/features/collections/words/components";
@@ -36,6 +39,7 @@ export function SystemCollectionWordsPanel({
   words,
 }: SystemCollectionWordsPanelProps) {
   const [search, setSearch] = useState("");
+  const { columnVisibility, toggleColumn } = useCatalogTableColumnVisibility();
   const {
     canGoNext,
     canGoPrevious,
@@ -80,6 +84,11 @@ export function SystemCollectionWordsPanel({
         ) : null}
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <VocabularySearch onSearchChange={setSearch} search={search} />
+          <VocabularyColumnPicker
+            columnVisibility={columnVisibility}
+            columns={CATALOG_TOGGLEABLE_COLUMNS}
+            onToggleColumn={toggleColumn}
+          />
         </div>
       </div>
 
@@ -100,7 +109,10 @@ export function SystemCollectionWordsPanel({
             <CatalogWordsStateBlock hasSearch={hasSearch} />
           ) : (
             <div className="min-h-0 flex-1 overflow-auto">
-              <CatalogWordsTable words={paginatedWords} />
+              <CatalogWordsTable
+                columnVisibility={columnVisibility}
+                words={paginatedWords}
+              />
             </div>
           )}
         </div>

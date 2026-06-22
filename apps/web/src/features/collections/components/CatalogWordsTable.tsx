@@ -11,16 +11,27 @@ import {
   hasUniformIpaUk,
   hasUniformIpaUs,
 } from "@/features/collections/words/lib/vocabularyIpa";
+import {
+  isCatalogColumnVisible,
+  type CatalogColumnVisibility,
+  type CatalogToggleableColumnId,
+} from "@/features/collections/lib/catalogTableColumns";
 import { VOCABULARY_TABLE_COLUMN_WIDTH } from "@/features/collections/words/lib/vocabularyTableColumns";
 import { classNames } from "@/shared/lib/classNames";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type CatalogWordsTableProps = {
+  columnVisibility: CatalogColumnVisibility;
   words: CatalogWord[];
 };
 
-export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
+export function CatalogWordsTable({
+  columnVisibility,
+  words,
+}: CatalogWordsTableProps) {
   const rows = expandCatalogWordsToDefinitionRows(words);
+  const showColumn = (columnId: CatalogToggleableColumnId) =>
+    isCatalogColumnVisible(columnVisibility, columnId);
 
   return (
     <>
@@ -29,7 +40,9 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
           const wordRows = expandCatalogWordsToDefinitionRows([word]);
           const uniformIpaUk = hasUniformIpaUk(word.definitions);
           const uniformIpaUs = hasUniformIpaUs(word.definitions);
-          const showHeaderIpa = uniformIpaUk || uniformIpaUs;
+          const showHeaderIpa =
+            (uniformIpaUk && showColumn("ipaUk")) ||
+            (uniformIpaUs && showColumn("ipaUs"));
 
           return (
             <article
@@ -40,12 +53,12 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                 <h2 className="text-base font-semibold">{word.word}</h2>
                 {showHeaderIpa ? (
                   <div className="grid shrink-0 gap-0.5 text-right text-base text-muted-foreground">
-                    {uniformIpaUk ? (
+                    {uniformIpaUk && showColumn("ipaUk") ? (
                       <DefinitionIpaValueCell
                         value={getSharedIpaUk(word.definitions)}
                       />
                     ) : null}
-                    {uniformIpaUs ? (
+                    {uniformIpaUs && showColumn("ipaUs") ? (
                       <DefinitionIpaValueCell
                         value={getSharedIpaUs(word.definitions)}
                       />
@@ -72,7 +85,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                           label={`Select ${word.word}`}
                         />
                       ) : null}
-                      {!uniformIpaUk ? (
+                      {!uniformIpaUk && showColumn("ipaUk") ? (
                         <dl className="grid grid-cols-1 gap-3">
                           <div>
                             <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -86,7 +99,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                           </div>
                         </dl>
                       ) : null}
-                      {!uniformIpaUs ? (
+                      {!uniformIpaUs && showColumn("ipaUs") ? (
                         <dl className="grid grid-cols-1 gap-3">
                           <div>
                             <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -101,6 +114,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                         </dl>
                       ) : null}
                       <dl className="grid grid-cols-2 gap-3">
+                        {showColumn("type") ? (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Type
@@ -109,6 +123,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                             <DefinitionTypeCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
+                        {showColumn("meaning") ? (
                         <div>
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Meaning
@@ -117,6 +133,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                             <DefinitionMeaningCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
+                        {showColumn("example") ? (
                         <div className="col-span-2">
                           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Example
@@ -125,6 +143,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                             <DefinitionExampleCell definition={row.definition} />
                           </dd>
                         </div>
+                        ) : null}
                       </dl>
                     </div>
                   );
@@ -151,6 +170,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
             >
               Word
             </th>
+            {showColumn("ipaUk") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -159,6 +179,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
             >
               IPA UK
             </th>
+            ) : null}
+            {showColumn("ipaUs") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -167,6 +189,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
             >
               IPA US
             </th>
+            ) : null}
+            {showColumn("type") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -175,6 +199,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
             >
               Type
             </th>
+            ) : null}
+            {showColumn("meaning") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -183,6 +209,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
             >
               Meaning
             </th>
+            ) : null}
+            {showColumn("example") ? (
             <th
               className={classNames(
                 "bg-surface px-2 py-2 align-middle font-semibold",
@@ -191,6 +219,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
             >
               Example
             </th>
+            ) : null}
           </tr>
         </thead>
         <tbody>
@@ -231,7 +260,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                     {row.word.word}
                   </td>
                 ) : null}
-                {row.isFirstInWord && uniformIpaUk ? (
+                {row.isFirstInWord && uniformIpaUk && showColumn("ipaUk") ? (
                   <td
                     className={classNames(
                       "px-2 py-2 align-middle",
@@ -244,7 +273,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                     />
                   </td>
                 ) : null}
-                {!uniformIpaUk ? (
+                {!uniformIpaUk && showColumn("ipaUk") ? (
                   <td
                     className={classNames(
                       "px-2 align-middle",
@@ -257,7 +286,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                     />
                   </td>
                 ) : null}
-                {row.isFirstInWord && uniformIpaUs ? (
+                {row.isFirstInWord && uniformIpaUs && showColumn("ipaUs") ? (
                   <td
                     className={classNames(
                       "px-2 py-2 align-middle",
@@ -270,7 +299,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                     />
                   </td>
                 ) : null}
-                {!uniformIpaUs ? (
+                {!uniformIpaUs && showColumn("ipaUs") ? (
                   <td
                     className={classNames(
                       "px-2 align-middle",
@@ -283,6 +312,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                     />
                   </td>
                 ) : null}
+                {showColumn("type") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -292,6 +322,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                 >
                   <DefinitionTypeCell definition={row.definition} />
                 </td>
+                ) : null}
+                {showColumn("meaning") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -301,6 +333,8 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                 >
                   <DefinitionMeaningCell definition={row.definition} />
                 </td>
+                ) : null}
+                {showColumn("example") ? (
                 <td
                   className={classNames(
                     "px-2 align-middle",
@@ -310,6 +344,7 @@ export function CatalogWordsTable({ words }: CatalogWordsTableProps) {
                 >
                   <DefinitionExampleCell definition={row.definition} />
                 </td>
+                ) : null}
               </tr>
             );
           })}
