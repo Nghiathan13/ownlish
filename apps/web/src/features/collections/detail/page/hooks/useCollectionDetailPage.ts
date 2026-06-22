@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import type { CatalogWord } from "@/entities/collection/api/collections";
 import {
   findCollectionById,
-  getCollectionPath,
   getDefaultUserCollection,
   getUserOwnedCollections,
   parseCollectionKindHint,
@@ -24,7 +23,6 @@ type UseCollectionDetailPageParams = {
 export function useCollectionDetailPage({
   collectionId,
 }: UseCollectionDetailPageParams) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const kindHint = parseCollectionKindHint(searchParams.get("kind"));
   const { status, user } = useAuthSession();
@@ -76,25 +74,6 @@ export function useCollectionDetailPage({
   }, [collections]);
   const resolvedImportTargetCollectionId =
     importTargetCollectionId ?? defaultCollection?.id ?? null;
-
-  const handleUserCollectionChange = useCallback(
-    (nextCollectionId: string) => {
-      if (nextCollectionId === collectionId) {
-        return;
-      }
-
-      const nextCollection = userOwnedCollections.find(
-        (collection) => collection.id === nextCollectionId,
-      );
-
-      if (!nextCollection) {
-        return;
-      }
-
-      router.push(getCollectionPath(nextCollection));
-    },
-    [collectionId, router, userOwnedCollections],
-  );
 
   const handleImportClick = useCallback(
     async (catalogDefinitionIds?: string[]) => {
@@ -149,7 +128,6 @@ export function useCollectionDetailPage({
     onImportTargetChange: setImportTargetCollectionId,
     onReloadCollectionDetail: reloadCollectionDetail,
     onReloadCollections: reloadCollections,
-    onUserCollectionChange: handleUserCollectionChange,
     resolvedImportTargetCollectionId,
     userOwnedCollections,
   };

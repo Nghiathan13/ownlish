@@ -20,7 +20,6 @@ type CollectionDetailBodyProps = {
   onImportTargetChange: (collectionId: string) => void;
   onReloadCollectionDetail: () => void;
   onReloadCollections: () => void;
-  onUserCollectionChange: (collectionId: string) => void;
   resolvedImportTargetCollectionId: string | null;
   userOwnedCollections: CollectionSummary[];
 };
@@ -41,7 +40,6 @@ export function CollectionDetailBody({
   onImportTargetChange,
   onReloadCollectionDetail,
   onReloadCollections,
-  onUserCollectionChange,
   resolvedImportTargetCollectionId,
   userOwnedCollections,
 }: CollectionDetailBodyProps) {
@@ -80,11 +78,6 @@ export function CollectionDetailBody({
   }
 
   return (
-    <CollectionWordsPanel
-      collectionId={collectionId}
-      hasCollectionsList={hasCollectionsList}
-      onCollectionChange={onUserCollectionChange}
-      userCollections={userOwnedCollections}
-    />
+    <CollectionWordsPanel collectionId={collectionId} />
   );
 }

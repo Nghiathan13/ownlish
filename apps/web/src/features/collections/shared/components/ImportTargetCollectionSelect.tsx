@@ -1,6 +1,11 @@
 "use client";
 
 import type { CollectionSummary } from "@/entities/collection/api/collections";
+import { classNames } from "@/shared/lib/classNames";
+import {
+  secondaryTextButtonColorsClassName,
+  textButtonLayoutClassName,
+} from "@/shared/ui/button";
 
 type ImportTargetCollectionSelectProps = {
   ariaLabel?: string;
@@ -9,6 +14,13 @@ type ImportTargetCollectionSelectProps = {
   value: string;
   variant?: "form" | "toolbar";
 };
+
+const toolbarSelectClassName = classNames(
+  textButtonLayoutClassName,
+  secondaryTextButtonColorsClassName,
+  "w-fit min-w-[10rem] max-w-[14rem] truncate appearance-none cursor-pointer",
+  "[@media(prefers-color-scheme:dark)]:color-scheme-dark",
+);
 
 export function ImportTargetCollectionSelect({
   ariaLabel = "Import into",
@@ -21,7 +33,7 @@ export function ImportTargetCollectionSelect({
     return (
       <select
         aria-label={ariaLabel}
-        className="h-10 w-fit min-w-[10rem] max-w-[14rem] cursor-pointer appearance-none truncate rounded-lg border border-border bg-transparent px-3 text-sm text-foreground outline-none transition hover:border-foreground focus:border-foreground [@media(prefers-color-scheme:dark)]:color-scheme-dark"
+        className={toolbarSelectClassName}
         onChange={(event) => onChange(event.target.value)}
         value={value}
       >

@@ -1,4 +1,3 @@
-import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { AddWordForm } from "@/features/collections/detail/user/forms/components/AddWordForm";
 import { DeleteDefinitionsConfirm } from "@/features/collections/detail/user/forms/components/DeleteDefinitionsConfirm";
 import { EditWordPanel } from "@/features/collections/detail/user/forms/components/EditWordPanel";
@@ -10,7 +9,6 @@ import {
 } from "@/features/collections/detail/shared/components";
 import type { useCollectionWordsPanel } from "@/features/collections/detail/user/panel/hooks/useCollectionWordsPanel";
 import { VOCABULARY_TOGGLEABLE_COLUMNS } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
-import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
@@ -18,25 +16,18 @@ import { Modal } from "@/shared/ui/Modal";
 
 type CollectionWordsPanelState = ReturnType<typeof useCollectionWordsPanel>;
 
-type CollectionWordsPanelBodyProps = CollectionWordsPanelState & {
-  collectionId: string;
-  hasCollectionsList: boolean;
-  onCollectionChange: (collectionId: string) => void;
-  userCollections: CollectionSummary[];
-};
+type CollectionWordsPanelBodyProps = CollectionWordsPanelState;
 
 export function CollectionWordsPanelBody({
   allDefinitionsSelected,
   canGoNext,
   canGoPrevious,
-  collectionId,
   columnVisibility,
   createWord,
   debouncedSearch,
   editingTarget,
   handleBulkDelete,
   handleEditWord,
-  hasCollectionsList,
   isAddWordOpen,
   isBulkDeleteOpen,
   isDeletingDefinitions,
@@ -45,7 +36,6 @@ export function CollectionWordsPanelBody({
   loadError,
   nextPage,
   offset,
-  onCollectionChange,
   onReload,
   pageSize,
   previousPage,
@@ -64,34 +54,22 @@ export function CollectionWordsPanelBody({
   totalWords,
   updateWord,
   updatingDefinitionId,
-  userCollections,
   words,
 }: CollectionWordsPanelBodyProps) {
   return (
     <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
-        <div className="flex shrink-0 items-center gap-2">
-          {hasCollectionsList && userCollections.length > 0 ? (
-            <ImportTargetCollectionSelect
-              ariaLabel="Collection"
-              collections={userCollections}
-              onChange={onCollectionChange}
-              value={collectionId}
-              variant="toolbar"
-            />
-          ) : null}
-          <button
-            type="button"
-            className={iconTextButtonClassName(
-              "w-fit shrink-0",
-              "border-foreground bg-foreground text-background",
-            )}
-            onClick={() => setIsAddWordOpen(true)}
-          >
-            <AddIcon />
-            Add word
-          </button>
-        </div>
+        <button
+          type="button"
+          className={iconTextButtonClassName(
+            "w-fit shrink-0",
+            "border-foreground bg-foreground text-background",
+          )}
+          onClick={() => setIsAddWordOpen(true)}
+        >
+          <AddIcon />
+          Add word
+        </button>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <WordsSearch search={search} onSearchChange={setSearch} />
           <WordsColumnPicker

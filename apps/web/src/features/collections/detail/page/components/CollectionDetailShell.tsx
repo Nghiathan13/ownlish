@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import { BackToCollectionsLink } from "@/features/collections/detail/page/components/BackToCollectionsLink";
+import { CollectionDetailHeader } from "@/features/collections/detail/page/components/CollectionDetailHeader";
 import { PageShell } from "@/shared/ui/PageShell";
 
 const CollectionDetailContent = dynamic(
@@ -22,7 +22,7 @@ export function CollectionDetailShell({
 }: CollectionDetailShellProps) {
   return (
     <PageShell fillViewport>
-      <BackToCollectionsLink />
+      <CollectionDetailHeader collectionId={collectionId} />
       <Suspense fallback={null}>
         <CollectionDetailContent collectionId={collectionId} />
       </Suspense>
