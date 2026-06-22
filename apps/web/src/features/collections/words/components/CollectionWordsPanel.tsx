@@ -165,7 +165,7 @@ export function CollectionWordsPanel({
   }
 
   return (
-    <>
+    <div className={classNames("flex min-h-0 flex-1 flex-col", className)}>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 items-center gap-2">
           {userCollections.length > 0 ? (
@@ -260,12 +260,11 @@ export function CollectionWordsPanel({
       ) : null}
 
       <VocabularyTable
-        className={classNames(
-          className,
+        className={
           isRefreshing && !isInitialLoading && !loadError && words.length > 0
             ? "pointer-events-none opacity-50"
-            : "opacity-100",
-        )}
+            : undefined
+        }
         allDefinitionsSelected={allDefinitionsSelected}
         columnVisibility={columnVisibility}
         error={loadError}
@@ -289,7 +288,7 @@ export function CollectionWordsPanel({
 
       {!isInitialLoading && !loadError && words.length > 0 ? (
         <VocabularyPagination
-          className="mb-4 px-4"
+          className="mb-4 shrink-0 px-4"
           canGoNext={canGoNext}
           canGoPrevious={canGoPrevious}
           offset={offset}
@@ -300,6 +299,6 @@ export function CollectionWordsPanel({
           total={totalWords}
         />
       ) : null}
-    </>
+    </div>
   );
 }

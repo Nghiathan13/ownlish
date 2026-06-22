@@ -110,7 +110,7 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
   }
 
   return (
-    <PageShell className="overflow-y-auto" fillViewport>
+    <PageShell fillViewport>
       <BackToCollectionsButton />
 
       {isLoadingCollections ? (
@@ -128,12 +128,14 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
         </div>
       ) : isUserCollection ? (
         <CollectionWordsPanel
+          className="min-h-0 flex-1"
           collectionId={collectionSummary.id}
           onCollectionChange={handleUserCollectionChange}
           userCollections={userOwnedCollections}
         />
       ) : (
         <SystemCollectionWordsPanel
+          className="min-h-0 flex-1"
           importError={importError}
           importResultMessage={importResultMessage}
           isImporting={isImporting}
@@ -155,7 +157,7 @@ function BackToCollectionsButton() {
   const router = useRouter();
 
   return (
-    <div className="mb-4 px-4">
+    <div className="mb-4 shrink-0 px-4">
       <button
         className={iconTextButtonClassName(
           "w-fit shrink-0",

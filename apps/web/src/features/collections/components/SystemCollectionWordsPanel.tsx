@@ -16,6 +16,7 @@ import {
   VocabularyPagination,
   VocabularySearch,
 } from "@/features/collections/words/components";
+import { classNames } from "@/shared/lib/classNames";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 const EMPTY_DEFINITION_SELECTION = new Set<string>();
@@ -162,7 +163,7 @@ export function SystemCollectionWordsPanel({
   }
 
   return (
-    <>
+    <div className={classNames("flex min-h-0 flex-1 flex-col", className)}>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         {canImport ? (
           <div className="flex shrink-0 items-center gap-2">
@@ -215,14 +216,14 @@ export function SystemCollectionWordsPanel({
       </div>
 
       {importResultMessage ? (
-        <div className="mb-4 px-4">
+        <div className="mb-4 shrink-0 px-4">
           <p className="rounded-lg border border-border bg-muted p-3 text-sm">
             {importResultMessage}
           </p>
         </div>
       ) : null}
       {importError ? (
-        <div className="mb-4 px-4">
+        <div className="mb-4 shrink-0 px-4">
           <p className="rounded-lg border border-border p-3 text-sm text-danger">
             {importError}
           </p>
@@ -230,7 +231,6 @@ export function SystemCollectionWordsPanel({
       ) : null}
 
       <CatalogWordsTable
-        className={className}
         allDefinitionsSelected={allDefinitionsSelected}
         columnVisibility={columnVisibility}
         error={loadError}
@@ -246,7 +246,7 @@ export function SystemCollectionWordsPanel({
 
       {totalWords > 0 && !isLoading && !loadError ? (
         <VocabularyPagination
-          className="mb-4 px-4"
+          className="mb-4 shrink-0 px-4"
           canGoNext={canGoNext}
           canGoPrevious={canGoPrevious}
           offset={offset}
@@ -257,6 +257,6 @@ export function SystemCollectionWordsPanel({
           total={totalWords}
         />
       ) : null}
-    </>
+    </div>
   );
 }

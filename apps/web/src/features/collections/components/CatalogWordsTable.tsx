@@ -61,7 +61,8 @@ export function CatalogWordsTable({
     ? "Try a different search term."
     : "This collection does not have any catalog words yet.";
   const tableShellClassName = classNames(
-    "mx-4 mb-4 overflow-auto rounded-xl border border-border",
+    "mx-4 mb-4 h-0 min-h-0 flex-1 overflow-auto rounded-xl border border-border",
+    "[&_tbody_td]:align-top [&_tbody_tr]:h-px",
     className,
   );
 
