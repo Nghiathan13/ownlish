@@ -80,3 +80,13 @@ export function isColumnVisible(
 ) {
   return visibility[columnId];
 }
+
+export function getVocabularyTableColumnCount(
+  visibility: VocabularyColumnVisibility,
+): number {
+  const visibleToggleableColumns = VOCABULARY_TOGGLEABLE_COLUMNS.filter(
+    (column) => isColumnVisible(visibility, column.id),
+  ).length;
+
+  return 3 + visibleToggleableColumns;
+}

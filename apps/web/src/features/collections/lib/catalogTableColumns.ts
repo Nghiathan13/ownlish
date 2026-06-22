@@ -79,3 +79,13 @@ export function isCatalogColumnVisible(
 ) {
   return visibility[columnId];
 }
+
+export function getCatalogTableColumnCount(
+  visibility: CatalogColumnVisibility,
+): number {
+  const visibleToggleableColumns = CATALOG_TOGGLEABLE_COLUMNS.filter(
+    (column) => isCatalogColumnVisible(visibility, column.id),
+  ).length;
+
+  return 2 + visibleToggleableColumns;
+}

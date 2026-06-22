@@ -12,7 +12,6 @@ import {
   VocabularyColumnPicker,
   VocabularyPagination,
   VocabularySearch,
-  VocabularyStateBlock,
   VocabularyTable,
 } from "@/features/collections/words/components";
 import { useVocabularyTableColumnVisibility } from "@/features/collections/words/hooks/useVocabularyTableColumnVisibility";
@@ -262,43 +261,34 @@ export function CollectionWordsPanel({
 
       <div
         className={classNames(
-          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border",
+          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-border",
           className,
+          isRefreshing && !isInitialLoading && !loadError && words.length > 0
+            ? "pointer-events-none opacity-50"
+            : "opacity-100",
         )}
       >
-          {isInitialLoading || loadError || words.length === 0 ? (
-            <VocabularyStateBlock
-              error={loadError}
-              hasSearch={Boolean(debouncedSearch.trim())}
-              isEmpty={words.length === 0}
-              isLoading={isInitialLoading}
-              onRetry={reload}
-            />
-          ) : (
-            <div
-              className={`min-h-0 flex-1 overflow-auto ${
-                isRefreshing ? "pointer-events-none opacity-50" : "opacity-100"
-              }`}
-            >
-              <VocabularyTable
-                allDefinitionsSelected={allDefinitionsSelected}
-                columnVisibility={columnVisibility}
-                onEdit={(word, definition) => {
-                  if (definition) {
-                    setEditingTarget({
-                      word,
-                      definitionId: definition.id,
-                    });
-                  }
-                }}
-                onToggleAllDefinitions={toggleAllDefinitions}
-                onToggleDefinition={toggleDefinition}
-                selectedDefinitionIds={selectedDefinitionIds}
-                someDefinitionsSelected={someDefinitionsSelected}
-                words={words}
-              />
-            </div>
-          )}
+        <VocabularyTable
+          allDefinitionsSelected={allDefinitionsSelected}
+          columnVisibility={columnVisibility}
+          error={loadError}
+          hasSearch={Boolean(debouncedSearch.trim())}
+          isLoading={isInitialLoading}
+          onEdit={(word, definition) => {
+            if (definition) {
+              setEditingTarget({
+                word,
+                definitionId: definition.id,
+              });
+            }
+          }}
+          onRetry={reload}
+          onToggleAllDefinitions={toggleAllDefinitions}
+          onToggleDefinition={toggleDefinition}
+          selectedDefinitionIds={selectedDefinitionIds}
+          someDefinitionsSelected={someDefinitionsSelected}
+          words={words}
+        />
       </div>
 
       {!isInitialLoading && !loadError && words.length > 0 ? (

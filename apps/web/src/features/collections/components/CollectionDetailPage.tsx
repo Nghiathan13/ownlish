@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
@@ -112,7 +111,7 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
 
   return (
     <PageShell fillViewport>
-      <BackToCollectionsLink />
+      <BackToCollectionsButton />
 
       {isLoadingCollections ? (
         <p className="px-4 text-muted-foreground">Loading collection...</p>
@@ -134,45 +133,45 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
           onCollectionChange={handleUserCollectionChange}
           userCollections={userOwnedCollections}
         />
-      ) : isLoadingCollectionDetail ? (
-        <p className="px-4 text-muted-foreground">Loading words...</p>
-      ) : collectionDetailError ? (
-        <div className="px-4">
-          <StateMessage
-            message={collectionDetailError}
-            onRetry={reloadCollectionDetail}
-          />
-        </div>
-      ) : collectionDetail ? (
+      ) : (
         <SystemCollectionWordsPanel
-          key={collectionDetail.id}
           className="min-h-0 flex-1"
           importError={importError}
           importResultMessage={importResultMessage}
           isImporting={isImporting}
+          isLoading={isLoadingCollectionDetail}
+          loadError={collectionDetailError}
           onImportClick={handleImportClick}
           onImportTargetChange={setImportTargetCollectionId}
+          onRetry={reloadCollectionDetail}
           resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
           userOwnedCollections={userOwnedCollections}
-          words={collectionDetail.catalogWords}
+          words={collectionDetail?.catalogWords ?? []}
         />
-      ) : null}
+      )}
     </PageShell>
   );
 }
 
-function BackToCollectionsLink() {
+function BackToCollectionsButton() {
+  const router = useRouter();
+
   return (
-    <Link
-      className={iconTextButtonClassName(
-        "mb-4 ml-4 w-fit shrink-0",
-        "border-foreground bg-foreground text-background",
-      )}
-      href="/collections"
-    >
-      <ArrowBackIcon />
-      Back to collections
-    </Link>
+    <div className="mb-4 px-4">
+      <button
+        className={iconTextButtonClassName(
+          "w-fit shrink-0",
+          "border-foreground bg-foreground text-background",
+        )}
+        onClick={() => {
+          router.push("/collections");
+        }}
+        type="button"
+      >
+        <ArrowBackIcon />
+        Back to collections
+      </button>
+    </div>
   );
 }
 

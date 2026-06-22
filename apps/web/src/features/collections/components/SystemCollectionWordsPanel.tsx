@@ -26,8 +26,11 @@ type SystemCollectionWordsPanelProps = {
   importError: string | null;
   importResultMessage: string | null;
   isImporting: boolean;
+  isLoading?: boolean;
+  loadError?: string | null;
   onImportClick: (catalogDefinitionIds?: string[]) => Promise<void>;
   onImportTargetChange: (collectionId: string) => void;
+  onRetry?: () => void;
   resolvedImportTargetCollectionId: string | null;
   userOwnedCollections: CollectionSummary[];
   words: CatalogWord[];
@@ -38,8 +41,11 @@ export function SystemCollectionWordsPanel({
   importError,
   importResultMessage,
   isImporting,
+  isLoading = false,
+  loadError = null,
   onImportClick,
   onImportTargetChange,
+  onRetry,
   resolvedImportTargetCollectionId,
   userOwnedCollections,
   words,
@@ -226,28 +232,26 @@ export function SystemCollectionWordsPanel({
 
       <div
         className={classNames(
-          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border",
+          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-auto rounded-xl border border-border",
           className,
         )}
       >
-          {totalWords === 0 ? (
-            <CatalogWordsStateBlock hasSearch={hasSearch} />
-          ) : (
-            <div className="min-h-0 flex-1 overflow-auto">
-              <CatalogWordsTable
-                allDefinitionsSelected={allDefinitionsSelected}
-                columnVisibility={columnVisibility}
-                onToggleAllDefinitions={toggleAllDefinitions}
-                onToggleDefinition={toggleDefinition}
-                selectedDefinitionIds={selectedDefinitionIds}
-                someDefinitionsSelected={someDefinitionsSelected}
-                words={paginatedWords}
-              />
-            </div>
-          )}
+        <CatalogWordsTable
+          allDefinitionsSelected={allDefinitionsSelected}
+          columnVisibility={columnVisibility}
+          error={loadError}
+          hasSearch={hasSearch}
+          isLoading={isLoading}
+          onRetry={onRetry}
+          onToggleAllDefinitions={toggleAllDefinitions}
+          onToggleDefinition={toggleDefinition}
+          selectedDefinitionIds={selectedDefinitionIds}
+          someDefinitionsSelected={someDefinitionsSelected}
+          words={paginatedWords}
+        />
       </div>
 
-      {totalWords > 0 ? (
+      {totalWords > 0 && !isLoading && !loadError ? (
         <VocabularyPagination
           className="mb-4 px-4"
           canGoNext={canGoNext}
@@ -261,20 +265,5 @@ export function SystemCollectionWordsPanel({
         />
       ) : null}
     </>
-  );
-}
-
-function CatalogWordsStateBlock({ hasSearch }: { hasSearch: boolean }) {
-  return (
-    <div className="p-6">
-      <h2 className="mb-2 text-xl font-semibold">
-        {hasSearch ? "No matching words." : "No words in this collection."}
-      </h2>
-      <p className="text-muted-foreground">
-        {hasSearch
-          ? "Try a different search term."
-          : "This collection does not have any catalog words yet."}
-      </p>
-    </div>
   );
 }

@@ -12,11 +12,13 @@ import {
   hasUniformIpaUs,
 } from "@/features/collections/words/lib/vocabularyIpa";
 import {
+  getVocabularyTableColumnCount,
   isColumnVisible,
   VOCABULARY_TABLE_COLUMN_WIDTH,
   type VocabularyColumnVisibility,
   type VocabularyToggleableColumnId,
 } from "@/features/collections/words/lib/vocabularyTableColumns";
+import { TableBodyState, TableMobileState } from "@/features/collections/words/components/TableBodyState";
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
@@ -26,7 +28,11 @@ import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 type VocabularyTableProps = {
   allDefinitionsSelected: boolean;
   columnVisibility: VocabularyColumnVisibility;
+  error?: string | null;
+  hasSearch?: boolean;
+  isLoading?: boolean;
   onEdit: (word: VocabWord, definition: VocabWordDefinition | null) => void;
+  onRetry?: () => void;
   onToggleAllDefinitions: () => void;
   onToggleDefinition: (definitionId: string) => void;
   selectedDefinitionIds: ReadonlySet<string>;
@@ -37,7 +43,11 @@ type VocabularyTableProps = {
 export function VocabularyTable({
   allDefinitionsSelected,
   columnVisibility,
+  error = null,
+  hasSearch = false,
+  isLoading = false,
   onEdit,
+  onRetry,
   onToggleAllDefinitions,
   onToggleDefinition,
   selectedDefinitionIds,
@@ -47,11 +57,27 @@ export function VocabularyTable({
   const rows = expandWordsToDefinitionRows(words);
   const showColumn = (columnId: VocabularyToggleableColumnId) =>
     isColumnVisible(columnVisibility, columnId);
+  const columnCount = getVocabularyTableColumnCount(columnVisibility);
+  const showBodyState = isLoading || Boolean(error) || words.length === 0;
+  const emptyTitle = hasSearch ? "No matching words." : "No vocabulary yet.";
+  const emptyDescription = hasSearch
+    ? "Try a different search term."
+    : "Add your first word with the form above.";
 
   return (
     <>
       <div className="grid gap-3 md:hidden">
-        {words.map((word) => {
+        {showBodyState ? (
+          <TableMobileState
+            emptyDescription={emptyDescription}
+            emptyTitle={emptyTitle}
+            error={error}
+            isEmpty={words.length === 0}
+            isLoading={isLoading}
+            onRetry={onRetry}
+          />
+        ) : (
+          words.map((word) => {
           const wordRows = expandWordsToDefinitionRows([word]);
           const uniformIpaUk = hasUniformIpaUk(word.definitions);
           const uniformIpaUs = hasUniformIpaUs(word.definitions);
@@ -194,7 +220,8 @@ export function VocabularyTable({
               </div>
             </article>
           );
-        })}
+        })
+        )}
       </div>
 
       <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-base md:table">
@@ -298,7 +325,18 @@ export function VocabularyTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => {
+          {showBodyState ? (
+            <TableBodyState
+              columnCount={columnCount}
+              emptyDescription={emptyDescription}
+              emptyTitle={emptyTitle}
+              error={error}
+              isEmpty={words.length === 0}
+              isLoading={isLoading}
+              onRetry={onRetry}
+            />
+          ) : (
+            rows.map((row, rowIndex) => {
             const definition = row.definition;
             const uniformIpaUk = hasUniformIpaUk(row.word.definitions);
             const uniformIpaUs = hasUniformIpaUs(row.word.definitions);
@@ -462,7 +500,8 @@ export function VocabularyTable({
                 </td>
               </tr>
             );
-          })}
+          })
+          )}
         </tbody>
       </table>
     </>

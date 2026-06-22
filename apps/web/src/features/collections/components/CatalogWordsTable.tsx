@@ -12,17 +12,23 @@ import {
   hasUniformIpaUs,
 } from "@/features/collections/words/lib/vocabularyIpa";
 import {
+  getCatalogTableColumnCount,
   isCatalogColumnVisible,
   type CatalogColumnVisibility,
   type CatalogToggleableColumnId,
 } from "@/features/collections/lib/catalogTableColumns";
 import { VOCABULARY_TABLE_COLUMN_WIDTH } from "@/features/collections/words/lib/vocabularyTableColumns";
+import { TableBodyState, TableMobileState } from "@/features/collections/words/components/TableBodyState";
 import { classNames } from "@/shared/lib/classNames";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type CatalogWordsTableProps = {
   allDefinitionsSelected: boolean;
   columnVisibility: CatalogColumnVisibility;
+  error?: string | null;
+  hasSearch?: boolean;
+  isLoading?: boolean;
+  onRetry?: () => void;
   onToggleAllDefinitions: () => void;
   onToggleDefinition: (definitionId: string) => void;
   selectedDefinitionIds: ReadonlySet<string>;
@@ -33,6 +39,10 @@ type CatalogWordsTableProps = {
 export function CatalogWordsTable({
   allDefinitionsSelected,
   columnVisibility,
+  error = null,
+  hasSearch = false,
+  isLoading = false,
+  onRetry,
   onToggleAllDefinitions,
   onToggleDefinition,
   selectedDefinitionIds,
@@ -42,11 +52,28 @@ export function CatalogWordsTable({
   const rows = expandCatalogWordsToDefinitionRows(words);
   const showColumn = (columnId: CatalogToggleableColumnId) =>
     isCatalogColumnVisible(columnVisibility, columnId);
+  const columnCount = getCatalogTableColumnCount(columnVisibility);
+  const showBodyState = isLoading || Boolean(error) || words.length === 0;
+  const emptyTitle = hasSearch ? "No matching words." : "No words in this collection.";
+  const emptyDescription = hasSearch
+    ? "Try a different search term."
+    : "This collection does not have any catalog words yet.";
 
   return (
     <>
       <div className="grid gap-3 md:hidden">
-        {words.map((word) => {
+        {showBodyState ? (
+          <TableMobileState
+            emptyDescription={emptyDescription}
+            emptyTitle={emptyTitle}
+            error={error}
+            isEmpty={words.length === 0}
+            isLoading={isLoading}
+            loadingMessage="Loading words..."
+            onRetry={onRetry}
+          />
+        ) : (
+          words.map((word) => {
           const wordRows = expandCatalogWordsToDefinitionRows([word]);
           const uniformIpaUk = hasUniformIpaUk(word.definitions);
           const uniformIpaUs = hasUniformIpaUs(word.definitions);
@@ -163,7 +190,8 @@ export function CatalogWordsTable({
               </div>
             </article>
           );
-        })}
+        })
+        )}
       </div>
 
       <table className="hidden w-full min-w-[920px] table-fixed border-collapse text-left text-base md:table">
@@ -242,7 +270,19 @@ export function CatalogWordsTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => {
+          {showBodyState ? (
+            <TableBodyState
+              columnCount={columnCount}
+              emptyDescription={emptyDescription}
+              emptyTitle={emptyTitle}
+              error={error}
+              isEmpty={words.length === 0}
+              isLoading={isLoading}
+              loadingMessage="Loading words..."
+              onRetry={onRetry}
+            />
+          ) : (
+            rows.map((row, rowIndex) => {
             const definition = row.definition;
             const uniformIpaUk = hasUniformIpaUk(row.word.definitions);
             const uniformIpaUs = hasUniformIpaUs(row.word.definitions);
@@ -368,7 +408,8 @@ export function CatalogWordsTable({
                 ) : null}
               </tr>
             );
-          })}
+          })
+          )}
         </tbody>
       </table>
     </>
