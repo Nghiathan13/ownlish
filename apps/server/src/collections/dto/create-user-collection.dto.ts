@@ -1,9 +1,4 @@
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import {
   MAX_COLLECTION_DESCRIPTION_LENGTH,
   MAX_COLLECTION_NAME_LENGTH,
