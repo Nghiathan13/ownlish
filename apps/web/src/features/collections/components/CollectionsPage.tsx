@@ -181,7 +181,7 @@ function UserCollectionCard({
   const isDeleting = deletingCollectionId === collection.id;
 
   return (
-    <article className="relative rounded-xl border border-border transition hover:bg-muted">
+    <article className="relative rounded-xl border border-border hover:bg-muted">
       <button
         aria-label={
           isDeleting ? "Deleting collection" : `Delete ${collection.name}`
@@ -199,7 +199,7 @@ function UserCollectionCard({
         }}
         type="button"
       >
-        <DeleteForeverIcon className="size-5" />
+        <DeleteForeverIcon />
       </button>
       <Link
         className="block p-4"
@@ -219,7 +219,7 @@ function SystemCollectionCard({
 }) {
   return (
     <Link
-      className="block rounded-xl border border-border p-4 transition hover:bg-muted"
+      className="block rounded-xl border border-border p-4 hover:bg-muted"
       href={`/collections/${getCollectionSlug(collection)}`}
     >
       <div className="flex items-start justify-between gap-3">
