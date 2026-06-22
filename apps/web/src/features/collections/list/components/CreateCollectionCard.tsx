@@ -7,7 +7,7 @@ type CreateCollectionCardProps = {
 export function CreateCollectionCard({ onClick }: CreateCollectionCardProps) {
   return (
     <button
-      className="flex min-h-32 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-5 text-muted-foreground transition hover:border-foreground hover:bg-muted hover:text-foreground"
+      className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-5 text-muted-foreground transition hover:border-foreground hover:bg-muted hover:text-foreground"
       onClick={onClick}
       type="button"
     >

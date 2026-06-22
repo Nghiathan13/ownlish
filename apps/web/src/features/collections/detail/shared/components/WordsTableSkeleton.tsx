@@ -15,11 +15,14 @@ export function WordsTableSkeleton({ className }: WordsTableSkeletonProps) {
         className,
       )}
     >
-      <Skeleton className="h-11 shrink-0 rounded-none border-b border-border" />
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <Skeleton className="h-10 shrink-0 rounded-none border-b border-border" />
+      <div className="flex flex-1 flex-col">
         {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
           <Skeleton
-            className={index === SKELETON_ROW_COUNT - 1 ? "h-10 w-5/6" : "h-10 w-full"}
+            className={classNames(
+              "h-12 w-full shrink-0 rounded-none",
+              index < SKELETON_ROW_COUNT - 1 && "border-b border-border",
+            )}
             key={index}
           />
         ))}
