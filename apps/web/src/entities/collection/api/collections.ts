@@ -48,6 +48,7 @@ export type CollectionDetail = CollectionSummary & {
 };
 
 export type ImportCollectionInput = {
+  catalogDefinitionIds?: string[];
   targetCollectionId?: string;
 };
 

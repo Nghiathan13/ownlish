@@ -120,6 +120,7 @@ export function useCreateCollection({
 import type { ImportCollectionInput } from "@/entities/collection/api/collections";
 
 type ImportCollectionVariables = {
+  catalogDefinitionIds?: string[];
   systemCollectionId: string;
   targetCollectionId?: string;
 };
@@ -130,6 +131,7 @@ export function useImportCollection({
   const queryClient = useQueryClient();
   const importMutation = useMutation({
     mutationFn: ({
+      catalogDefinitionIds,
       systemCollectionId,
       targetCollectionId,
     }: ImportCollectionVariables) =>
@@ -139,6 +141,10 @@ export function useImportCollection({
 
           if (targetCollectionId) {
             input.targetCollectionId = targetCollectionId;
+          }
+
+          if (catalogDefinitionIds?.length) {
+            input.catalogDefinitionIds = catalogDefinitionIds;
           }
 
           return importCollection(token, systemCollectionId, input);

@@ -21,12 +21,22 @@ import { classNames } from "@/shared/lib/classNames";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type CatalogWordsTableProps = {
+  allDefinitionsSelected: boolean;
   columnVisibility: CatalogColumnVisibility;
+  onToggleAllDefinitions: () => void;
+  onToggleDefinition: (definitionId: string) => void;
+  selectedDefinitionIds: ReadonlySet<string>;
+  someDefinitionsSelected: boolean;
   words: CatalogWord[];
 };
 
 export function CatalogWordsTable({
+  allDefinitionsSelected,
   columnVisibility,
+  onToggleAllDefinitions,
+  onToggleDefinition,
+  selectedDefinitionIds,
+  someDefinitionsSelected,
   words,
 }: CatalogWordsTableProps) {
   const rows = expandCatalogWordsToDefinitionRows(words);
@@ -81,8 +91,10 @@ export function CatalogWordsTable({
                       )}
                     >
                       {definition ? (
-                        <PlaceholderSelectCheckbox
+                        <SelectCheckbox
+                          checked={selectedDefinitionIds.has(definition.id)}
                           label={`Select ${word.word}`}
+                          onChange={() => onToggleDefinition(definition.id)}
                         />
                       ) : null}
                       {!uniformIpaUk && showColumn("ipaUk") ? (
@@ -159,7 +171,14 @@ export function CatalogWordsTable({
           <tr>
             <th className="w-10 bg-surface px-3 py-3 align-middle">
               <div className="flex items-center">
-                <PlaceholderSelectCheckbox label="Select all definitions on this page" />
+                <SelectCheckbox
+                  checked={allDefinitionsSelected}
+                  indeterminate={
+                    someDefinitionsSelected && !allDefinitionsSelected
+                  }
+                  label="Select all definitions on this page"
+                  onChange={onToggleAllDefinitions}
+                />
               </div>
             </th>
             <th
@@ -243,8 +262,10 @@ export function CatalogWordsTable({
                 >
                   {definition ? (
                     <div className="flex items-center">
-                      <PlaceholderSelectCheckbox
+                      <SelectCheckbox
+                        checked={selectedDefinitionIds.has(definition.id)}
                         label={`Select ${row.word.word}`}
+                        onChange={() => onToggleDefinition(definition.id)}
                       />
                     </div>
                   ) : null}
@@ -351,12 +372,6 @@ export function CatalogWordsTable({
         </tbody>
       </table>
     </>
-  );
-}
-
-function PlaceholderSelectCheckbox({ label }: { label: string }) {
-  return (
-    <SelectCheckbox checked={false} label={label} onChange={() => undefined} />
   );
 }
 

@@ -64,7 +64,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   const resolvedImportTargetCollectionId =
     importTargetCollectionId ?? defaultCollection?.id ?? null;
 
-  async function handleImportClick() {
+  async function handleImportClick(catalogDefinitionIds?: string[]) {
     if (!collectionSummary || !resolvedImportTargetCollectionId) return;
 
     setImportResultMessage(null);
@@ -74,6 +74,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
       const result = await importCollection({
         systemCollectionId: collectionSummary.id,
         targetCollectionId: resolvedImportTargetCollectionId,
+        catalogDefinitionIds,
       });
       const targetCollection =
         userOwnedCollections.find(

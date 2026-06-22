@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { CatalogWord, CollectionSummary } from "@/entities/collection/api/collections";
 import { CatalogWordsTable } from "@/features/collections/components/CatalogWordsTable";
 import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
 import { useCatalogWordsPagination } from "@/features/collections/hooks/useCatalogWordsPagination";
 import { useCatalogTableColumnVisibility } from "@/features/collections/hooks/useCatalogTableColumnVisibility";
+import {
+  getSelectableCatalogDefinitions,
+  getSelectedCatalogDefinitions,
+} from "@/features/collections/lib/catalogSelection";
 import { CATALOG_TOGGLEABLE_COLUMNS } from "@/features/collections/lib/catalogTableColumns";
 import {
   VocabularyColumnPicker,
@@ -15,12 +19,14 @@ import {
 import { classNames } from "@/shared/lib/classNames";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
+const EMPTY_DEFINITION_SELECTION = new Set<string>();
+
 type SystemCollectionWordsPanelProps = {
   className?: string;
   importError: string | null;
   importResultMessage: string | null;
   isImporting: boolean;
-  onImportClick: () => void;
+  onImportClick: (catalogDefinitionIds?: string[]) => Promise<void>;
   onImportTargetChange: (collectionId: string) => void;
   resolvedImportTargetCollectionId: string | null;
   userOwnedCollections: CollectionSummary[];
@@ -52,9 +58,103 @@ export function SystemCollectionWordsPanel({
     setPageSize,
     totalWords,
   } = useCatalogWordsPagination(words, search);
+  const selectionScope = `${debouncedSearch}:${offset}:${pageSize}`;
+  const [selectionByScope, setSelectionByScope] = useState<{
+    scope: string;
+    ids: Set<string>;
+  }>(() => ({
+    scope: selectionScope,
+    ids: new Set(),
+  }));
+  const selectedDefinitionIds =
+    selectionByScope.scope === selectionScope
+      ? selectionByScope.ids
+      : EMPTY_DEFINITION_SELECTION;
   const hasSearch = Boolean(debouncedSearch.trim());
   const canImport =
     userOwnedCollections.length > 0 && Boolean(resolvedImportTargetCollectionId);
+
+  function updateSelection(
+    updater: (currentIds: Set<string>) => Set<string>,
+  ) {
+    setSelectionByScope((current) => {
+      const currentIds =
+        current.scope === selectionScope
+          ? current.ids
+          : EMPTY_DEFINITION_SELECTION;
+
+      return {
+        scope: selectionScope,
+        ids: updater(currentIds),
+      };
+    });
+  }
+
+  const selectableDefinitions = useMemo(
+    () => getSelectableCatalogDefinitions(paginatedWords),
+    [paginatedWords],
+  );
+  const selectedDefinitions = useMemo(
+    () =>
+      getSelectedCatalogDefinitions(paginatedWords, selectedDefinitionIds),
+    [paginatedWords, selectedDefinitionIds],
+  );
+  const allDefinitionsSelected =
+    selectableDefinitions.length > 0 &&
+    selectableDefinitions.every((item) =>
+      selectedDefinitionIds.has(item.definition.id),
+    );
+  const someDefinitionsSelected = selectableDefinitions.some((item) =>
+    selectedDefinitionIds.has(item.definition.id),
+  );
+
+  function toggleDefinition(definitionId: string) {
+    updateSelection((currentIds) => {
+      const nextIds = new Set(currentIds);
+
+      if (nextIds.has(definitionId)) {
+        nextIds.delete(definitionId);
+      } else {
+        nextIds.add(definitionId);
+      }
+
+      return nextIds;
+    });
+  }
+
+  function toggleAllDefinitions() {
+    updateSelection((currentIds) => {
+      const allIds = selectableDefinitions.map((item) => item.definition.id);
+      const allSelected =
+        allIds.length > 0 && allIds.every((id) => currentIds.has(id));
+
+      if (allSelected) {
+        return new Set();
+      }
+
+      return new Set(allIds);
+    });
+  }
+
+  async function handleImportAllClick() {
+    try {
+      await onImportClick();
+      updateSelection(() => new Set());
+    } catch {
+      // Parent renders the import error message.
+    }
+  }
+
+  async function handleImportSelectedClick() {
+    try {
+      await onImportClick(
+        selectedDefinitions.map((item) => item.definition.id),
+      );
+      updateSelection(() => new Set());
+    } catch {
+      // Parent renders the import error message.
+    }
+  }
 
   return (
     <div className={classNames("flex min-h-0 flex-col", className)}>
@@ -74,11 +174,11 @@ export function SystemCollectionWordsPanel({
               )}
               disabled={isImporting}
               onClick={() => {
-                void onImportClick();
+                void handleImportAllClick();
               }}
               type="button"
             >
-              {isImporting ? "Importing..." : "Import"}
+              {isImporting ? "Importing..." : "Import all"}
             </button>
           </div>
         ) : null}
@@ -90,6 +190,23 @@ export function SystemCollectionWordsPanel({
             onToggleColumn={toggleColumn}
           />
         </div>
+        {selectedDefinitions.length > 0 ? (
+          <button
+            className={iconTextButtonClassName(
+              "w-fit shrink-0 sm:ml-auto",
+              "border-foreground bg-foreground text-background",
+            )}
+            disabled={isImporting}
+            onClick={() => {
+              void handleImportSelectedClick();
+            }}
+            type="button"
+          >
+            {isImporting
+              ? "Importing..."
+              : `Import (${selectedDefinitions.length})`}
+          </button>
+        ) : null}
       </div>
 
       {importResultMessage ? (
@@ -110,7 +227,12 @@ export function SystemCollectionWordsPanel({
           ) : (
             <div className="min-h-0 flex-1 overflow-auto">
               <CatalogWordsTable
+                allDefinitionsSelected={allDefinitionsSelected}
                 columnVisibility={columnVisibility}
+                onToggleAllDefinitions={toggleAllDefinitions}
+                onToggleDefinition={toggleDefinition}
+                selectedDefinitionIds={selectedDefinitionIds}
+                someDefinitionsSelected={someDefinitionsSelected}
                 words={paginatedWords}
               />
             </div>
