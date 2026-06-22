@@ -44,6 +44,21 @@ type CatalogWordResult = {
   definitions: CatalogDefinitionResult[];
 };
 
+type ImportedDefinitionData = {
+  vocabWordId: string;
+  sourceDefinitionId: number;
+  sourceWordId: number;
+  type: string;
+  meaningVi: string | null;
+  definition: string | null;
+  example: string | null;
+  exampleVi: string | null;
+  ipaUk: string | null;
+  ipaUs: string | null;
+  band: string | null;
+  source: string;
+};
+
 type CollectionDetail = CollectionSummary & {
   catalogWords: CatalogWordResult[];
   vocabWords: Awaited<ReturnType<PrismaService['vocabWord']['findMany']>>;
@@ -177,8 +192,12 @@ export class CollectionsService {
   async importToVocabulary(
     userId: string,
     id: string,
-    targetCollectionId?: string,
+    options: {
+      targetCollectionId?: string;
+      catalogDefinitionIds?: string[];
+    } = {},
   ): Promise<ImportCollectionResult> {
+    const { targetCollectionId, catalogDefinitionIds } = options;
     const collection = await this.findVisibleCollection(userId, id);
 
     if (!collection) {
@@ -197,10 +216,22 @@ export class CollectionsService {
       throw new NotFoundException('Target collection not found');
     }
 
-    const catalogWords = await this.getCatalogWords(
+    let catalogWords = await this.getCatalogWords(
       collection.id,
       collection.cefrLevel,
     );
+
+    if (catalogDefinitionIds?.length) {
+      const selectedDefinitionIds = new Set(catalogDefinitionIds);
+      catalogWords = catalogWords
+        .map((catalogWord) => ({
+          ...catalogWord,
+          definitions: catalogWord.definitions.filter((definition) =>
+            selectedDefinitionIds.has(definition.id),
+          ),
+        }))
+        .filter((catalogWord) => catalogWord.definitions.length > 0);
+    }
 
     if (catalogWords.length === 0) {
       return {
@@ -257,8 +288,7 @@ export class CollectionsService {
       existingWords.map((word) => word.id),
     );
     const updatedWordIds = new Set<string>();
-    const definitionsToRestore: ReturnType<typeof this.toImportedDefinition>[] =
-      [];
+    const definitionsToRestore: ImportedDefinitionData[] = [];
     const definitionData = catalogWords.flatMap((catalogWord) => {
       const normalizedWord = normalizeWord(catalogWord.word);
       const vocabWord = wordByNormalizedWord.get(normalizedWord);
@@ -500,7 +530,7 @@ export class CollectionsService {
   private toImportedDefinition(
     vocabWordId: string,
     definition: CatalogDefinitionResult,
-  ) {
+  ): ImportedDefinitionData {
     return {
       vocabWordId,
       sourceDefinitionId: definition.sourceDefinitionId,
@@ -517,9 +547,7 @@ export class CollectionsService {
     };
   }
 
-  private toRestoredDefinitionData(
-    definition: ReturnType<typeof this.toImportedDefinition>,
-  ) {
+  private toRestoredDefinitionData(definition: ImportedDefinitionData) {
     return {
       sourceWordId: definition.sourceWordId,
       type: definition.type,

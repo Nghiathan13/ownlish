@@ -47,11 +47,10 @@ export class CollectionsController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() body: ImportCollectionDto,
   ): ReturnType<CollectionsService['importToVocabulary']> {
-    return this.collectionsService.importToVocabulary(
-      request.user.id,
-      id,
-      body.targetCollectionId,
-    );
+    return this.collectionsService.importToVocabulary(request.user.id, id, {
+      targetCollectionId: body.targetCollectionId,
+      catalogDefinitionIds: body.catalogDefinitionIds,
+    });
   }
 
   @Delete(':id')

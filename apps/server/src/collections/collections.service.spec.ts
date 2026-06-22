@@ -249,6 +249,80 @@ describe('CollectionsService', () => {
     });
   });
 
+  it('imports only selected catalog definitions when ids are provided', async () => {
+    prisma.wordCollection.findFirst
+      .mockResolvedValueOnce(collection)
+      .mockResolvedValueOnce(defaultCollection);
+    prisma.collectionCatalogItem.findMany.mockResolvedValue([
+      {
+        catalogWord: {
+          id: 'catalog-word-id',
+          word: 'about',
+          normalizedWord: 'about',
+          definitions: [
+            {
+              id: 'definition-1',
+              sourceDefinitionId: 1001,
+              sourceWordId: 101,
+              type: 'adverb',
+              meaningVi: 'khoảng',
+              definition: null,
+              example: null,
+              exampleVi: null,
+              ipaUk: '/əˈbaʊt/',
+              ipaUs: '/əˈbaʊt/',
+              band: 'A1',
+              source: 'oxford_3000',
+            },
+            {
+              id: 'definition-2',
+              sourceDefinitionId: 1002,
+              sourceWordId: 101,
+              type: 'preposition',
+              meaningVi: 'về',
+              definition: null,
+              example: null,
+              exampleVi: null,
+              ipaUk: '/əˈbaʊt/',
+              ipaUs: '/əˈbaʊt/',
+              band: 'A1',
+              source: 'oxford_3000',
+            },
+          ],
+        },
+      },
+    ]);
+    prisma.vocabWord.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        id: 'vocab-word-id',
+        normalizedWord: 'about',
+      },
+    ]);
+    prisma.vocabWord.createMany.mockResolvedValue({ count: 1 });
+    prisma.vocabWordDefinition.findMany.mockResolvedValue([]);
+    prisma.vocabWordDefinition.createMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      service.importToVocabulary('user-id', 'collection-id', {
+        catalogDefinitionIds: ['definition-1'],
+      }),
+    ).resolves.toEqual({
+      imported: 1,
+      updated: 0,
+      skipped: 0,
+    });
+    expect(prisma.vocabWordDefinition.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          vocabWordId: 'vocab-word-id',
+          sourceDefinitionId: 1001,
+          type: 'adverb',
+        }),
+      ],
+      skipDuplicates: true,
+    });
+  });
+
   it('updates existing words when collection adds new definitions', async () => {
     prisma.wordCollection.findFirst
       .mockResolvedValueOnce(collection)

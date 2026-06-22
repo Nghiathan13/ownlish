@@ -302,7 +302,8 @@ describe('VocabService', () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(null);
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
-    await service.create('user-id', { collectionId, 
+    await service.create('user-id', {
+      collectionId,
       word: 'account',
       type: 'noun',
       ipaUk: '/əˈkaʊnt/',
@@ -360,7 +361,8 @@ describe('VocabService', () => {
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
     await expect(
-      service.create('user-id', { collectionId, 
+      service.create('user-id', {
+        collectionId,
         word: ' Hello ',
         meaningVi: 'xin chao',
       }),
@@ -419,7 +421,8 @@ describe('VocabService', () => {
     prismaMock.vocabWord.update.mockResolvedValue(updatedWord);
 
     await expect(
-      service.create('user-id', { collectionId, 
+      service.create('user-id', {
+        collectionId,
         word: 'hello',
         type: 'verb',
         meaningVi: 'chay',
@@ -463,7 +466,8 @@ describe('VocabService', () => {
       definitions: [reviewDefinition],
     });
 
-    await service.create('user-id', { collectionId, 
+    await service.create('user-id', {
+      collectionId,
       word: ' Hello ',
       meaningVi: 'xin chao',
     });
@@ -495,9 +499,7 @@ describe('VocabService', () => {
 
   it('throws bad request when creating a blank word', async () => {
     await expect(
-      service.create('user-id', { collectionId, 
-        word: '   ',
-      }),
+      service.create('user-id', { collectionId, word: '   ' }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prismaMock.vocabWord.create).not.toHaveBeenCalled();
   });
