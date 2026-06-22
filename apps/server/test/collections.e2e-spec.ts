@@ -324,6 +324,92 @@ describe('CollectionsController (e2e)', () => {
       });
   });
 
+  it('imports only selected catalog definitions by id', async () => {
+    const partialImportWord = 'e2e partial import word';
+    const partialImportNormalizedWord = 'e2e-partial-import-word';
+    const catalogDefinitionId = 'oxford-def-e2e-partial-import';
+
+    await prisma.catalogWord.deleteMany({
+      where: { normalizedWord: partialImportNormalizedWord },
+    });
+
+    const catalogWord = await prisma.catalogWord.create({
+      data: {
+        word: partialImportWord,
+        normalizedWord: partialImportNormalizedWord,
+        definitions: {
+          create: [
+            {
+              id: catalogDefinitionId,
+              sourceDefinitionId: 999101,
+              sourceWordId: 999101,
+              type: 'noun',
+              meaningVi: 'tu chon',
+              band: 'A1',
+              source: 'oxford_3000',
+            },
+            {
+              sourceDefinitionId: 999102,
+              sourceWordId: 999101,
+              type: 'verb',
+              meaningVi: 'tu bo qua',
+              band: 'A1',
+              source: 'oxford_3000',
+            },
+          ],
+        },
+        collectionItems: {
+          create: {
+            collectionId,
+            sortOrder: 1,
+          },
+        },
+      },
+    });
+
+    await request(app.getHttpServer())
+      .post(`/collections/${collectionId}/import`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        targetCollectionId: defaultCollectionId,
+        catalogDefinitionIds: [catalogDefinitionId],
+      })
+      .expect(201)
+      .expect((response) => {
+        expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
+          imported: 1,
+          updated: 0,
+          skipped: 0,
+        });
+      });
+
+    const vocabListResponse = await request(app.getHttpServer())
+      .get(buildVocabListPath(defaultCollectionId))
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const vocabListBody = parseResponseBody<VocabListBody>(vocabListResponse);
+    const importedWord = vocabListBody.items.find(
+      (item) => item.word === partialImportWord,
+    );
+
+    expect(importedWord).toMatchObject({
+      word: partialImportWord,
+      definitions: [
+        expect.objectContaining({
+          sourceDefinitionId: 999101,
+          type: 'noun',
+          meaningVi: 'tu chon',
+        }),
+      ],
+    });
+    expect(importedWord?.definitions).toHaveLength(1);
+
+    await prisma.catalogWord.delete({
+      where: { id: catalogWord.id },
+    });
+  });
+
   it('requires authentication', () => {
     return request(app.getHttpServer()).get('/collections').expect(401);
   });

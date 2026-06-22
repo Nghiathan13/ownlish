@@ -1,4 +1,10 @@
-import { IsArray, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class ImportCollectionDto {
   @IsOptional()
@@ -7,6 +13,7 @@ export class ImportCollectionDto {
 
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   catalogDefinitionIds?: string[];
 }
