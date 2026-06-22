@@ -6,7 +6,6 @@ import {
   type VocabularyColumnVisibility,
   type VocabularyToggleableColumnId,
 } from "@/features/vocabulary/lib/vocabularyTableColumns";
-import { classNames } from "@/shared/lib/classNames";
 import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { SwapColumnIcon } from "@/shared/ui/icons/SwapColumnIcon";

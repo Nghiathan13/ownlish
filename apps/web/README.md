@@ -39,17 +39,23 @@ pnpm build
 
 | Name | Required | Default | Purpose |
 | --- | --- | --- | --- |
-| `NEXT_PUBLIC_API_BASE_URL` | No | `http://localhost:3001` | EngVocab API base URL |
+| `NEXT_PUBLIC_API_BASE_URL` | No | `http://localhost:3001` | EngVocab API base URL for data requests |
+| `AUTH_API_BASE_URL` | No | `NEXT_PUBLIC_API_BASE_URL` or `http://localhost:3001` | Server-only API URL for `/api/auth` BFF routes |
+
+Auth login, register, refresh, and logout run through same-origin `/api/auth/*`
+routes on the web app. The BFF stores the refresh token in a first-party
+`HttpOnly` cookie on the web domain.
 
 ## Deployment
 
 The recommended production host is Vercel through Git integration. The
 production web app talks to the Railway API, which uses Supabase Postgres.
 
-Set this environment variable in the Vercel project:
+Set these environment variables in the Vercel project:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://<backend-production-url>
+AUTH_API_BASE_URL=https://<backend-production-url>
 ```
 
 After Vercel creates the web deployment URL, update the backend production
@@ -59,13 +65,9 @@ environment so browser requests are allowed:
 CORS_ORIGIN=https://<web-production-url>
 ```
 
-For cross-site refresh-token cookies between Vercel and Railway, the backend
-must also use:
-
-```env
-REFRESH_TOKEN_COOKIE_SECURE=true
-REFRESH_TOKEN_COOKIE_SAME_SITE=none
-```
+The backend refresh cookie settings are still used when the BFF calls
+`/auth/login`, `/auth/register`, `/auth/refresh`, and `/auth/logout` on the
+API. Browser clients no longer rely on the Railway-hosted refresh cookie.
 
 Use the default Vercel build settings:
 

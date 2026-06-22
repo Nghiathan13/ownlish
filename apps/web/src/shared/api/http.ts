@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/shared/config/env";
 import { isRecord } from "@/shared/lib/parse";
 
 type ApiRequestOptions = RequestInit & {
+  sameOrigin?: boolean;
   token?: string | null;
 };
 
@@ -59,12 +60,12 @@ async function readJsonBody(response: Response) {
 
 export async function apiRequest(
   path: string,
-  { token, headers, ...options }: ApiRequestOptions = {},
+  { token, headers, sameOrigin = false, ...options }: ApiRequestOptions = {},
 ): Promise<unknown> {
   let response: Response;
 
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(sameOrigin ? path : `${API_BASE_URL}${path}`, {
       ...options,
       credentials: "include",
       headers: {

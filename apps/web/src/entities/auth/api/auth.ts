@@ -17,16 +17,18 @@ function parseLogoutResponse(body: unknown): { success: true } {
 }
 
 export function login(input: LoginInput) {
-  return apiRequest("/auth/login", {
+  return apiRequest("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(input),
+    sameOrigin: true,
   }).then(parseAuthResponse);
 }
 
 export function register(input: RegisterInput) {
-  return apiRequest("/auth/register", {
+  return apiRequest("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(input),
+    sameOrigin: true,
   }).then(parseAuthResponse);
 }
 
@@ -37,7 +39,8 @@ export function getCurrentUser(token: string) {
 }
 
 export function logoutSession() {
-  return apiRequest("/auth/logout", {
+  return apiRequest("/api/auth/logout", {
     method: "POST",
+    sameOrigin: true,
   }).then(parseLogoutResponse);
 }
