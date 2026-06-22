@@ -243,6 +243,13 @@ export function createCollection(token: string, input: CreateCollectionInput) {
   }).then(parseCollectionSummary);
 }
 
+export function deleteCollection(token: string, id: string) {
+  return apiRequest(`/collections/${id}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
 export function importCollection(
   token: string,
   id: string,

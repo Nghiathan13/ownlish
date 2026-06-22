@@ -9,7 +9,7 @@ type MyVocabularyCardProps = {
 };
 
 const cardClassName =
-  "block rounded-xl border border-border p-5 transition hover:bg-muted";
+  "block rounded-xl border border-border p-4 transition hover:bg-muted";
 
 export function MyVocabularyCard({
   href,

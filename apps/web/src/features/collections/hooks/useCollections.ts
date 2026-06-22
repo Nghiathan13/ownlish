@@ -3,10 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createCollection,
+  deleteCollection,
   getCollection,
   importCollection,
   listCollections,
   type CreateCollectionInput,
+  type ImportCollectionInput,
 } from "@/entities/collection/api/collections";
 import { getReviewQueueQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
@@ -117,7 +119,45 @@ export function useCreateCollection({
   };
 }
 
-import type { ImportCollectionInput } from "@/entities/collection/api/collections";
+export function useDeleteCollection({
+  userId,
+}: Pick<UseCollectionsParams, "userId">) {
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (collectionId: string) =>
+      runAuthenticatedRequest({
+        request: (token) => deleteCollection(token, collectionId),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: getCollectionsQueryKey(userId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getVocabUserQueryKey(userId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getReviewQueueQueryKey(userId),
+        exact: true,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getVocabStatsQueryKey(userId),
+      });
+    },
+  });
+
+  return {
+    deleteCollection: deleteMutation.mutateAsync,
+    deleteError: toErrorMessage(
+      deleteMutation.error,
+      "Cannot delete collection.",
+    ),
+    deletingCollectionId: deleteMutation.isPending
+      ? (deleteMutation.variables ?? null)
+      : null,
+    isDeletingCollection: deleteMutation.isPending,
+    resetDeleteState: deleteMutation.reset,
+  };
+}
 
 type ImportCollectionVariables = {
   catalogDefinitionIds?: string[];

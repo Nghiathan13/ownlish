@@ -13,15 +13,21 @@ import {
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { CreateCollectionModal } from "@/features/collections/components/CreateCollectionModal";
 import { MyVocabularyCard } from "@/features/collections/components/MyVocabularyCard";
-import { useCollectionsList } from "@/features/collections/hooks/useCollections";
+import {
+  useCollectionsList,
+  useDeleteCollection,
+} from "@/features/collections/hooks/useCollections";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import {
+  iconOnlyButtonClassName,
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
+import { DeleteForeverIcon } from "@/shared/ui/icons/DeleteForeverIcon";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 export function CollectionsPage() {
   const { status, user } = useAuthSession();
@@ -34,6 +40,14 @@ export function CollectionsPage() {
       isAuthenticated,
       userId: user?.id ?? null,
     });
+  const {
+    deleteCollection,
+    deleteError,
+    deletingCollectionId,
+    resetDeleteState,
+  } = useDeleteCollection({
+    userId: user?.id ?? null,
+  });
   const defaultCollection = useMemo(() => {
     return getDefaultUserCollection(collections);
   }, [collections]);
@@ -52,6 +66,16 @@ export function CollectionsPage() {
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
     "Collections";
   const isUserTab = activeCategory === "user";
+
+  async function handleDeleteCollection(collectionId: string) {
+    resetDeleteState();
+
+    try {
+      await deleteCollection(collectionId);
+    } catch {
+      // deleteError is rendered below.
+    }
+  }
 
   return (
     <PageShell>
@@ -81,6 +105,9 @@ export function CollectionsPage() {
           <StateMessage message={collectionsError} onRetry={reloadCollections} />
         ) : isUserTab ? (
           <div className="mb-4 grid gap-4 px-4">
+            {deleteError ? (
+              <p className="text-sm text-danger">{deleteError}</p>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <MyVocabularyCard
                 href={myVocabularyHref}
@@ -90,7 +117,9 @@ export function CollectionsPage() {
               {activeCollections.map((collection) => (
                 <UserCollectionCard
                   collection={collection}
+                  deletingCollectionId={deletingCollectionId}
                   key={collection.id}
+                  onDelete={handleDeleteCollection}
                 />
               ))}
               <CreateCollectionCard
@@ -142,17 +171,44 @@ function CreateCollectionCard({ onClick }: { onClick: () => void }) {
 
 function UserCollectionCard({
   collection,
+  deletingCollectionId,
+  onDelete,
 }: {
   collection: CollectionSummary;
+  deletingCollectionId: string | null;
+  onDelete: (collectionId: string) => void;
 }) {
+  const isDeleting = deletingCollectionId === collection.id;
+
   return (
-    <Link
-      className="block rounded-xl border border-border p-5 transition hover:bg-muted"
-      href={`/collections/${getCollectionSlug(collection)}`}
-    >
-      <h2 className="text-xl font-bold">{collection.name}</h2>
-      <p className="mt-5 text-sm font-semibold">{collection.itemCount} words</p>
-    </Link>
+    <article className="relative rounded-xl border border-border transition hover:bg-muted">
+      <button
+        aria-label={
+          isDeleting ? "Deleting collection" : `Delete ${collection.name}`
+        }
+        className={iconOnlyButtonClassName(
+          "absolute right-3 top-3 z-10 bg-transparent",
+          statusColorClasses.danger.text,
+          statusColorClasses.danger.backgroundHover,
+        )}
+        disabled={isDeleting}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void onDelete(collection.id);
+        }}
+        type="button"
+      >
+        <DeleteForeverIcon className="size-5" />
+      </button>
+      <Link
+        className="block p-4"
+        href={`/collections/${getCollectionSlug(collection)}`}
+      >
+        <h2 className="pr-10 text-xl font-bold">{collection.name}</h2>
+        <p className="mt-5 text-sm font-semibold">{collection.itemCount} words</p>
+      </Link>
+    </article>
   );
 }
 
@@ -163,7 +219,7 @@ function SystemCollectionCard({
 }) {
   return (
     <Link
-      className="block rounded-xl border border-border p-5 transition hover:bg-muted"
+      className="block rounded-xl border border-border p-4 transition hover:bg-muted"
       href={`/collections/${getCollectionSlug(collection)}`}
     >
       <div className="flex items-start justify-between gap-3">
