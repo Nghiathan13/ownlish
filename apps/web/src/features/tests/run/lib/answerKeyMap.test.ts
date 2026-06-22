@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildAnswerKeyMap } from "./answerKeyMap";
-import type { ToeicQuestionGroup } from "../api/types";
+import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 
 const groups: ToeicQuestionGroup[] = [
   {

@@ -8,8 +8,8 @@ import {
 } from "@/entities/collection/lib/collectionDisplay";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
-import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
-import { useCollectionsList } from "@/features/collections/hooks/useCollections";
+import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
+import { useCollectionsList } from "@/features/collections/shared/hooks/useCollections";
 import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
 import { useReviewQueue } from "@/features/review/hooks/useReviewQueue";
 import type { ReviewGrade } from "@/features/review/lib/reviewSchedule";
