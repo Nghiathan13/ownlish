@@ -17,7 +17,7 @@ export function TestsPage() {
 
   return (
     <PageShell>
-      <div className="flex flex-col items-start gap-2 p-4">
+      <div className="mb-4 flex flex-col items-start gap-2 px-4">
         <button className={primaryTextButtonClassName()} type="button">
           TOEIC
         </button>
@@ -39,7 +39,7 @@ export function TestsPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 p-4">
+      <div className="mb-4 flex flex-col gap-4 px-4">
         {overview.isLoadingTests ? (
           <p className="text-muted-foreground">Loading tests...</p>
         ) : overview.testsError ? (
