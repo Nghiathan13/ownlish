@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { CollectionDetailPage } from "@/features/collections/components/CollectionDetailPage";
+import { CollectionDetailShell } from "@/features/collections/components/CollectionDetailShell";
 
 export default function CollectionDetailRoute() {
   const params = useParams<{ collectionId: string | string[] }>();
@@ -13,5 +13,5 @@ export default function CollectionDetailRoute() {
     return null;
   }
 
-  return <CollectionDetailPage collectionId={collectionId} />;
+  return <CollectionDetailShell collectionId={collectionId} />;
 }

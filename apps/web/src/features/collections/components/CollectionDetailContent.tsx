@@ -17,15 +17,15 @@ import {
   useImportCollection,
 } from "@/features/collections/hooks/useCollections";
 import { CollectionWordsPanel } from "@/features/collections/words/components/CollectionWordsPanel";
-import { iconTextButtonClassName, secondaryTextButtonClassName } from "@/shared/ui/button";
-import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
-import { PageShell } from "@/shared/ui/PageShell";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
-type CollectionDetailPageProps = {
+type CollectionDetailContentProps = {
   collectionId: string;
 };
 
-export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps) {
+export function CollectionDetailContent({
+  collectionId,
+}: CollectionDetailContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const kindHint = parseCollectionKindHint(searchParams.get("kind"));
@@ -120,67 +120,51 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
     }
   }
 
-  return (
-    <PageShell fillViewport>
-      <BackToCollectionsButton />
+  if (collectionsError && !hasCollectionsList) {
+    return (
+      <div className="px-4">
+        <StateMessage message={collectionsError} onRetry={reloadCollections} />
+      </div>
+    );
+  }
 
-      {collectionsError && !hasCollectionsList ? (
-        <div className="px-4">
-          <StateMessage message={collectionsError} onRetry={reloadCollections} />
-        </div>
-      ) : isNotFound ? (
-        <div className="mx-4 rounded-xl border border-border p-6">
-          <h1 className="mb-2 text-xl font-semibold">Collection not found.</h1>
-          <p className="text-muted-foreground">
-            Go back to collections and choose an available set.
-          </p>
-        </div>
-      ) : isSystemCollection ? (
-        <SystemCollectionWordsPanel
-          hasCollectionsList={hasCollectionsList}
-          importError={importError}
-          importResultMessage={importResultMessage}
-          isImporting={isImporting}
-          isLoading={isLoadingCollectionDetail}
-          loadError={collectionDetailError}
-          onImportClick={handleImportClick}
-          onImportTargetChange={setImportTargetCollectionId}
-          onRetry={reloadCollectionDetail}
-          resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
-          userOwnedCollections={userOwnedCollections}
-          words={collectionDetail?.catalogWords ?? []}
-        />
-      ) : (
-        <CollectionWordsPanel
-          collectionId={collectionId}
-          hasCollectionsList={hasCollectionsList}
-          onCollectionChange={handleUserCollectionChange}
-          userCollections={userOwnedCollections}
-        />
-      )}
-    </PageShell>
-  );
-}
+  if (isNotFound) {
+    return (
+      <div className="mx-4 rounded-xl border border-border p-6">
+        <h1 className="mb-2 text-xl font-semibold">Collection not found.</h1>
+        <p className="text-muted-foreground">
+          Go back to collections and choose an available set.
+        </p>
+      </div>
+    );
+  }
 
-function BackToCollectionsButton() {
-  const router = useRouter();
+  if (isSystemCollection) {
+    return (
+      <SystemCollectionWordsPanel
+        hasCollectionsList={hasCollectionsList}
+        importError={importError}
+        importResultMessage={importResultMessage}
+        isImporting={isImporting}
+        isLoading={isLoadingCollectionDetail}
+        loadError={collectionDetailError}
+        onImportClick={handleImportClick}
+        onImportTargetChange={setImportTargetCollectionId}
+        onRetry={reloadCollectionDetail}
+        resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
+        userOwnedCollections={userOwnedCollections}
+        words={collectionDetail?.catalogWords ?? []}
+      />
+    );
+  }
 
   return (
-    <div className="mb-4 shrink-0 px-4">
-      <button
-        className={iconTextButtonClassName(
-          "w-fit shrink-0",
-          "border-foreground bg-foreground text-background",
-        )}
-        onClick={() => {
-          router.push("/collections");
-        }}
-        type="button"
-      >
-        <ArrowBackIcon />
-        Back to collections
-      </button>
-    </div>
+    <CollectionWordsPanel
+      collectionId={collectionId}
+      hasCollectionsList={hasCollectionsList}
+      onCollectionChange={handleUserCollectionChange}
+      userCollections={userOwnedCollections}
+    />
   );
 }
 
