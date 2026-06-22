@@ -1,5 +1,5 @@
 import type { CollectionSummary } from "@/entities/collection/api/collections";
-import { MyVocabularyCard } from "@/features/collections/shared/components/MyVocabularyCard";
+import { MyVocabularyCard } from "@/features/collections/list/components/MyVocabularyCard";
 import { CreateCollectionCard } from "@/features/collections/list/components/CreateCollectionCard";
 import { UserCollectionCard } from "@/features/collections/list/components/UserCollectionCard";
 

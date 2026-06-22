@@ -8,15 +8,19 @@ import { UserCollectionsGrid } from "@/features/collections/list/components/User
 type CollectionsListBodyProps = {
   activeCollections: CollectionSummary[];
   activeTabLabel: string;
+  canImportSystemCollections: boolean;
   collectionsError: string | null;
   defaultCollection: CollectionSummary | null;
   deleteError: string | null;
   deletingCollectionId: string | null;
+  importError: string | null;
+  importingCollectionId: string | null;
   isAuthenticated: boolean;
   isLoadingCollections: boolean;
   isUserTab: boolean;
   onCreateCollection: () => void;
   onDeleteCollection: (collectionId: string) => void;
+  onImportSystemCollection: (collectionId: string) => void;
   onRetry: () => void;
   userId: string | null;
 };
@@ -24,15 +28,19 @@ type CollectionsListBodyProps = {
 export function CollectionsListBody({
   activeCollections,
   activeTabLabel,
+  canImportSystemCollections,
   collectionsError,
   defaultCollection,
   deleteError,
   deletingCollectionId,
+  importError,
+  importingCollectionId,
   isAuthenticated,
   isLoadingCollections,
   isUserTab,
   onCreateCollection,
   onDeleteCollection,
+  onImportSystemCollection,
   onRetry,
   userId,
 }: CollectionsListBodyProps) {
@@ -67,5 +75,13 @@ export function CollectionsListBody({
     return <CollectionCategoryEmptyState categoryLabel={activeTabLabel} />;
   }
 
-  return <SystemCollectionsGrid collections={activeCollections} />;
+  return (
+    <SystemCollectionsGrid
+      canImport={canImportSystemCollections}
+      collections={activeCollections}
+      importError={importError}
+      importingCollectionId={importingCollectionId}
+      onImportCollection={onImportSystemCollection}
+    />
+  );
 }

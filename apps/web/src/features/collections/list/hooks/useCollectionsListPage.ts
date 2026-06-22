@@ -11,6 +11,7 @@ import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/use
 import {
   useCollectionsList,
   useDeleteCollection,
+  useImportCollection,
 } from "@/features/collections/shared/hooks/useCollections";
 
 export function useCollectionsListPage() {
@@ -20,6 +21,9 @@ export function useCollectionsListPage() {
   const [activeCategory, setActiveCategory] =
     useState<CollectionCategory>("user");
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
+  const [importingCollectionId, setImportingCollectionId] = useState<
+    string | null
+  >(null);
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
       isAuthenticated,
@@ -31,6 +35,13 @@ export function useCollectionsListPage() {
     deletingCollectionId,
     resetDeleteState,
   } = useDeleteCollection({
+    userId,
+  });
+  const {
+    importCollection,
+    importError,
+    resetImportState,
+  } = useImportCollection({
     userId,
   });
   const defaultCollection = useMemo(() => {
@@ -57,6 +68,32 @@ export function useCollectionsListPage() {
     [deleteCollection, resetDeleteState],
   );
 
+  const handleImportSystemCollection = useCallback(
+    async (systemCollectionId: string) => {
+      if (!defaultCollection?.id) {
+        return;
+      }
+
+      resetImportState();
+      setImportingCollectionId(systemCollectionId);
+
+      try {
+        await importCollection({
+          systemCollectionId,
+          targetCollectionId: defaultCollection.id,
+        });
+      } catch {
+        // importError is rendered by the grid.
+      } finally {
+        setImportingCollectionId(null);
+      }
+    },
+    [defaultCollection, importCollection, resetImportState],
+  );
+
+  const canImportSystemCollections =
+    isAuthenticated && Boolean(defaultCollection?.id);
+
   const openCreateCollection = useCallback(() => {
     setIsCreateCollectionOpen(true);
   }, []);
@@ -69,12 +106,16 @@ export function useCollectionsListPage() {
     activeCategory,
     activeCollections,
     activeTabLabel,
+    canImportSystemCollections,
     closeCreateCollection,
     collectionsError,
     defaultCollection,
     deleteError,
     deletingCollectionId,
     handleDeleteCollection,
+    handleImportSystemCollection,
+    importError,
+    importingCollectionId,
     isAuthenticated,
     isCreateCollectionOpen,
     isLoadingCollections,

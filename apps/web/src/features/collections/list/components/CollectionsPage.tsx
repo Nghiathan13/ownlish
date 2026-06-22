@@ -18,15 +18,19 @@ export function CollectionsPage() {
       <CollectionsListBody
         activeCollections={page.activeCollections}
         activeTabLabel={page.activeTabLabel}
+        canImportSystemCollections={page.canImportSystemCollections}
         collectionsError={page.collectionsError}
         defaultCollection={page.defaultCollection}
         deleteError={page.deleteError}
         deletingCollectionId={page.deletingCollectionId}
+        importError={page.importError}
+        importingCollectionId={page.importingCollectionId}
         isAuthenticated={page.isAuthenticated}
         isLoadingCollections={page.isLoadingCollections}
         isUserTab={page.isUserTab}
         onCreateCollection={page.openCreateCollection}
         onDeleteCollection={page.handleDeleteCollection}
+        onImportSystemCollection={page.handleImportSystemCollection}
         onRetry={page.reloadCollections}
         userId={page.userId}
       />
