@@ -4,6 +4,7 @@ import { getReviewQueueQueryKey } from "./reviewQueueCache";
 import { getVocabStatsQueryKey } from "./vocabStatsCache";
 
 export type VocabPageState = {
+  collectionId: string;
   offset: number;
   pageSize: VocabularyPageSize;
   search: string;
@@ -17,6 +18,7 @@ export function getVocabQueryKey(
     "vocab",
     {
       userId,
+      collectionId: pageState.collectionId,
       search: pageState.search,
       offset: pageState.offset,
       limit: pageState.pageSize,
@@ -31,12 +33,14 @@ export function getVocabUserQueryKey(userId: string | null) {
 type InvalidateVocabMutationQueriesParams = {
   queryClient: QueryClient;
   userId: string | null;
+  collectionId: string | null;
   vocabQueryKey: QueryKey;
 };
 
 export function invalidateVocabMutationQueries({
   queryClient,
   userId,
+  collectionId,
   vocabQueryKey,
 }: InvalidateVocabMutationQueriesParams) {
   void queryClient.invalidateQueries({ queryKey: vocabQueryKey, exact: true });
@@ -45,7 +49,7 @@ export function invalidateVocabMutationQueries({
     exact: true,
   });
   void queryClient.invalidateQueries({
-    queryKey: getVocabStatsQueryKey(userId),
+    queryKey: getVocabStatsQueryKey(userId, collectionId),
     exact: true,
   });
 }

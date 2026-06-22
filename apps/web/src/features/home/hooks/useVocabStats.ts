@@ -7,22 +7,28 @@ import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedR
 import { ApiError } from "@/shared/api/http";
 
 type UseVocabStatsParams = {
+  collectionId: string | null;
   isAuthenticated: boolean;
   userId: string | null;
 };
 
 export function useVocabStats({
+  collectionId,
   isAuthenticated,
   userId,
 }: UseVocabStatsParams) {
   const { data, error, isLoading, refetch } = useQuery({
-    queryKey: getVocabStatsQueryKey(userId),
+    queryKey: getVocabStatsQueryKey(userId, collectionId),
     queryFn: async ({ signal }) => {
       return runAuthenticatedRequest({
-        request: (token) => getVocabStats(token, { signal }),
+        request: (token) =>
+          getVocabStats(token, {
+            collectionId: collectionId as string,
+            signal,
+          }),
       });
     },
-    enabled: isAuthenticated && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId) && Boolean(collectionId),
   });
 
   return {

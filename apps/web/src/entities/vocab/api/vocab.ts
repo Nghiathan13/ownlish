@@ -71,6 +71,7 @@ export type VocabStats = {
 };
 
 export type CreateVocabWordInput = {
+  collectionId: string;
   band?: string;
   definition?: string;
   example?: string;
@@ -109,9 +110,15 @@ export type DeleteVocabDefinitionResult =
     };
 
 type ListVocabWordsParams = {
+  collectionId: string;
   limit?: number;
   offset?: number;
   search?: string;
+  signal?: AbortSignal;
+};
+
+type VocabStatsParams = {
+  collectionId: string;
   signal?: AbortSignal;
 };
 
@@ -353,8 +360,10 @@ function parseDeleteVocabDefinitionResult(
   };
 }
 
-function buildVocabQuery(params: ListVocabWordsParams = {}) {
-  const searchParams = new URLSearchParams();
+function buildVocabQuery(params: ListVocabWordsParams) {
+  const searchParams = new URLSearchParams({
+    collectionId: params.collectionId,
+  });
 
   if (params.limit !== undefined) {
     searchParams.set("limit", String(params.limit));
@@ -373,31 +382,51 @@ function buildVocabQuery(params: ListVocabWordsParams = {}) {
   return query ? `?${query}` : "";
 }
 
-export function listVocabWords(
-  token: string,
-  params: ListVocabWordsParams = {},
-) {
+export function listVocabWords(token: string, params: ListVocabWordsParams) {
   return apiRequest(`/vocab${buildVocabQuery(params)}`, {
     signal: params.signal,
     token,
   }).then(parseVocabWordListResponse);
 }
 
-export function getVocabStats(
-  token: string,
-  options: { signal?: AbortSignal } = {},
-) {
-  return apiRequest("/vocab/stats", {
-    signal: options.signal,
+export function getVocabStats(token: string, params: VocabStatsParams) {
+  const searchParams = new URLSearchParams({
+    collectionId: params.collectionId,
+  });
+
+  return apiRequest(`/vocab/stats?${searchParams.toString()}`, {
+    signal: params.signal,
     token,
   }).then(parseVocabStats);
 }
 
+type ListDueReviewWordsParams = {
+  limit?: number;
+  offset?: number;
+  signal?: AbortSignal;
+};
+
+function buildDueReviewQuery(params: ListDueReviewWordsParams = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+
+  if (params.offset !== undefined) {
+    searchParams.set("offset", String(params.offset));
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `?${query}` : "";
+}
+
 export function listDueReviewWords(
   token: string,
-  params: ListVocabWordsParams = {},
+  params: ListDueReviewWordsParams = {},
 ) {
-  return apiRequest(`/vocab/review/due${buildVocabQuery(params)}`, {
+  return apiRequest(`/vocab/review/due${buildDueReviewQuery(params)}`, {
     signal: params.signal,
     token,
   }).then(parseVocabReviewListResponse);

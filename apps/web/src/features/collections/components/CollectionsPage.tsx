@@ -7,6 +7,7 @@ import {
   collectionCategoryTabs,
   filterCollectionsByCategory,
   getCollectionSlug,
+  getDefaultUserCollection,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -18,7 +19,7 @@ import {
 } from "@/features/collections/constants/myVocabulary";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
-import { MyVocabularyWordsPanel } from "@/features/vocabulary/components/MyVocabularyWordsPanel";
+import { CollectionWordsPanel } from "@/features/vocabulary/components/CollectionWordsPanel";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -40,7 +41,11 @@ export function CollectionsPage() {
       isAuthenticated,
       userId: user?.id ?? null,
     });
+  const defaultCollection = useMemo(() => {
+    return getDefaultUserCollection(collections);
+  }, [collections]);
   const { isLoading: isLoadingVocabStats, stats: vocabStats } = useVocabStats({
+    collectionId: defaultCollection?.id ?? null,
     isAuthenticated,
     userId: user?.id ?? null,
   });
@@ -107,9 +112,9 @@ export function CollectionsPage() {
               />
             </div>
 
-            {isMyVocabularyExpanded ? (
+            {isMyVocabularyExpanded && defaultCollection ? (
               <Panel className="flex min-h-[32rem] flex-col">
-                <MyVocabularyWordsPanel />
+                <CollectionWordsPanel collectionId={defaultCollection.id} />
               </Panel>
             ) : null}
           </div>

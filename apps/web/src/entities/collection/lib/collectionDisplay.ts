@@ -31,7 +31,9 @@ export function filterCollectionsByCategory(
   category: CollectionCategory,
 ) {
   if (category === "user") {
-    return collections.filter((collection) => collection.kind === "USER");
+    return collections.filter(
+      (collection) => collection.kind === "USER" && !collection.isDefault,
+    );
   }
 
   return collections.filter(
@@ -39,6 +41,10 @@ export function filterCollectionsByCategory(
       collection.kind === "SYSTEM" &&
       getCollectionCategory(collection) === category,
   );
+}
+
+export function getDefaultUserCollection(collections: CollectionSummary[]) {
+  return collections.find((collection) => collection.isDefault) ?? null;
 }
 
 export function getCollectionSlug(collection: CollectionSummary) {

@@ -16,12 +16,14 @@ type UpdateVocabularyWordVariables = {
 };
 
 type UseUpdateVocabularyWordParams = {
+  collectionId: string;
   queryClient: QueryClient;
   queryKey: QueryKey;
   userId: string | null;
 };
 
 export function useUpdateVocabularyWord({
+  collectionId,
   queryClient,
   queryKey,
   userId,
@@ -71,6 +73,7 @@ export function useUpdateVocabularyWord({
       invalidateVocabMutationQueries({
         queryClient,
         userId,
+        collectionId,
         vocabQueryKey: queryKey,
       });
     },

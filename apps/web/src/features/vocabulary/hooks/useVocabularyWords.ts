@@ -8,12 +8,14 @@ import { useVocabularyListQuery } from "./useVocabularyListQuery";
 import { useVocabularyPageState } from "./useVocabularyPageState";
 
 type UseVocabularyWordsParams = {
+  collectionId: string;
   isAuthenticated: boolean;
   search: string;
   userId: string | null;
 };
 
 export function useVocabularyWords({
+  collectionId,
   isAuthenticated,
   search,
   userId,
@@ -26,6 +28,7 @@ export function useVocabularyWords({
     resetToFirstPage,
     setPageSize,
   } = useVocabularyPageState({
+    collectionId,
     search,
   });
   const queryClient = useQueryClient();
@@ -40,6 +43,7 @@ export function useVocabularyWords({
     totalWords,
     words,
   } = useVocabularyListQuery({
+    collectionId,
     isAuthenticated,
     pageSize: pageState.pageSize,
     pageState,
@@ -47,6 +51,7 @@ export function useVocabularyWords({
   });
 
   const createWord = useCreateVocabularyWord({
+    collectionId,
     pageState,
     queryClient,
     queryKey,
@@ -56,6 +61,7 @@ export function useVocabularyWords({
 
   const { updateWord, updatingDefinitionId, updatingWordId } =
     useUpdateVocabularyWord({
+      collectionId,
       queryClient,
       queryKey,
       userId,
@@ -63,6 +69,7 @@ export function useVocabularyWords({
 
   const { deleteDefinition, deleteDefinitions, isDeletingDefinitions } =
     useDeleteVocabularyDefinition({
+      collectionId,
       moveBackOnePage,
       pageState,
       queryClient,

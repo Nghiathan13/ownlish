@@ -7,17 +7,39 @@ import {
 } from "@/entities/vocab/lib/vocabPagination";
 
 type UseVocabularyPageStateParams = {
+  collectionId: string;
   search: string;
 };
 
 export function useVocabularyPageState({
+  collectionId,
   search,
 }: UseVocabularyPageStateParams) {
   const [pageState, setPageState] = useState<VocabPageState>({
+    collectionId,
     offset: 0,
     pageSize: DEFAULT_VOCABULARY_PAGE_SIZE,
     search,
   });
+
+  useEffect(() => {
+    if (pageState.collectionId === collectionId) {
+      return;
+    }
+
+    queueMicrotask(() => {
+      setPageState((currentPageState) =>
+        currentPageState.collectionId === collectionId
+          ? currentPageState
+          : {
+              ...currentPageState,
+              collectionId,
+              search,
+              offset: 0,
+            },
+      );
+    });
+  }, [collectionId, pageState.collectionId, search]);
 
   useEffect(() => {
     if (pageState.search === search) {

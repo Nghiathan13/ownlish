@@ -88,7 +88,7 @@ export function getVocabWordFormError(values: VocabWordFormValues) {
 
 function toDefinitionInputFields(
   values: VocabWordFormValues,
-): Omit<CreateVocabWordInput, "word"> {
+): Omit<CreateVocabWordInput, "word" | "collectionId"> {
   return {
     band: optionalValue(values.band),
     definition: optionalValue(values.definition),
@@ -103,7 +103,7 @@ function toDefinitionInputFields(
 
 export function toCreateVocabWordInput(
   values: VocabWordFormValues,
-): CreateVocabWordInput {
+): Omit<CreateVocabWordInput, "collectionId"> {
   return {
     word: values.word.trim(),
     ...toDefinitionInputFields(values),

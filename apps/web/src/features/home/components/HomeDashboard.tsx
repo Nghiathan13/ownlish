@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getDefaultUserCollection } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
+import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import { classNames } from "@/shared/lib/classNames";
 import {
@@ -16,7 +18,13 @@ import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 export function HomeDashboard() {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const { collections, isLoadingCollections } = useCollectionsList({
+    isAuthenticated,
+    userId: user?.id ?? null,
+  });
+  const defaultCollection = getDefaultUserCollection(collections);
   const { error, isLoading, reload, stats } = useVocabStats({
+    collectionId: defaultCollection?.id ?? null,
     isAuthenticated,
     userId: user?.id ?? null,
   });
@@ -57,7 +65,7 @@ export function HomeDashboard() {
     <PageShell>
       <Panel>
         <div className="flex flex-col gap-6">
-          {isLoading ? (
+          {isLoading || isLoadingCollections ? (
             <DashboardMessage>Loading your dashboard...</DashboardMessage>
           ) : error ? (
             <DashboardMessage>

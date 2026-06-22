@@ -16,6 +16,7 @@ export type CollectionSummary = {
   kind: WordCollectionKind;
   source: string | null;
   cefrLevel: string | null;
+  isDefault: boolean;
   isPublic: boolean;
   itemCount: number;
   createdAt: string;
@@ -46,6 +47,10 @@ export type CollectionDetail = CollectionSummary & {
   catalogWords: CatalogWord[];
 };
 
+export type ImportCollectionInput = {
+  targetCollectionId?: string;
+};
+
 export type ImportCollectionResult = {
   imported: number;
   updated: number;
@@ -73,6 +78,7 @@ function parseCollectionSummary(body: unknown): CollectionSummary {
     kind,
     source,
     cefrLevel,
+    isDefault,
     isPublic,
     itemCount,
     createdAt,
@@ -85,6 +91,7 @@ function parseCollectionSummary(body: unknown): CollectionSummary {
     !isNullableString(description) ||
     !isNullableString(source) ||
     !isNullableString(cefrLevel) ||
+    !isBoolean(isDefault) ||
     !isBoolean(isPublic) ||
     !isNumber(itemCount) ||
     !isString(createdAt) ||
@@ -100,6 +107,7 @@ function parseCollectionSummary(body: unknown): CollectionSummary {
     kind: parseCollectionKind(kind),
     source,
     cefrLevel,
+    isDefault,
     isPublic,
     itemCount,
     createdAt,
@@ -234,9 +242,14 @@ export function createCollection(token: string, input: CreateCollectionInput) {
   }).then(parseCollectionSummary);
 }
 
-export function importCollection(token: string, id: string) {
+export function importCollection(
+  token: string,
+  id: string,
+  input: ImportCollectionInput = {},
+) {
   return apiRequest(`/collections/${id}/import`, {
     method: "POST",
     token,
+    body: JSON.stringify(input),
   }).then(parseImportCollectionResult);
 }

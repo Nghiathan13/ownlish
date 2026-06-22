@@ -23,6 +23,7 @@ export type DeleteVocabularyDefinitionTarget = {
 };
 
 type UseDeleteVocabularyDefinitionParams = {
+  collectionId: string;
   moveBackOnePage: () => void;
   pageState: VocabPageState;
   queryClient: QueryClient;
@@ -55,6 +56,7 @@ function countRemovedWords(
 }
 
 export function useDeleteVocabularyDefinition({
+  collectionId,
   moveBackOnePage,
   pageState,
   queryClient,
@@ -162,6 +164,7 @@ export function useDeleteVocabularyDefinition({
       invalidateVocabMutationQueries({
         queryClient,
         userId,
+        collectionId,
         vocabQueryKey: queryKey,
       });
     },

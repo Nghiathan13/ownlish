@@ -7,6 +7,7 @@ import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedR
 import { ApiError } from "@/shared/api/http";
 
 type UseVocabularyListQueryParams = {
+  collectionId: string;
   isAuthenticated: boolean;
   pageSize: number;
   pageState: VocabPageState;
@@ -14,6 +15,7 @@ type UseVocabularyListQueryParams = {
 };
 
 export function useVocabularyListQuery({
+  collectionId,
   isAuthenticated,
   pageSize,
   pageState,
@@ -32,6 +34,7 @@ export function useVocabularyListQuery({
       return runAuthenticatedRequest({
         request: (token) =>
           listVocabWords(token, {
+            collectionId,
             limit: pageSize,
             offset: pageState.offset,
             search: pageState.search.trim() || undefined,
@@ -39,7 +42,7 @@ export function useVocabularyListQuery({
           }),
       });
     },
-    enabled: isAuthenticated && Boolean(userId),
+    enabled: isAuthenticated && Boolean(userId) && Boolean(collectionId),
     placeholderData: keepPreviousData,
   });
 

@@ -10,6 +10,7 @@ import { invalidateVocabMutationQueries } from "@/entities/vocab/lib/vocabCache"
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 
 type UseCreateVocabularyWordParams = {
+  collectionId: string;
   pageState: VocabPageState;
   queryClient: QueryClient;
   queryKey: QueryKey;
@@ -18,6 +19,7 @@ type UseCreateVocabularyWordParams = {
 };
 
 export function useCreateVocabularyWord({
+  collectionId,
   pageState,
   queryClient,
   queryKey,
@@ -25,9 +27,13 @@ export function useCreateVocabularyWord({
   userId,
 }: UseCreateVocabularyWordParams) {
   const { mutateAsync: createWordMutation } = useMutation({
-    mutationFn: (input: CreateVocabWordInput) => {
+    mutationFn: (input: Omit<CreateVocabWordInput, "collectionId">) => {
       return runAuthenticatedRequest({
-        request: (token) => createVocabWord(token, input),
+        request: (token) =>
+          createVocabWord(token, {
+            collectionId,
+            ...input,
+          }),
       });
     },
     onSuccess: (createdWord) => {
@@ -67,13 +73,14 @@ export function useCreateVocabularyWord({
       invalidateVocabMutationQueries({
         queryClient,
         userId,
+        collectionId,
         vocabQueryKey: queryKey,
       });
     },
   });
 
   return useCallback(
-    async (input: CreateVocabWordInput) => {
+    async (input: Omit<CreateVocabWordInput, "collectionId">) => {
       await createWordMutation(input);
     },
     [createWordMutation],

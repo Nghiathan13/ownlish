@@ -13,7 +13,7 @@ import { ApiError } from "@/shared/api/http";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 
 type AddWordFormProps = {
-  onCreate: (input: CreateVocabWordInput) => Promise<void>;
+  onCreate: (input: Omit<CreateVocabWordInput, "collectionId">) => Promise<void>;
   onCreated?: () => void;
 };
 

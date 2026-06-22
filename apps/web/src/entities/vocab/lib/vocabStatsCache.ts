@@ -1,3 +1,6 @@
-export function getVocabStatsQueryKey(userId: string | null) {
-  return ["vocab-stats", { userId }] as const;
+export function getVocabStatsQueryKey(
+  userId: string | null,
+  collectionId: string | null = null,
+) {
+  return ["vocab-stats", { userId, collectionId }] as const;
 }

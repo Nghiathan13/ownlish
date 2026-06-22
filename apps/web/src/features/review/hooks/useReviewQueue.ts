@@ -79,7 +79,9 @@ export function useReviewQueue({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: getVocabUserQueryKey(userId) });
-      queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
+      queryClient.invalidateQueries({
+        queryKey: getVocabStatsQueryKey(userId),
+      });
     },
   });
 

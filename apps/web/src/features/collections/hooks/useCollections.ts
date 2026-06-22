@@ -136,7 +136,6 @@ export function useImportCollection({
       });
       void queryClient.invalidateQueries({
         queryKey: getVocabStatsQueryKey(userId),
-        exact: true,
       });
     },
   });

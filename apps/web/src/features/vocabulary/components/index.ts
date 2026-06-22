@@ -1,3 +1,4 @@
+export { CollectionWordsPanel } from "./CollectionWordsPanel";
 export { MyVocabularyWordsPanel } from "./MyVocabularyWordsPanel";
 export { AddWordForm } from "./AddWordForm";
 export { DeleteDefinitionConfirm } from "./DeleteDefinitionConfirm";

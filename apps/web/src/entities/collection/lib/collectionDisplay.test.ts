@@ -17,6 +17,7 @@ function makeCollection(
     kind: "SYSTEM",
     source: "oxford",
     cefrLevel: "A1",
+    isDefault: false,
     isPublic: true,
     itemCount: 100,
     createdAt: "2026-01-01T00:00:00.000Z",
@@ -62,10 +63,20 @@ describe("collection display helpers", () => {
       name: "Oxford Notes",
       source: null,
       cefrLevel: null,
+      isDefault: false,
+      isPublic: false,
+    });
+    const defaultCollection = makeCollection({
+      id: "default-collection",
+      kind: "USER",
+      name: "My Vocabulary",
+      source: null,
+      cefrLevel: null,
+      isDefault: true,
       isPublic: false,
     });
     const systemCollection = makeCollection();
-    const collections = [userCollection, systemCollection];
+    const collections = [defaultCollection, userCollection, systemCollection];
 
     expect(filterCollectionsByCategory(collections, "user")).toEqual([
       userCollection,
