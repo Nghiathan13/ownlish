@@ -22,23 +22,27 @@ export function CollectionCard({
   wordCountLabel,
 }: CollectionCardProps) {
   const hasFooter = footerAction != null;
+  const hasHeaderAction = headerAction != null;
   const contentClassName = classNames(
-    hasFooter ? "p-4 pb-14" : "p-4",
-    headerAction ? "pr-10" : undefined,
+    "flex flex-col gap-2 p-4",
+    hasFooter && "pb-14",
+    hasHeaderAction && "pr-12",
   );
 
   if (isDisabled || !href) {
     return (
       <article className="rounded-xl border border-border p-4 opacity-50">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="text-xl font-bold">{title}</h2>
-          {badge ? (
-            <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-              {badge}
-            </span>
-          ) : null}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-lg font-semibold">{title}</h2>
+            {badge ? (
+              <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
+                {badge}
+              </span>
+            ) : null}
+          </div>
+          <p className="text-sm font-semibold">{wordCountLabel}</p>
         </div>
-        <p className="mt-5 text-sm font-semibold">{wordCountLabel}</p>
       </article>
     );
   }
@@ -46,19 +50,19 @@ export function CollectionCard({
   return (
     <article className="relative rounded-xl border border-border">
       {headerAction ? (
-        <div className="absolute right-3 top-3 z-10">{headerAction}</div>
+        <div className="absolute right-4 top-4 z-10">{headerAction}</div>
       ) : null}
       <Link className="block rounded-xl hover:bg-muted" href={href}>
         <div className={contentClassName}>
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-xl font-bold">{title}</h2>
+            <h2 className="text-lg font-semibold">{title}</h2>
             {badge ? (
               <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
                 {badge}
               </span>
             ) : null}
           </div>
-          <p className="mt-5 text-sm font-semibold">{wordCountLabel}</p>
+          <p className="text-sm font-semibold">{wordCountLabel}</p>
         </div>
       </Link>
       {footerAction ? (
