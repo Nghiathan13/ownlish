@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { WordCollectionKind } from '@prisma/client';
+import { DEFAULT_USER_COLLECTION_NAME } from '../collections/collections.constants';
 import { PrismaService } from '../prisma/prisma.service';
 
 type CreateUserInput = {
@@ -8,7 +10,14 @@ type CreateUserInput = {
 };
 
 type UserResult = ReturnType<PrismaService['user']['findUnique']>;
-type CreatedUserResult = ReturnType<PrismaService['user']['create']>;
+type CreatedUserResult = Promise<{
+  id: string;
+  email: string;
+  passwordHash: string;
+  name: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}>;
 
 @Injectable()
 export class UsersService {
@@ -27,8 +36,22 @@ export class UsersService {
   }
 
   create(input: CreateUserInput): CreatedUserResult {
-    return this.prisma.user.create({
-      data: input,
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: input,
+      });
+
+      await tx.wordCollection.create({
+        data: {
+          ownerUserId: user.id,
+          name: DEFAULT_USER_COLLECTION_NAME,
+          kind: WordCollectionKind.USER,
+          isDefault: true,
+          isPublic: false,
+        },
+      });
+
+      return user;
     });
   }
 }

@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -10,6 +11,9 @@ import {
 import { MAX_VOCAB_LEVEL, MIN_VOCAB_LEVEL } from '../vocab.constants';
 
 export class CreateVocabWordDto {
+  @IsUUID('4')
+  collectionId!: string;
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)

@@ -69,13 +69,16 @@ export class VocabService {
 
   async list(
     userId: string,
-    query: ListVocabWordsDto = {},
+    query: ListVocabWordsDto,
   ): Promise<VocabWordListResponse> {
+    await this.assertOwnedCollection(userId, query.collectionId);
+
     const search = query.search?.trim();
     const limit = query.limit ?? 50;
     const offset = query.offset ?? 0;
     const where = {
       userId,
+      collectionId: query.collectionId,
       definitions: {
         some: {
           deletedAt: null,
@@ -165,11 +168,13 @@ export class VocabService {
     userId: string,
     dto: CreateVocabWordDto,
   ): Promise<Awaited<CreatedVocabWordResult>> {
+    await this.assertOwnedCollection(userId, dto.collectionId);
+
     const word = this.normalizeRequiredWord(dto.word);
     const normalizedWord = normalizeWord(word);
     const existingWord = await this.prisma.vocabWord.findFirst({
       where: {
-        userId,
+        collectionId: dto.collectionId,
         normalizedWord,
       },
       include: activeDefinitionsInclude,
@@ -182,6 +187,7 @@ export class VocabService {
     return this.prisma.vocabWord.create({
       data: {
         userId,
+        collectionId: dto.collectionId,
         normalizedWord,
         word,
         definitions: {
@@ -590,6 +596,20 @@ export class VocabService {
       'code' in error &&
       error.code === 'P2002'
     );
+  }
+
+  private async assertOwnedCollection(userId: string, collectionId: string) {
+    const collection = await this.prisma.wordCollection.findFirst({
+      where: {
+        id: collectionId,
+        ownerUserId: userId,
+      },
+      select: { id: true },
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
   }
 }
 

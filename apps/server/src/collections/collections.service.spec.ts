@@ -11,7 +11,20 @@ describe('CollectionsService', () => {
     kind: WordCollectionKind.SYSTEM,
     source: 'oxford',
     cefrLevel: 'A1',
+    isDefault: false,
     isPublic: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const defaultCollection = {
+    id: 'default-collection-id',
+    name: 'My Vocabulary',
+    description: null,
+    kind: WordCollectionKind.USER,
+    source: null,
+    cefrLevel: null,
+    isDefault: true,
+    isPublic: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -26,9 +39,11 @@ describe('CollectionsService', () => {
     vocabWordDefinition: {
       createMany: jest.fn(),
       findMany: jest.fn(),
+      updateMany: jest.fn(),
     },
     wordCollection: {
       create: jest.fn(),
+      delete: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
     },
@@ -45,7 +60,7 @@ describe('CollectionsService', () => {
         ...collection,
         _count: {
           catalogItems: 10,
-          userWordItems: 0,
+          vocabWords: 0,
         },
       },
     ]);
@@ -79,12 +94,13 @@ describe('CollectionsService', () => {
       kind: WordCollectionKind.USER,
       source: null,
       cefrLevel: null,
+      isDefault: false,
       isPublic: false,
       name: 'TOEIC Prep',
       description: 'Words for exam prep',
       _count: {
         catalogItems: 0,
-        userWordItems: 0,
+        vocabWords: 0,
       },
     });
 
@@ -100,6 +116,7 @@ describe('CollectionsService', () => {
       kind: WordCollectionKind.USER,
       source: null,
       cefrLevel: null,
+      isDefault: false,
       isPublic: false,
       itemCount: 0,
       createdAt: now,
@@ -112,17 +129,27 @@ describe('CollectionsService', () => {
         ownerUserId: 'user-id',
         name: 'TOEIC Prep',
         description: 'Words for exam prep',
+        isDefault: false,
         isPublic: false,
       },
       include: {
         _count: {
           select: {
             catalogItems: true,
-            userWordItems: true,
+            vocabWords: true,
           },
         },
       },
     });
+  });
+
+  it('rejects deleting the default collection', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValue(defaultCollection);
+
+    await expect(
+      service.deleteUserCollection('user-id', 'default-collection-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.wordCollection.delete).not.toHaveBeenCalled();
   });
 
   it('rejects creating a user collection without a name', async () => {
@@ -133,7 +160,9 @@ describe('CollectionsService', () => {
   });
 
   it('imports new words and merges definitions into existing words', async () => {
-    prisma.wordCollection.findFirst.mockResolvedValue(collection);
+    prisma.wordCollection.findFirst
+      .mockResolvedValueOnce(collection)
+      .mockResolvedValueOnce(defaultCollection);
     prisma.collectionCatalogItem.findMany.mockResolvedValue([
       {
         catalogWord: {
@@ -193,6 +222,7 @@ describe('CollectionsService', () => {
     expect(prisma.vocabWord.createMany).toHaveBeenCalledWith({
       data: [
         {
+          collectionId: 'default-collection-id',
           normalizedWord: 'about',
           userId: 'user-id',
           word: 'about',
@@ -220,7 +250,9 @@ describe('CollectionsService', () => {
   });
 
   it('updates existing words when collection adds new definitions', async () => {
-    prisma.wordCollection.findFirst.mockResolvedValue(collection);
+    prisma.wordCollection.findFirst
+      .mockResolvedValueOnce(collection)
+      .mockResolvedValueOnce(defaultCollection);
     prisma.collectionCatalogItem.findMany.mockResolvedValue([
       {
         catalogWord: {

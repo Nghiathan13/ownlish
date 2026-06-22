@@ -15,7 +15,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreateVocabWordDto } from './dto/create-vocab-word.dto';
 import { ListDueReviewWordsDto } from './dto/list-due-review-words.dto';
-import { ListVocabWordsDto } from './dto/list-vocab-words.dto';
+import {
+  GetVocabStatsDto,
+  ListVocabWordsDto,
+} from './dto/list-vocab-words.dto';
 import { UpdateVocabWordDto } from './dto/update-vocab-word.dto';
 import { UpdateVocabReviewDto } from './dto/update-vocab-review.dto';
 import { VocabStatsService } from './vocab-stats.service';
@@ -40,8 +43,9 @@ export class VocabController {
   @Get('stats')
   getStats(
     @Req() request: AuthRequest,
+    @Query() query: GetVocabStatsDto,
   ): ReturnType<VocabStatsService['getStats']> {
-    return this.vocabStatsService.getStats(request.user.id);
+    return this.vocabStatsService.getStats(request.user.id, query.collectionId);
   }
 
   @Get('review/due')

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   HIGH_WRONG_COUNT_THRESHOLD,
@@ -32,7 +32,12 @@ type RawVocabStatsRow = {
 export class VocabStatsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getStats(userId: string): Promise<VocabStatsResponse> {
+  async getStats(
+    userId: string,
+    collectionId: string,
+  ): Promise<VocabStatsResponse> {
+    await this.assertOwnedCollection(userId, collectionId);
+
     const now = new Date();
     const [stats] = await this.prisma.$queryRaw<RawVocabStatsRow[]>`
       WITH active AS (
@@ -44,6 +49,7 @@ export class VocabStatsService {
         INNER JOIN "vocab_words" AS "word"
           ON "word"."id" = "definition"."vocab_word_id"
         WHERE "word"."user_id" = ${userId}
+          AND "word"."collection_id" = ${collectionId}
           AND "definition"."deleted_at" IS NULL
       ),
       summary AS (
@@ -108,5 +114,19 @@ export class VocabStatsService {
         },
       ),
     };
+  }
+
+  private async assertOwnedCollection(userId: string, collectionId: string) {
+    const collection = await this.prisma.wordCollection.findFirst({
+      where: {
+        id: collectionId,
+        ownerUserId: userId,
+      },
+      select: { id: true },
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
   }
 }

@@ -5,6 +5,12 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
 import { registerE2eUser } from './helpers/e2e-auth';
+import {
+  buildVocabListPath,
+  buildVocabStatsPath,
+  getDefaultCollectionId,
+  withDefaultCollection,
+} from './helpers/e2e-collections';
 import { getE2ePrisma } from './helpers/e2e-prisma';
 import { parseResponseBody } from './helpers/parse-response-body';
 import type {
@@ -21,6 +27,7 @@ describe('VocabController (e2e)', () => {
   let prisma: PrismaClient;
   let accessToken: string;
   let userId: string;
+  let defaultCollectionId: string;
 
   const email = 'vocab-e2e@example.com';
   const password = 'test123456';
@@ -53,6 +60,10 @@ describe('VocabController (e2e)', () => {
     });
     accessToken = auth.accessToken;
     userId = auth.userId;
+    defaultCollectionId = await getDefaultCollectionId(
+      app.getHttpServer(),
+      accessToken,
+    );
   });
 
   afterEach(async () => {
@@ -66,11 +77,13 @@ describe('VocabController (e2e)', () => {
     const createResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: ' Hello ',
-        meaningVi: 'xin chao',
-        level: 1,
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: ' Hello ',
+          meaningVi: 'xin chao',
+          level: 1,
+        }),
+      )
       .expect(201);
 
     const createBody = parseResponseBody<VocabWordBody>(createResponse);
@@ -103,7 +116,7 @@ describe('VocabController (e2e)', () => {
       });
 
     await request(app.getHttpServer())
-      .get('/vocab')
+      .get(buildVocabListPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
@@ -184,7 +197,7 @@ describe('VocabController (e2e)', () => {
       });
 
     await request(app.getHttpServer())
-      .get('/vocab')
+      .get(buildVocabListPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
@@ -205,10 +218,12 @@ describe('VocabController (e2e)', () => {
     const createResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'delete me',
-        meaningVi: 'xoa',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'delete me',
+          meaningVi: 'xoa',
+        }),
+      )
       .expect(201);
 
     const createBody = parseResponseBody<VocabWordBody>(createResponse);
@@ -235,7 +250,7 @@ describe('VocabController (e2e)', () => {
       .expect(404);
 
     await request(app.getHttpServer())
-      .get('/vocab')
+      .get(buildVocabListPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
@@ -249,10 +264,12 @@ describe('VocabController (e2e)', () => {
     const createResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'strict delete',
-        meaningVi: 'xoa',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'strict delete',
+          meaningVi: 'xoa',
+        }),
+      )
       .expect(201);
 
     const wordId = parseResponseBody<VocabWordBody>(createResponse).id;
@@ -272,11 +289,13 @@ describe('VocabController (e2e)', () => {
     const createResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'bank',
-        type: 'noun',
-        meaningVi: 'ngan hang',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'bank',
+          type: 'noun',
+          meaningVi: 'ngan hang',
+        }),
+      )
       .expect(201);
 
     const createBody = parseResponseBody<VocabWordBody>(createResponse);
@@ -322,23 +341,27 @@ describe('VocabController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'hello',
-        meaningVi: 'xin chao',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'hello',
+          meaningVi: 'xin chao',
+        }),
+      )
       .expect(201);
 
     await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'shell',
-        meaningVi: 'vo',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'shell',
+          meaningVi: 'vo',
+        }),
+      )
       .expect(201);
 
     await request(app.getHttpServer())
-      .get('/vocab?search=he')
+      .get(buildVocabListPath(defaultCollectionId, { search: 'he' }))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
@@ -358,27 +381,33 @@ describe('VocabController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'new word',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'new word',
+        }),
+      )
       .expect(201);
 
     const masteredResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'mastered word',
-        level: 7,
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'mastered word',
+          level: 7,
+        }),
+      )
       .expect(201);
 
     const difficultResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'difficult word',
-        wrongCount: 3,
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'difficult word',
+          wrongCount: 3,
+        }),
+      )
       .expect(201);
 
     const masteredBody = parseResponseBody<VocabWordBody>(masteredResponse);
@@ -412,7 +441,7 @@ describe('VocabController (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
-      .get('/vocab/stats')
+      .get(buildVocabStatsPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
@@ -443,33 +472,41 @@ describe('VocabController (e2e)', () => {
     const newWordResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'new word',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'new word',
+        }),
+      )
       .expect(201);
 
     const dueWordResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'due word',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'due word',
+        }),
+      )
       .expect(201);
 
     const futureWordResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'future word',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'future word',
+        }),
+      )
       .expect(201);
 
     const masteredWordResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'mastered word',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'mastered word',
+        }),
+      )
       .expect(201);
 
     const newWordBody = parseResponseBody<VocabWordBody>(newWordResponse);
@@ -562,9 +599,11 @@ describe('VocabController (e2e)', () => {
     const createResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'invalid review date',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'invalid review date',
+        }),
+      )
       .expect(201);
 
     const invalidReviewWordId =
@@ -583,16 +622,16 @@ describe('VocabController (e2e)', () => {
   });
 
   it('allows adding another manual definition for the same word', async () => {
-    const firstPayload = {
+    const firstPayload = withDefaultCollection(defaultCollectionId, {
       word: 'hello',
       type: 'noun',
       meaningVi: 'xin chao',
-    };
-    const secondPayload = {
+    });
+    const secondPayload = withDefaultCollection(defaultCollectionId, {
       word: 'hello',
       type: 'verb',
       meaningVi: 'chay',
-    };
+    });
 
     const firstResponse = await request(app.getHttpServer())
       .post('/vocab')
@@ -627,7 +666,7 @@ describe('VocabController (e2e)', () => {
     );
 
     await request(app.getHttpServer())
-      .get('/vocab')
+      .get(buildVocabListPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
@@ -643,9 +682,9 @@ describe('VocabController (e2e)', () => {
   });
 
   it('allows creating the same word after soft delete', async () => {
-    const payload = {
+    const payload = withDefaultCollection(defaultCollectionId, {
       word: 'hello',
-    };
+    });
 
     const createResponse = await request(app.getHttpServer())
       .post('/vocab')
@@ -676,7 +715,7 @@ describe('VocabController (e2e)', () => {
     });
 
     await request(app.getHttpServer())
-      .get('/vocab')
+      .get(buildVocabListPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {

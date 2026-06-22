@@ -93,6 +93,7 @@ describe('VocabController', () => {
     };
     vocabServiceMock.list.mockResolvedValue(response);
     const query = {
+      collectionId: 'collection-id',
       limit: 10,
       offset: 20,
     };
@@ -134,10 +135,18 @@ describe('VocabController', () => {
       highWrongCount: 0,
       levels: [{ level: 0, count: 1 }],
     };
+    const statsQuery = {
+      collectionId: 'collection-id',
+    };
     vocabStatsServiceMock.getStats.mockResolvedValue(response);
 
-    await expect(controller.getStats(request)).resolves.toEqual(response);
-    expect(vocabStatsServiceMock.getStats).toHaveBeenCalledWith('user-id');
+    await expect(controller.getStats(request, statsQuery)).resolves.toEqual(
+      response,
+    );
+    expect(vocabStatsServiceMock.getStats).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+    );
   });
 
   it('delegates get to VocabService with current user id', async () => {
@@ -149,6 +158,7 @@ describe('VocabController', () => {
 
   it('delegates create to VocabService with current user id', async () => {
     const dto = {
+      collectionId: 'collection-id',
       word: 'hello',
       meaningVi: 'xin chao',
     };

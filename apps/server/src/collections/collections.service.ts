@@ -15,6 +15,7 @@ type CollectionSummary = {
   kind: WordCollectionKind;
   source: string | null;
   cefrLevel: string | null;
+  isDefault: boolean;
   isPublic: boolean;
   itemCount: number;
   createdAt: Date;
@@ -65,7 +66,7 @@ export class CollectionsService {
         _count: {
           select: {
             catalogItems: true,
-            userWordItems: true,
+            vocabWords: true,
           },
         },
       },
@@ -85,7 +86,9 @@ export class CollectionsService {
     return collections.map((collection) => ({
       ...this.toSummary(collection),
       itemCount:
-        collection._count.catalogItems + collection._count.userWordItems,
+        collection.kind === WordCollectionKind.SYSTEM
+          ? collection._count.catalogItems
+          : collection._count.vocabWords,
     }));
   }
 
@@ -106,13 +109,14 @@ export class CollectionsService {
         ownerUserId: userId,
         name,
         description,
+        isDefault: false,
         isPublic: false,
       },
       include: {
         _count: {
           select: {
             catalogItems: true,
-            userWordItems: true,
+            vocabWords: true,
           },
         },
       },
@@ -120,9 +124,30 @@ export class CollectionsService {
 
     return {
       ...this.toSummary(collection),
-      itemCount:
-        collection._count.catalogItems + collection._count.userWordItems,
+      itemCount: collection._count.vocabWords,
     };
+  }
+
+  async deleteUserCollection(userId: string, id: string): Promise<void> {
+    const collection = await this.prisma.wordCollection.findFirst({
+      where: {
+        id,
+        ownerUserId: userId,
+        kind: WordCollectionKind.USER,
+      },
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
+
+    if (collection.isDefault) {
+      throw new BadRequestException('Default collection cannot be deleted');
+    }
+
+    await this.prisma.wordCollection.delete({
+      where: { id },
+    });
   }
 
   async get(userId: string, id: string): Promise<CollectionDetail> {
@@ -152,6 +177,7 @@ export class CollectionsService {
   async importToVocabulary(
     userId: string,
     id: string,
+    targetCollectionId?: string,
   ): Promise<ImportCollectionResult> {
     const collection = await this.findVisibleCollection(userId, id);
 
@@ -161,6 +187,14 @@ export class CollectionsService {
 
     if (collection.kind !== WordCollectionKind.SYSTEM) {
       throw new BadRequestException('Only system collections can be imported');
+    }
+
+    const targetCollection = targetCollectionId
+      ? await this.findOwnedUserCollection(userId, targetCollectionId)
+      : await this.getDefaultUserCollection(userId);
+
+    if (!targetCollection) {
+      throw new NotFoundException('Target collection not found');
     }
 
     const catalogWords = await this.getCatalogWords(
@@ -181,7 +215,7 @@ export class CollectionsService {
     );
     const existingWords = await this.prisma.vocabWord.findMany({
       where: {
-        userId,
+        collectionId: targetCollection.id,
         normalizedWord: {
           in: normalizedWords,
         },
@@ -200,13 +234,13 @@ export class CollectionsService {
     );
     const createWordsResult = await this.prisma.vocabWord.createMany({
       data: newWords.map((catalogWord) =>
-        this.toImportedVocabWord(userId, catalogWord),
+        this.toImportedVocabWord(userId, targetCollection.id, catalogWord),
       ),
       skipDuplicates: true,
     });
     const allWords = await this.prisma.vocabWord.findMany({
       where: {
-        userId,
+        collectionId: targetCollection.id,
         normalizedWord: {
           in: normalizedWords,
         },
@@ -320,6 +354,25 @@ export class CollectionsService {
     });
   }
 
+  private findOwnedUserCollection(userId: string, id: string) {
+    return this.prisma.wordCollection.findFirst({
+      where: {
+        id,
+        ownerUserId: userId,
+        kind: WordCollectionKind.USER,
+      },
+    });
+  }
+
+  private getDefaultUserCollection(userId: string) {
+    return this.prisma.wordCollection.findFirst({
+      where: {
+        ownerUserId: userId,
+        isDefault: true,
+      },
+    });
+  }
+
   private async getCatalogWords(
     collectionId: string,
     cefrLevel: string | null,
@@ -368,11 +421,7 @@ export class CollectionsService {
   private getUserVocabWords(collectionId: string) {
     return this.prisma.vocabWord.findMany({
       where: {
-        collectionItems: {
-          some: {
-            collectionId,
-          },
-        },
+        collectionId,
         definitions: {
           some: {
             deletedAt: null,
@@ -435,9 +484,14 @@ export class CollectionsService {
     return `${vocabWordId}:${source}:${sourceDefinitionId ?? ''}`;
   }
 
-  private toImportedVocabWord(userId: string, catalogWord: CatalogWordResult) {
+  private toImportedVocabWord(
+    userId: string,
+    collectionId: string,
+    catalogWord: CatalogWordResult,
+  ) {
     return {
       userId,
+      collectionId,
       word: catalogWord.word,
       normalizedWord: normalizeWord(catalogWord.word),
     };
@@ -487,6 +541,7 @@ export class CollectionsService {
     kind: WordCollectionKind;
     source: string | null;
     cefrLevel: string | null;
+    isDefault: boolean;
     isPublic: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -498,6 +553,7 @@ export class CollectionsService {
       kind: collection.kind,
       source: collection.source,
       cefrLevel: collection.cefrLevel,
+      isDefault: collection.isDefault,
       isPublic: collection.isPublic,
       createdAt: collection.createdAt,
       updatedAt: collection.updatedAt,

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -12,6 +13,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CollectionsService } from './collections.service';
 import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
+import { ImportCollectionDto } from './dto/import-collection.dto';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
@@ -43,7 +45,20 @@ export class CollectionsController {
   importToVocabulary(
     @Req() request: AuthRequest,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() body: ImportCollectionDto,
   ): ReturnType<CollectionsService['importToVocabulary']> {
-    return this.collectionsService.importToVocabulary(request.user.id, id);
+    return this.collectionsService.importToVocabulary(
+      request.user.id,
+      id,
+      body.targetCollectionId,
+    );
+  }
+
+  @Delete(':id')
+  delete(
+    @Req() request: AuthRequest,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): ReturnType<CollectionsService['deleteUserCollection']> {
+    return this.collectionsService.deleteUserCollection(request.user.id, id);
   }
 }

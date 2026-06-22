@@ -6,11 +6,17 @@ describe('VocabStatsService', () => {
   let service: VocabStatsService;
 
   const prismaMock = {
+    wordCollection: {
+      findFirst: jest.fn(),
+    },
     $queryRaw: jest.fn(),
   };
 
+  const collectionId = 'collection-id';
+
   beforeEach(async () => {
     jest.clearAllMocks();
+    prismaMock.wordCollection.findFirst.mockResolvedValue({ id: collectionId });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,7 +51,7 @@ describe('VocabStatsService', () => {
     ]);
 
     try {
-      await expect(service.getStats('user-id')).resolves.toEqual({
+      await expect(service.getStats('user-id', collectionId)).resolves.toEqual({
         total: 10,
         due: 4,
         mastered: 2,

@@ -46,15 +46,18 @@ model RefreshSession {
 model VocabWord {
   id             String @id @default(uuid())
   userId         String @map("user_id")
+  collectionId   String @map("collection_id")
   word           String
   normalizedWord String @map("normalized_word")
 
-  collectionItems CollectionUserWordItem[]
-  definitions     VocabWordDefinition[]
-  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection  WordCollection        @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  definitions VocabWordDefinition[]
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, normalizedWord])
+  @@unique([collectionId, normalizedWord])
   @@index([userId])
+  @@index([collectionId])
+  @@index([userId, collectionId])
   @@map("vocab_words")
 }
 
@@ -142,13 +145,14 @@ model WordCollection {
   kind        WordCollectionKind @default(USER)
   source      String?
   cefrLevel   String?            @map("cefr_level")
+  isDefault   Boolean            @default(false) @map("is_default")
   isPublic    Boolean            @default(false) @map("is_public")
   createdAt   DateTime           @default(now()) @map("created_at")
   updatedAt   DateTime           @updatedAt @map("updated_at")
 
-  catalogItems  CollectionCatalogItem[]
-  owner         User?                    @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
-  userWordItems CollectionUserWordItem[]
+  catalogItems CollectionCatalogItem[]
+  owner        User?                   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  vocabWords   VocabWord[]
 
   @@index([kind])
   @@index([ownerUserId])
@@ -167,19 +171,6 @@ model CollectionCatalogItem {
   @@id([collectionId, catalogWordId])
   @@index([catalogWordId])
   @@map("collection_catalog_items")
-}
-
-model CollectionUserWordItem {
-  collectionId String @map("collection_id")
-  vocabWordId  String @map("vocab_word_id")
-  sortOrder    Int    @default(0) @map("sort_order")
-
-  collection WordCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  vocabWord  VocabWord      @relation(fields: [vocabWordId], references: [id], onDelete: Cascade)
-
-  @@id([collectionId, vocabWordId])
-  @@index([vocabWordId])
-  @@map("collection_user_word_items")
 }
 
 enum ToeicRunMode {

@@ -11,7 +11,12 @@ import { getMockCallArg } from '../testing/jest-mock-call';
 describe('VocabService', () => {
   let service: VocabService;
 
+  const collectionId = 'collection-id';
+
   const prismaMock = {
+    wordCollection: {
+      findFirst: jest.fn(),
+    },
     vocabWord: {
       findMany: jest.fn(),
       count: jest.fn(),
@@ -63,6 +68,7 @@ describe('VocabService', () => {
 
   const activeWordWhere = {
     userId: 'user-id',
+    collectionId,
     definitions: {
       some: {
         deletedAt: null,
@@ -70,8 +76,13 @@ describe('VocabService', () => {
     },
   };
 
+  const listQuery = {
+    collectionId,
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
+    prismaMock.wordCollection.findFirst.mockResolvedValue({ id: collectionId });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -94,7 +105,7 @@ describe('VocabService', () => {
     prismaMock.vocabWord.findMany.mockResolvedValue([vocabWord]);
     prismaMock.vocabWord.count.mockResolvedValue(1);
 
-    await expect(service.list('user-id')).resolves.toEqual({
+    await expect(service.list('user-id', listQuery)).resolves.toEqual({
       items: [vocabWord],
       meta: {
         limit: 50,
@@ -125,6 +136,7 @@ describe('VocabService', () => {
 
     await expect(
       service.list('user-id', {
+        collectionId,
         limit: 10,
         offset: 20,
       }),
@@ -156,6 +168,7 @@ describe('VocabService', () => {
 
     await expect(
       service.list('user-id', {
+        collectionId,
         limit: 10,
         offset: 10,
       }),
@@ -171,6 +184,7 @@ describe('VocabService', () => {
     prismaMock.vocabWord.count.mockResolvedValue(1);
 
     await service.list('user-id', {
+      collectionId,
       search: ' Hello ',
       limit: 10,
       offset: 0,
@@ -264,7 +278,12 @@ describe('VocabService', () => {
       expect.objectContaining({
         where: {
           id: 'word-id',
-          ...activeWordWhere,
+          userId: 'user-id',
+          definitions: {
+            some: {
+              deletedAt: null,
+            },
+          },
         },
         include: activeDefinitionsInclude,
       }),
@@ -283,7 +302,7 @@ describe('VocabService', () => {
     prismaMock.vocabWord.findFirst.mockResolvedValue(null);
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
-    await service.create('user-id', {
+    await service.create('user-id', { collectionId, 
       word: 'account',
       type: 'noun',
       ipaUk: '/əˈkaʊnt/',
@@ -341,7 +360,7 @@ describe('VocabService', () => {
     prismaMock.vocabWord.create.mockResolvedValue(vocabWord);
 
     await expect(
-      service.create('user-id', {
+      service.create('user-id', { collectionId, 
         word: ' Hello ',
         meaningVi: 'xin chao',
       }),
@@ -400,7 +419,7 @@ describe('VocabService', () => {
     prismaMock.vocabWord.update.mockResolvedValue(updatedWord);
 
     await expect(
-      service.create('user-id', {
+      service.create('user-id', { collectionId, 
         word: 'hello',
         type: 'verb',
         meaningVi: 'chay',
@@ -444,7 +463,7 @@ describe('VocabService', () => {
       definitions: [reviewDefinition],
     });
 
-    await service.create('user-id', {
+    await service.create('user-id', { collectionId, 
       word: ' Hello ',
       meaningVi: 'xin chao',
     });
@@ -476,7 +495,7 @@ describe('VocabService', () => {
 
   it('throws bad request when creating a blank word', async () => {
     await expect(
-      service.create('user-id', {
+      service.create('user-id', { collectionId, 
         word: '   ',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);

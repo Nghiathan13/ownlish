@@ -5,6 +5,11 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
 import { registerE2eUser } from './helpers/e2e-auth';
+import {
+  buildVocabListPath,
+  getDefaultCollectionId,
+  withDefaultCollection,
+} from './helpers/e2e-collections';
 import type {
   CollectionCatalogBody,
   CollectionImportBody,
@@ -19,6 +24,7 @@ describe('CollectionsController (e2e)', () => {
   let prisma: PrismaClient;
   let accessToken: string;
   let collectionId: string;
+  let defaultCollectionId: string;
 
   const email = 'collections-e2e@example.com';
   const password = 'test123456';
@@ -94,6 +100,10 @@ describe('CollectionsController (e2e)', () => {
     });
     accessToken = auth.accessToken;
     collectionId = collection.id;
+    defaultCollectionId = await getDefaultCollectionId(
+      app.getHttpServer(),
+      accessToken,
+    );
   });
 
   afterEach(async () => {
@@ -213,7 +223,7 @@ describe('CollectionsController (e2e)', () => {
       });
 
     const vocabListResponse = await request(app.getHttpServer())
-      .get('/vocab')
+      .get(buildVocabListPath(defaultCollectionId))
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
 
@@ -247,11 +257,13 @@ describe('CollectionsController (e2e)', () => {
     const manualAddResponse = await request(app.getHttpServer())
       .post('/vocab')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        word: 'e2e catalog word',
-        type: 'verb',
-        meaningVi: 'nghia manual',
-      })
+      .send(
+        withDefaultCollection(defaultCollectionId, {
+          word: 'e2e catalog word',
+          type: 'verb',
+          meaningVi: 'nghia manual',
+        }),
+      )
       .expect(201);
 
     const manualAddBody = parseResponseBody<VocabWordBody>(manualAddResponse);

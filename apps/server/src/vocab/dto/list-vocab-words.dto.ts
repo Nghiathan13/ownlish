@@ -3,12 +3,21 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
 
+export class GetVocabStatsDto {
+  @IsUUID('4')
+  collectionId!: string;
+}
+
 export class ListVocabWordsDto {
+  @IsUUID('4')
+  collectionId!: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(120)

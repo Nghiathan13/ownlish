@@ -3,6 +3,7 @@ import type { VocabWordBody } from './e2e-vocab-types';
 export type CollectionSummaryBody = {
   id: string;
   itemCount: number;
+  isDefault?: boolean;
   kind: string;
   name: string;
 };
