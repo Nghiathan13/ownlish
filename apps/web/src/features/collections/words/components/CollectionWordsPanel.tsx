@@ -36,12 +36,14 @@ type EditingTarget = {
 
 type CollectionWordsPanelProps = {
   collectionId: string;
+  hasCollectionsList: boolean;
   onCollectionChange: (collectionId: string) => void;
   userCollections: CollectionSummary[];
 };
 
 export function CollectionWordsPanel({
   collectionId,
+  hasCollectionsList,
   onCollectionChange,
   userCollections,
 }: CollectionWordsPanelProps) {
@@ -165,7 +167,7 @@ export function CollectionWordsPanel({
     <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 items-center gap-2">
-          {userCollections.length > 0 ? (
+          {hasCollectionsList && userCollections.length > 0 ? (
             <ImportTargetCollectionSelect
               ariaLabel="Collection"
               collections={userCollections}

@@ -37,8 +37,16 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
     isAuthenticated: isAuthenticatedStatus(status),
     userId: user?.id ?? null,
   };
-  const { collections, collectionsError, isLoadingCollections, reloadCollections } =
-    useCollectionsList(authParams);
+  const {
+    collections,
+    collectionsError,
+    hasCollectionsList,
+    reloadCollections,
+  } = useCollectionsList(authParams);
+  const collectionSummary = useMemo(() => {
+    return findCollectionById(collections, collectionId);
+  }, [collectionId, collections]);
+  const isSystemCollection = collectionSummary?.kind === "SYSTEM";
   const {
     collectionDetail,
     collectionDetailError,
@@ -47,20 +55,10 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
   } = useCollectionDetail({
     ...authParams,
     collectionId,
+    enabled: isSystemCollection,
   });
-  const collectionSummary = useMemo(() => {
-    return findCollectionById(collections, collectionId);
-  }, [collectionId, collections]);
-  const collectionKind = collectionSummary?.kind ?? collectionDetail?.kind;
-  const isUserCollection = collectionKind === "USER";
-  const isSystemCollection = collectionKind === "SYSTEM";
-  const hasFinishedResolving =
-    !isLoadingCollections && !isLoadingCollectionDetail;
   const isNotFound =
-    hasFinishedResolving &&
-    !collectionKind &&
-    !collectionsError &&
-    !collectionDetailError;
+    hasCollectionsList && !collectionSummary && !collectionsError;
   const { importCollection, importError, isImporting, resetImportState } =
     useImportCollection({
       userId: user?.id ?? null,
@@ -121,7 +119,7 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
     <PageShell fillViewport>
       <BackToCollectionsButton />
 
-      {collectionsError && !collectionSummary && !collectionDetail ? (
+      {collectionsError && !hasCollectionsList ? (
         <div className="px-4">
           <StateMessage message={collectionsError} onRetry={reloadCollections} />
         </div>
@@ -132,14 +130,9 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
             Go back to collections and choose an available set.
           </p>
         </div>
-      ) : isUserCollection || !isSystemCollection ? (
-        <CollectionWordsPanel
-          collectionId={collectionId}
-          onCollectionChange={handleUserCollectionChange}
-          userCollections={userOwnedCollections}
-        />
-      ) : (
+      ) : isSystemCollection ? (
         <SystemCollectionWordsPanel
+          hasCollectionsList={hasCollectionsList}
           importError={importError}
           importResultMessage={importResultMessage}
           isImporting={isImporting}
@@ -151,6 +144,13 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
           resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
           userOwnedCollections={userOwnedCollections}
           words={collectionDetail?.catalogWords ?? []}
+        />
+      ) : (
+        <CollectionWordsPanel
+          collectionId={collectionId}
+          hasCollectionsList={hasCollectionsList}
+          onCollectionChange={handleUserCollectionChange}
+          userCollections={userOwnedCollections}
         />
       )}
     </PageShell>

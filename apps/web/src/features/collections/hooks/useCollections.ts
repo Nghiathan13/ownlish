@@ -23,6 +23,7 @@ type UseCollectionsParams = {
 
 type UseCollectionDetailParams = UseCollectionsParams & {
   collectionId: string | null;
+  enabled?: boolean;
 };
 
 export function getCollectionsQueryKey(userId: string | null) {
@@ -51,6 +52,7 @@ export function useCollectionsList({
         request: (token) => listCollections(token, { signal }),
       }),
     enabled: isAuthenticated && Boolean(userId),
+    staleTime: 60_000,
   });
 
   return {
@@ -59,6 +61,7 @@ export function useCollectionsList({
       collectionsQuery.error,
       "Cannot load collections.",
     ),
+    hasCollectionsList: collectionsQuery.data !== undefined,
     isLoadingCollections: collectionsQuery.isLoading,
     reloadCollections: collectionsQuery.refetch,
   };
@@ -66,6 +69,7 @@ export function useCollectionsList({
 
 export function useCollectionDetail({
   collectionId,
+  enabled = true,
   isAuthenticated,
   userId,
 }: UseCollectionDetailParams) {
@@ -78,7 +82,11 @@ export function useCollectionDetail({
             signal,
           }),
       }),
-    enabled: isAuthenticated && Boolean(userId) && Boolean(collectionId),
+    enabled:
+      isAuthenticated &&
+      Boolean(userId) &&
+      Boolean(collectionId) &&
+      enabled,
   });
 
   return {

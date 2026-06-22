@@ -21,6 +21,7 @@ import { iconTextButtonClassName } from "@/shared/ui/button";
 const EMPTY_DEFINITION_SELECTION = new Set<string>();
 
 type SystemCollectionWordsPanelProps = {
+  hasCollectionsList: boolean;
   importError: string | null;
   importResultMessage: string | null;
   isImporting: boolean;
@@ -35,6 +36,7 @@ type SystemCollectionWordsPanelProps = {
 };
 
 export function SystemCollectionWordsPanel({
+  hasCollectionsList,
   importError,
   importResultMessage,
   isImporting,
@@ -75,7 +77,9 @@ export function SystemCollectionWordsPanel({
       : EMPTY_DEFINITION_SELECTION;
   const hasSearch = Boolean(debouncedSearch.trim());
   const canImport =
-    userOwnedCollections.length > 0 && Boolean(resolvedImportTargetCollectionId);
+    hasCollectionsList &&
+    userOwnedCollections.length > 0 &&
+    Boolean(resolvedImportTargetCollectionId);
 
   function updateSelection(
     updater: (currentIds: Set<string>) => Set<string>,
