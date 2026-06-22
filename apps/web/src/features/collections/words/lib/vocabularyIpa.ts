@@ -1,5 +1,3 @@
-import type { VocabWordDefinition } from "@/entities/vocab/api/vocab";
-
 export type IpaField = "uk" | "us";
 
 export type DefinitionIpaPair = {
@@ -7,8 +5,13 @@ export type DefinitionIpaPair = {
   us: string | null;
 };
 
+type IpaDefinitionSource = {
+  ipaUk?: string | null;
+  ipaUs?: string | null;
+} | null;
+
 export function getDefinitionIpaPair(
-  definition: VocabWordDefinition | null,
+  definition: IpaDefinitionSource,
 ): DefinitionIpaPair {
   return {
     uk: definition?.ipaUk ?? null,
@@ -17,7 +20,7 @@ export function getDefinitionIpaPair(
 }
 
 export function getIpaFieldValue(
-  definition: VocabWordDefinition | null,
+  definition: IpaDefinitionSource,
   field: IpaField,
 ) {
   const pair = getDefinitionIpaPair(definition);
@@ -25,7 +28,7 @@ export function getIpaFieldValue(
 }
 
 export function hasUniformIpaField(
-  definitions: VocabWordDefinition[],
+  definitions: ReadonlyArray<IpaDefinitionSource & object>,
   field: IpaField,
 ) {
   if (definitions.length === 0) {
@@ -40,25 +43,33 @@ export function hasUniformIpaField(
 }
 
 export function getSharedIpaField(
-  definitions: VocabWordDefinition[],
+  definitions: ReadonlyArray<IpaDefinitionSource & object>,
   field: IpaField,
 ) {
   return getIpaFieldValue(definitions[0] ?? null, field);
 }
 
-export function hasUniformIpaUk(definitions: VocabWordDefinition[]) {
+export function hasUniformIpaUk(
+  definitions: ReadonlyArray<IpaDefinitionSource & object>,
+) {
   return hasUniformIpaField(definitions, "uk");
 }
 
-export function hasUniformIpaUs(definitions: VocabWordDefinition[]) {
+export function hasUniformIpaUs(
+  definitions: ReadonlyArray<IpaDefinitionSource & object>,
+) {
   return hasUniformIpaField(definitions, "us");
 }
 
-export function getSharedIpaUk(definitions: VocabWordDefinition[]) {
+export function getSharedIpaUk(
+  definitions: ReadonlyArray<IpaDefinitionSource & object>,
+) {
   return getSharedIpaField(definitions, "uk");
 }
 
-export function getSharedIpaUs(definitions: VocabWordDefinition[]) {
+export function getSharedIpaUs(
+  definitions: ReadonlyArray<IpaDefinitionSource & object>,
+) {
   return getSharedIpaField(definitions, "us");
 }
 
