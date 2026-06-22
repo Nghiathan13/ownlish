@@ -66,7 +66,7 @@ export function VocabularyTable({
     ? "Try a different search term."
     : "Add your first word with the form above.";
   const tableShellClassName = classNames(
-    "mx-4 mb-4 min-h-0 flex-1 overflow-auto rounded-xl border border-border",
+    "mx-4 mb-4 overflow-auto rounded-xl border border-border",
     className,
   );
 
