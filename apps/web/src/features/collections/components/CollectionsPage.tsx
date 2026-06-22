@@ -111,7 +111,6 @@ export function CollectionsPage() {
           <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3">
             {activeCollections.map((collection) => (
               <SystemCollectionCard
-                activeTabLabel={activeTabLabel}
                 collection={collection}
                 key={collection.id}
               />
@@ -147,74 +146,36 @@ function UserCollectionCard({
   collection: CollectionSummary;
 }) {
   return (
-    <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            My collection
-          </p>
-          <h2 className="text-xl font-bold">{collection.name}</h2>
-        </div>
-      </div>
-
-      <p className="mb-5 min-h-12 text-sm text-muted-foreground">
-        {collection.description ??
-          `Review ${collection.itemCount} words in this collection.`}
-      </p>
-
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-semibold">{collection.itemCount} words</p>
-        <Link
-          className={secondaryTextButtonClassName()}
-          href={`/collections/${getCollectionSlug(collection)}`}
-        >
-          View words
-        </Link>
-      </div>
-    </article>
+    <Link
+      className="block rounded-xl border border-border p-5 transition hover:bg-muted"
+      href={`/collections/${getCollectionSlug(collection)}`}
+    >
+      <h2 className="text-xl font-bold">{collection.name}</h2>
+      <p className="mt-5 text-sm font-semibold">{collection.itemCount} words</p>
+    </Link>
   );
 }
 
 function SystemCollectionCard({
-  activeTabLabel,
   collection,
 }: {
-  activeTabLabel: string;
   collection: CollectionSummary;
 }) {
-  const categoryLabel = collection.source ?? activeTabLabel;
-
   return (
-    <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {categoryLabel}
-          </p>
-          <h2 className="text-xl font-bold">{collection.name}</h2>
-        </div>
+    <Link
+      className="block rounded-xl border border-border p-5 transition hover:bg-muted"
+      href={`/collections/${getCollectionSlug(collection)}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-xl font-bold">{collection.name}</h2>
         {collection.cefrLevel ? (
           <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
             {collection.cefrLevel}
           </span>
         ) : null}
       </div>
-
-      <p className="mb-5 min-h-12 text-sm text-muted-foreground">
-        {collection.description ??
-          `Review ${collection.itemCount} words in this collection.`}
-      </p>
-
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-semibold">{collection.itemCount} words</p>
-        <Link
-          className={secondaryTextButtonClassName()}
-          href={`/collections/${getCollectionSlug(collection)}`}
-        >
-          View words
-        </Link>
-      </div>
-    </article>
+      <p className="mt-5 text-sm font-semibold">{collection.itemCount} words</p>
+    </Link>
   );
 }
 
