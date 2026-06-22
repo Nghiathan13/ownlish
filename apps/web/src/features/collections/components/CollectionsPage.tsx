@@ -26,7 +26,6 @@ import {
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { DeleteForeverIcon } from "@/shared/ui/icons/DeleteForeverIcon";
 import { PageShell } from "@/shared/ui/PageShell";
-import { Panel } from "@/shared/ui/Panel";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 export function CollectionsPage() {
@@ -74,8 +73,7 @@ export function CollectionsPage() {
 
   return (
     <PageShell>
-      <Panel>
-        <div className="mb-4 flex flex-wrap gap-2 px-4">
+      <div className="mb-4 flex flex-wrap gap-2 px-4">
           {collectionCategoryTabs.map((tab) => (
             <button
               className={
@@ -95,9 +93,11 @@ export function CollectionsPage() {
         </div>
 
         {isLoadingCollections ? (
-          <p className="text-muted-foreground">Loading collections...</p>
+          <p className="px-4 text-muted-foreground">Loading collections...</p>
         ) : collectionsError ? (
-          <StateMessage message={collectionsError} onRetry={reloadCollections} />
+          <div className="px-4">
+            <StateMessage message={collectionsError} onRetry={reloadCollections} />
+          </div>
         ) : isUserTab ? (
           <div className="mb-4 grid gap-4 px-4">
             {deleteError ? (
@@ -126,7 +126,7 @@ export function CollectionsPage() {
             </div>
           </div>
         ) : activeCollections.length === 0 ? (
-          <div className="rounded-xl border border-border p-6">
+          <div className="mx-4 rounded-xl border border-border p-6">
             <h2 className="mb-2 text-xl font-semibold">
               No {activeTabLabel} collections yet.
             </h2>
@@ -144,8 +144,6 @@ export function CollectionsPage() {
             ))}
           </div>
         )}
-      </Panel>
-
       <CreateCollectionModal
         isOpen={isCreateCollectionOpen}
         onClose={() => setIsCreateCollectionOpen(false)}

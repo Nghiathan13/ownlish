@@ -17,9 +17,9 @@ import {
   useImportCollection,
 } from "@/features/collections/hooks/useCollections";
 import { CollectionWordsPanel } from "@/features/collections/words/components/CollectionWordsPanel";
-import { secondaryTextButtonClassName } from "@/shared/ui/button";
+import { iconTextButtonClassName, secondaryTextButtonClassName } from "@/shared/ui/button";
+import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { PageShell } from "@/shared/ui/PageShell";
-import { Panel } from "@/shared/ui/Panel";
 
 type CollectionDetailPageProps = {
   collectionId: string;
@@ -112,15 +112,19 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
 
   return (
     <PageShell fillViewport>
-      <Panel className="flex min-h-0 flex-1 flex-col">
-        <BackToCollectionsLink />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="mb-4 shrink-0 px-4">
+          <BackToCollectionsLink />
+        </div>
 
         {isLoadingCollections ? (
-          <p className="text-muted-foreground">Loading collection...</p>
+          <p className="px-4 text-muted-foreground">Loading collection...</p>
         ) : collectionsError ? (
-          <StateMessage message={collectionsError} onRetry={reloadCollections} />
+          <div className="px-4">
+            <StateMessage message={collectionsError} onRetry={reloadCollections} />
+          </div>
         ) : !collectionSummary ? (
-          <div className="rounded-xl border border-border p-6">
+          <div className="mx-4 rounded-xl border border-border p-6">
             <h1 className="mb-2 text-xl font-semibold">Collection not found.</h1>
             <p className="text-muted-foreground">
               Go back to collections and choose an available set.
@@ -134,12 +138,14 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
             userCollections={userOwnedCollections}
           />
         ) : isLoadingCollectionDetail ? (
-          <p className="text-muted-foreground">Loading words...</p>
+          <p className="px-4 text-muted-foreground">Loading words...</p>
         ) : collectionDetailError ? (
-          <StateMessage
-            message={collectionDetailError}
-            onRetry={reloadCollectionDetail}
-          />
+          <div className="px-4">
+            <StateMessage
+              message={collectionDetailError}
+              onRetry={reloadCollectionDetail}
+            />
+          </div>
         ) : collectionDetail ? (
           <SystemCollectionWordsPanel
             key={collectionDetail.id}
@@ -154,7 +160,7 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
             words={collectionDetail.catalogWords}
           />
         ) : null}
-      </Panel>
+      </div>
     </PageShell>
   );
 }
@@ -162,9 +168,13 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
 function BackToCollectionsLink() {
   return (
     <Link
-      className="mb-4 inline-flex text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+      className={iconTextButtonClassName(
+        "w-fit",
+        "border-foreground bg-foreground text-background",
+      )}
       href="/collections"
     >
+      <ArrowBackIcon />
       Back to collections
     </Link>
   );

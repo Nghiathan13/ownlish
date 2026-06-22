@@ -167,7 +167,7 @@ export function CollectionWordsPanel({
 
   return (
     <div className={classNames("flex min-h-0 flex-col", className)}>
-      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 items-center gap-2">
           {userCollections.length > 0 ? (
             <ImportTargetCollectionSelect
@@ -260,7 +260,7 @@ export function CollectionWordsPanel({
         </Modal>
       ) : null}
 
-      <div className="mt-4 flex min-h-0 flex-1 flex-col">
+      <div className="mb-4 flex min-h-0 flex-1 flex-col px-4">
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
           {isInitialLoading || loadError || words.length === 0 ? (
             <VocabularyStateBlock
@@ -296,22 +296,22 @@ export function CollectionWordsPanel({
             </div>
           )}
         </div>
-
-        {!isInitialLoading && !loadError && words.length > 0 ? (
-          <div className="mt-4 shrink-0">
-            <VocabularyPagination
-              canGoNext={canGoNext}
-              canGoPrevious={canGoPrevious}
-              offset={offset}
-              onNext={nextPage}
-              onPageSizeChange={setPageSize}
-              onPrevious={previousPage}
-              pageSize={pageSize}
-              total={totalWords}
-            />
-          </div>
-        ) : null}
       </div>
+
+      {!isInitialLoading && !loadError && words.length > 0 ? (
+        <div className="mb-4 shrink-0 px-4">
+          <VocabularyPagination
+            canGoNext={canGoNext}
+            canGoPrevious={canGoPrevious}
+            offset={offset}
+            onNext={nextPage}
+            onPageSizeChange={setPageSize}
+            onPrevious={previousPage}
+            pageSize={pageSize}
+            total={totalWords}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
