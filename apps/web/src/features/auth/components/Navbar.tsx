@@ -213,7 +213,9 @@ export function Navbar() {
                 onClick={() => {
                   void logout();
                 }}
-                className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                className={textButtonClassName(
+                  "border-border bg-transparent text-foreground hover:bg-muted",
+                )}
               >
                 Logout
               </button>
@@ -222,7 +224,9 @@ export function Navbar() {
             pathname !== "/login" && (
               <Link
                 href="/login"
-                className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-90"
+                className={textButtonClassName(
+                  "border-foreground bg-foreground text-background",
+                )}
               >
                 Sign in
               </Link>
