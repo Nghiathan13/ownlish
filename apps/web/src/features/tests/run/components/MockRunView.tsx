@@ -13,7 +13,7 @@ import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {
   getSessionQuestionNumber,
 } from "@/features/tests/run/lib/sessionQuestionPosition";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { Modal } from "@/shared/ui/Modal";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -340,9 +340,15 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
         <Panel>
           <p className="text-muted-foreground">{mock.loadError}</p>
           <div className="mt-4">
-            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+            <button
+              className={textButtonClassName(
+                "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
+              onClick={() => router.push("/tests")}
+              type="button"
+            >
               Back to tests
-            </Button>
+            </button>
           </div>
         </Panel>
       </PageShell>

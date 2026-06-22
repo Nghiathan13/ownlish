@@ -14,8 +14,7 @@ import {
   usePracticeQuestionNav,
 } from "@/features/tests/run/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
-import { Button } from "@/shared/ui/Button";
-import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconTextButtonClassName, textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { BilingualIcon } from "@/shared/ui/icons/BilingualIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
@@ -71,15 +70,17 @@ export function Navbar() {
                   Exit
                 </button>
               ) : (
-                <Button
-                  className="py-2 text-base font-normal"
+                <button
+                  className={textButtonClassName(
+                    "border-foreground bg-foreground text-background",
+                  )}
                   onClick={() => {
                     void practiceFinish?.finish();
                   }}
                   type="button"
                 >
                   Finish
-                </Button>
+                </button>
               )}
               {practiceExit?.practiceTitle || practiceFinish?.mockTitle ? (
                 <div className="flex items-center gap-4">

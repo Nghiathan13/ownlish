@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 
 type ReviewStateBlockProps = {
   error: string | null;
@@ -21,14 +21,16 @@ export function ReviewStateBlock({
     return (
       <div className="grid gap-4">
         <p className="text-sm text-danger">{error}</p>
-        <Button
+        <button
           type="button"
-          variant="secondary"
+          className={textButtonClassName(
+            "w-fit",
+            "border-border bg-transparent text-foreground hover:bg-muted",
+          )}
           onClick={onRetry}
-          className="w-fit"
         >
           Retry
-        </Button>
+        </button>
       </div>
     );
   }

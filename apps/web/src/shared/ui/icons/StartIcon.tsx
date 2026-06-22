@@ -1,6 +1,4 @@
 import type { SVGProps } from "react";
-import { classNames } from "@/shared/lib/classNames";
-
 type StartIconProps = SVGProps<SVGSVGElement>;
 
 export function StartIcon({ className, ...props }: StartIconProps) {
@@ -10,7 +8,7 @@ export function StartIcon({ className, ...props }: StartIconProps) {
       viewBox="0 -960 960 960"
       fill="currentColor"
       aria-hidden
-      className={classNames("block size-3.5 shrink-0", className)}
+      className={className}
       {...props}
     >
       <path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" />

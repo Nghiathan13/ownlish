@@ -1,6 +1,4 @@
 import type { SVGProps } from "react";
-import { classNames } from "@/shared/lib/classNames";
-
 type ArrowForwardIconProps = SVGProps<SVGSVGElement>;
 
 export function ArrowForwardIcon({ className, ...props }: ArrowForwardIconProps) {
@@ -10,7 +8,7 @@ export function ArrowForwardIcon({ className, ...props }: ArrowForwardIconProps)
       viewBox="0 -960 960 960"
       fill="currentColor"
       aria-hidden
-      className={classNames("block size-3.5 shrink-0", className)}
+      className={className}
       {...props}
     >
       <path d="M647-440H160v-80h487L423-744l57-56 320 320-320 320-57-56 224-224Z" />

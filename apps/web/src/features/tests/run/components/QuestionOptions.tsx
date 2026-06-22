@@ -88,7 +88,7 @@ function OptionAnswerIcon({
     return (
       <RightIcon
         className={classNames(
-          "mt-0.5 shrink-0",
+          "mt-0.5 size-4 shrink-0",
           statusColorClasses.success.text,
           iconOffsetClass,
         )}
@@ -100,7 +100,7 @@ function OptionAnswerIcon({
     return (
       <WrongIcon
         className={classNames(
-          "mt-0.5 shrink-0",
+          "mt-0.5 size-4 shrink-0",
           statusColorClasses.danger.text,
           iconOffsetClass,
         )}
@@ -110,7 +110,10 @@ function OptionAnswerIcon({
 
   return (
     <CircleIcon
-      className={classNames("mt-0.5 shrink-0 text-foreground", iconOffsetClass)}
+      className={classNames(
+        "mt-0.5 size-4 shrink-0 text-foreground",
+        iconOffsetClass,
+      )}
       selected={isSelected && !showGrading}
     />
   );

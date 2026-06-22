@@ -1,6 +1,4 @@
 import type { SVGProps } from "react";
-import { classNames } from "@/shared/lib/classNames";
-
 type CloseIconProps = SVGProps<SVGSVGElement>;
 
 export function CloseIcon({ className, ...props }: CloseIconProps) {
@@ -10,7 +8,7 @@ export function CloseIcon({ className, ...props }: CloseIconProps) {
       viewBox="0 -960 960 960"
       fill="currentColor"
       aria-hidden
-      className={classNames("block size-3.5 shrink-0", className)}
+      className={className}
       {...props}
     >
       <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />

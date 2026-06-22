@@ -1,8 +1,7 @@
 "use client";
 
 import { Modal } from "@/shared/ui/Modal";
-import { Button } from "@/shared/ui/Button";
-import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconTextButtonClassName, textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
@@ -160,18 +159,19 @@ export function ToeicPartPickerModal({
 
         <div className="flex flex-wrap justify-end gap-2">
           {partPicker.intent === "practice" ? (
-            <Button
-              className="px-4 py-2"
+            <button
+              className={textButtonClassName(
+                "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
               disabled={partPicker.isReviewWrongDisabled}
               onClick={() => partPicker.startWithMode("review_wrong")}
               type="button"
-              variant="secondary"
             >
               Review wrong
               {partPicker.selectedWrongCount > 0
                 ? ` (${partPicker.selectedWrongCount})`
                 : ""}
-            </Button>
+            </button>
           ) : null}
           <button
             className={iconTextButtonClassName(

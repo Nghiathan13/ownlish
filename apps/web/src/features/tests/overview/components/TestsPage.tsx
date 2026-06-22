@@ -4,7 +4,7 @@ import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPa
 import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { PageShell } from "@/shared/ui/PageShell";
 
 export function TestsPage() {
@@ -34,13 +34,15 @@ export function TestsPage() {
         ) : overview.testsError ? (
           <div className="space-y-3">
             <p className="text-muted-foreground">{overview.testsError}</p>
-            <Button
+            <button
+              className={textButtonClassName(
+                "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
               onClick={() => void overview.reloadTests()}
               type="button"
-              variant="secondary"
             >
               Retry
-            </Button>
+            </button>
           </div>
         ) : overview.tests.length === 0 ? (
           <p className="text-muted-foreground">No tests available yet.</p>

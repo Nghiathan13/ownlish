@@ -11,7 +11,7 @@ import {
   normalizeSelectedParts,
   parseSelectedPartsParam,
 } from "@/features/tests/shared/lib/toeicParts";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -75,9 +75,15 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
         <Panel>
           <p className="text-muted-foreground">{testsError}</p>
           <div className="mt-4">
-            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+            <button
+              className={textButtonClassName(
+                "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
+              onClick={() => router.push("/tests")}
+              type="button"
+            >
               Back to tests
-            </Button>
+            </button>
           </div>
         </Panel>
       </PageShell>
@@ -92,9 +98,15 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
         <Panel>
           <p className="text-muted-foreground">Test not found.</p>
           <div className="mt-4">
-            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+            <button
+              className={textButtonClassName(
+                "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
+              onClick={() => router.push("/tests")}
+              type="button"
+            >
               Back to tests
-            </Button>
+            </button>
           </div>
         </Panel>
       </PageShell>
@@ -107,9 +119,15 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
         <Panel>
           <p className="text-muted-foreground">{copy.selectParts}</p>
           <div className="mt-4">
-            <Button onClick={() => router.push("/tests")} type="button" variant="secondary">
+            <button
+              className={textButtonClassName(
+                "border-border bg-transparent text-foreground hover:bg-muted",
+              )}
+              onClick={() => router.push("/tests")}
+              type="button"
+            >
               Back to tests
-            </Button>
+            </button>
           </div>
         </Panel>
       </PageShell>

@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 
 type VocabularyStateBlockProps = {
   hasSearch: boolean;
@@ -27,14 +27,16 @@ export function VocabularyStateBlock({
     return (
       <div className="grid gap-4 p-6">
         <p className="text-sm text-danger">{error}</p>
-        <Button
+        <button
           type="button"
-          variant="secondary"
+          className={textButtonClassName(
+            "w-fit",
+            "border-border bg-transparent text-foreground hover:bg-muted",
+          )}
           onClick={onRetry}
-          className="w-fit"
         >
           Retry
-        </Button>
+        </button>
       </div>
     );
   }

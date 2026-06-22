@@ -10,7 +10,7 @@ import {
   useCollectionsList,
   useImportCollection,
 } from "@/features/collections/hooks/useCollections";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 import { TextInput } from "@/shared/ui/TextInput";
@@ -116,8 +116,11 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
                   {collectionDetail.description}
                 </p>
               </div>
-              <Button
-                className="w-fit"
+              <button
+                className={textButtonClassName(
+                  "w-fit",
+                  "border-foreground bg-foreground text-background",
+                )}
                 disabled={isImporting}
                 onClick={() => {
                   void handleImportClick();
@@ -125,7 +128,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
                 type="button"
               >
                 {isImporting ? "Importing..." : "Import collection"}
-              </Button>
+              </button>
             </div>
 
             {importResultMessage ? (
@@ -275,16 +278,18 @@ function StateMessage({
   return (
     <div className="grid gap-4 rounded-xl border border-border p-4">
       <p className="text-sm text-muted-foreground">{message}</p>
-      <Button
-        className="w-fit"
+      <button
+        className={textButtonClassName(
+          "w-fit",
+          "border-border bg-transparent text-foreground hover:bg-muted",
+        )}
         onClick={() => {
           void onRetry();
         }}
         type="button"
-        variant="secondary"
       >
         Retry
-      </Button>
+      </button>
     </div>
   );
 }

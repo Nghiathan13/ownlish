@@ -11,7 +11,7 @@ import {
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { classNames } from "@/shared/lib/classNames";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -123,16 +123,18 @@ function StateMessage({
   return (
     <div className="grid gap-4 rounded-xl border border-border p-4">
       <p className="text-sm text-muted-foreground">{message}</p>
-      <Button
-        className="w-fit"
+      <button
+        className={textButtonClassName(
+          "w-fit",
+          "border-border bg-transparent text-foreground hover:bg-muted",
+        )}
         onClick={() => {
           void onRetry();
         }}
         type="button"
-        variant="secondary"
       >
         Retry
-      </Button>
+      </button>
     </div>
   );
 }

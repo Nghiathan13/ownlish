@@ -61,6 +61,7 @@ export function QuestionTranslationPanel({
                 {isCorrect ? (
                   <RightIcon
                     className={classNames(
+                      "size-4",
                       statusColorClasses.success.text,
                       "-translate-y-[0.5px]",
                     )}

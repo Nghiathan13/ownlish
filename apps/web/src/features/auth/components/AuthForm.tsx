@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
 import { classNames } from "@/shared/lib/classNames";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 import { Field } from "@/shared/ui/Field";
 import { Panel } from "@/shared/ui/Panel";
 import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
@@ -92,24 +92,32 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
       </h1>
 
       <div className="my-6 flex gap-3" aria-label="Auth mode">
-        <Button
+        <button
           type="button"
-          variant={mode === "login" ? "primary" : "secondary"}
+          className={textButtonClassName(
+            mode === "login"
+              ? "border-foreground bg-foreground text-background"
+              : "border-border bg-transparent text-foreground hover:bg-muted",
+          )}
           onClick={() => switchMode("login")}
           aria-pressed={mode === "login"}
           disabled={isSubmitting}
         >
           Login
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          variant={mode === "register" ? "primary" : "secondary"}
+          className={textButtonClassName(
+            mode === "register"
+              ? "border-foreground bg-foreground text-background"
+              : "border-border bg-transparent text-foreground hover:bg-muted",
+          )}
           onClick={() => switchMode("register")}
           aria-pressed={mode === "register"}
           disabled={isSubmitting}
         >
           Register
-        </Button>
+        </button>
       </div>
 
       <form
@@ -168,13 +176,19 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           </p>
         ) : null}
 
-        <Button type="submit" disabled={isSubmitting}>
+        <button
+          type="submit"
+          className={textButtonClassName(
+            "border-foreground bg-foreground text-background",
+          )}
+          disabled={isSubmitting}
+        >
           {isSubmitting
             ? "Please wait..."
             : isRegister
               ? "Create account"
               : "Sign in"}
-        </Button>
+        </button>
       </form>
     </Panel>
   );

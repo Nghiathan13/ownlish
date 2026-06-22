@@ -1,6 +1,4 @@
 import type { SVGProps } from "react";
-import { classNames } from "@/shared/lib/classNames";
-
 type RemoveIconProps = SVGProps<SVGSVGElement>;
 
 export function RemoveIcon({ className, ...props }: RemoveIconProps) {
@@ -10,7 +8,7 @@ export function RemoveIcon({ className, ...props }: RemoveIconProps) {
       viewBox="0 -960 960 960"
       fill="currentColor"
       aria-hidden
-      className={classNames("block size-3.5 shrink-0", className)}
+      className={className}
       {...props}
     >
       <path d="M200-440v-80h560v80H200Z" />

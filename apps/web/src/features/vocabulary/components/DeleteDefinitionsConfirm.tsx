@@ -1,4 +1,4 @@
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 
 type DeleteDefinitionsConfirmProps = {
   count: number;
@@ -22,12 +22,25 @@ export function DeleteDefinitionsConfirm({
       </p>
 
       <div className="flex gap-3">
-        <Button type="button" disabled={isDeleting} onClick={onConfirm}>
+        <button
+          type="button"
+          className={textButtonClassName(
+            "border-foreground bg-foreground text-background",
+          )}
+          disabled={isDeleting}
+          onClick={onConfirm}
+        >
           {isDeleting ? "Deleting..." : "Delete"}
-        </Button>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        </button>
+        <button
+          type="button"
+          className={textButtonClassName(
+            "border-border bg-transparent text-foreground hover:bg-muted",
+          )}
+          onClick={onCancel}
+        >
           Cancel
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ import {
   type VocabWordFormValues,
 } from "@/features/vocabulary/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
-import { Button } from "@/shared/ui/Button";
+import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
 
 type EditWordPanelProps = {
   definitionId: string;
@@ -108,17 +108,25 @@ export function EditWordPanel({
       ) : null}
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={isSubmitting}>
+        <button
+          type="submit"
+          className={textButtonClassName(
+            "border-foreground bg-foreground text-background",
+          )}
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Saving..." : "Save changes"}
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          variant="secondary"
+          className={textButtonClassName(
+            "border-border bg-transparent text-foreground hover:bg-muted",
+          )}
           onClick={onClose}
           disabled={isSubmitting}
         >
           Cancel
-        </Button>
+        </button>
       </div>
     </form>
   );
