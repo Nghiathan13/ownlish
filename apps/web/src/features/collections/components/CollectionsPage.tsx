@@ -10,18 +10,21 @@ import {
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { CreateCollectionModal } from "@/features/collections/components/CreateCollectionModal";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
+import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
 export function CollectionsPage() {
   const { status, user } = useAuthSession();
   const [activeCategory, setActiveCategory] =
-    useState<CollectionCategory>("my");
+    useState<CollectionCategory>("user");
+  const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
       isAuthenticated: isAuthenticatedStatus(status),
@@ -33,6 +36,7 @@ export function CollectionsPage() {
   const activeTabLabel =
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
     "Collections";
+  const isUserTab = activeCategory === "user";
 
   return (
     <PageShell>
@@ -58,17 +62,26 @@ export function CollectionsPage() {
           <p className="text-muted-foreground">Loading collections...</p>
         ) : collectionsError ? (
           <StateMessage message={collectionsError} onRetry={reloadCollections} />
+        ) : isUserTab ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <CreateCollectionCard
+              onClick={() => setIsCreateCollectionOpen(true)}
+            />
+            {activeCollections.map((collection) => (
+              <CollectionCard
+                activeTabLabel={activeTabLabel}
+                collection={collection}
+                key={collection.id}
+              />
+            ))}
+          </div>
         ) : activeCollections.length === 0 ? (
           <div className="rounded-xl border border-border p-6">
             <h2 className="mb-2 text-xl font-semibold">
-              {activeCategory === "my"
-                ? "No collections yet."
-                : `No ${activeTabLabel} collections yet.`}
+              No {activeTabLabel} collections yet.
             </h2>
             <p className="text-muted-foreground">
-              {activeCategory === "my"
-                ? "Your personal word sets will appear here."
-                : "This category is ready for future word sets."}
+              This category is ready for future word sets.
             </p>
           </div>
         ) : (
@@ -83,7 +96,25 @@ export function CollectionsPage() {
           </div>
         )}
       </Panel>
+
+      <CreateCollectionModal
+        isOpen={isCreateCollectionOpen}
+        onClose={() => setIsCreateCollectionOpen(false)}
+      />
     </PageShell>
+  );
+}
+
+function CreateCollectionCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-5 text-muted-foreground transition hover:border-foreground hover:bg-muted hover:text-foreground"
+      onClick={onClick}
+      type="button"
+    >
+      <AddIcon className="size-8" />
+      <span className="text-sm font-semibold">New collection</span>
+    </button>
   );
 }
 

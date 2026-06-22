@@ -52,6 +52,11 @@ export type ImportCollectionResult = {
   skipped: number;
 };
 
+export type CreateCollectionInput = {
+  name: string;
+  description?: string;
+};
+
 function parseCollectionKind(value: unknown): WordCollectionKind {
   if (value === "SYSTEM" || value === "USER") return value;
 
@@ -219,6 +224,14 @@ export function getCollection(
     signal: options.signal,
     token,
   }).then(parseCollectionDetail);
+}
+
+export function createCollection(token: string, input: CreateCollectionInput) {
+  return apiRequest("/collections", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  }).then(parseCollectionSummary);
 }
 
 export function importCollection(token: string, id: string) {

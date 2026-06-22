@@ -55,7 +55,7 @@ describe("collection display helpers", () => {
     );
   });
 
-  it("filters user collections for the my tab only", () => {
+  it("filters user collections for the user tab only", () => {
     const userCollection = makeCollection({
       id: "user-collection",
       kind: "USER",
@@ -67,7 +67,7 @@ describe("collection display helpers", () => {
     const systemCollection = makeCollection();
     const collections = [userCollection, systemCollection];
 
-    expect(filterCollectionsByCategory(collections, "my")).toEqual([
+    expect(filterCollectionsByCategory(collections, "user")).toEqual([
       userCollection,
     ]);
     expect(filterCollectionsByCategory(collections, "oxford")).toEqual([

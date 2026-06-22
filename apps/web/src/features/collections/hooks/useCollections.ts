@@ -2,9 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  createCollection,
   getCollection,
   importCollection,
   listCollections,
+  type CreateCollectionInput,
 } from "@/entities/collection/api/collections";
 import { getReviewQueueQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
 import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
@@ -85,6 +87,33 @@ export function useCollectionDetail({
     ),
     isLoadingCollectionDetail: collectionDetailQuery.isLoading,
     reloadCollectionDetail: collectionDetailQuery.refetch,
+  };
+}
+
+export function useCreateCollection({
+  userId,
+}: Pick<UseCollectionsParams, "userId">) {
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (input: CreateCollectionInput) =>
+      runAuthenticatedRequest({
+        request: (token) => createCollection(token, input),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: getCollectionsQueryKey(userId),
+      });
+    },
+  });
+
+  return {
+    createCollection: createMutation.mutateAsync,
+    createError: toErrorMessage(
+      createMutation.error,
+      "Cannot create collection.",
+    ),
+    isCreatingCollection: createMutation.isPending,
+    resetCreateState: createMutation.reset,
   };
 }
 

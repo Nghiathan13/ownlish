@@ -1,12 +1,12 @@
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 
-export type CollectionCategory = "my" | "oxford" | "toeic" | "ielts";
+export type CollectionCategory = "user" | "oxford" | "toeic" | "ielts";
 
 export const collectionCategoryTabs: Array<{
   key: CollectionCategory;
   label: string;
 }> = [
-  { key: "my", label: "My Collections" },
+  { key: "user", label: "My Collections" },
   { key: "oxford", label: "Oxford" },
   { key: "toeic", label: "TOEIC" },
   { key: "ielts", label: "IELTS" },
@@ -14,7 +14,7 @@ export const collectionCategoryTabs: Array<{
 
 export function getCollectionCategory(
   collection: CollectionSummary,
-): Exclude<CollectionCategory, "my"> | null {
+): Exclude<CollectionCategory, "user"> | null {
   const source = collection.source?.toLowerCase() ?? "";
   const name = collection.name.toLowerCase();
   const text = `${source} ${name}`;
@@ -30,7 +30,7 @@ export function filterCollectionsByCategory(
   collections: CollectionSummary[],
   category: CollectionCategory,
 ) {
-  if (category === "my") {
+  if (category === "user") {
     return collections.filter((collection) => collection.kind === "USER");
   }
 
