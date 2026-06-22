@@ -6,7 +6,7 @@ import type { CollectionSummary } from "@/entities/collection/api/collections";
 import {
   collectionCategoryTabs,
   filterCollectionsByCategory,
-  getCollectionSlug,
+  getCollectionPath,
   getDefaultUserCollection,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
@@ -55,7 +55,7 @@ export function CollectionsPage() {
     return filterCollectionsByCategory(collections, activeCategory);
   }, [activeCategory, collections]);
   const myVocabularyHref = defaultCollection
-    ? `/collections/${getCollectionSlug(defaultCollection)}`
+    ? getCollectionPath(defaultCollection)
     : null;
   const activeTabLabel =
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
@@ -181,7 +181,7 @@ function UserCollectionCard({
   userId: string | null;
 }) {
   const isDeleting = deletingCollectionId === collection.id;
-  const collectionHref = `/collections/${getCollectionSlug(collection)}`;
+  const collectionHref = getCollectionPath(collection);
 
   return (
     <article className="relative rounded-xl border border-border hover:bg-muted">
@@ -232,7 +232,7 @@ function SystemCollectionCard({
   return (
     <Link
       className="block rounded-xl border border-border p-4 hover:bg-muted"
-      href={`/collections/${getCollectionSlug(collection)}`}
+      href={getCollectionPath(collection)}
     >
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-xl font-bold">{collection.name}</h2>

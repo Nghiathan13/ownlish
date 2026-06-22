@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
-  findCollectionBySlug,
-  getCollectionSlug,
+  findCollectionById,
+  getCollectionPath,
   getDefaultUserCollection,
   getUserOwnedCollections,
 } from "@/entities/collection/lib/collectionDisplay";
@@ -22,10 +22,10 @@ import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
 type CollectionDetailPageProps = {
-  slug: string;
+  collectionId: string;
 };
 
-export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
+export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps) {
   const router = useRouter();
   const { status, user } = useAuthSession();
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
@@ -41,8 +41,8 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList(authParams);
   const collectionSummary = useMemo(() => {
-    return findCollectionBySlug(collections, slug);
-  }, [collections, slug]);
+    return findCollectionById(collections, collectionId);
+  }, [collectionId, collections]);
   const isUserCollection = collectionSummary?.kind === "USER";
   const {
     collectionDetail,
@@ -80,7 +80,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
       return;
     }
 
-    router.push(`/collections/${getCollectionSlug(nextCollection)}`);
+    router.push(getCollectionPath(nextCollection));
   }
 
   async function handleImportClick(catalogDefinitionIds?: string[]) {

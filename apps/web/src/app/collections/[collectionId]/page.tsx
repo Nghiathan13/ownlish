@@ -3,18 +3,18 @@ import { CollectionDetailPage } from "@/features/collections/components/Collecti
 
 type CollectionDetailRouteProps = {
   params: Promise<{
-    slug: string;
+    collectionId: string;
   }>;
 };
 
 export default async function CollectionDetailRoute({
   params,
 }: CollectionDetailRouteProps) {
-  const { slug } = await params;
+  const { collectionId } = await params;
 
   return (
     <RequireAuth>
-      <CollectionDetailPage slug={slug} />
+      <CollectionDetailPage collectionId={collectionId} />
     </RequireAuth>
   );
 }

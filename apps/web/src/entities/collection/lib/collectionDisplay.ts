@@ -59,29 +59,13 @@ export function getUserOwnedCollections(collections: CollectionSummary[]) {
     });
 }
 
-export function getCollectionSlug(collection: CollectionSummary) {
-  const source = toSlugPart(collection.source ?? collection.name);
-  const level = collection.cefrLevel ? toSlugPart(collection.cefrLevel) : "";
-  const slug = [source, level].filter(Boolean).join("-");
-
-  return slug || collection.id;
+export function getCollectionPath(collection: CollectionSummary) {
+  return `/collections/${collection.id}`;
 }
 
-export function findCollectionBySlug(
+export function findCollectionById(
   collections: CollectionSummary[],
-  slug: string,
+  collectionId: string,
 ) {
-  return (
-    collections.find((collection) => getCollectionSlug(collection) === slug) ??
-    collections.find((collection) => collection.id === slug) ??
-    null
-  );
-}
-
-function toSlugPart(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  return collections.find((collection) => collection.id === collectionId) ?? null;
 }

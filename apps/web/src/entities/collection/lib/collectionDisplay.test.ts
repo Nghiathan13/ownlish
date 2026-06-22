@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 import {
   filterCollectionsByCategory,
-  findCollectionBySlug,
+  findCollectionById,
   getCollectionCategory,
-  getCollectionSlug,
+  getCollectionPath,
   getUserOwnedCollections,
 } from "./collectionDisplay";
 
@@ -42,19 +42,17 @@ describe("collection display helpers", () => {
     ).toBe("ielts");
   });
 
-  it("builds a stable source-level slug", () => {
-    expect(getCollectionSlug(makeCollection())).toBe("oxford-a1");
+  it("builds a collection path from id", () => {
+    expect(getCollectionPath(makeCollection())).toBe("/collections/collection-id");
   });
 
-  it("finds a collection by slug or id fallback", () => {
+  it("finds a collection by id", () => {
     const collections = [makeCollection()];
 
-    expect(findCollectionBySlug(collections, "oxford-a1")?.id).toBe(
+    expect(findCollectionById(collections, "collection-id")?.id).toBe(
       "collection-id",
     );
-    expect(findCollectionBySlug(collections, "collection-id")?.id).toBe(
-      "collection-id",
-    );
+    expect(findCollectionById(collections, "missing-id")).toBeNull();
   });
 
   it("filters user collections for the user tab only", () => {
@@ -113,5 +111,31 @@ describe("collection display helpers", () => {
     expect(
       getUserOwnedCollections([studyCollection, defaultCollection]),
     ).toEqual([defaultCollection, studyCollection]);
+  });
+
+  it("keeps duplicate-named user collections distinct by id", () => {
+    const firstStudyList = makeCollection({
+      id: "study-list-1",
+      kind: "USER",
+      name: "Study List",
+      source: null,
+      cefrLevel: null,
+      isDefault: false,
+      isPublic: false,
+    });
+    const secondStudyList = makeCollection({
+      id: "study-list-2",
+      kind: "USER",
+      name: "Study List",
+      source: null,
+      cefrLevel: null,
+      isDefault: false,
+      isPublic: false,
+    });
+
+    expect(getCollectionPath(firstStudyList)).toBe("/collections/study-list-1");
+    expect(getCollectionPath(secondStudyList)).toBe("/collections/study-list-2");
+    expect(findCollectionById([firstStudyList, secondStudyList], "study-list-2"))
+      .toBe(secondStudyList);
   });
 });
