@@ -3,11 +3,13 @@ import { SearchIcon } from "@/shared/ui/icons/SearchIcon";
 import { TextInput } from "@/shared/ui/TextInput";
 
 type VocabularySearchProps = {
+  disabled?: boolean;
   onSearchChange: (search: string) => void;
   search: string;
 };
 
 export function VocabularySearch({
+  disabled = false,
   onSearchChange,
   search,
 }: VocabularySearchProps) {
@@ -18,6 +20,7 @@ export function VocabularySearch({
         id="vocabulary-search"
         aria-label="Search the word"
         className={classNames("rounded-md px-4 py-2 pl-11 pr-4 text-sm")}
+        disabled={disabled}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search the word"

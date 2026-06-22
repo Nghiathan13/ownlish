@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   findCollectionById,
   getCollectionPath,
@@ -21,10 +21,12 @@ import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type CollectionDetailContentProps = {
   collectionId: string;
+  onMounted?: () => void;
 };
 
 export function CollectionDetailContent({
   collectionId,
+  onMounted,
 }: CollectionDetailContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,6 +78,10 @@ export function CollectionDetailContent({
   }, [collections]);
   const resolvedImportTargetCollectionId =
     importTargetCollectionId ?? defaultCollection?.id ?? null;
+
+  useEffect(() => {
+    onMounted?.();
+  }, [onMounted]);
 
   function handleUserCollectionChange(nextCollectionId: string) {
     if (nextCollectionId === collectionId) {
