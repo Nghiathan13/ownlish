@@ -2,13 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import type { CreateVocabWordInput } from "@/entities/vocab/api/vocab";
-import { VocabWordFormFields } from "@/features/vocabulary/components/VocabWordFormFields";
+import { VocabWordFormFields } from "@/features/collections/words/components/VocabWordFormFields";
 import {
   EMPTY_VOCAB_WORD_FORM_VALUES,
   getVocabWordFormError,
   toCreateVocabWordInput,
   type VocabWordFormValues,
-} from "@/features/vocabulary/lib/vocabWordForm";
+} from "@/features/collections/words/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 

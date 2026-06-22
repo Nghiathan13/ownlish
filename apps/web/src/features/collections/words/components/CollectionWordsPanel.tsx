@@ -12,13 +12,13 @@ import {
   VocabularySearch,
   VocabularyStateBlock,
   VocabularyTable,
-} from "@/features/vocabulary/components";
-import { useVocabularyTableColumnVisibility } from "@/features/vocabulary/hooks/useVocabularyTableColumnVisibility";
-import { useVocabularyWords } from "@/features/vocabulary/hooks/useVocabularyWords";
+} from "@/features/collections/words/components";
+import { useVocabularyTableColumnVisibility } from "@/features/collections/words/hooks/useVocabularyTableColumnVisibility";
+import { useVocabularyWords } from "@/features/collections/words/hooks/useVocabularyWords";
 import {
   getSelectableDefinitions,
   getSelectedDefinitions,
-} from "@/features/vocabulary/lib/vocabularySelection";
+} from "@/features/collections/words/lib/vocabularySelection";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";

@@ -17,7 +17,7 @@ export type VocabWordFormValues = {
   word: string;
 };
 
-import { VOCAB_WORD_FORM_LIMITS } from "@/features/vocabulary/constants/vocabWordFormLimits";
+import { VOCAB_WORD_FORM_LIMITS } from "@/features/collections/words/constants/vocabWordFormLimits";
 
 export const EMPTY_VOCAB_WORD_FORM_VALUES: VocabWordFormValues = {
   band: "",

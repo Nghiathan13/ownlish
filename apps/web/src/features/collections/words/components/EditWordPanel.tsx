@@ -6,14 +6,14 @@ import type {
   VocabWord,
 } from "@/entities/vocab/api/vocab";
 import { isOxfordDefinitionSource } from "@/entities/vocab/lib/vocabSources";
-import { VocabWordFormFields } from "@/features/vocabulary/components/VocabWordFormFields";
+import { VocabWordFormFields } from "@/features/collections/words/components/VocabWordFormFields";
 import {
   getVocabWordDefinition,
   getVocabWordFormError,
   toUpdateVocabWordInput,
   toVocabWordFormValues,
   type VocabWordFormValues,
-} from "@/features/vocabulary/lib/vocabWordForm";
+} from "@/features/collections/words/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
 import {
   primaryTextButtonClassName,

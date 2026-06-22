@@ -2,7 +2,7 @@ import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab"
 import {
   expandWordsToDefinitionRows,
   type VocabularyDefinitionRow,
-} from "@/features/vocabulary/lib/vocabularyTableRows";
+} from "@/features/collections/words/lib/vocabularyTableRows";
 import {
   formatIpaDisplay,
   getIpaFieldValue,
@@ -10,13 +10,13 @@ import {
   getSharedIpaUs,
   hasUniformIpaUk,
   hasUniformIpaUs,
-} from "@/features/vocabulary/lib/vocabularyIpa";
+} from "@/features/collections/words/lib/vocabularyIpa";
 import {
   isColumnVisible,
   VOCABULARY_TABLE_COLUMN_WIDTH,
   type VocabularyColumnVisibility,
   type VocabularyToggleableColumnId,
-} from "@/features/vocabulary/lib/vocabularyTableColumns";
+} from "@/features/collections/words/lib/vocabularyTableColumns";
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";

@@ -2,7 +2,7 @@ import {
   VOCABULARY_TOGGLEABLE_COLUMNS,
   type VocabularyColumnVisibility,
   type VocabularyToggleableColumnId,
-} from "@/features/vocabulary/constants/vocabularyTableColumns";
+} from "@/features/collections/words/constants/vocabularyTableColumns";
 
 export {
   VOCABULARY_COLUMN_VISIBILITY_STORAGE_KEY,
@@ -10,7 +10,7 @@ export {
   VOCABULARY_TOGGLEABLE_COLUMNS,
   type VocabularyColumnVisibility,
   type VocabularyToggleableColumnId,
-} from "@/features/vocabulary/constants/vocabularyTableColumns";
+} from "@/features/collections/words/constants/vocabularyTableColumns";
 
 export function createDefaultColumnVisibility(): VocabularyColumnVisibility {
   return Object.fromEntries(

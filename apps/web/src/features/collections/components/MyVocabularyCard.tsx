@@ -1,18 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type MyVocabularyCardProps = {
-  isExpanded: boolean;
+  href: string | null;
   isLoadingWordCount: boolean;
-  onToggleViewWords: () => void;
   wordCount: number | null;
 };
 
 export function MyVocabularyCard({
-  isExpanded,
+  href,
   isLoadingWordCount,
-  onToggleViewWords,
   wordCount,
 }: MyVocabularyCardProps) {
   const wordCountLabel =
@@ -37,13 +36,15 @@ export function MyVocabularyCard({
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-semibold">{wordCountLabel}</p>
-        <button
-          className={secondaryTextButtonClassName()}
-          onClick={onToggleViewWords}
-          type="button"
-        >
-          {isExpanded ? "Hide words" : "View words"}
-        </button>
+        {href ? (
+          <Link className={secondaryTextButtonClassName()} href={href}>
+            View words
+          </Link>
+        ) : (
+          <span className={secondaryTextButtonClassName("pointer-events-none opacity-50")}>
+            View words
+          </span>
+        )}
       </div>
     </article>
   );

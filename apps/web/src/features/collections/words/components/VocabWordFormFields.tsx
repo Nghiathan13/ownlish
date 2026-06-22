@@ -1,5 +1,5 @@
-import { VOCAB_WORD_FORM_LIMITS } from "@/features/vocabulary/constants/vocabWordFormLimits";
-import type { VocabWordFormValues } from "@/features/vocabulary/lib/vocabWordForm";
+import { VOCAB_WORD_FORM_LIMITS } from "@/features/collections/words/constants/vocabWordFormLimits";
+import type { VocabWordFormValues } from "@/features/collections/words/lib/vocabWordForm";
 import { Field } from "@/shared/ui/Field";
 import { TextInput } from "@/shared/ui/TextInput";
 import { Textarea } from "@/shared/ui/Textarea";

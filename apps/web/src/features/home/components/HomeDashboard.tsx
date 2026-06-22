@@ -121,8 +121,8 @@ export function HomeDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link className={primaryTextButtonClassName()} href="/vocabulary">
-                  Manage vocabulary
+                <Link className={primaryTextButtonClassName()} href="/collections">
+                  Manage collections
                 </Link>
                 <Link className={secondaryTextButtonClassName()} href="/review">
                   Review due words

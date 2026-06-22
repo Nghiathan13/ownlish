@@ -7,7 +7,7 @@ import {
   toggleColumnVisibility,
   VOCABULARY_COLUMN_VISIBILITY_STORAGE_KEY,
   type VocabularyToggleableColumnId,
-} from "@/features/vocabulary/lib/vocabularyTableColumns";
+} from "@/features/collections/words/lib/vocabularyTableColumns";
 
 function readColumnVisibilityFromStorage() {
   if (typeof window === "undefined") {

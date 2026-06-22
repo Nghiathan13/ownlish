@@ -9,8 +9,8 @@ describe("getSafeAuthRedirectPath", () => {
 
   it("allows internal paths", () => {
     expect(getSafeAuthRedirectPath("/review")).toBe("/review");
-    expect(getSafeAuthRedirectPath("/vocabulary?search=test")).toBe(
-      "/vocabulary?search=test",
+    expect(getSafeAuthRedirectPath("/collections?search=test")).toBe(
+      "/collections?search=test",
     );
   });
 

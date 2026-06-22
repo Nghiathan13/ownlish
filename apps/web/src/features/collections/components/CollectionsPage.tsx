@@ -13,13 +13,8 @@ import {
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { CreateCollectionModal } from "@/features/collections/components/CreateCollectionModal";
 import { MyVocabularyCard } from "@/features/collections/components/MyVocabularyCard";
-import {
-  MY_VOCABULARY_CARD_ID,
-  type ExpandedCollectionCardId,
-} from "@/features/collections/constants/myVocabulary";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
-import { CollectionWordsPanel } from "@/features/vocabulary/components/CollectionWordsPanel";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -34,8 +29,6 @@ export function CollectionsPage() {
   const [activeCategory, setActiveCategory] =
     useState<CollectionCategory>("user");
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
-  const [expandedCardId, setExpandedCardId] =
-    useState<ExpandedCollectionCardId>(null);
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
       isAuthenticated,
@@ -52,44 +45,13 @@ export function CollectionsPage() {
   const activeCollections = useMemo(() => {
     return filterCollectionsByCategory(collections, activeCategory);
   }, [activeCategory, collections]);
-  const expandedCollectionId = useMemo(() => {
-    if (!expandedCardId) {
-      return null;
-    }
-
-    if (expandedCardId === MY_VOCABULARY_CARD_ID) {
-      return defaultCollection?.id ?? null;
-    }
-
-    return expandedCardId;
-  }, [defaultCollection, expandedCardId]);
-  const expandedCollection = useMemo(() => {
-    if (!expandedCollectionId) {
-      return null;
-    }
-
-    return (
-      collections.find((collection) => collection.id === expandedCollectionId) ??
-      null
-    );
-  }, [collections, expandedCollectionId]);
+  const myVocabularyHref = defaultCollection
+    ? `/collections/${getCollectionSlug(defaultCollection)}`
+    : null;
   const activeTabLabel =
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
     "Collections";
   const isUserTab = activeCategory === "user";
-  const isMyVocabularyExpanded = expandedCardId === MY_VOCABULARY_CARD_ID;
-
-  function toggleMyVocabularyExpanded() {
-    setExpandedCardId((current) =>
-      current === MY_VOCABULARY_CARD_ID ? null : MY_VOCABULARY_CARD_ID,
-    );
-  }
-
-  function toggleUserCollectionExpanded(collectionId: string) {
-    setExpandedCardId((current) =>
-      current === collectionId ? null : collectionId,
-    );
-  }
 
   return (
     <PageShell>
@@ -105,7 +67,6 @@ export function CollectionsPage() {
               key={tab.key}
               onClick={() => {
                 setActiveCategory(tab.key);
-                setExpandedCardId(null);
               }}
               type="button"
             >
@@ -122,45 +83,20 @@ export function CollectionsPage() {
           <div className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <MyVocabularyCard
-                isExpanded={isMyVocabularyExpanded}
+                href={myVocabularyHref}
                 isLoadingWordCount={isLoadingVocabStats}
-                onToggleViewWords={toggleMyVocabularyExpanded}
                 wordCount={vocabStats?.total ?? null}
               />
               {activeCollections.map((collection) => (
                 <UserCollectionCard
                   collection={collection}
-                  isExpanded={expandedCardId === collection.id}
                   key={collection.id}
-                  onToggleViewWords={() => {
-                    toggleUserCollectionExpanded(collection.id);
-                  }}
                 />
               ))}
               <CreateCollectionCard
                 onClick={() => setIsCreateCollectionOpen(true)}
               />
             </div>
-
-            {expandedCollectionId ? (
-              <Panel className="flex min-h-[32rem] flex-col">
-                {expandedCollection ? (
-                  <div className="mb-4">
-                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      {expandedCollection.isDefault
-                        ? "Default"
-                        : "My collection"}
-                    </p>
-                    <h2 className="text-2xl font-bold">
-                      {expandedCollection.isDefault
-                        ? "My Vocabulary"
-                        : expandedCollection.name}
-                    </h2>
-                  </div>
-                ) : null}
-                <CollectionWordsPanel collectionId={expandedCollectionId} />
-              </Panel>
-            ) : null}
           </div>
         ) : activeCollections.length === 0 ? (
           <div className="rounded-xl border border-border p-6">
@@ -207,12 +143,8 @@ function CreateCollectionCard({ onClick }: { onClick: () => void }) {
 
 function UserCollectionCard({
   collection,
-  isExpanded,
-  onToggleViewWords,
 }: {
   collection: CollectionSummary;
-  isExpanded: boolean;
-  onToggleViewWords: () => void;
 }) {
   return (
     <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
@@ -232,13 +164,12 @@ function UserCollectionCard({
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-semibold">{collection.itemCount} words</p>
-        <button
+        <Link
           className={secondaryTextButtonClassName()}
-          onClick={onToggleViewWords}
-          type="button"
+          href={`/collections/${getCollectionSlug(collection)}`}
         >
-          {isExpanded ? "Hide words" : "View words"}
-        </button>
+          View words
+        </Link>
       </div>
     </article>
   );

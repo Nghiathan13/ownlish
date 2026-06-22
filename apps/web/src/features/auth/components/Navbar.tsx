@@ -189,9 +189,6 @@ export function Navbar() {
             <Link href="/" className={linkClass("/")}>
               Dashboard
             </Link>
-            <Link href="/vocabulary" className={linkClass("/vocabulary")}>
-              Vocabulary
-            </Link>
             <Link href="/collections" className={linkClass("/collections")}>
               Collections
             </Link>
