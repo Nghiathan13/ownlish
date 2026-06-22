@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   getDefaultUserCollection,
   getUserOwnedCollections,
@@ -24,6 +25,8 @@ export default function ReviewPage() {
 }
 
 function ReviewPageContent() {
+  const searchParams = useSearchParams();
+  const collectionIdFromUrl = searchParams.get("collectionId");
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
@@ -40,8 +43,17 @@ function ReviewPageContent() {
   const defaultCollection = useMemo(() => {
     return getDefaultUserCollection(collections);
   }, [collections]);
+  const collectionIdFromUrlValue = useMemo(() => {
+    if (!collectionIdFromUrl) {
+      return null;
+    }
+
+    return userCollections.some((collection) => collection.id === collectionIdFromUrl)
+      ? collectionIdFromUrl
+      : null;
+  }, [collectionIdFromUrl, userCollections]);
   const resolvedCollectionId =
-    selectedCollectionId ?? defaultCollection?.id ?? null;
+    selectedCollectionId ?? collectionIdFromUrlValue ?? defaultCollection?.id ?? null;
   const {
     currentWord,
     error,

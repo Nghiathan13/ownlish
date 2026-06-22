@@ -13,11 +13,11 @@ import {
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { CreateCollectionModal } from "@/features/collections/components/CreateCollectionModal";
 import { MyVocabularyCard } from "@/features/collections/components/MyVocabularyCard";
+import { CollectionReviewLink } from "@/features/collections/components/CollectionReviewLink";
 import {
   useCollectionsList,
   useDeleteCollection,
 } from "@/features/collections/hooks/useCollections";
-import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import {
   iconOnlyButtonClassName,
   primaryTextButtonClassName,
@@ -51,11 +51,6 @@ export function CollectionsPage() {
   const defaultCollection = useMemo(() => {
     return getDefaultUserCollection(collections);
   }, [collections]);
-  const { isLoading: isLoadingVocabStats, stats: vocabStats } = useVocabStats({
-    collectionId: defaultCollection?.id ?? null,
-    isAuthenticated,
-    userId: user?.id ?? null,
-  });
   const activeCollections = useMemo(() => {
     return filterCollectionsByCategory(collections, activeCategory);
   }, [activeCategory, collections]);
@@ -110,16 +105,19 @@ export function CollectionsPage() {
             ) : null}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <MyVocabularyCard
+                collectionId={defaultCollection?.id ?? null}
                 href={myVocabularyHref}
-                isLoadingWordCount={isLoadingVocabStats}
-                wordCount={vocabStats?.total ?? null}
+                isAuthenticated={isAuthenticated}
+                userId={user?.id ?? null}
               />
               {activeCollections.map((collection) => (
                 <UserCollectionCard
                   collection={collection}
                   deletingCollectionId={deletingCollectionId}
+                  isAuthenticated={isAuthenticated}
                   key={collection.id}
                   onDelete={handleDeleteCollection}
+                  userId={user?.id ?? null}
                 />
               ))}
               <CreateCollectionCard
@@ -172,13 +170,18 @@ function CreateCollectionCard({ onClick }: { onClick: () => void }) {
 function UserCollectionCard({
   collection,
   deletingCollectionId,
+  isAuthenticated,
   onDelete,
+  userId,
 }: {
   collection: CollectionSummary;
   deletingCollectionId: string | null;
+  isAuthenticated: boolean;
   onDelete: (collectionId: string) => void;
+  userId: string | null;
 }) {
   const isDeleting = deletingCollectionId === collection.id;
+  const collectionHref = `/collections/${getCollectionSlug(collection)}`;
 
   return (
     <article className="relative rounded-xl border border-border hover:bg-muted">
@@ -201,13 +204,19 @@ function UserCollectionCard({
       >
         <DeleteForeverIcon />
       </button>
-      <Link
-        className="block p-4"
-        href={`/collections/${getCollectionSlug(collection)}`}
-      >
+      <Link className="block p-4 pb-0" href={collectionHref}>
         <h2 className="pr-10 text-xl font-bold">{collection.name}</h2>
-        <p className="mt-5 text-sm font-semibold">{collection.itemCount} words</p>
       </Link>
+      <div className="flex items-center justify-between gap-4 p-4">
+        <Link className="text-sm font-semibold" href={collectionHref}>
+          {collection.itemCount} words
+        </Link>
+        <CollectionReviewLink
+          collectionId={collection.id}
+          isAuthenticated={isAuthenticated}
+          userId={userId}
+        />
+      </div>
     </article>
   );
 }
