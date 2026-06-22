@@ -113,8 +113,10 @@ export class VocabService {
 
   async listDueReviewWords(
     userId: string,
-    query: ListDueReviewWordsDto = {},
+    query: ListDueReviewWordsDto,
   ): Promise<ReviewDefinitionListResponse> {
+    await this.assertOwnedCollection(userId, query.collectionId);
+
     const limit = query.limit ?? 500;
     const offset = query.offset ?? 0;
     const where = {
@@ -124,6 +126,7 @@ export class VocabService {
       },
       vocabWord: {
         userId,
+        collectionId: query.collectionId,
       },
       OR: [
         {

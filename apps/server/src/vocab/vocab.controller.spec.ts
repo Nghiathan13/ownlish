@@ -113,6 +113,7 @@ describe('VocabController', () => {
       },
     };
     const query = {
+      collectionId: 'collection-id',
       limit: 10,
       offset: 0,
     };

@@ -218,6 +218,7 @@ describe('VocabService', () => {
     try {
       await expect(
         service.listDueReviewWords('user-id', {
+          collectionId,
           limit: 10,
           offset: 20,
         }),
@@ -240,6 +241,7 @@ describe('VocabService', () => {
             },
             vocabWord: {
               userId: 'user-id',
+              collectionId,
             },
             OR: [
               {

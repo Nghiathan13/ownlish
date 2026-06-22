@@ -549,7 +549,9 @@ describe('VocabController (e2e)', () => {
       .expect(200);
 
     await request(app.getHttpServer())
-      .get('/vocab/review/due?limit=10&offset=0')
+      .get(
+        `/vocab/review/due?limit=10&offset=0&collectionId=${defaultCollectionId}`,
+      )
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .expect((response) => {
