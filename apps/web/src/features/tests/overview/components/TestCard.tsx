@@ -6,7 +6,7 @@ import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
-import { iconOnlyButtonClassName, iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconOnlyButtonClassName, iconTextButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
 import {

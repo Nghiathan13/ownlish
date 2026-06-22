@@ -11,7 +11,7 @@ import {
   normalizeSelectedParts,
   parseSelectedPartsParam,
 } from "@/features/tests/shared/lib/toeicParts";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -76,9 +76,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
           <p className="text-muted-foreground">{testsError}</p>
           <div className="mt-4">
             <button
-              className={textButtonClassName(
-                "border-border bg-transparent text-foreground hover:bg-muted",
-              )}
+              className={secondaryTextButtonClassName()}
               onClick={() => router.push("/tests")}
               type="button"
             >
@@ -99,9 +97,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
           <p className="text-muted-foreground">Test not found.</p>
           <div className="mt-4">
             <button
-              className={textButtonClassName(
-                "border-border bg-transparent text-foreground hover:bg-muted",
-              )}
+              className={secondaryTextButtonClassName()}
               onClick={() => router.push("/tests")}
               type="button"
             >
@@ -120,9 +116,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
           <p className="text-muted-foreground">{copy.selectParts}</p>
           <div className="mt-4">
             <button
-              className={textButtonClassName(
-                "border-border bg-transparent text-foreground hover:bg-muted",
-              )}
+              className={secondaryTextButtonClassName()}
               onClick={() => router.push("/tests")}
               type="button"
             >

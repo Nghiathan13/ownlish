@@ -4,7 +4,10 @@ import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPa
 import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 
 export function TestsPage() {
@@ -14,16 +17,10 @@ export function TestsPage() {
   return (
     <PageShell>
       <div className="flex flex-col items-start gap-2 p-4">
-        <button
-          className="rounded-lg border border-foreground bg-foreground px-4 py-2 text-sm font-semibold text-background"
-          type="button"
-        >
+        <button className={primaryTextButtonClassName()} type="button">
           TOEIC
         </button>
-        <button
-          className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground"
-          type="button"
-        >
+        <button className={secondaryTextButtonClassName()} type="button">
           2026
         </button>
       </div>
@@ -35,9 +32,7 @@ export function TestsPage() {
           <div className="space-y-3">
             <p className="text-muted-foreground">{overview.testsError}</p>
             <button
-              className={textButtonClassName(
-                "border-border bg-transparent text-foreground hover:bg-muted",
-              )}
+              className={secondaryTextButtonClassName()}
               onClick={() => void overview.reloadTests()}
               type="button"
             >

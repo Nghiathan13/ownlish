@@ -10,7 +10,7 @@ import {
   type VocabWordFormValues,
 } from "@/features/vocabulary/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { primaryTextButtonClassName } from "@/shared/ui/button";
 
 type AddWordFormProps = {
   onCreate: (input: CreateVocabWordInput) => Promise<void>;
@@ -89,9 +89,7 @@ export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
       <div>
         <button
           type="submit"
-          className={textButtonClassName(
-            "border-foreground bg-foreground text-background",
-          )}
+          className={primaryTextButtonClassName()}
           disabled={isSubmitting}
         >
           {isSubmitting ? "Adding..." : "Add word"}

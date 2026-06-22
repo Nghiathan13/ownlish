@@ -10,8 +10,10 @@ import {
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
-import { classNames } from "@/shared/lib/classNames";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -39,12 +41,11 @@ export function CollectionsPage() {
         <div className="mb-6 flex flex-wrap gap-2">
           {collectionCategoryTabs.map((tab) => (
             <button
-              className={classNames(
-                "rounded-lg border px-3.5 py-2 text-sm font-semibold transition",
+              className={
                 activeCategory === tab.key
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-transparent text-foreground hover:bg-muted",
-              )}
+                  ? primaryTextButtonClassName()
+                  : secondaryTextButtonClassName()
+              }
               key={tab.key}
               onClick={() => setActiveCategory(tab.key)}
               type="button"
@@ -98,7 +99,7 @@ export function CollectionsPage() {
                     {collection.itemCount} words
                   </p>
                   <Link
-                    className="inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-3.5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-background"
+                    className={secondaryTextButtonClassName()}
                     href={`/collections/${getCollectionSlug(collection)}`}
                   >
                     View words
@@ -124,10 +125,7 @@ function StateMessage({
     <div className="grid gap-4 rounded-xl border border-border p-4">
       <p className="text-sm text-muted-foreground">{message}</p>
       <button
-        className={textButtonClassName(
-          "w-fit",
-          "border-border bg-transparent text-foreground hover:bg-muted",
-        )}
+        className={secondaryTextButtonClassName("w-fit")}
         onClick={() => {
           void onRetry();
         }}

@@ -4,7 +4,10 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
 import { classNames } from "@/shared/lib/classNames";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import { Field } from "@/shared/ui/Field";
 import { Panel } from "@/shared/ui/Panel";
 import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
@@ -94,11 +97,11 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
       <div className="my-6 flex gap-3" aria-label="Auth mode">
         <button
           type="button"
-          className={textButtonClassName(
+          className={
             mode === "login"
-              ? "border-foreground bg-foreground text-background"
-              : "border-border bg-transparent text-foreground hover:bg-muted",
-          )}
+              ? primaryTextButtonClassName()
+              : secondaryTextButtonClassName()
+          }
           onClick={() => switchMode("login")}
           aria-pressed={mode === "login"}
           disabled={isSubmitting}
@@ -107,11 +110,11 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
         </button>
         <button
           type="button"
-          className={textButtonClassName(
+          className={
             mode === "register"
-              ? "border-foreground bg-foreground text-background"
-              : "border-border bg-transparent text-foreground hover:bg-muted",
-          )}
+              ? primaryTextButtonClassName()
+              : secondaryTextButtonClassName()
+          }
           onClick={() => switchMode("register")}
           aria-pressed={mode === "register"}
           disabled={isSubmitting}
@@ -178,9 +181,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
 
         <button
           type="submit"
-          className={textButtonClassName(
-            "border-foreground bg-foreground text-background",
-          )}
+          className={primaryTextButtonClassName()}
           disabled={isSubmitting}
         >
           {isSubmitting

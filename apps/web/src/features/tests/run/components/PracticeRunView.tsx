@@ -29,7 +29,7 @@ import {
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
@@ -231,9 +231,7 @@ export function PracticeRunView({
           </p>
           <div className="mt-4">
             <button
-              className={textButtonClassName(
-                "border-border bg-transparent text-foreground hover:bg-muted",
-              )}
+              className={secondaryTextButtonClassName()}
               onClick={() => router.push("/tests")}
               type="button"
             >

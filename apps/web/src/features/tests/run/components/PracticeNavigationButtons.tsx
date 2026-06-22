@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PracticeQuestionGridPanel } from "@/features/tests/run/components/PracticeQuestionGridPanel";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
-import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { GridViewIcon } from "@/shared/ui/icons/GridViewIcon";

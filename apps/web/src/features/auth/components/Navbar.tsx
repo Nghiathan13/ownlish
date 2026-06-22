@@ -14,7 +14,11 @@ import {
   usePracticeQuestionNav,
 } from "@/features/tests/run/providers/PracticeExitProvider";
 import { classNames } from "@/shared/lib/classNames";
-import { iconTextButtonClassName, textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  iconTextButtonClassName,
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { BilingualIcon } from "@/shared/ui/icons/BilingualIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
@@ -71,9 +75,7 @@ export function Navbar() {
                 </button>
               ) : (
                 <button
-                  className={textButtonClassName(
-                    "border-foreground bg-foreground text-background",
-                  )}
+                  className={primaryTextButtonClassName()}
                   onClick={() => {
                     void practiceFinish?.finish();
                   }}
@@ -213,9 +215,7 @@ export function Navbar() {
                 onClick={() => {
                   void logout();
                 }}
-                className={textButtonClassName(
-                  "border-border bg-transparent text-foreground hover:bg-muted",
-                )}
+                className={secondaryTextButtonClassName()}
               >
                 Logout
               </button>
@@ -224,9 +224,7 @@ export function Navbar() {
             pathname !== "/login" && (
               <Link
                 href="/login"
-                className={textButtonClassName(
-                  "border-foreground bg-foreground text-background",
-                )}
+                className={primaryTextButtonClassName()}
               >
                 Sign in
               </Link>

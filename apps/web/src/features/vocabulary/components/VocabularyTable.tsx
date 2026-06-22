@@ -20,7 +20,7 @@ import {
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
-import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type VocabularyTableProps = {

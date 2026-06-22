@@ -4,7 +4,7 @@ import {
   isVocabularyPageSize,
   type VocabularyPageSize,
 } from "@/entities/vocab/lib/vocabPagination";
-import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 

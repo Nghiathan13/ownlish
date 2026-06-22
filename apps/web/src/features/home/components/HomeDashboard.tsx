@@ -5,16 +5,13 @@ import type { ReactNode } from "react";
 import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import { classNames } from "@/shared/lib/classNames";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
 import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
-
-const actionLinkClassName =
-  "inline-flex items-center justify-center rounded-lg border px-3.5 py-2.5 text-sm font-semibold transition";
-const primaryLinkClassName =
-  "border-foreground bg-foreground text-background";
-const secondaryLinkClassName =
-  "border-border bg-transparent text-foreground hover:bg-muted";
 
 export function HomeDashboard() {
   const { status, user } = useAuthSession();
@@ -48,10 +45,7 @@ export function HomeDashboard() {
             Sign in to manage your words, review due vocabulary, and track your
             learning progress.
           </p>
-          <Link
-            className={classNames(actionLinkClassName, primaryLinkClassName)}
-            href="/login"
-          >
+          <Link className={primaryTextButtonClassName()} href="/login">
             Sign in
           </Link>
         </Panel>
@@ -69,7 +63,7 @@ export function HomeDashboard() {
             <DashboardMessage>
               <span>{error}</span>
               <button
-                className={classNames(actionLinkClassName, secondaryLinkClassName)}
+                className={secondaryTextButtonClassName()}
                 onClick={() => void reload()}
                 type="button"
               >
@@ -86,10 +80,7 @@ export function HomeDashboard() {
                   Add your first word to start tracking review progress.
                 </p>
               </div>
-              <Link
-                className={classNames(actionLinkClassName, primaryLinkClassName)}
-                href="/collections"
-              >
+              <Link className={primaryTextButtonClassName()} href="/collections">
                 Browse collections
               </Link>
             </DashboardMessage>
@@ -122,16 +113,10 @@ export function HomeDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link
-                  className={classNames(actionLinkClassName, primaryLinkClassName)}
-                  href="/vocabulary"
-                >
+                <Link className={primaryTextButtonClassName()} href="/vocabulary">
                   Manage vocabulary
                 </Link>
-                <Link
-                  className={classNames(actionLinkClassName, secondaryLinkClassName)}
-                  href="/review"
-                >
+                <Link className={secondaryTextButtonClassName()} href="/review">
                   Review due words
                 </Link>
               </div>

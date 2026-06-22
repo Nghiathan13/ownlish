@@ -21,7 +21,7 @@ import {
   getSelectedDefinitions,
 } from "@/features/vocabulary/lib/vocabularySelection";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { iconTextButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconTextButtonClassName } from "@/shared/ui/button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { Modal } from "@/shared/ui/Modal";

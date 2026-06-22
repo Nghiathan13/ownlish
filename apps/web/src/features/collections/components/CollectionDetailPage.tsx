@@ -10,7 +10,10 @@ import {
   useCollectionsList,
   useImportCollection,
 } from "@/features/collections/hooks/useCollections";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 import { TextInput } from "@/shared/ui/TextInput";
@@ -117,10 +120,7 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
                 </p>
               </div>
               <button
-                className={textButtonClassName(
-                  "w-fit",
-                  "border-foreground bg-foreground text-background",
-                )}
+                className={primaryTextButtonClassName("w-fit")}
                 disabled={isImporting}
                 onClick={() => {
                   void handleImportClick();
@@ -279,10 +279,7 @@ function StateMessage({
     <div className="grid gap-4 rounded-xl border border-border p-4">
       <p className="text-sm text-muted-foreground">{message}</p>
       <button
-        className={textButtonClassName(
-          "w-fit",
-          "border-border bg-transparent text-foreground hover:bg-muted",
-        )}
+        className={secondaryTextButtonClassName("w-fit")}
         onClick={() => {
           void onRetry();
         }}

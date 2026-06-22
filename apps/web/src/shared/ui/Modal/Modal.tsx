@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useId } from "react";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
-import { iconOnlyButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
 
 type ModalProps = {
   children: ReactNode;

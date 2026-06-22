@@ -2,7 +2,10 @@ import type {
   VocabWord,
   VocabWordDefinition,
 } from "@/entities/vocab/api/vocab";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 
 type DeleteDefinitionConfirmProps = {
   definition: VocabWordDefinition;
@@ -40,9 +43,7 @@ export function DeleteDefinitionConfirm({
       <div className="flex gap-3">
         <button
           type="button"
-          className={textButtonClassName(
-            "border-foreground bg-foreground text-background",
-          )}
+          className={primaryTextButtonClassName()}
           disabled={isDeleting}
           onClick={() => onConfirm(word, definition)}
         >
@@ -50,9 +51,7 @@ export function DeleteDefinitionConfirm({
         </button>
         <button
           type="button"
-          className={textButtonClassName(
-            "border-border bg-transparent text-foreground hover:bg-muted",
-          )}
+          className={secondaryTextButtonClassName()}
           onClick={onCancel}
         >
           Cancel

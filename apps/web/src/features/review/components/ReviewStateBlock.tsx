@@ -1,4 +1,4 @@
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type ReviewStateBlockProps = {
   error: string | null;
@@ -23,10 +23,7 @@ export function ReviewStateBlock({
         <p className="text-sm text-danger">{error}</p>
         <button
           type="button"
-          className={textButtonClassName(
-            "w-fit",
-            "border-border bg-transparent text-foreground hover:bg-muted",
-          )}
+          className={secondaryTextButtonClassName("w-fit")}
           onClick={onRetry}
         >
           Retry

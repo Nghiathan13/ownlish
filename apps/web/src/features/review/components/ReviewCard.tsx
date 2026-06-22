@@ -1,5 +1,8 @@
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
-import { textButtonClassName } from "@/shared/ui/button/buttonTheme";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 import type { ReviewGrade } from "../lib/reviewSchedule";
 
 type ReviewCardProps = {
@@ -46,20 +49,14 @@ export function ReviewCard({
       <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
         <button
           type="button"
-          className={textButtonClassName(
-            "w-full",
-            "border-border bg-transparent text-foreground hover:bg-muted",
-          )}
+          className={secondaryTextButtonClassName("w-full")}
           onClick={onToggleMeaning}
         >
           {showMeaning ? "Hide meaning" : "Show meaning"}
         </button>
         <button
           type="button"
-          className={textButtonClassName(
-            "w-full",
-            "border-border bg-transparent text-foreground hover:bg-muted",
-          )}
+          className={secondaryTextButtonClassName("w-full")}
           disabled={!canGrade}
           onClick={() => onGrade("forgot")}
           title={showMeaning ? "Forgot" : "Show meaning before grading"}
@@ -68,10 +65,7 @@ export function ReviewCard({
         </button>
         <button
           type="button"
-          className={textButtonClassName(
-            "w-full",
-            "border-foreground bg-foreground text-background",
-          )}
+          className={primaryTextButtonClassName("w-full")}
           disabled={!canGrade}
           onClick={() => onGrade("remember")}
           title={showMeaning ? "Remember" : "Show meaning before grading"}
