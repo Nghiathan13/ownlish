@@ -4,6 +4,7 @@ import {
   isVocabularyPageSize,
   type VocabularyPageSize,
 } from "@/entities/vocab/lib/vocabPagination";
+import { classNames } from "@/shared/lib/classNames";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
@@ -11,6 +12,7 @@ import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 type VocabularyPaginationProps = {
   canGoNext: boolean;
   canGoPrevious: boolean;
+  className?: string;
   offset: number;
   onNext: () => void;
   onPageSizeChange: (pageSize: VocabularyPageSize) => void;
@@ -22,6 +24,7 @@ type VocabularyPaginationProps = {
 export function VocabularyPagination({
   canGoNext,
   canGoPrevious,
+  className,
   offset,
   onNext,
   onPageSizeChange,
@@ -37,7 +40,7 @@ export function VocabularyPagination({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className={classNames("flex flex-wrap items-center gap-2", className)}>
       <PaginationIconButton
         disabled={!canGoPrevious}
         label="Previous page"

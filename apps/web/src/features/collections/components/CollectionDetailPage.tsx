@@ -112,55 +112,51 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
 
   return (
     <PageShell fillViewport>
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="mb-4 shrink-0 px-4">
-          <BackToCollectionsLink />
-        </div>
+      <BackToCollectionsLink />
 
-        {isLoadingCollections ? (
-          <p className="px-4 text-muted-foreground">Loading collection...</p>
-        ) : collectionsError ? (
-          <div className="px-4">
-            <StateMessage message={collectionsError} onRetry={reloadCollections} />
-          </div>
-        ) : !collectionSummary ? (
-          <div className="mx-4 rounded-xl border border-border p-6">
-            <h1 className="mb-2 text-xl font-semibold">Collection not found.</h1>
-            <p className="text-muted-foreground">
-              Go back to collections and choose an available set.
-            </p>
-          </div>
-        ) : isUserCollection ? (
-          <CollectionWordsPanel
-            className="min-h-0 flex-1"
-            collectionId={collectionSummary.id}
-            onCollectionChange={handleUserCollectionChange}
-            userCollections={userOwnedCollections}
+      {isLoadingCollections ? (
+        <p className="px-4 text-muted-foreground">Loading collection...</p>
+      ) : collectionsError ? (
+        <div className="px-4">
+          <StateMessage message={collectionsError} onRetry={reloadCollections} />
+        </div>
+      ) : !collectionSummary ? (
+        <div className="mx-4 rounded-xl border border-border p-6">
+          <h1 className="mb-2 text-xl font-semibold">Collection not found.</h1>
+          <p className="text-muted-foreground">
+            Go back to collections and choose an available set.
+          </p>
+        </div>
+      ) : isUserCollection ? (
+        <CollectionWordsPanel
+          className="min-h-0 flex-1"
+          collectionId={collectionSummary.id}
+          onCollectionChange={handleUserCollectionChange}
+          userCollections={userOwnedCollections}
+        />
+      ) : isLoadingCollectionDetail ? (
+        <p className="px-4 text-muted-foreground">Loading words...</p>
+      ) : collectionDetailError ? (
+        <div className="px-4">
+          <StateMessage
+            message={collectionDetailError}
+            onRetry={reloadCollectionDetail}
           />
-        ) : isLoadingCollectionDetail ? (
-          <p className="px-4 text-muted-foreground">Loading words...</p>
-        ) : collectionDetailError ? (
-          <div className="px-4">
-            <StateMessage
-              message={collectionDetailError}
-              onRetry={reloadCollectionDetail}
-            />
-          </div>
-        ) : collectionDetail ? (
-          <SystemCollectionWordsPanel
-            key={collectionDetail.id}
-            className="min-h-0 flex-1"
-            importError={importError}
-            importResultMessage={importResultMessage}
-            isImporting={isImporting}
-            onImportClick={handleImportClick}
-            onImportTargetChange={setImportTargetCollectionId}
-            resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
-            userOwnedCollections={userOwnedCollections}
-            words={collectionDetail.catalogWords}
-          />
-        ) : null}
-      </div>
+        </div>
+      ) : collectionDetail ? (
+        <SystemCollectionWordsPanel
+          key={collectionDetail.id}
+          className="min-h-0 flex-1"
+          importError={importError}
+          importResultMessage={importResultMessage}
+          isImporting={isImporting}
+          onImportClick={handleImportClick}
+          onImportTargetChange={setImportTargetCollectionId}
+          resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
+          userOwnedCollections={userOwnedCollections}
+          words={collectionDetail.catalogWords}
+        />
+      ) : null}
     </PageShell>
   );
 }
@@ -169,7 +165,7 @@ function BackToCollectionsLink() {
   return (
     <Link
       className={iconTextButtonClassName(
-        "w-fit",
+        "mb-4 ml-4 w-fit shrink-0",
         "border-foreground bg-foreground text-background",
       )}
       href="/collections"

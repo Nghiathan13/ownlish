@@ -99,11 +99,11 @@ export function CollectionsPage() {
             <StateMessage message={collectionsError} onRetry={reloadCollections} />
           </div>
         ) : isUserTab ? (
-          <div className="mb-4 grid gap-4 px-4">
+          <>
             {deleteError ? (
-              <p className="text-sm text-danger">{deleteError}</p>
+              <p className="mb-4 px-4 text-sm text-danger">{deleteError}</p>
             ) : null}
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3">
               <MyVocabularyCard
                 collectionId={defaultCollection?.id ?? null}
                 href={myVocabularyHref}
@@ -124,7 +124,7 @@ export function CollectionsPage() {
                 onClick={() => setIsCreateCollectionOpen(true)}
               />
             </div>
-          </div>
+          </>
         ) : activeCollections.length === 0 ? (
           <div className="mx-4 rounded-xl border border-border p-6">
             <h2 className="mb-2 text-xl font-semibold">

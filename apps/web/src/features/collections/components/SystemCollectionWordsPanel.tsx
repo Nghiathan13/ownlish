@@ -157,7 +157,7 @@ export function SystemCollectionWordsPanel({
   }
 
   return (
-    <div className={classNames("flex min-h-0 flex-col", className)}>
+    <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         {canImport ? (
           <div className="flex shrink-0 items-center gap-2">
@@ -224,8 +224,12 @@ export function SystemCollectionWordsPanel({
         </div>
       ) : null}
 
-      <div className="mb-4 flex min-h-0 flex-1 flex-col px-4">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+      <div
+        className={classNames(
+          "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border",
+          className,
+        )}
+      >
           {totalWords === 0 ? (
             <CatalogWordsStateBlock hasSearch={hasSearch} />
           ) : (
@@ -241,24 +245,22 @@ export function SystemCollectionWordsPanel({
               />
             </div>
           )}
-        </div>
       </div>
 
       {totalWords > 0 ? (
-        <div className="mb-4 shrink-0 px-4">
-          <VocabularyPagination
-            canGoNext={canGoNext}
-            canGoPrevious={canGoPrevious}
-            offset={offset}
-            onNext={nextPage}
-            onPageSizeChange={setPageSize}
-            onPrevious={previousPage}
-            pageSize={pageSize}
-            total={totalWords}
-          />
-        </div>
+        <VocabularyPagination
+          className="mb-4 px-4"
+          canGoNext={canGoNext}
+          canGoPrevious={canGoPrevious}
+          offset={offset}
+          onNext={nextPage}
+          onPageSizeChange={setPageSize}
+          onPrevious={previousPage}
+          pageSize={pageSize}
+          total={totalWords}
+        />
       ) : null}
-    </div>
+    </>
   );
 }
 
