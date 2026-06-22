@@ -6,13 +6,32 @@ type ImportTargetCollectionSelectProps = {
   collections: CollectionSummary[];
   onChange: (collectionId: string) => void;
   value: string;
+  variant?: "form" | "toolbar";
 };
 
 export function ImportTargetCollectionSelect({
   collections,
   onChange,
   value,
+  variant = "form",
 }: ImportTargetCollectionSelectProps) {
+  if (variant === "toolbar") {
+    return (
+      <select
+        aria-label="Import into"
+        className="h-10 w-fit min-w-[10rem] max-w-[14rem] cursor-pointer appearance-none truncate rounded-lg border border-border bg-transparent px-3 text-sm text-foreground outline-none transition hover:border-foreground focus:border-foreground [@media(prefers-color-scheme:dark)]:color-scheme-dark"
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {collections.map((collection) => (
+          <option key={collection.id} value={collection.id}>
+            {collection.isDefault ? "My Vocabulary" : collection.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   return (
     <div className="grid gap-2">
       <label

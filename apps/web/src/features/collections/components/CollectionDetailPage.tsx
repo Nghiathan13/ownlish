@@ -2,28 +2,22 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { CatalogWord } from "@/entities/collection/api/collections";
 import {
   findCollectionBySlug,
   getDefaultUserCollection,
   getUserOwnedCollections,
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
-import { CatalogWordsTable } from "@/features/collections/components/CatalogWordsTable";
-import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
+import { SystemCollectionWordsPanel } from "@/features/collections/components/SystemCollectionWordsPanel";
 import {
   useCollectionDetail,
   useCollectionsList,
   useImportCollection,
 } from "@/features/collections/hooks/useCollections";
 import { CollectionWordsPanel } from "@/features/collections/words/components/CollectionWordsPanel";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
-import { TextInput } from "@/shared/ui/TextInput";
 
 type CollectionDetailPageProps = {
   slug: string;
@@ -31,7 +25,6 @@ type CollectionDetailPageProps = {
 
 export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   const { status, user } = useAuthSession();
-  const [wordSearch, setWordSearch] = useState("");
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
     null,
   );
@@ -70,17 +63,6 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   }, [collections]);
   const resolvedImportTargetCollectionId =
     importTargetCollectionId ?? defaultCollection?.id ?? null;
-  const isSystemCollection = collectionSummary?.kind === "SYSTEM";
-  const filteredWords = useMemo(() => {
-    const words = collectionDetail?.catalogWords ?? [];
-    const search = wordSearch.trim().toLowerCase();
-
-    if (!search) {
-      return words;
-    }
-
-    return words.filter((word) => word.word.toLowerCase().includes(search));
-  }, [collectionDetail, wordSearch]);
 
   async function handleImportClick() {
     if (!collectionSummary || !resolvedImportTargetCollectionId) return;
@@ -109,12 +91,8 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   }
 
   return (
-    <PageShell fillViewport={isUserCollection}>
-      <Panel
-        className={
-          isUserCollection ? "flex min-h-0 flex-1 flex-col" : undefined
-        }
-      >
+    <PageShell fillViewport>
+      <Panel className="flex min-h-0 flex-1 flex-col">
         <BackToCollectionsLink />
 
         {isLoadingCollections ? (
@@ -144,20 +122,21 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
             onRetry={reloadCollectionDetail}
           />
         ) : collectionDetail ? (
-          <SystemCollectionDetail
-            collectionDetail={collectionDetail}
-            filteredWords={filteredWords}
-            importError={importError}
-            importResultMessage={importResultMessage}
-            isImporting={isImporting}
-            isSystemCollection={isSystemCollection}
-            onImportClick={handleImportClick}
-            onWordSearchChange={setWordSearch}
-            resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
-            userOwnedCollections={userOwnedCollections}
-            wordSearch={wordSearch}
-            onImportTargetChange={setImportTargetCollectionId}
-          />
+          <div className="flex min-h-0 flex-1 flex-col gap-6">
+            <SystemCollectionHeader collectionDetail={collectionDetail} />
+            <SystemCollectionWordsPanel
+              key={collectionDetail.id}
+              className="min-h-0 flex-1"
+              importError={importError}
+              importResultMessage={importResultMessage}
+              isImporting={isImporting}
+              onImportClick={handleImportClick}
+              onImportTargetChange={setImportTargetCollectionId}
+              resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
+              userOwnedCollections={userOwnedCollections}
+              words={collectionDetail.catalogWords}
+            />
+          </div>
         ) : null}
       </Panel>
     </PageShell>
@@ -198,114 +177,22 @@ function UserCollectionHeader({
   );
 }
 
-function SystemCollectionDetail({
+function SystemCollectionHeader({
   collectionDetail,
-  filteredWords,
-  importError,
-  importResultMessage,
-  isImporting,
-  isSystemCollection,
-  onImportClick,
-  onImportTargetChange,
-  onWordSearchChange,
-  resolvedImportTargetCollectionId,
-  userOwnedCollections,
-  wordSearch,
 }: {
   collectionDetail: NonNullable<ReturnType<typeof useCollectionDetail>["collectionDetail"]>;
-  filteredWords: CatalogWord[];
-  importError: string | null;
-  importResultMessage: string | null;
-  isImporting: boolean;
-  isSystemCollection: boolean;
-  onImportClick: () => void;
-  onImportTargetChange: (collectionId: string) => void;
-  onWordSearchChange: (value: string) => void;
-  resolvedImportTargetCollectionId: string | null;
-  userOwnedCollections: ReturnType<typeof getUserOwnedCollections>;
-  wordSearch: string;
 }) {
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {collectionDetail.cefrLevel ?? collectionDetail.source}
-          </p>
-          <h1 className="text-3xl font-bold leading-tight">
-            {collectionDetail.name}
-          </h1>
-          <p className="mt-2 max-w-3xl text-muted-foreground">
-            {collectionDetail.description}
-          </p>
-        </div>
-        {isSystemCollection ? (
-          <div className="grid w-full max-w-md gap-4">
-            {userOwnedCollections.length > 0 &&
-            resolvedImportTargetCollectionId ? (
-              <ImportTargetCollectionSelect
-                collections={userOwnedCollections}
-                onChange={onImportTargetChange}
-                value={resolvedImportTargetCollectionId}
-              />
-            ) : null}
-            <button
-              className={primaryTextButtonClassName("w-fit")}
-              disabled={isImporting || !resolvedImportTargetCollectionId}
-              onClick={() => {
-                void onImportClick();
-              }}
-              type="button"
-            >
-              {isImporting ? "Importing..." : "Import collection"}
-            </button>
-          </div>
-        ) : null}
-      </div>
-
-      {importResultMessage ? (
-        <p className="rounded-lg border border-border bg-muted p-3 text-sm">
-          {importResultMessage}
-        </p>
-      ) : null}
-      {importError ? (
-        <p className="rounded-lg border border-border p-3 text-sm text-danger">
-          {importError}
-        </p>
-      ) : null}
-
-      <div className="grid gap-2">
-        <label
-          className="text-sm font-semibold text-foreground"
-          htmlFor="collection-word-search"
-        >
-          Search
-        </label>
-        <TextInput
-          id="collection-word-search"
-          onChange={(event) => onWordSearchChange(event.target.value)}
-          placeholder="Search English word"
-          value={wordSearch}
-        />
-        <p className="text-sm text-muted-foreground">
-          {filteredWords.length} of {collectionDetail.itemCount} words
-        </p>
-      </div>
-
-      {filteredWords.length === 0 ? (
-        <div className="rounded-xl border border-border p-6">
-          <h2 className="mb-2 text-xl font-semibold">No matching words.</h2>
-          <p className="text-muted-foreground">
-            Try a different English search term.
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <div className="max-h-[min(70vh,48rem)] overflow-auto">
-            <CatalogWordsTable words={filteredWords} />
-          </div>
-        </div>
-      )}
+    <div>
+      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        {collectionDetail.cefrLevel ?? collectionDetail.source}
+      </p>
+      <h1 className="text-3xl font-bold leading-tight">
+        {collectionDetail.name}
+      </h1>
+      <p className="mt-2 max-w-3xl text-muted-foreground">
+        {collectionDetail.description}
+      </p>
     </div>
   );
 }
