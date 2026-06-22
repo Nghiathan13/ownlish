@@ -5,6 +5,7 @@ import {
   findCollectionBySlug,
   getCollectionCategory,
   getCollectionSlug,
+  getUserOwnedCollections,
 } from "./collectionDisplay";
 
 function makeCollection(
@@ -87,5 +88,30 @@ describe("collection display helpers", () => {
     expect(filterCollectionsByCategory(collections, "oxford")).not.toContain(
       userCollection,
     );
+  });
+
+  it("lists all user-owned collections with default first", () => {
+    const defaultCollection = makeCollection({
+      id: "default-collection",
+      kind: "USER",
+      name: "My Vocabulary",
+      source: null,
+      cefrLevel: null,
+      isDefault: true,
+      isPublic: false,
+    });
+    const studyCollection = makeCollection({
+      id: "study-collection",
+      kind: "USER",
+      name: "Study List",
+      source: null,
+      cefrLevel: null,
+      isDefault: false,
+      isPublic: false,
+    });
+
+    expect(
+      getUserOwnedCollections([studyCollection, defaultCollection]),
+    ).toEqual([defaultCollection, studyCollection]);
   });
 });

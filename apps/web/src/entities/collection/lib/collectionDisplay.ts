@@ -47,6 +47,18 @@ export function getDefaultUserCollection(collections: CollectionSummary[]) {
   return collections.find((collection) => collection.isDefault) ?? null;
 }
 
+export function getUserOwnedCollections(collections: CollectionSummary[]) {
+  return collections
+    .filter((collection) => collection.kind === "USER")
+    .sort((left, right) => {
+      if (left.isDefault !== right.isDefault) {
+        return left.isDefault ? -1 : 1;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+}
+
 export function getCollectionSlug(collection: CollectionSummary) {
   const source = toSlugPart(collection.source ?? collection.name);
   const level = collection.cefrLevel ? toSlugPart(collection.cefrLevel) : "";

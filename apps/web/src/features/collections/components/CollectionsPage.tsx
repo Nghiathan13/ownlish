@@ -15,7 +15,7 @@ import { CreateCollectionModal } from "@/features/collections/components/CreateC
 import { MyVocabularyCard } from "@/features/collections/components/MyVocabularyCard";
 import {
   MY_VOCABULARY_CARD_ID,
-  type ExpandedUserCollectionCardId,
+  type ExpandedCollectionCardId,
 } from "@/features/collections/constants/myVocabulary";
 import { useCollectionsList } from "@/features/collections/hooks/useCollections";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
@@ -35,7 +35,7 @@ export function CollectionsPage() {
     useState<CollectionCategory>("user");
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
   const [expandedCardId, setExpandedCardId] =
-    useState<ExpandedUserCollectionCardId>(null);
+    useState<ExpandedCollectionCardId>(null);
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
       isAuthenticated,
@@ -52,6 +52,27 @@ export function CollectionsPage() {
   const activeCollections = useMemo(() => {
     return filterCollectionsByCategory(collections, activeCategory);
   }, [activeCategory, collections]);
+  const expandedCollectionId = useMemo(() => {
+    if (!expandedCardId) {
+      return null;
+    }
+
+    if (expandedCardId === MY_VOCABULARY_CARD_ID) {
+      return defaultCollection?.id ?? null;
+    }
+
+    return expandedCardId;
+  }, [defaultCollection, expandedCardId]);
+  const expandedCollection = useMemo(() => {
+    if (!expandedCollectionId) {
+      return null;
+    }
+
+    return (
+      collections.find((collection) => collection.id === expandedCollectionId) ??
+      null
+    );
+  }, [collections, expandedCollectionId]);
   const activeTabLabel =
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
     "Collections";
@@ -61,6 +82,12 @@ export function CollectionsPage() {
   function toggleMyVocabularyExpanded() {
     setExpandedCardId((current) =>
       current === MY_VOCABULARY_CARD_ID ? null : MY_VOCABULARY_CARD_ID,
+    );
+  }
+
+  function toggleUserCollectionExpanded(collectionId: string) {
+    setExpandedCardId((current) =>
+      current === collectionId ? null : collectionId,
     );
   }
 
@@ -101,10 +128,13 @@ export function CollectionsPage() {
                 wordCount={vocabStats?.total ?? null}
               />
               {activeCollections.map((collection) => (
-                <CollectionCard
-                  activeTabLabel={activeTabLabel}
+                <UserCollectionCard
                   collection={collection}
+                  isExpanded={expandedCardId === collection.id}
                   key={collection.id}
+                  onToggleViewWords={() => {
+                    toggleUserCollectionExpanded(collection.id);
+                  }}
                 />
               ))}
               <CreateCollectionCard
@@ -112,9 +142,23 @@ export function CollectionsPage() {
               />
             </div>
 
-            {isMyVocabularyExpanded && defaultCollection ? (
+            {expandedCollectionId ? (
               <Panel className="flex min-h-[32rem] flex-col">
-                <CollectionWordsPanel collectionId={defaultCollection.id} />
+                {expandedCollection ? (
+                  <div className="mb-4">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {expandedCollection.isDefault
+                        ? "Default"
+                        : "My collection"}
+                    </p>
+                    <h2 className="text-2xl font-bold">
+                      {expandedCollection.isDefault
+                        ? "My Vocabulary"
+                        : expandedCollection.name}
+                    </h2>
+                  </div>
+                ) : null}
+                <CollectionWordsPanel collectionId={expandedCollectionId} />
               </Panel>
             ) : null}
           </div>
@@ -130,7 +174,7 @@ export function CollectionsPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {activeCollections.map((collection) => (
-              <CollectionCard
+              <SystemCollectionCard
                 activeTabLabel={activeTabLabel}
                 collection={collection}
                 key={collection.id}
@@ -161,17 +205,53 @@ function CreateCollectionCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function CollectionCard({
+function UserCollectionCard({
+  collection,
+  isExpanded,
+  onToggleViewWords,
+}: {
+  collection: CollectionSummary;
+  isExpanded: boolean;
+  onToggleViewWords: () => void;
+}) {
+  return (
+    <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            My collection
+          </p>
+          <h2 className="text-xl font-bold">{collection.name}</h2>
+        </div>
+      </div>
+
+      <p className="mb-5 min-h-12 text-sm text-muted-foreground">
+        {collection.description ??
+          `Review ${collection.itemCount} words in this collection.`}
+      </p>
+
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm font-semibold">{collection.itemCount} words</p>
+        <button
+          className={secondaryTextButtonClassName()}
+          onClick={onToggleViewWords}
+          type="button"
+        >
+          {isExpanded ? "Hide words" : "View words"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function SystemCollectionCard({
   activeTabLabel,
   collection,
 }: {
   activeTabLabel: string;
   collection: CollectionSummary;
 }) {
-  const categoryLabel =
-    collection.kind === "USER"
-      ? "My collection"
-      : (collection.source ?? activeTabLabel);
+  const categoryLabel = collection.source ?? activeTabLabel;
 
   return (
     <article className="rounded-xl border border-border p-5 transition hover:bg-muted">

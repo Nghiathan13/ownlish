@@ -117,16 +117,37 @@ export function useCreateCollection({
   };
 }
 
+import type { ImportCollectionInput } from "@/entities/collection/api/collections";
+
+type ImportCollectionVariables = {
+  systemCollectionId: string;
+  targetCollectionId?: string;
+};
+
 export function useImportCollection({
   userId,
 }: Pick<UseCollectionsParams, "userId">) {
   const queryClient = useQueryClient();
   const importMutation = useMutation({
-    mutationFn: (collectionId: string) =>
+    mutationFn: ({
+      systemCollectionId,
+      targetCollectionId,
+    }: ImportCollectionVariables) =>
       runAuthenticatedRequest({
-        request: (token) => importCollection(token, collectionId),
+        request: (token) => {
+          const input: ImportCollectionInput = {};
+
+          if (targetCollectionId) {
+            input.targetCollectionId = targetCollectionId;
+          }
+
+          return importCollection(token, systemCollectionId, input);
+        },
       }),
     onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: getCollectionsQueryKey(userId),
+      });
       void queryClient.invalidateQueries({
         queryKey: getVocabUserQueryKey(userId),
       });

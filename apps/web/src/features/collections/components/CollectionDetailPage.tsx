@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { CatalogDefinition, CatalogWord } from "@/entities/collection/api/collections";
-import { findCollectionBySlug } from "@/entities/collection/lib/collectionDisplay";
+import {
+  findCollectionBySlug,
+  getDefaultUserCollection,
+  getUserOwnedCollections,
+} from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
 import {
   useCollectionDetail,
   useCollectionsList,
@@ -28,6 +33,9 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
     null,
   );
+  const [importTargetCollectionId, setImportTargetCollectionId] = useState<
+    string | null
+  >(null);
   const authParams = {
     isAuthenticated: isAuthenticatedStatus(status),
     userId: user?.id ?? null,
@@ -50,6 +58,15 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
     useImportCollection({
       userId: user?.id ?? null,
     });
+  const userOwnedCollections = useMemo(() => {
+    return getUserOwnedCollections(collections);
+  }, [collections]);
+  const defaultCollection = useMemo(() => {
+    return getDefaultUserCollection(collections);
+  }, [collections]);
+  const resolvedImportTargetCollectionId =
+    importTargetCollectionId ?? defaultCollection?.id ?? null;
+  const isSystemCollection = collectionSummary?.kind === "SYSTEM";
   const filteredWords = useMemo(() => {
     const words = collectionDetail?.catalogWords ?? [];
     const search = wordSearch.trim().toLowerCase();
@@ -62,15 +79,25 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   }, [collectionDetail, wordSearch]);
 
   async function handleImportClick() {
-    if (!collectionSummary) return;
+    if (!collectionSummary || !resolvedImportTargetCollectionId) return;
 
     setImportResultMessage(null);
     resetImportState();
 
     try {
-      const result = await importCollection(collectionSummary.id);
+      const result = await importCollection({
+        systemCollectionId: collectionSummary.id,
+        targetCollectionId: resolvedImportTargetCollectionId,
+      });
+      const targetCollection =
+        userOwnedCollections.find(
+          (collection) => collection.id === resolvedImportTargetCollectionId,
+        ) ?? null;
+      const targetName = targetCollection?.isDefault
+        ? "My Vocabulary"
+        : (targetCollection?.name ?? "your collection");
       setImportResultMessage(
-        `Imported ${result.imported} words. Updated ${result.updated} existing words. Skipped ${result.skipped} words.`,
+        `Imported ${result.imported} words into ${targetName}. Updated ${result.updated} existing words. Skipped ${result.skipped} words.`,
       );
     } catch {
       // The mutation state renders the error message.
@@ -119,16 +146,30 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
                   {collectionDetail.description}
                 </p>
               </div>
-              <button
-                className={primaryTextButtonClassName("w-fit")}
-                disabled={isImporting}
-                onClick={() => {
-                  void handleImportClick();
-                }}
-                type="button"
-              >
-                {isImporting ? "Importing..." : "Import collection"}
-              </button>
+              {isSystemCollection ? (
+                <div className="grid w-full max-w-md gap-4">
+                  {userOwnedCollections.length > 0 &&
+                  resolvedImportTargetCollectionId ? (
+                    <ImportTargetCollectionSelect
+                      collections={userOwnedCollections}
+                      onChange={setImportTargetCollectionId}
+                      value={resolvedImportTargetCollectionId}
+                    />
+                  ) : null}
+                  <button
+                    className={primaryTextButtonClassName("w-fit")}
+                    disabled={
+                      isImporting || !resolvedImportTargetCollectionId
+                    }
+                    onClick={() => {
+                      void handleImportClick();
+                    }}
+                    type="button"
+                  >
+                    {isImporting ? "Importing..." : "Import collection"}
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             {importResultMessage ? (
