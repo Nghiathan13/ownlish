@@ -2,20 +2,20 @@ import { classNames } from "@/shared/lib/classNames";
 import { SearchIcon } from "@/shared/ui/icons/SearchIcon";
 import { TextInput } from "@/shared/ui/TextInput";
 
-type VocabularySearchProps = {
+type WordsSearchProps = {
   onSearchChange: (search: string) => void;
   search: string;
 };
 
-export function VocabularySearch({
+export function WordsSearch({
   onSearchChange,
   search,
-}: VocabularySearchProps) {
+}: WordsSearchProps) {
   return (
     <div className="relative min-w-0 flex-1">
       <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
       <TextInput
-        id="vocabulary-search"
+        id="words-search"
         aria-label="Search the word"
         className={classNames("rounded-md px-4 py-2 pl-11 pr-4 text-sm")}
         value={search}

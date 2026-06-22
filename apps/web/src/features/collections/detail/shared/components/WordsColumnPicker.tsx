@@ -10,17 +10,17 @@ type ColumnOption<Id extends string> = {
   label: string;
 };
 
-type VocabularyColumnPickerProps<Id extends string> = {
+type WordsColumnPickerProps<Id extends string> = {
   columnVisibility: Record<Id, boolean>;
   columns: ReadonlyArray<ColumnOption<Id>>;
   onToggleColumn: (columnId: Id) => void;
 };
 
-export function VocabularyColumnPicker<Id extends string>({
+export function WordsColumnPicker<Id extends string>({
   columnVisibility,
   columns,
   onToggleColumn,
-}: VocabularyColumnPickerProps<Id>) {
+}: WordsColumnPickerProps<Id>) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);

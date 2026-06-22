@@ -6,7 +6,7 @@ import {
   getSharedIpaUs,
   hasUniformIpaUk,
   hasUniformIpaUs,
-} from "./vocabularyIpa";
+} from "./wordIpa";
 
 function makeDefinition(overrides: Partial<{ ipaUk: string | null; ipaUs: string | null }> = {}) {
   return {
@@ -16,7 +16,7 @@ function makeDefinition(overrides: Partial<{ ipaUk: string | null; ipaUs: string
   };
 }
 
-describe("vocabularyIpa", () => {
+describe("wordIpa", () => {
   it("returns ipa pair from definition", () => {
     expect(
       getDefinitionIpaPair(

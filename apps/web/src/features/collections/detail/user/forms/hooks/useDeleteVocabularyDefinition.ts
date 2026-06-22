@@ -172,13 +172,6 @@ export function useDeleteVocabularyDefinition({
     },
   });
 
-  const deleteDefinition = useCallback(
-    async (target: DeleteVocabularyDefinitionTarget) => {
-      await deleteDefinitionsMutation(target);
-    },
-    [deleteDefinitionsMutation],
-  );
-
   const deleteDefinitions = useCallback(
     async (targets: DeleteVocabularyDefinitionTarget[]) => {
       if (targets.length === 0) {
@@ -191,7 +184,6 @@ export function useDeleteVocabularyDefinition({
   );
 
   return {
-    deleteDefinition,
     deleteDefinitions,
     isDeletingDefinitions,
   };

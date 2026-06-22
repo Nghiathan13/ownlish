@@ -3,9 +3,9 @@ import { CatalogWordsTable } from "@/features/collections/detail/system/panel/co
 import type { useSystemCollectionWordsPanel } from "@/features/collections/detail/system/panel/hooks/useSystemCollectionWordsPanel";
 import { CATALOG_TOGGLEABLE_COLUMNS } from "@/features/collections/detail/system/panel/lib/catalogTableColumns";
 import {
-  VocabularyColumnPicker,
-  VocabularyPagination,
-  VocabularySearch,
+  WordsColumnPicker,
+  WordsPagination,
+  WordsSearch,
 } from "@/features/collections/detail/shared/components";
 import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
 import { iconTextButtonClassName } from "@/shared/ui/button";
@@ -93,8 +93,8 @@ export function SystemCollectionWordsPanelBody({
           </div>
         ) : null}
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <VocabularySearch onSearchChange={setSearch} search={search} />
-          <VocabularyColumnPicker
+          <WordsSearch onSearchChange={setSearch} search={search} />
+          <WordsColumnPicker
             columnVisibility={columnVisibility}
             columns={CATALOG_TOGGLEABLE_COLUMNS}
             onToggleColumn={toggleColumn}
@@ -149,7 +149,7 @@ export function SystemCollectionWordsPanelBody({
       />
 
       {totalWords > 0 && !isLoading && !loadError ? (
-        <VocabularyPagination
+        <WordsPagination
           className="mb-4 shrink-0 px-4"
           canGoNext={canGoNext}
           canGoPrevious={canGoPrevious}

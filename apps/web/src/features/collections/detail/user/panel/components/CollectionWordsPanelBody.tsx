@@ -4,9 +4,9 @@ import { DeleteDefinitionsConfirm } from "@/features/collections/detail/user/for
 import { EditWordPanel } from "@/features/collections/detail/user/forms/components/EditWordPanel";
 import { VocabularyTable } from "@/features/collections/detail/user/panel/components/VocabularyTable";
 import {
-  VocabularyColumnPicker,
-  VocabularyPagination,
-  VocabularySearch,
+  WordsColumnPicker,
+  WordsPagination,
+  WordsSearch,
 } from "@/features/collections/detail/shared/components";
 import type { useCollectionWordsPanel } from "@/features/collections/detail/user/panel/hooks/useCollectionWordsPanel";
 import { VOCABULARY_TOGGLEABLE_COLUMNS } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
@@ -93,8 +93,8 @@ export function CollectionWordsPanelBody({
           </button>
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <VocabularySearch search={search} onSearchChange={setSearch} />
-          <VocabularyColumnPicker
+          <WordsSearch search={search} onSearchChange={setSearch} />
+          <WordsColumnPicker
             columnVisibility={columnVisibility}
             columns={VOCABULARY_TOGGLEABLE_COLUMNS}
             onToggleColumn={toggleColumn}
@@ -183,7 +183,7 @@ export function CollectionWordsPanelBody({
       />
 
       {!isInitialLoading && !loadError && words.length > 0 ? (
-        <VocabularyPagination
+        <WordsPagination
           className="mb-4 shrink-0 px-4"
           canGoNext={canGoNext}
           canGoPrevious={canGoPrevious}

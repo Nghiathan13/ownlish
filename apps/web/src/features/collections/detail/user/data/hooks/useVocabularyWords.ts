@@ -67,7 +67,7 @@ export function useVocabularyWords({
       userId,
     });
 
-  const { deleteDefinition, deleteDefinitions, isDeletingDefinitions } =
+  const { deleteDefinitions, isDeletingDefinitions } =
     useDeleteVocabularyDefinition({
       collectionId,
       moveBackOnePage,
@@ -82,7 +82,6 @@ export function useVocabularyWords({
     canGoNext: pageState.offset + words.length < totalWords,
     canGoPrevious: pageState.offset > 0,
     createWord,
-    deleteDefinition,
     deleteDefinitions,
     isDeletingDefinitions,
     isInitialLoading,

@@ -10,7 +10,7 @@ import {
   getSharedIpaUs,
   hasUniformIpaUk,
   hasUniformIpaUs,
-} from "@/features/collections/detail/shared/lib/vocabularyIpa";
+} from "@/features/collections/detail/shared/lib/wordIpa";
 import {
   getCatalogTableColumnCount,
   isCatalogColumnVisible,

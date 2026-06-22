@@ -9,7 +9,7 @@ import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 
-type VocabularyPaginationProps = {
+type WordsPaginationProps = {
   canGoNext: boolean;
   canGoPrevious: boolean;
   className?: string;
@@ -21,7 +21,7 @@ type VocabularyPaginationProps = {
   total: number;
 };
 
-export function VocabularyPagination({
+export function WordsPagination({
   canGoNext,
   canGoPrevious,
   className,
@@ -31,7 +31,7 @@ export function VocabularyPagination({
   onPrevious,
   pageSize,
   total,
-}: VocabularyPaginationProps) {
+}: WordsPaginationProps) {
   if (total === 0) {
     return null;
   }

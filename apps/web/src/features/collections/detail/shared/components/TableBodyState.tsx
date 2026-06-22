@@ -18,7 +18,7 @@ export function TableBodyState({
   error = null,
   isEmpty = false,
   isLoading = false,
-  loadingMessage = "Loading vocabulary...",
+  loadingMessage = "Loading words...",
   onRetry,
 }: TableBodyStateProps) {
   if (isLoading) {
@@ -75,7 +75,7 @@ export function TableMobileState({
   error = null,
   isEmpty = false,
   isLoading = false,
-  loadingMessage = "Loading vocabulary...",
+  loadingMessage = "Loading words...",
   onRetry,
 }: Omit<TableBodyStateProps, "columnCount">) {
   if (isLoading) {

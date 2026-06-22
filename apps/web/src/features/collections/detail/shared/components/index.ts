@@ -1,5 +1,5 @@
 export { TableBodyState, TableMobileState } from "./TableBodyState";
-export { VocabularyColumnPicker } from "./VocabularyColumnPicker";
-export { VocabularyPagination } from "./VocabularyPagination";
-export { VocabularySearch } from "./VocabularySearch";
+export { WordsColumnPicker } from "./WordsColumnPicker";
+export { WordsPagination } from "./WordsPagination";
+export { WordsSearch } from "./WordsSearch";
 export { WordsTableSkeleton } from "./WordsTableSkeleton";
