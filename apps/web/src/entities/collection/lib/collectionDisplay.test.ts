@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 import {
+  filterCollectionsByCategory,
   findCollectionBySlug,
   getCollectionCategory,
   getCollectionSlug,
@@ -51,6 +52,29 @@ describe("collection display helpers", () => {
     );
     expect(findCollectionBySlug(collections, "collection-id")?.id).toBe(
       "collection-id",
+    );
+  });
+
+  it("filters user collections for the my tab only", () => {
+    const userCollection = makeCollection({
+      id: "user-collection",
+      kind: "USER",
+      name: "Oxford Notes",
+      source: null,
+      cefrLevel: null,
+      isPublic: false,
+    });
+    const systemCollection = makeCollection();
+    const collections = [userCollection, systemCollection];
+
+    expect(filterCollectionsByCategory(collections, "my")).toEqual([
+      userCollection,
+    ]);
+    expect(filterCollectionsByCategory(collections, "oxford")).toEqual([
+      systemCollection,
+    ]);
+    expect(filterCollectionsByCategory(collections, "oxford")).not.toContain(
+      userCollection,
     );
   });
 });

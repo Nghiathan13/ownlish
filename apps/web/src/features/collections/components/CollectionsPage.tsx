@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import type { CollectionSummary } from "@/entities/collection/api/collections";
 import {
   collectionCategoryTabs,
-  getCollectionCategory,
+  filterCollectionsByCategory,
   getCollectionSlug,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
@@ -20,16 +21,14 @@ import { Panel } from "@/shared/ui/Panel";
 export function CollectionsPage() {
   const { status, user } = useAuthSession();
   const [activeCategory, setActiveCategory] =
-    useState<CollectionCategory>("oxford");
+    useState<CollectionCategory>("my");
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
       isAuthenticated: isAuthenticatedStatus(status),
       userId: user?.id ?? null,
     });
   const activeCollections = useMemo(() => {
-    return collections.filter(
-      (collection) => getCollectionCategory(collection) === activeCategory,
-    );
+    return filterCollectionsByCategory(collections, activeCategory);
   }, [activeCategory, collections]);
   const activeTabLabel =
     collectionCategoryTabs.find((tab) => tab.key === activeCategory)?.label ??
@@ -62,55 +61,75 @@ export function CollectionsPage() {
         ) : activeCollections.length === 0 ? (
           <div className="rounded-xl border border-border p-6">
             <h2 className="mb-2 text-xl font-semibold">
-              No {activeTabLabel} collections yet.
+              {activeCategory === "my"
+                ? "No collections yet."
+                : `No ${activeTabLabel} collections yet.`}
             </h2>
             <p className="text-muted-foreground">
-              This category is ready for future word sets.
+              {activeCategory === "my"
+                ? "Your personal word sets will appear here."
+                : "This category is ready for future word sets."}
             </p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {activeCollections.map((collection) => (
-              <article
-                className="rounded-xl border border-border p-5 transition hover:bg-muted"
+              <CollectionCard
+                activeTabLabel={activeTabLabel}
+                collection={collection}
                 key={collection.id}
-              >
-                <div className="mb-5 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      {collection.source ?? activeTabLabel}
-                    </p>
-                    <h2 className="text-xl font-bold">{collection.name}</h2>
-                  </div>
-                  {collection.cefrLevel ? (
-                    <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-                      {collection.cefrLevel}
-                    </span>
-                  ) : null}
-                </div>
-
-                <p className="mb-5 min-h-12 text-sm text-muted-foreground">
-                  {collection.description ??
-                    `Review ${collection.itemCount} words in this collection.`}
-                </p>
-
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm font-semibold">
-                    {collection.itemCount} words
-                  </p>
-                  <Link
-                    className={secondaryTextButtonClassName()}
-                    href={`/collections/${getCollectionSlug(collection)}`}
-                  >
-                    View words
-                  </Link>
-                </div>
-              </article>
+              />
             ))}
           </div>
         )}
       </Panel>
     </PageShell>
+  );
+}
+
+function CollectionCard({
+  activeTabLabel,
+  collection,
+}: {
+  activeTabLabel: string;
+  collection: CollectionSummary;
+}) {
+  const categoryLabel =
+    collection.kind === "USER"
+      ? "My collection"
+      : (collection.source ?? activeTabLabel);
+
+  return (
+    <article className="rounded-xl border border-border p-5 transition hover:bg-muted">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            {categoryLabel}
+          </p>
+          <h2 className="text-xl font-bold">{collection.name}</h2>
+        </div>
+        {collection.cefrLevel ? (
+          <span className="rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
+            {collection.cefrLevel}
+          </span>
+        ) : null}
+      </div>
+
+      <p className="mb-5 min-h-12 text-sm text-muted-foreground">
+        {collection.description ??
+          `Review ${collection.itemCount} words in this collection.`}
+      </p>
+
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm font-semibold">{collection.itemCount} words</p>
+        <Link
+          className={secondaryTextButtonClassName()}
+          href={`/collections/${getCollectionSlug(collection)}`}
+        >
+          View words
+        </Link>
+      </div>
+    </article>
   );
 }
 
