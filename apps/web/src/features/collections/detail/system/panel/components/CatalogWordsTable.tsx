@@ -19,7 +19,9 @@ import {
 } from "@/features/collections/detail/system/panel/lib/catalogTableColumns";
 import { TABLE_COLUMN_WIDTH } from "@/features/collections/detail/shared/constants/columnWidths";
 import { TableBodyState, TableMobileState } from "@/features/collections/detail/shared/components/TableBodyState";
+import { WordsTableHead } from "@/features/collections/detail/shared/components/WordsTableHead";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
+import { getCatalogWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
 import { classNames } from "@/shared/lib/classNames";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
@@ -67,7 +69,12 @@ export function CatalogWordsTable({
   );
 
   if (isLoading && !error && words.length === 0) {
-    return <WordsTableSkeleton className={className} />;
+    return (
+      <WordsTableSkeleton
+        className={className}
+        columns={getCatalogWordsTableHeadColumns(columnVisibility)}
+      />
+    );
   }
 
   return (
@@ -207,80 +214,13 @@ export function CatalogWordsTable({
 
       <div className={classNames("hidden md:block", scrollShellClassName)}>
         <table className="w-full min-w-[920px] table-fixed border-collapse text-left text-base">
-        <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
-          <tr>
-            <th className="w-10 bg-surface px-3 py-3 align-middle">
-              <div className="flex items-center">
-                <SelectCheckbox
-                  checked={allDefinitionsSelected}
-                  indeterminate={
-                    someDefinitionsSelected && !allDefinitionsSelected
-                  }
-                  label="Select all definitions on this page"
-                  onChange={onToggleAllDefinitions}
-                />
-              </div>
-            </th>
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                TABLE_COLUMN_WIDTH.word,
-              )}
-            >
-              Word
-            </th>
-            {showColumn("ipaUk") ? (
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                TABLE_COLUMN_WIDTH.ipaUk,
-              )}
-            >
-              IPA UK
-            </th>
-            ) : null}
-            {showColumn("ipaUs") ? (
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                TABLE_COLUMN_WIDTH.ipaUs,
-              )}
-            >
-              IPA US
-            </th>
-            ) : null}
-            {showColumn("type") ? (
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                TABLE_COLUMN_WIDTH.type,
-              )}
-            >
-              Type
-            </th>
-            ) : null}
-            {showColumn("meaning") ? (
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                TABLE_COLUMN_WIDTH.meaning,
-              )}
-            >
-              Meaning
-            </th>
-            ) : null}
-            {showColumn("example") ? (
-            <th
-              className={classNames(
-                "bg-surface px-2 py-2 align-middle font-semibold",
-                TABLE_COLUMN_WIDTH.example,
-              )}
-            >
-              Example
-            </th>
-            ) : null}
-          </tr>
-        </thead>
+        <WordsTableHead
+          columns={getCatalogWordsTableHeadColumns(columnVisibility)}
+          allDefinitionsSelected={allDefinitionsSelected}
+          checkbox
+          onToggleAllDefinitions={onToggleAllDefinitions}
+          someDefinitionsSelected={someDefinitionsSelected}
+        />
         <tbody>
           {showBodyState ? (
             <TableBodyState

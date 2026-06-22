@@ -1,7 +1,13 @@
 import { BackToCollectionsLink } from "@/features/collections/detail/page/components/BackToCollectionsLink";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
+import { getVocabularyWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
+import { createDefaultColumnVisibility } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Skeleton } from "@/shared/ui/Skeleton";
+
+const defaultVocabularyHeadColumns = getVocabularyWordsTableHeadColumns(
+  createDefaultColumnVisibility(),
+);
 
 export function CollectionDetailPageSkeleton() {
   return (
@@ -17,7 +23,10 @@ export function CollectionDetailPageSkeleton() {
         <Skeleton className="h-10 w-24 shrink-0" />
       </div>
 
-      <WordsTableSkeleton />
+      <WordsTableSkeleton
+        columns={defaultVocabularyHeadColumns}
+        showActions
+      />
     </PageShell>
   );
 }
