@@ -39,10 +39,6 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
   };
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList(authParams);
-  const collectionSummary = useMemo(() => {
-    return findCollectionById(collections, collectionId);
-  }, [collectionId, collections]);
-  const isUserCollection = collectionSummary?.kind === "USER";
   const {
     collectionDetail,
     collectionDetailError,
@@ -50,9 +46,21 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
     reloadCollectionDetail,
   } = useCollectionDetail({
     ...authParams,
-    collectionId:
-      collectionSummary?.kind === "SYSTEM" ? collectionSummary.id : null,
+    collectionId,
   });
+  const collectionSummary = useMemo(() => {
+    return findCollectionById(collections, collectionId);
+  }, [collectionId, collections]);
+  const collectionKind = collectionSummary?.kind ?? collectionDetail?.kind;
+  const isUserCollection = collectionKind === "USER";
+  const isSystemCollection = collectionKind === "SYSTEM";
+  const hasFinishedResolving =
+    !isLoadingCollections && !isLoadingCollectionDetail;
+  const isNotFound =
+    hasFinishedResolving &&
+    !collectionKind &&
+    !collectionsError &&
+    !collectionDetailError;
   const { importCollection, importError, isImporting, resetImportState } =
     useImportCollection({
       userId: user?.id ?? null,
@@ -67,7 +75,7 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
     importTargetCollectionId ?? defaultCollection?.id ?? null;
 
   function handleUserCollectionChange(nextCollectionId: string) {
-    if (nextCollectionId === collectionSummary?.id) {
+    if (nextCollectionId === collectionId) {
       return;
     }
 
@@ -83,14 +91,14 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
   }
 
   async function handleImportClick(catalogDefinitionIds?: string[]) {
-    if (!collectionSummary || !resolvedImportTargetCollectionId) return;
+    if (!isSystemCollection || !resolvedImportTargetCollectionId) return;
 
     setImportResultMessage(null);
     resetImportState();
 
     try {
       const result = await importCollection({
-        systemCollectionId: collectionSummary.id,
+        systemCollectionId: collectionId,
         targetCollectionId: resolvedImportTargetCollectionId,
         catalogDefinitionIds,
       });
@@ -113,22 +121,20 @@ export function CollectionDetailPage({ collectionId }: CollectionDetailPageProps
     <PageShell fillViewport>
       <BackToCollectionsButton />
 
-      {isLoadingCollections ? (
-        <p className="px-4 text-muted-foreground">Loading collection...</p>
-      ) : collectionsError ? (
+      {collectionsError && !collectionSummary && !collectionDetail ? (
         <div className="px-4">
           <StateMessage message={collectionsError} onRetry={reloadCollections} />
         </div>
-      ) : !collectionSummary ? (
+      ) : isNotFound ? (
         <div className="mx-4 rounded-xl border border-border p-6">
           <h1 className="mb-2 text-xl font-semibold">Collection not found.</h1>
           <p className="text-muted-foreground">
             Go back to collections and choose an available set.
           </p>
         </div>
-      ) : isUserCollection ? (
+      ) : isUserCollection || !isSystemCollection ? (
         <CollectionWordsPanel
-          collectionId={collectionSummary.id}
+          collectionId={collectionId}
           onCollectionChange={handleUserCollectionChange}
           userCollections={userOwnedCollections}
         />
