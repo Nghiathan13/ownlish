@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
@@ -10,6 +11,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CollectionsService } from './collections.service';
+import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
@@ -19,6 +21,14 @@ export class CollectionsController {
   @Get()
   list(@Req() request: AuthRequest): ReturnType<CollectionsService['list']> {
     return this.collectionsService.list(request.user.id);
+  }
+
+  @Post()
+  create(
+    @Req() request: AuthRequest,
+    @Body() body: CreateUserCollectionDto,
+  ): ReturnType<CollectionsService['createUserCollection']> {
+    return this.collectionsService.createUserCollection(request.user.id, body);
   }
 
   @Get(':id')

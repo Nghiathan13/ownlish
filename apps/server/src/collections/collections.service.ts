@@ -89,6 +89,42 @@ export class CollectionsService {
     }));
   }
 
+  async createUserCollection(
+    userId: string,
+    input: { name: string; description?: string },
+  ): Promise<CollectionSummary> {
+    const name = input.name.trim();
+    const description = input.description?.trim() || null;
+
+    if (!name) {
+      throw new BadRequestException('Collection name is required.');
+    }
+
+    const collection = await this.prisma.wordCollection.create({
+      data: {
+        kind: WordCollectionKind.USER,
+        ownerUserId: userId,
+        name,
+        description,
+        isPublic: false,
+      },
+      include: {
+        _count: {
+          select: {
+            catalogItems: true,
+            userWordItems: true,
+          },
+        },
+      },
+    });
+
+    return {
+      ...this.toSummary(collection),
+      itemCount:
+        collection._count.catalogItems + collection._count.userWordItems,
+    };
+  }
+
   async get(userId: string, id: string): Promise<CollectionDetail> {
     const collection = await this.findVisibleCollection(userId, id);
 

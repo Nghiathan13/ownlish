@@ -28,6 +28,7 @@ describe('CollectionsService', () => {
       findMany: jest.fn(),
     },
     wordCollection: {
+      create: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
     },
@@ -70,6 +71,65 @@ describe('CollectionsService', () => {
         },
       }),
     );
+  });
+
+  it('creates a user-owned collection', async () => {
+    prisma.wordCollection.create.mockResolvedValue({
+      ...collection,
+      kind: WordCollectionKind.USER,
+      source: null,
+      cefrLevel: null,
+      isPublic: false,
+      name: 'TOEIC Prep',
+      description: 'Words for exam prep',
+      _count: {
+        catalogItems: 0,
+        userWordItems: 0,
+      },
+    });
+
+    await expect(
+      service.createUserCollection('user-id', {
+        name: '  TOEIC Prep  ',
+        description: ' Words for exam prep ',
+      }),
+    ).resolves.toEqual({
+      id: 'collection-id',
+      name: 'TOEIC Prep',
+      description: 'Words for exam prep',
+      kind: WordCollectionKind.USER,
+      source: null,
+      cefrLevel: null,
+      isPublic: false,
+      itemCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    expect(prisma.wordCollection.create).toHaveBeenCalledWith({
+      data: {
+        kind: WordCollectionKind.USER,
+        ownerUserId: 'user-id',
+        name: 'TOEIC Prep',
+        description: 'Words for exam prep',
+        isPublic: false,
+      },
+      include: {
+        _count: {
+          select: {
+            catalogItems: true,
+            userWordItems: true,
+          },
+        },
+      },
+    });
+  });
+
+  it('rejects creating a user collection without a name', async () => {
+    await expect(
+      service.createUserCollection('user-id', { name: '   ' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.wordCollection.create).not.toHaveBeenCalled();
   });
 
   it('imports new words and merges definitions into existing words', async () => {

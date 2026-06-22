@@ -112,6 +112,42 @@ describe('CollectionsController (e2e)', () => {
     await app.close();
   });
 
+  it('creates a user collection', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/collections')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        name: 'My Study List',
+        description: 'Custom words',
+      })
+      .expect(201);
+
+    const created = parseResponseBody<CollectionSummaryBody>(createResponse);
+    expect(created).toMatchObject({
+      kind: 'USER',
+      name: 'My Study List',
+      itemCount: 0,
+    });
+
+    await request(app.getHttpServer())
+      .get('/collections')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        const collections =
+          parseResponseBody<CollectionSummaryBody[]>(response);
+        expect(collections).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: created.id,
+              kind: 'USER',
+              name: 'My Study List',
+            }),
+          ]),
+        );
+      });
+  });
+
   it('lists, reads, and imports a system collection', async () => {
     await request(app.getHttpServer())
       .get('/collections')
