@@ -48,7 +48,7 @@ function PartCheckboxOption({
   return (
     <button
       className={classNames(
-        "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left",
+        "flex w-full items-center gap-2 rounded-lg border px-4 py-2 text-left",
         disabled
           ? "cursor-not-allowed border-border opacity-60"
           : checked
