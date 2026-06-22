@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { CollectionSummary } from "@/entities/collection/api/collections";
 import type { VocabWord } from "@/entities/vocab/api/vocab";
+import { ImportTargetCollectionSelect } from "@/features/collections/components/ImportTargetCollectionSelect";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import {
   AddWordForm,
@@ -37,11 +39,15 @@ type EditingTarget = {
 type CollectionWordsPanelProps = {
   className?: string;
   collectionId: string;
+  onCollectionChange: (collectionId: string) => void;
+  userCollections: CollectionSummary[];
 };
 
 export function CollectionWordsPanel({
   className,
   collectionId,
+  onCollectionChange,
+  userCollections,
 }: CollectionWordsPanelProps) {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
@@ -162,17 +168,28 @@ export function CollectionWordsPanel({
   return (
     <div className={classNames("flex min-h-0 flex-col", className)}>
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
-        <button
-          type="button"
-          className={iconTextButtonClassName(
-            "w-fit shrink-0",
-            "border-foreground bg-foreground text-background",
-          )}
-          onClick={() => setIsAddWordOpen(true)}
-        >
-          <AddIcon />
-          Add word
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {userCollections.length > 0 ? (
+            <ImportTargetCollectionSelect
+              ariaLabel="Collection"
+              collections={userCollections}
+              onChange={onCollectionChange}
+              value={collectionId}
+              variant="toolbar"
+            />
+          ) : null}
+          <button
+            type="button"
+            className={iconTextButtonClassName(
+              "w-fit shrink-0",
+              "border-foreground bg-foreground text-background",
+            )}
+            onClick={() => setIsAddWordOpen(true)}
+          >
+            <AddIcon />
+            Add word
+          </button>
+        </div>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <VocabularySearch search={search} onSearchChange={setSearch} />
           <VocabularyColumnPicker

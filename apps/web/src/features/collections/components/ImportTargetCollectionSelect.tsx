@@ -3,6 +3,7 @@
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 
 type ImportTargetCollectionSelectProps = {
+  ariaLabel?: string;
   collections: CollectionSummary[];
   onChange: (collectionId: string) => void;
   value: string;
@@ -10,6 +11,7 @@ type ImportTargetCollectionSelectProps = {
 };
 
 export function ImportTargetCollectionSelect({
+  ariaLabel = "Import into",
   collections,
   onChange,
   value,
@@ -18,7 +20,7 @@ export function ImportTargetCollectionSelect({
   if (variant === "toolbar") {
     return (
       <select
-        aria-label="Import into"
+        aria-label={ariaLabel}
         className="h-10 w-fit min-w-[10rem] max-w-[14rem] cursor-pointer appearance-none truncate rounded-lg border border-border bg-transparent px-3 text-sm text-foreground outline-none transition hover:border-foreground focus:border-foreground [@media(prefers-color-scheme:dark)]:color-scheme-dark"
         onChange={(event) => onChange(event.target.value)}
         value={value}

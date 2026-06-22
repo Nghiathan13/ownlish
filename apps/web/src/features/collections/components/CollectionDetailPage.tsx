@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   findCollectionBySlug,
+  getCollectionSlug,
   getDefaultUserCollection,
   getUserOwnedCollections,
 } from "@/entities/collection/lib/collectionDisplay";
@@ -24,6 +26,7 @@ type CollectionDetailPageProps = {
 };
 
 export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
+  const router = useRouter();
   const { status, user } = useAuthSession();
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
     null,
@@ -63,6 +66,22 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
   }, [collections]);
   const resolvedImportTargetCollectionId =
     importTargetCollectionId ?? defaultCollection?.id ?? null;
+
+  function handleUserCollectionChange(nextCollectionId: string) {
+    if (nextCollectionId === collectionSummary?.id) {
+      return;
+    }
+
+    const nextCollection = userOwnedCollections.find(
+      (collection) => collection.id === nextCollectionId,
+    );
+
+    if (!nextCollection) {
+      return;
+    }
+
+    router.push(`/collections/${getCollectionSlug(nextCollection)}`);
+  }
 
   async function handleImportClick(catalogDefinitionIds?: string[]) {
     if (!collectionSummary || !resolvedImportTargetCollectionId) return;
@@ -111,6 +130,8 @@ export function CollectionDetailPage({ slug }: CollectionDetailPageProps) {
           <CollectionWordsPanel
             className="min-h-0 flex-1"
             collectionId={collectionSummary.id}
+            onCollectionChange={handleUserCollectionChange}
+            userCollections={userOwnedCollections}
           />
         ) : isLoadingCollectionDetail ? (
           <p className="text-muted-foreground">Loading words...</p>
