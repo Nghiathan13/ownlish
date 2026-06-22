@@ -17,17 +17,7 @@ export type VocabWordFormValues = {
   word: string;
 };
 
-export const VOCAB_WORD_FORM_LIMITS = {
-  band: 40,
-  definition: 1000,
-  example: 1000,
-  exampleVi: 1000,
-  ipaUk: 120,
-  ipaUs: 120,
-  meaningVi: 500,
-  type: 80,
-  word: 120,
-} as const;
+import { VOCAB_WORD_FORM_LIMITS } from "@/features/vocabulary/constants/vocabWordFormLimits";
 
 export const EMPTY_VOCAB_WORD_FORM_VALUES: VocabWordFormValues = {
   band: "",

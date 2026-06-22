@@ -1,4 +1,4 @@
-export const BILINGUAL_STORAGE_KEY = "engvocab.tests.bilingual";
+import { BILINGUAL_STORAGE_KEY } from "@/features/tests/run/constants/storageKeys";
 
 export function parseBilingualEnabled(raw: string | null) {
   return raw === "true";

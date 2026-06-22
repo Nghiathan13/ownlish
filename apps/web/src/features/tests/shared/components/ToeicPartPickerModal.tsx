@@ -17,10 +17,10 @@ import { useToeicPartPicker } from "@/features/tests/shared/hooks/useToeicPartPi
 import { getPartProgress } from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import {
-  isPartEnabled,
   LISTENING_PARTS,
   READING_PARTS,
-} from "@/features/tests/shared/lib/toeicPartPicker";
+} from "@/features/tests/shared/constants/toeicPartPicker";
+import { isPartEnabled } from "@/features/tests/shared/lib/toeicPartPicker";
 
 type ToeicPartPickerModalProps = {
   intent?: "practice" | "mock";

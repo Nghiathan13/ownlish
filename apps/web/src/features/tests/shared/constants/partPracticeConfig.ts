@@ -1,0 +1,91 @@
+export type PartLeftPanel =
+  | "audio-image"
+  | "audio"
+  | "listening-group"
+  | "question"
+  | "passage"
+  | "none";
+
+export type PartTranslationVariant =
+  | "options"
+  | "question-options"
+  | "content-options"
+  | "content-question-options";
+
+export type PartContentLayout = "default" | "split-plain";
+
+export type PartPracticeConfig = {
+  leftPanel: PartLeftPanel;
+  translationVariant: PartTranslationVariant;
+  showQuestionInRightPanel: boolean;
+  navigationMode: "per-question" | "per-group";
+  showOptionTextBeforeAnswer: boolean;
+  hideContextUntilGroupComplete: boolean;
+  contentLayout: PartContentLayout;
+};
+
+export const PART_PRACTICE_CONFIG: Record<number, PartPracticeConfig> = {
+  1: {
+    leftPanel: "audio-image",
+    translationVariant: "options",
+    showQuestionInRightPanel: false,
+    navigationMode: "per-question",
+    showOptionTextBeforeAnswer: false,
+    hideContextUntilGroupComplete: false,
+    contentLayout: "split-plain",
+  },
+  2: {
+    leftPanel: "audio",
+    translationVariant: "question-options",
+    showQuestionInRightPanel: false,
+    navigationMode: "per-question",
+    showOptionTextBeforeAnswer: false,
+    hideContextUntilGroupComplete: false,
+    contentLayout: "split-plain",
+  },
+  3: {
+    leftPanel: "listening-group",
+    translationVariant: "content-question-options",
+    showQuestionInRightPanel: true,
+    navigationMode: "per-group",
+    showOptionTextBeforeAnswer: true,
+    hideContextUntilGroupComplete: true,
+    contentLayout: "split-plain",
+  },
+  4: {
+    leftPanel: "listening-group",
+    translationVariant: "content-question-options",
+    showQuestionInRightPanel: true,
+    navigationMode: "per-group",
+    showOptionTextBeforeAnswer: true,
+    hideContextUntilGroupComplete: true,
+    contentLayout: "split-plain",
+  },
+  5: {
+    leftPanel: "none",
+    translationVariant: "question-options",
+    showQuestionInRightPanel: true,
+    navigationMode: "per-question",
+    showOptionTextBeforeAnswer: true,
+    hideContextUntilGroupComplete: false,
+    contentLayout: "split-plain",
+  },
+  6: {
+    leftPanel: "passage",
+    translationVariant: "options",
+    showQuestionInRightPanel: false,
+    navigationMode: "per-group",
+    showOptionTextBeforeAnswer: true,
+    hideContextUntilGroupComplete: true,
+    contentLayout: "split-plain",
+  },
+  7: {
+    leftPanel: "passage",
+    translationVariant: "question-options",
+    showQuestionInRightPanel: true,
+    navigationMode: "per-group",
+    showOptionTextBeforeAnswer: true,
+    hideContextUntilGroupComplete: true,
+    contentLayout: "split-plain",
+  },
+};

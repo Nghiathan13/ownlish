@@ -19,6 +19,7 @@ import {
 } from "@/features/tests/overview/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/run/lib/practiceStorage";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
+import { DEFAULT_TOEIC_YEAR, type ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 
 const TOEIC_PART_COUNT = 7;
 const PRACTICE_MODES: PracticeMode[] = ["practice", "review_wrong"];
@@ -40,10 +41,17 @@ export function useTestsOverview() {
     useState<PartPickerIntent>("practice");
   const [clearingTestId, setClearingTestId] = useState<number | null>(null);
   const [startingTestId, setStartingTestId] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<ToeicYear>(DEFAULT_TOEIC_YEAR);
   const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
     isAuthenticated,
     userId: user?.id ?? null,
+    year: selectedYear,
   });
+
+  const selectYear = (year: ToeicYear) => {
+    setSelectedYear(year);
+    setSelectedTest(null);
+  };
 
   const clearHistory = async (testId: number) => {
     if (
@@ -64,7 +72,7 @@ export function useTestsOverview() {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: getTestsQueryKey(user?.id ?? null, 2026),
+          queryKey: getTestsQueryKey(user?.id ?? null, selectedYear),
         }),
         queryClient.invalidateQueries({
           queryKey: ["practice-session", testId],
@@ -168,6 +176,8 @@ export function useTestsOverview() {
     closePartPicker,
     startMock,
     startTest,
+    selectedYear,
+    selectYear,
     startingTestId,
     tests,
     testsError,

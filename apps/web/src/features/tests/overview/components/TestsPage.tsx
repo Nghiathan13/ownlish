@@ -4,6 +4,7 @@ import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPa
 import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
+import { TOEIC_YEARS } from "@/features/tests/shared/constants/toeicYears";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -20,9 +21,22 @@ export function TestsPage() {
         <button className={primaryTextButtonClassName()} type="button">
           TOEIC
         </button>
-        <button className={secondaryTextButtonClassName()} type="button">
-          2026
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {TOEIC_YEARS.map((year) => (
+            <button
+              className={
+                overview.selectedYear === year
+                  ? primaryTextButtonClassName()
+                  : secondaryTextButtonClassName()
+              }
+              key={year}
+              onClick={() => overview.selectYear(year)}
+              type="button"
+            >
+              {year}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 p-4">
@@ -40,7 +54,9 @@ export function TestsPage() {
             </button>
           </div>
         ) : overview.tests.length === 0 ? (
-          <p className="text-muted-foreground">No tests available yet.</p>
+          <p className="text-muted-foreground">
+            No tests available for {overview.selectedYear} yet.
+          </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {overview.tests.map((test) => (

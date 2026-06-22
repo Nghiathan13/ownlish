@@ -1,4 +1,4 @@
-import type { PartTranslationVariant } from "@/features/tests/shared/lib/partPracticeConfig";
+import type { PartTranslationVariant } from "@/features/tests/shared/constants/partPracticeConfig";
 
 export function showsQuestionTranslation(variant: PartTranslationVariant) {
   return (

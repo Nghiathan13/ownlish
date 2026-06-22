@@ -1,6 +1,7 @@
 import { apiRequest, invalidApiResponse } from "@/shared/api/http";
 import { isNumber, isRecord } from "@/shared/lib/parse";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
+import { DEFAULT_TOEIC_YEAR, type ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 
 function parseToeicPartProgress(value: unknown) {
   if (!isRecord(value) || !isNumber(value.partNumber)) {
@@ -46,7 +47,7 @@ function parseTestSummary(value: unknown): ToeicTestSummary | null {
 
 export async function listToeicTests(
   token: string,
-  year = 2026,
+  year: ToeicYear = DEFAULT_TOEIC_YEAR,
   init?: RequestInit,
 ) {
   const body = await apiRequest(`/tests?year=${year}`, {

@@ -4,21 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 import { listToeicTests } from "@/features/tests/overview/api/toeicTestsOverviewApi";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
+import { DEFAULT_TOEIC_YEAR, type ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 
 type UseTestsListParams = {
   isAuthenticated: boolean;
   userId: string | null;
-  year?: number;
+  year?: ToeicYear;
 };
 
-export function getTestsQueryKey(userId: string | null, year: number) {
+export function getTestsQueryKey(userId: string | null, year: ToeicYear) {
   return ["tests", { userId, year }] as const;
 }
 
 export function useTestsList({
   isAuthenticated,
   userId,
-  year = 2026,
+  year = DEFAULT_TOEIC_YEAR,
 }: UseTestsListParams) {
   const testsQuery = useQuery({
     queryKey: getTestsQueryKey(userId, year),
