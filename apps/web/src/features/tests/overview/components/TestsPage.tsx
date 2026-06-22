@@ -4,7 +4,7 @@ import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPa
 import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
-import { TOEIC_YEARS } from "@/features/tests/shared/constants/toeicYears";
+import { getToeicYearButtonLabel, TOEIC_YEARS } from "@/features/tests/shared/constants/toeicYears";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -33,7 +33,7 @@ export function TestsPage() {
               onClick={() => overview.selectYear(year)}
               type="button"
             >
-              {year}
+              {getToeicYearButtonLabel(year)}
             </button>
           ))}
         </div>
@@ -55,7 +55,7 @@ export function TestsPage() {
           </div>
         ) : overview.tests.length === 0 ? (
           <p className="text-muted-foreground">
-            No tests available for {overview.selectedYear} yet.
+            No tests available for {getToeicYearButtonLabel(overview.selectedYear)} yet.
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

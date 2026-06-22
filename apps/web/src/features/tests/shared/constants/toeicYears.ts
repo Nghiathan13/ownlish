@@ -9,3 +9,11 @@ export const DEFAULT_TOEIC_YEAR: ToeicYear = 2026;
 export function isToeicYear(value: number): value is ToeicYear {
   return TOEIC_YEARS.includes(value as ToeicYear);
 }
+
+export function getToeicYearButtonLabel(year: ToeicYear) {
+  if (year === 2025) {
+    return "YBM 2025";
+  }
+
+  return `ETS ${year}`;
+}
