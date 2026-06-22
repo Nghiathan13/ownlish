@@ -60,15 +60,14 @@ export function CatalogWordsTable({
   const emptyDescription = hasSearch
     ? "Try a different search term."
     : "This collection does not have any catalog words yet.";
-  const tableShellClassName = classNames(
-    "mx-4 mb-4 h-0 min-h-0 flex-1 overflow-auto rounded-xl border border-border",
-    "[&_tbody_td]:align-top [&_tbody_tr]:h-px",
+  const scrollShellClassName = classNames(
+    "mx-4 mb-4 h-0 min-h-0 min-w-0 flex-1 overflow-auto rounded-xl border border-border",
     className,
   );
 
   return (
     <>
-      <div className={classNames("grid gap-3 md:hidden", tableShellClassName)}>
+      <div className={classNames("grid gap-3 md:hidden", scrollShellClassName)}>
         {showBodyState ? (
           <TableMobileState
             emptyDescription={emptyDescription}
@@ -201,12 +200,8 @@ export function CatalogWordsTable({
         )}
       </div>
 
-      <table
-        className={classNames(
-          "hidden w-full min-w-[920px] table-fixed border-collapse text-left text-base md:table",
-          tableShellClassName,
-        )}
-      >
+      <div className={classNames("hidden md:block", scrollShellClassName)}>
+        <table className="w-full min-w-[920px] table-fixed border-collapse text-left text-base">
         <thead className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]">
           <tr>
             <th className="w-10 bg-surface px-3 py-3 align-middle">
@@ -423,7 +418,8 @@ export function CatalogWordsTable({
           })
           )}
         </tbody>
-      </table>
+        </table>
+      </div>
     </>
   );
 }
