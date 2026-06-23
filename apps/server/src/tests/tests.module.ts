@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
-import { PracticeService } from './practice.service';
+import { ToeicRunService } from './toeic-run.service';
 import { TestsController } from './tests.controller';
 import { TestsService } from './tests.service';
 import { TestsStorageService } from './tests-storage.service';
-import { ToeicRunGrader } from './lib/toeic-run-grader';
-import { ToeicRunMaterializer } from './lib/toeic-run-materializer';
-import { ToeicRunSessionMapper } from './lib/toeic-run-session.mapper';
+import { ToeicRunGrader } from './lib/toeic-run/grader';
+import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
+import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -17,7 +17,7 @@ import { ToeicRunSessionMapper } from './lib/toeic-run-session.mapper';
     ToeicRunSessionMapper,
     ToeicRunMaterializer,
     ToeicRunGrader,
-    PracticeService,
+    ToeicRunService,
   ],
   controllers: [TestsController],
 })

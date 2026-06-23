@@ -1,35 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ToeicRunMode } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import { ToeicRunMaterializer } from './toeic-run-materializer';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { ToeicRunMaterializer } from './materializer';
+import {
+  createToeicTestsPrismaMock,
+  useToeicTestsTransaction,
+} from '../../testing/create-toeic-tests-prisma.mock';
 
 describe('ToeicRunMaterializer', () => {
   let materializer: ToeicRunMaterializer;
 
-  const prismaMock = {
-    toeicRun: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-    },
-    toeicRunGroup: {
-      create: jest.fn(),
-    },
-    toeicRunQuestion: {
-      createMany: jest.fn(),
-    },
-    toeicQuestionGroup: {
-      findMany: jest.fn(),
-    },
-    $transaction: jest.fn(),
-  };
+  const prismaMock = createToeicTestsPrismaMock();
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    prismaMock.$transaction.mockImplementation(
-      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
-    );
+    useToeicTestsTransaction(prismaMock);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -146,6 +131,24 @@ describe('ToeicRunMaterializer', () => {
     expect(prismaMock.toeicRun.update).toHaveBeenCalledWith({
       where: { id: 'run-id' },
       data: { selectedParts: [1, 2] },
+    });
+  });
+
+  it('finds the latest practice run for a user and test', async () => {
+    prismaMock.toeicRun.findFirst.mockResolvedValue({ id: 'run-id' });
+
+    await expect(
+      materializer.findLatestPracticeRun('user-id', 1),
+    ).resolves.toEqual({ id: 'run-id' });
+
+    expect(prismaMock.toeicRun.findFirst).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        toeicTestId: 1,
+        mode: ToeicRunMode.PRACTICE,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: expect.any(Object) as unknown,
     });
   });
 });

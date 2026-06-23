@@ -1,4 +1,4 @@
-import type { ToeicQuestionOptionKey } from './toeic-question-mapper';
+import type { ToeicQuestionOptionKey } from '../toeic-question-mapper';
 import type { ToeicQuestion, ToeicRunQuestionStatus } from '@prisma/client';
 
 export type SubmitToeicAnswerResponse = {

@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ToeicRunMode } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import type { ToeicRunForResponse } from './toeic-run-session.types';
-import { toeicRunResponseInclude } from './toeic-run-response.include';
+import { PrismaService } from '../../../prisma/prisma.service';
+import type { ToeicRunForResponse } from './session.types';
+import { toeicRunResponseInclude } from './response.include';
 import type {
   CreateToeicRunWithQuestionsInput,
   ToeicQuestionGroupForRun,
-} from './toeic-run-materializer.types';
+} from './materializer.types';
 
 @Injectable()
 export class ToeicRunMaterializer {

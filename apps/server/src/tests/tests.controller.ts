@@ -15,11 +15,12 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
+import { ExpandToeicRunPartsDto } from './dto/expand-toeic-run-parts.dto';
 import { GetToeicRunDto } from './dto/get-toeic-run.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
-import { PracticeService } from './practice.service';
+import { ToeicRunService } from './toeic-run.service';
 import { TestsService } from './tests.service';
 
 @Controller('tests')
@@ -27,7 +28,7 @@ import { TestsService } from './tests.service';
 export class TestsController {
   constructor(
     private readonly testsService: TestsService,
-    private readonly practiceService: PracticeService,
+    private readonly toeicRunService: ToeicRunService,
   ) {}
 
   @Get()
@@ -37,7 +38,7 @@ export class TestsController {
 
   @Post('runs')
   createRun(@Req() request: AuthRequest, @Body() dto: CreateToeicRunDto) {
-    return this.practiceService.createRun(request.user.id, dto);
+    return this.toeicRunService.createRun(request.user.id, dto);
   }
 
   @Get('runs/:sessionId')
@@ -46,7 +47,20 @@ export class TestsController {
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
     @Query() query: GetToeicRunDto,
   ) {
-    return this.practiceService.getRun(request.user.id, sessionId, query);
+    return this.toeicRunService.getRun(request.user.id, sessionId, query);
+  }
+
+  @Post('runs/:sessionId/expand-parts')
+  expandRunParts(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Body() dto: ExpandToeicRunPartsDto,
+  ) {
+    return this.toeicRunService.expandRunParts(
+      request.user.id,
+      sessionId,
+      dto,
+    );
   }
 
   @Post('runs/:sessionId/answers')
@@ -55,7 +69,7 @@ export class TestsController {
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
     @Body() dto: SubmitToeicAnswerDto,
   ) {
-    return this.practiceService.submitAnswer(request.user.id, sessionId, dto);
+    return this.toeicRunService.submitAnswer(request.user.id, sessionId, dto);
   }
 
   @Patch('runs/:sessionId/finish')
@@ -63,7 +77,7 @@ export class TestsController {
     @Req() request: AuthRequest,
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
   ) {
-    return this.practiceService.finishRun(request.user.id, sessionId);
+    return this.toeicRunService.finishRun(request.user.id, sessionId);
   }
 
   @Delete(':testId/practice-history')
@@ -71,7 +85,7 @@ export class TestsController {
     @Req() request: AuthRequest,
     @Param('testId', ParseIntPipe) testId: number,
   ) {
-    return this.practiceService.clearTestHistory(request.user.id, testId);
+    return this.toeicRunService.clearTestHistory(request.user.id, testId);
   }
 
   @Post(':testId/parts/:partNumber/refresh-media')

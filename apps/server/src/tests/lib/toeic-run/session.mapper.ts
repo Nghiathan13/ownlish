@@ -1,24 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ToeicRunQuestionStatus } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import {
   countOptions,
   isToeicQuestionOptionKey,
   mapQuestionOptions,
   parseAnswerKey,
-} from './toeic-question-mapper';
+} from '../toeic-question-mapper';
 import {
   formatToeicGroupStatus,
   formatToeicQuestionCorrectness,
   formatToeicQuestionStatus,
   formatToeicRunMode,
-} from './toeic-run-session.formatters';
+} from './session.formatters';
 import type {
   FormatToeicSessionResponseOptions,
   ToeicRunForResponse,
   ToeicRunGroupForResponse,
-} from './toeic-run-session.types';
-import { TestsStorageService } from '../tests-storage.service';
+} from './session.types';
+import type { ToeicSessionResponse } from './session.response.types';
+import { TestsStorageService } from '../../tests-storage.service';
 
 @Injectable()
 export class ToeicRunSessionMapper {
@@ -31,7 +32,7 @@ export class ToeicRunSessionMapper {
     session: ToeicRunForResponse,
     visibleParts = session.selectedParts,
     options?: FormatToeicSessionResponseOptions,
-  ) {
+  ): Promise<ToeicSessionResponse> {
     const visiblePartSet = new Set(visibleParts);
     const visibleGroups = this.sortVisibleGroups(
       session.groups

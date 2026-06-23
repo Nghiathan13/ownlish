@@ -1,7 +1,7 @@
 import { ToeicRunQuestionStatus } from '@prisma/client';
-import { isToeicRunGroupReadyToGrade } from './toeic-run-grader.helpers';
+import { isToeicRunGroupReadyToGrade } from './grader.helpers';
 
-describe('toeic-run-grader.helpers', () => {
+describe('grader.helpers', () => {
   describe('isToeicRunGroupReadyToGrade', () => {
     it('returns true when every question has a selection in practice mode', () => {
       expect(

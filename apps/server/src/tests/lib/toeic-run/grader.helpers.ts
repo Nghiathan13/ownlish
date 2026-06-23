@@ -1,5 +1,5 @@
 import { ToeicRunQuestionStatus } from '@prisma/client';
-import type { ToeicRunQuestionGradeState } from './toeic-run-grader.types';
+import type { ToeicRunQuestionGradeState } from './grader.types';
 
 export function isToeicRunGroupReadyToGrade(
   questions: ToeicRunQuestionGradeState[],

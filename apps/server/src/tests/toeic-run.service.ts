@@ -5,16 +5,18 @@ import {
 } from '@nestjs/common';
 import { ToeicRunMode } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ExpandToeicRunPartsDto } from './dto/expand-toeic-run-parts.dto';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
 import { GetToeicRunDto } from './dto/get-toeic-run.dto';
-import { ToeicRunGrader } from './lib/toeic-run-grader';
-import { isWrongReviewToeicGroup } from './lib/toeic-run-session.formatters';
-import { ToeicRunMaterializer } from './lib/toeic-run-materializer';
-import { ToeicRunSessionMapper } from './lib/toeic-run-session.mapper';
+import { ToeicRunGrader } from './lib/toeic-run/grader';
+import { isWrongReviewToeicGroup } from './lib/toeic-run/session.formatters';
+import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
+import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
+import type { ToeicSessionResponse } from './lib/toeic-run/session.response.types';
 
 @Injectable()
-export class PracticeService {
+export class ToeicRunService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sessionMapper: ToeicRunSessionMapper,
@@ -22,7 +24,10 @@ export class PracticeService {
     private readonly runGrader: ToeicRunGrader,
   ) {}
 
-  async createRun(userId: string, dto: CreateToeicRunDto) {
+  async createRun(
+    userId: string,
+    dto: CreateToeicRunDto,
+  ): Promise<ToeicSessionResponse> {
     const selectedParts = this.resolveSelectedParts(dto);
     const mode = dto.mode ?? 'practice';
 
@@ -168,7 +173,11 @@ export class PracticeService {
     });
   }
 
-  async getRun(userId: string, sessionId: string, dto: GetToeicRunDto = {}) {
+  async getRun(
+    userId: string,
+    sessionId: string,
+    dto: GetToeicRunDto = {},
+  ): Promise<ToeicSessionResponse> {
     const loadedRun = await this.prisma.toeicRun.findFirst({
       where: { id: sessionId, userId },
       select: {
@@ -206,14 +215,6 @@ export class PracticeService {
 
     await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
 
-    if (dto.parts) {
-      await this.runMaterializer.ensurePracticeRunIncludesParts(
-        loadedRun.id,
-        loadedRun.toeicTestId,
-        visibleParts,
-      );
-    }
-
     const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
     if (!run) {
       throw new NotFoundException('Practice session not found.');
@@ -229,6 +230,46 @@ export class PracticeService {
     return this.sessionMapper.formatSessionResponse(run, visibleParts);
   }
 
+  async expandRunParts(
+    userId: string,
+    sessionId: string,
+    dto: ExpandToeicRunPartsDto,
+  ): Promise<ToeicSessionResponse> {
+    const selectedParts = this.resolveSelectedPartsFromNumbers(dto.partNumbers);
+    const loadedRun = await this.prisma.toeicRun.findFirst({
+      where: { id: sessionId, userId },
+      select: {
+        id: true,
+        mode: true,
+        toeicTestId: true,
+      },
+    });
+
+    if (!loadedRun) {
+      throw new NotFoundException('TOEIC run not found.');
+    }
+
+    if (loadedRun.mode === ToeicRunMode.MOCK_TEST) {
+      throw new BadRequestException(
+        'Only practice runs can be expanded with additional parts.',
+      );
+    }
+
+    await this.assertTestAndPartsExist(loadedRun.toeicTestId, selectedParts);
+    await this.runMaterializer.ensurePracticeRunIncludesParts(
+      loadedRun.id,
+      loadedRun.toeicTestId,
+      selectedParts,
+    );
+
+    const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
+    if (!run) {
+      throw new NotFoundException('Practice session not found.');
+    }
+
+    return this.sessionMapper.formatSessionResponse(run, selectedParts);
+  }
+
   async submitAnswer(
     userId: string,
     sessionId: string,
@@ -237,7 +278,10 @@ export class PracticeService {
     return this.runGrader.submitAnswer(userId, sessionId, dto);
   }
 
-  async finishRun(userId: string, sessionId: string) {
+  async finishRun(
+    userId: string,
+    sessionId: string,
+  ): Promise<ToeicSessionResponse> {
     const run = await this.prisma.toeicRun.findFirst({
       where: { id: sessionId, userId },
     });

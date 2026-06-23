@@ -10,21 +10,21 @@ import {
   ToeicRunQuestionStatus,
   type ToeicQuestion,
 } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import { SubmitToeicAnswerDto } from '../dto/submit-toeic-answer.dto';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { SubmitToeicAnswerDto } from '../../dto/submit-toeic-answer.dto';
 import {
   getOptionText,
   getOptionViText,
   isToeicQuestionOptionKey,
   parseAnswerKey,
   type ToeicQuestionOptionKey,
-} from './toeic-question-mapper';
-import { isToeicRunGroupReadyToGrade } from './toeic-run-grader.helpers';
+} from '../toeic-question-mapper';
+import { isToeicRunGroupReadyToGrade } from './grader.helpers';
 import type {
   SubmitToeicAnswerResponse,
   ToeicQuestionWithTestPart,
   ToeicRunQuestionWithQuestion,
-} from './toeic-run-grader.types';
+} from './grader.types';
 
 @Injectable()
 export class ToeicRunGrader {

@@ -9,10 +9,10 @@ import {
   formatToeicQuestionStatus,
   formatToeicRunMode,
   isWrongReviewToeicGroup,
-} from './toeic-run-session.formatters';
-import type { ToeicRunGroupForResponse } from './toeic-run-session.types';
+} from './session.formatters';
+import type { ToeicRunGroupForResponse } from './session.types';
 
-describe('toeic-run-session.formatters', () => {
+describe('session.formatters', () => {
   describe('formatToeicRunMode', () => {
     it('maps mock test mode to mock_test', () => {
       expect(formatToeicRunMode(ToeicRunMode.MOCK_TEST)).toBe('mock_test');

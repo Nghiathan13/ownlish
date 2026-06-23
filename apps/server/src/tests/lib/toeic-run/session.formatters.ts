@@ -6,7 +6,11 @@ import {
 import type {
   ToeicRunGroupForResponse,
   ToeicSessionResponseMode,
-} from './toeic-run-session.types';
+} from './session.types';
+import type {
+  ToeicSessionGroupStatusResponse,
+  ToeicSessionQuestionStatusResponse,
+} from './session.response.types';
 
 export function formatToeicRunMode(mode: ToeicRunMode): ToeicSessionResponseMode {
   if (mode === ToeicRunMode.MOCK_TEST) {
@@ -25,7 +29,9 @@ export function isWrongReviewToeicGroup(group: ToeicRunGroupForResponse) {
   );
 }
 
-export function formatToeicGroupStatus(status: ToeicRunGroupStatus | null) {
+export function formatToeicGroupStatus(
+  status: ToeicRunGroupStatus | null,
+): ToeicSessionGroupStatusResponse {
   if (status === ToeicRunGroupStatus.RIGHT) {
     return 'right';
   }
@@ -37,7 +43,9 @@ export function formatToeicGroupStatus(status: ToeicRunGroupStatus | null) {
   return null;
 }
 
-export function formatToeicQuestionStatus(status: ToeicRunQuestionStatus | null) {
+export function formatToeicQuestionStatus(
+  status: ToeicRunQuestionStatus | null,
+): ToeicSessionQuestionStatusResponse {
   if (status === ToeicRunQuestionStatus.SELECTED) {
     return 'selected';
   }
