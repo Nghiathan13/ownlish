@@ -82,11 +82,11 @@ export function SidebarUserMenu({
         <div
           role="menu"
           className={classNames(
-            "absolute bottom-full left-0 z-50 mb-2 min-w-56 rounded-lg border border-border bg-background p-4 shadow-lg",
+            "absolute bottom-full left-0 z-50 mb-2 min-w-56 rounded-lg border border-border bg-background p-2 shadow-lg",
             !collapsed && "right-0",
           )}
         >
-          <div className="flex items-center gap-4 border-b border-border pb-2">
+          <div className="flex items-center gap-2 p-2">
             <AccountIcon className="size-6 shrink-0" />
             <div className="min-w-0">
               <p className="truncate text-base font-normal text-foreground">
@@ -105,9 +105,9 @@ export function SidebarUserMenu({
               setOpen(false);
               onLogout();
             }}
-            className="flex w-full items-center gap-4 pt-2 text-base font-normal text-foreground hover:bg-muted"
+            className="flex w-full items-center gap-2 p-2 text-base font-normal text-foreground hover:bg-muted"
           >
-            <LogoutIcon className="size-5 shrink-0" />
+            <LogoutIcon className="size-6 shrink-0" />
             Logout
           </button>
         </div>
