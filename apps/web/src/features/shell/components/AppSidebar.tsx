@@ -7,11 +7,11 @@ import {
   isAuthenticatedStatus,
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
-import { useSidebarCollapsed } from "@/features/auth/hooks/useSidebarCollapsed";
+import { useSidebarCollapsed } from "@/features/shell/hooks/useSidebarCollapsed";
 import {
   APP_NAV_LINKS,
   getAppSidebarLinkClass,
-} from "@/features/auth/lib/appNavLinks";
+} from "@/features/shell/lib/appNavLinks";
 import { classNames } from "@/shared/lib/classNames";
 import {
   iconOnlyButtonClassName,

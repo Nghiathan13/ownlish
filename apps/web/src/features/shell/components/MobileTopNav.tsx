@@ -10,7 +10,7 @@ import {
 import {
   APP_NAV_LINKS,
   getAppNavLinkClass,
-} from "@/features/auth/lib/appNavLinks";
+} from "@/features/shell/lib/appNavLinks";
 import { classNames } from "@/shared/lib/classNames";
 import {
   primaryTextButtonClassName,

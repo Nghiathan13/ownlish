@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { AppSidebar } from "@/features/auth/components/AppSidebar";
-import { MobileTopNav } from "@/features/auth/components/MobileTopNav";
-import { TestSessionToolbar } from "@/features/auth/components/TestSessionToolbar";
-import { isImmersiveTestPath } from "@/features/tests/shared/lib/isImmersiveTestPath";
+import { TestSessionToolbar } from "@/features/tests/run/components/TestSessionToolbar";
+import { AppSidebar } from "@/features/shell/components/AppSidebar";
+import { MobileTopNav } from "@/features/shell/components/MobileTopNav";
+import { getShellLayoutMode } from "@/features/shell/lib/shellRoutes";
 
 type AppShellProps = {
   children: ReactNode;
@@ -13,14 +13,13 @@ type AppShellProps = {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const isLogin = pathname === "/login";
-  const isImmersiveTest = isImmersiveTestPath(pathname);
+  const layoutMode = getShellLayoutMode(pathname);
 
-  if (isLogin) {
+  if (layoutMode === "bare") {
     return <>{children}</>;
   }
 
-  if (isImmersiveTest) {
+  if (layoutMode === "immersive-test") {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <TestSessionToolbar />
