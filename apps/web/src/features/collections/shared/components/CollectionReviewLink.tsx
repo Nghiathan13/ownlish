@@ -23,37 +23,24 @@ export function CollectionReviewLink({
     userId,
   });
   const dueCount = stats?.due ?? 0;
-  const isDisabled = !isLoading && dueCount === 0;
+
+  if (!isLoading && dueCount === 0) {
+    return null;
+  }
+
   const label = isLoading ? "Review (...)" : "Review";
   const reviewLabel =
     !isLoading && dueCount > 0 ? `Review (${dueCount})` : label;
-  const enabledClassName = iconTextButtonClassName(
+  const className = iconTextButtonClassName(
     "pointer-events-auto relative z-20 shrink-0 border-foreground bg-foreground text-background",
-  );
-  const disabledClassName = iconTextButtonClassName(
-    "pointer-events-auto relative z-20 shrink-0 border-border bg-muted text-muted-foreground",
   );
   const badge =
     !isLoading && dueCount > 0 ? <TopRightCountBadge count={dueCount} /> : null;
 
-  if (isDisabled) {
-    return (
-      <button
-        aria-label="Review"
-        className={disabledClassName}
-        disabled
-        type="button"
-      >
-        <QuizIcon />
-        {label}
-      </button>
-    );
-  }
-
   return (
     <Link
       aria-label={reviewLabel}
-      className={enabledClassName}
+      className={className}
       href={`/review?collectionId=${collectionId}`}
       onClick={(event) => {
         event.stopPropagation();
