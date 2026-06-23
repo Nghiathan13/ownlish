@@ -32,7 +32,7 @@ export function AppSidebar() {
       <div
         className={classNames(
           "flex flex-col gap-4 p-2",
-          collapsed ? "w-14" : "w-56",
+          collapsed ? "w-14" : "w-60",
         )}
       >
         {collapsed ? (
