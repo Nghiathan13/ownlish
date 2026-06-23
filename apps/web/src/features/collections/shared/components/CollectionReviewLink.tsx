@@ -32,7 +32,7 @@ export function CollectionReviewLink({
   const reviewLabel =
     !isLoading && dueCount > 0 ? `Review (${dueCount})` : label;
   const className = iconTextButtonClassName(
-    "pointer-events-auto relative z-20 shrink-0 rounded-[16px] border-foreground bg-foreground text-background",
+    "pointer-events-auto relative z-20 shrink-0 rounded-[20px] border-foreground bg-foreground text-background",
   );
   const badge =
     !isLoading && dueCount > 0 ? <TopRightCountBadge count={dueCount} /> : null;
