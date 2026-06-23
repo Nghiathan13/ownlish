@@ -26,10 +26,11 @@ export function MyVocabularyCard({
   });
   const wordCountLabel =
     isLoading || stats == null ? "..." : `${stats.total} words`;
+  const description = collection?.description?.trim() || "No description.";
 
   return (
     <CollectionCard
-      description={collection?.description ?? null}
+      description={description}
       footerAction={
         collectionId
           ? (

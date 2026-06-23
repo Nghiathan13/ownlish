@@ -25,18 +25,20 @@ export function CollectionCard({
   if (isDisabled || !href) {
     return (
       <article className="rounded-xl border border-border p-4 opacity-50">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-lg font-semibold">{title}</h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <h2 className="text-lg font-semibold">{title}</h2>
+              {description ? (
+                <p className="text-base text-muted-foreground">{description}</p>
+              ) : null}
+            </div>
             {badge ? (
               <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
                 {badge}
               </span>
             ) : null}
           </div>
-          {description ? (
-            <p className="text-base text-muted-foreground">{description}</p>
-          ) : null}
           <p className="text-base">{wordCountLabel}</p>
         </div>
       </article>
@@ -45,19 +47,21 @@ export function CollectionCard({
 
   return (
     <article className="relative rounded-xl border border-border">
-      <div className="relative z-10 flex flex-col gap-2 p-4 pointer-events-none">
+      <div className="relative z-10 flex flex-col gap-4 p-4 pointer-events-none">
         <div className="flex items-start gap-3">
-          <h2 className="min-w-0 flex-1 text-lg font-semibold">{title}</h2>
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h2 className="text-lg font-semibold">{title}</h2>
+            {description ? (
+              <p className="text-base text-muted-foreground">{description}</p>
+            ) : null}
+          </div>
           {badge ? (
             <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
               {badge}
             </span>
           ) : null}
-          {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
+          {headerAction ?? null}
         </div>
-        {description ? (
-          <p className="text-base text-muted-foreground">{description}</p>
-        ) : null}
         <div className="flex items-center justify-between gap-3">
           <p className="text-base">{wordCountLabel}</p>
           {footerAction ? <div className="shrink-0">{footerAction}</div> : null}
