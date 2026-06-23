@@ -29,7 +29,7 @@ export function CollectionCard({
     return (
       <article className="rounded-xl border border-border p-4 opacity-50">
         <div className="flex flex-col gap-4">
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <h2 className="text-lg font-semibold">{title}</h2>
               {createdLabel ? (
@@ -54,7 +54,7 @@ export function CollectionCard({
   return (
     <article className="relative rounded-xl border border-border hover:border-foreground">
       <div className="relative z-10 flex flex-col gap-4 p-4 pointer-events-none">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 className="text-lg font-semibold">{title}</h2>
             {createdLabel ? (
