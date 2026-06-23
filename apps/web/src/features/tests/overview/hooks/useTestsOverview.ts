@@ -47,8 +47,8 @@ export function useTestsOverview(selectedYear: ToeicYear) {
   const clearHistory = async (testId: number) => {
     if (
       !isAuthenticated ||
-      !window.confirm(
-        "Clear all practice history for this test? This cannot be undone.",
+      !      window.confirm(
+        "Clear all practice answers for this test? This cannot be undone.",
       )
     ) {
       return;
