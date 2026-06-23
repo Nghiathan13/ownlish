@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CalenderIcon } from "@/shared/ui/icons/CalenderIcon";
 
+const COLLECTION_CARD_RADIUS_CLASS = "rounded-[32px]";
+
 type CollectionCardProps = {
   badge?: string | null;
   createdLabel?: string | null;
@@ -27,7 +29,9 @@ export function CollectionCard({
 }: CollectionCardProps) {
   if (isDisabled || !href) {
     return (
-      <article className="rounded-xl border border-border p-4 opacity-50">
+      <article
+        className={`${COLLECTION_CARD_RADIUS_CLASS} border border-border p-4 opacity-50`}
+      >
         <div className="flex flex-col gap-4">
           <div className="flex items-start gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -52,7 +56,7 @@ export function CollectionCard({
   }
 
   return (
-    <article className="group relative rounded-xl border border-border hover:border-foreground">
+    <article className={`group relative ${COLLECTION_CARD_RADIUS_CLASS} border border-border hover:border-foreground`}>
       <div className="relative z-10 flex flex-col gap-4 p-4 pointer-events-none">
         <div className="flex items-start gap-4">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -78,7 +82,7 @@ export function CollectionCard({
       </div>
       <Link
         aria-label={`Open ${title}`}
-        className="absolute inset-0 rounded-xl"
+        className={`absolute inset-0 ${COLLECTION_CARD_RADIUS_CLASS}`}
         href={href}
       />
     </article>
