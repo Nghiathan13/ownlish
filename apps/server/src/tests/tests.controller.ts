@@ -15,6 +15,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
+import { GetToeicRunDto } from './dto/get-toeic-run.dto';
 import { ListTestsDto } from './dto/list-tests.dto';
 import { RefreshMediaDto } from './dto/refresh-media.dto';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
@@ -43,8 +44,9 @@ export class TestsController {
   getRun(
     @Req() request: AuthRequest,
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Query() query: GetToeicRunDto,
   ) {
-    return this.practiceService.getRun(request.user.id, sessionId);
+    return this.practiceService.getRun(request.user.id, sessionId, query);
   }
 
   @Post('runs/:sessionId/answers')

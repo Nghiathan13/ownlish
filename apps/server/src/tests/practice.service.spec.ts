@@ -690,4 +690,252 @@ describe('PracticeService', () => {
 
     expect(prismaMock.$transaction).toHaveBeenCalledWith(['delete-runs-query']);
   });
+
+  it('getRun filters visible parts on a practice session', async () => {
+    const practiceRun = {
+      id: 'practice-run-id',
+      mode: 'PRACTICE',
+      toeicTestId: 1,
+      selectedParts: [1, 2, 3],
+      totalRight: 0,
+      totalWrong: 0,
+      completedAt: null,
+      questions: [],
+      groups: [
+        {
+          toeicQuestionGroupId: 101,
+          partNumber: 1,
+          questionStart: 1,
+          questionEnd: 1,
+          sortOrder: 0,
+          status: null,
+          toeicQuestionGroup: {
+            id: 101,
+            groupType: 'photo',
+            accent: null,
+            content: null,
+            contentVi: null,
+            audioStoragePath: null,
+            imageStoragePath: null,
+          },
+          questions: [],
+        },
+        {
+          toeicQuestionGroupId: 102,
+          partNumber: 2,
+          questionStart: 2,
+          questionEnd: 2,
+          sortOrder: 1,
+          status: null,
+          toeicQuestionGroup: {
+            id: 102,
+            groupType: 'photo',
+            accent: null,
+            content: null,
+            contentVi: null,
+            audioStoragePath: null,
+            imageStoragePath: null,
+          },
+          questions: [],
+        },
+      ],
+    };
+
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1, year: 2026 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([
+      { partNumber: 1 },
+      { partNumber: 2 },
+      { partNumber: 3 },
+    ]);
+    prismaMock.toeicRun.findFirst.mockResolvedValue(practiceRun);
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique
+      .mockResolvedValueOnce({
+        id: 'practice-run-id',
+        selectedParts: [1, 2, 3],
+        groups: [],
+      })
+      .mockResolvedValueOnce(practiceRun);
+
+    await expect(
+      service.getRun('user-id', 'practice-run-id', { parts: '1' }),
+    ).resolves.toMatchObject({
+      sessionId: 'practice-run-id',
+      year: 2026,
+      partNumbers: [1],
+      groups: [{ partNumber: 1 }],
+    });
+  });
+
+  it('getRun returns review wrong view over the shared practice session', async () => {
+    const practiceRun = {
+      id: 'practice-run-id',
+      mode: 'PRACTICE',
+      toeicTestId: 1,
+      selectedParts: [1],
+      totalRight: 1,
+      totalWrong: 1,
+      completedAt: null,
+      questions: [
+        {
+          toeicQuestionId: 1001,
+          selectedKey: 'B',
+          status: 'WRONG',
+          toeicQuestion: { answerKey: 'A' },
+        },
+      ],
+      groups: [
+        {
+          toeicQuestionGroupId: 101,
+          partNumber: 1,
+          questionStart: 1,
+          questionEnd: 1,
+          sortOrder: 0,
+          status: 'WRONG',
+          toeicQuestionGroup: {
+            id: 101,
+            groupType: 'photo',
+            accent: null,
+            content: null,
+            contentVi: null,
+            audioStoragePath: null,
+            imageStoragePath: null,
+          },
+          questions: [
+            {
+              toeicQuestionId: 1001,
+              selectedKey: 'B',
+              status: 'WRONG',
+              toeicQuestion: {
+                id: 1001,
+                groupId: 101,
+                questionNumber: 1,
+                question: 'Question 1',
+                questionVi: null,
+                questionType: null,
+                optionA: 'A',
+                optionB: 'B',
+                optionC: 'C',
+                optionD: 'D',
+                optionAVi: null,
+                optionBVi: null,
+                optionCVi: null,
+                optionDVi: null,
+                answerKey: 'A',
+                explanationVi: null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1, year: 2025 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([{ partNumber: 1 }]);
+    prismaMock.toeicRun.findFirst.mockResolvedValue(practiceRun);
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique
+      .mockResolvedValueOnce({
+        id: 'practice-run-id',
+        selectedParts: [1],
+        groups: [],
+      })
+      .mockResolvedValueOnce(practiceRun);
+
+    await expect(
+      service.getRun('user-id', 'practice-run-id', {
+        parts: '1',
+        mode: 'review_wrong',
+      }),
+    ).resolves.toMatchObject({
+      sessionId: 'practice-run-id',
+      mode: 'review_wrong',
+      year: 2025,
+      groups: [
+        {
+          partNumber: 1,
+          questions: [{ id: 1001, selectedKey: null }],
+        },
+      ],
+    });
+  });
+
+  it('getRun expands practice sessions when new parts are requested', async () => {
+    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1, year: 2026 });
+    prismaMock.toeicTestPart.findMany.mockResolvedValue([
+      { partNumber: 1 },
+      { partNumber: 2 },
+    ]);
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'practice-run-id',
+      mode: 'PRACTICE',
+      toeicTestId: 1,
+      selectedParts: [1],
+      totalRight: 0,
+      totalWrong: 0,
+      completedAt: null,
+      questions: [],
+      groups: [],
+    });
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: typeof prismaMock) => unknown) => callback(prismaMock),
+    );
+    prismaMock.toeicRun.findUnique
+      .mockResolvedValueOnce({
+        id: 'practice-run-id',
+        selectedParts: [1],
+        groups: [],
+      })
+      .mockResolvedValueOnce({
+        id: 'practice-run-id',
+        mode: 'PRACTICE',
+        toeicTestId: 1,
+        selectedParts: [1, 2],
+        totalRight: 0,
+        totalWrong: 0,
+        completedAt: null,
+        questions: [],
+        groups: [],
+      });
+
+    await expect(
+      service.getRun('user-id', 'practice-run-id', { parts: '1,2' }),
+    ).resolves.toMatchObject({
+      sessionId: 'practice-run-id',
+      partNumbers: [1, 2],
+      year: 2026,
+    });
+
+    expect(prismaMock.toeicRun.update).toHaveBeenCalledWith({
+      where: { id: 'practice-run-id' },
+      data: { selectedParts: [1, 2] },
+    });
+  });
+
+  it('getRun rejects review wrong mode for mock sessions', async () => {
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'mock-run-id',
+      mode: 'MOCK_TEST',
+      toeicTestId: 1,
+      selectedParts: [1],
+      totalRight: 0,
+      totalWrong: 0,
+      completedAt: null,
+      questions: [],
+      groups: [],
+    });
+
+    await expect(
+      service.getRun('user-id', 'mock-run-id', {
+        parts: '1',
+        mode: 'review_wrong',
+      }),
+    ).rejects.toThrow('Review wrong is not supported for mock test runs.');
+  });
 });

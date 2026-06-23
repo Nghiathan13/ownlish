@@ -21,6 +21,7 @@ import {
 } from './lib/toeic-question-mapper';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
+import { GetToeicRunDto } from './dto/get-toeic-run.dto';
 import { TestsStorageService } from './tests-storage.service';
 
 type SubmitAnswerResponse = {
@@ -154,14 +155,27 @@ export class PracticeService {
     return this.formatSessionResponse(run, selectedParts);
   }
 
-  private resolveSelectedParts(dto: CreateToeicRunDto): number[] {
-    const selectedParts = [...new Set(dto.partNumbers)].sort((a, b) => a - b);
+  private resolveSelectedPartsFromNumbers(partNumbers: number[]): number[] {
+    const selectedParts = [...new Set(partNumbers)].sort((a, b) => a - b);
 
     if (selectedParts.length === 0) {
       throw new BadRequestException('Select at least one test part.');
     }
 
     return selectedParts;
+  }
+
+  private resolveSelectedParts(dto: CreateToeicRunDto): number[] {
+    return this.resolveSelectedPartsFromNumbers(dto.partNumbers);
+  }
+
+  private parsePartsQuery(parts: string): number[] {
+    const parsed = parts
+      .split(',')
+      .map((value) => Number(value.trim()))
+      .filter((value) => Number.isInteger(value) && value > 0);
+
+    return this.resolveSelectedPartsFromNumbers(parsed);
   }
 
   private async assertTestAndPartsExist(
@@ -280,11 +294,20 @@ export class PracticeService {
     );
     const responseMode = options?.mode ?? this.formatRunMode(session.mode);
     let nextSessionQuestionNumber = 1;
+    const test = await this.prisma.toeicTest.findUnique({
+      where: { id: session.toeicTestId },
+      select: { year: true },
+    });
+
+    if (!test) {
+      throw new NotFoundException('Test not found.');
+    }
 
     return {
       sessionId: session.id,
       mode: responseMode,
       testId: session.toeicTestId,
+      year: test.year,
       partNumbers: visibleParts,
       totalQuestions: visibleGroups.reduce(
         (total, group) => total + group.questions.length,
@@ -626,17 +649,65 @@ export class PracticeService {
     });
   }
 
-  async getRun(userId: string, sessionId: string) {
-    const run = await this.prisma.toeicRun.findFirst({
+  async getRun(userId: string, sessionId: string, dto: GetToeicRunDto = {}) {
+    const loadedRun = await this.prisma.toeicRun.findFirst({
       where: { id: sessionId, userId },
-      include: this.runResponseInclude(),
+      select: {
+        id: true,
+        mode: true,
+        toeicTestId: true,
+        selectedParts: true,
+      },
     });
 
-    if (!run) {
+    if (!loadedRun) {
       throw new NotFoundException('TOEIC run not found.');
     }
 
-    return this.formatSessionResponse(run);
+    const visibleParts = dto.parts
+      ? this.parsePartsQuery(dto.parts)
+      : [...loadedRun.selectedParts];
+
+    if (loadedRun.mode === ToeicRunMode.MOCK_TEST) {
+      if (dto.mode === 'review_wrong') {
+        throw new BadRequestException(
+          'Review wrong is not supported for mock test runs.',
+        );
+      }
+
+      await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
+
+      const run = await this.getRunForResponse(loadedRun.id);
+      if (!run) {
+        throw new NotFoundException('TOEIC run not found.');
+      }
+
+      return this.formatSessionResponse(run, visibleParts);
+    }
+
+    await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
+
+    if (dto.parts) {
+      await this.ensurePracticeRunIncludesParts(
+        loadedRun.id,
+        loadedRun.toeicTestId,
+        visibleParts,
+      );
+    }
+
+    const run = await this.getRunForResponse(loadedRun.id);
+    if (!run) {
+      throw new NotFoundException('Practice session not found.');
+    }
+
+    if (dto.mode === 'review_wrong') {
+      return this.formatSessionResponse(run, visibleParts, {
+        mode: 'review_wrong',
+        groupFilter: (group) => this.isWrongReviewGroup(group),
+      });
+    }
+
+    return this.formatSessionResponse(run, visibleParts);
   }
 
   private buildGradedResponse(
