@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { CalenderIcon } from "@/shared/ui/icons/CalenderIcon";
 
 type CollectionCardProps = {
   badge?: string | null;
@@ -32,7 +33,7 @@ export function CollectionCard({
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <h2 className="text-lg font-semibold">{title}</h2>
               {createdLabel ? (
-                <p className="text-base text-muted-foreground">{createdLabel}</p>
+                <CollectionCardCreatedLabel label={createdLabel} />
               ) : null}
             </div>
             {badge ? (
@@ -57,7 +58,7 @@ export function CollectionCard({
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 className="text-lg font-semibold">{title}</h2>
             {createdLabel ? (
-              <p className="text-base text-muted-foreground">{createdLabel}</p>
+              <CollectionCardCreatedLabel label={createdLabel} />
             ) : null}
           </div>
           {badge ? (
@@ -81,5 +82,14 @@ export function CollectionCard({
         href={href}
       />
     </article>
+  );
+}
+
+function CollectionCardCreatedLabel({ label }: { label: string }) {
+  return (
+    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+      <CalenderIcon className="size-4 shrink-0" />
+      {label}
+    </p>
   );
 }
