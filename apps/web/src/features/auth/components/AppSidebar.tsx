@@ -46,7 +46,7 @@ export function AppSidebar() {
               }}
               className={classNames(
                 iconOnlyButtonClassName(),
-                "size-10 [&_svg]:size-5 text-muted-foreground hover:bg-muted hover:text-foreground",
+                "size-10 [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               <PanelOpenIcon />
@@ -69,7 +69,7 @@ export function AppSidebar() {
               }}
               className={classNames(
                 iconOnlyButtonClassName(),
-                "size-10 [&_svg]:size-5 text-muted-foreground hover:bg-muted hover:text-foreground",
+                "size-10 [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               <PanelCloseIcon />
@@ -94,7 +94,7 @@ export function AppSidebar() {
                     collapsed && "justify-center",
                   )}
                 >
-                  <Icon className="size-5 shrink-0" />
+                  <Icon className="size-6 shrink-0" />
                   {!collapsed ? <span>{link.label}</span> : null}
                 </Link>
               );
