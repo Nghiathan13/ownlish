@@ -52,7 +52,7 @@ export function CollectionCard({
   }
 
   return (
-    <article className="group relative rounded-xl border border-border group-hover:border-foreground">
+    <article className="relative rounded-xl border border-border hover:border-foreground">
       <div className="relative z-10 flex flex-col gap-4 p-4 pointer-events-none">
         <div className="flex items-start gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
