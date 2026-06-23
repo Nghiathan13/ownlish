@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   useAuthSession,
   isAuthenticatedStatus,
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
+import { useSidebarCollapsed } from "@/features/auth/hooks/useSidebarCollapsed";
 import {
   APP_NAV_LINKS,
   getAppSidebarLinkClass,
@@ -21,30 +21,11 @@ import {
 import { PanelCloseIcon } from "@/shared/ui/icons/PanelCloseIcon";
 import { PanelOpenIcon } from "@/shared/ui/icons/PanelOpenIcon";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "engvocab.sidebar.collapsed";
-
 export function AppSidebar() {
   const pathname = usePathname();
   const { logout, status, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
-  const [collapsed, setCollapsed] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
-    if (stored === "true") {
-      setCollapsed(true);
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
-
-    localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
-  }, [collapsed, hydrated]);
+  const { collapsed, setCollapsed } = useSidebarCollapsed();
 
   return (
     <aside
