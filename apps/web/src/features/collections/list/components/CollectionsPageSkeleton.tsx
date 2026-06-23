@@ -5,7 +5,7 @@ const SKELETON_CARD_COUNT = 6;
 const SKELETON_TAB_COUNT = 4;
 
 function CollectionCardSkeleton() {
-  return <Skeleton className="min-h-45 w-full rounded-[32px]" />;
+  return <Skeleton className="min-h-45 w-full rounded-xl" />;
 }
 
 export function CollectionsGridSkeleton() {

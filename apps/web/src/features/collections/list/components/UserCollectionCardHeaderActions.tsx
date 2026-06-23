@@ -39,7 +39,7 @@ export function UserCollectionCardHeaderActions({
             isDeleting ? "Deleting collection" : `Delete ${collection.name}`
           }
           className={iconOnlyButtonClassName(
-            "pointer-events-auto rounded-full bg-transparent",
+            "pointer-events-auto bg-transparent",
             statusColorClasses.danger.text,
             statusColorClasses.danger.backgroundHover,
           )}
