@@ -59,6 +59,27 @@ export function getUserOwnedCollections(collections: CollectionSummary[]) {
     });
 }
 
+export function getSystemCollectionsInSameCategory(
+  collections: CollectionSummary[],
+  currentCollection: CollectionSummary,
+) {
+  const category = getCollectionCategory(currentCollection);
+
+  return collections
+    .filter((collection) => {
+      if (collection.kind !== "SYSTEM") {
+        return false;
+      }
+
+      if (category == null) {
+        return true;
+      }
+
+      return getCollectionCategory(collection) === category;
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 export type CollectionKindHint = "system" | "user";
 
 export function getCollectionKindHint(

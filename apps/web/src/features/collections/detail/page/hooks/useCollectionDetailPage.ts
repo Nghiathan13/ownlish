@@ -31,9 +31,6 @@ export function useCollectionDetailPage({
   const [importResultMessage, setImportResultMessage] = useState<string | null>(
     null,
   );
-  const [importTargetCollectionId, setImportTargetCollectionId] = useState<
-    string | null
-  >(null);
   const authParams = {
     isAuthenticated,
     userId,
@@ -72,8 +69,7 @@ export function useCollectionDetailPage({
   const defaultCollection = useMemo(() => {
     return getDefaultUserCollection(collections);
   }, [collections]);
-  const resolvedImportTargetCollectionId =
-    importTargetCollectionId ?? defaultCollection?.id ?? null;
+  const resolvedImportTargetCollectionId = defaultCollection?.id ?? null;
 
   const handleImportClick = useCallback(
     async (catalogDefinitionIds?: string[]) => {
@@ -125,7 +121,6 @@ export function useCollectionDetailPage({
     isSystemCollection,
     loadError: collectionDetailError,
     onImportClick: handleImportClick,
-    onImportTargetChange: setImportTargetCollectionId,
     onReloadCollectionDetail: reloadCollectionDetail,
     onReloadCollections: reloadCollections,
     resolvedImportTargetCollectionId,

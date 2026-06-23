@@ -17,7 +17,6 @@ type CollectionDetailBodyProps = {
   isSystemCollection: boolean;
   loadError: string | null;
   onImportClick: (catalogDefinitionIds?: string[]) => Promise<void>;
-  onImportTargetChange: (collectionId: string) => void;
   onReloadCollectionDetail: () => void;
   onReloadCollections: () => void;
   resolvedImportTargetCollectionId: string | null;
@@ -37,7 +36,6 @@ export function CollectionDetailBody({
   isSystemCollection,
   loadError,
   onImportClick,
-  onImportTargetChange,
   onReloadCollectionDetail,
   onReloadCollections,
   resolvedImportTargetCollectionId,
@@ -68,7 +66,6 @@ export function CollectionDetailBody({
         isLoading={isLoadingCollectionDetail}
         loadError={loadError}
         onImportClick={onImportClick}
-        onImportTargetChange={onImportTargetChange}
         onRetry={onReloadCollectionDetail}
         resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
         userOwnedCollections={userOwnedCollections}

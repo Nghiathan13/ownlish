@@ -12,7 +12,6 @@ type SystemCollectionWordsPanelProps = {
   isLoading?: boolean;
   loadError?: string | null;
   onImportClick: (catalogDefinitionIds?: string[]) => Promise<void>;
-  onImportTargetChange: (collectionId: string) => void;
   onRetry?: () => void;
   resolvedImportTargetCollectionId: string | null;
   userOwnedCollections: CollectionSummary[];
@@ -27,7 +26,6 @@ export function SystemCollectionWordsPanel({
   isLoading,
   loadError,
   onImportClick,
-  onImportTargetChange,
   onRetry,
   resolvedImportTargetCollectionId,
   userOwnedCollections,
@@ -44,7 +42,6 @@ export function SystemCollectionWordsPanel({
       isImporting={isImporting}
       isLoading={isLoading}
       loadError={loadError}
-      onImportTargetChange={onImportTargetChange}
       onRetry={onRetry}
       resolvedImportTargetCollectionId={resolvedImportTargetCollectionId}
       userOwnedCollections={userOwnedCollections}

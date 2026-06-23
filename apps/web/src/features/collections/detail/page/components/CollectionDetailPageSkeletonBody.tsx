@@ -62,9 +62,7 @@ export function CollectionDetailPageSkeletonBody() {
     <>
       <div className="mb-4 grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4">
         <BackToCollectionsLink />
-        {isSystemCollection ? null : (
-          <Skeleton className="h-10 min-w-[10rem] max-w-[14rem] shrink-0" />
-        )}
+        <Skeleton className="h-10 min-w-[10rem] max-w-[14rem] shrink-0" />
       </div>
 
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">

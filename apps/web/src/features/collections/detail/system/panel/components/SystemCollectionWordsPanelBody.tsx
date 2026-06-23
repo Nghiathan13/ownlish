@@ -7,7 +7,6 @@ import {
   WordsPagination,
   WordsSearch,
 } from "@/features/collections/detail/shared/components";
-import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type SystemCollectionWordsPanelState = ReturnType<
@@ -21,7 +20,6 @@ type SystemCollectionWordsPanelBodyProps = SystemCollectionWordsPanelState & {
   isImporting: boolean;
   isLoading?: boolean;
   loadError?: string | null;
-  onImportTargetChange: (collectionId: string) => void;
   onRetry?: () => void;
   resolvedImportTargetCollectionId: string | null;
   userOwnedCollections: CollectionSummary[];
@@ -41,7 +39,6 @@ export function SystemCollectionWordsPanelBody({
   isImporting,
   isLoading = false,
   loadError = null,
-  onImportTargetChange,
   onRetry,
   paginatedWords,
   resolvedImportTargetCollectionId,
@@ -70,27 +67,19 @@ export function SystemCollectionWordsPanelBody({
     <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
         {canImport ? (
-          <div className="flex shrink-0 items-center gap-2">
-            <ImportTargetCollectionSelect
-              collections={userOwnedCollections}
-              onChange={onImportTargetChange}
-              value={resolvedImportTargetCollectionId as string}
-              variant="toolbar"
-            />
-            <button
-              className={iconTextButtonClassName(
-                "w-fit shrink-0",
-                "border-foreground bg-foreground text-background",
-              )}
-              disabled={isImporting}
-              onClick={() => {
-                void handleImportAllClick();
-              }}
-              type="button"
-            >
-              {isImporting ? "Importing..." : "Import all"}
-            </button>
-          </div>
+          <button
+            className={iconTextButtonClassName(
+              "w-fit shrink-0",
+              "border-foreground bg-foreground text-background",
+            )}
+            disabled={isImporting}
+            onClick={() => {
+              void handleImportAllClick();
+            }}
+            type="button"
+          >
+            {isImporting ? "Importing..." : "Import all"}
+          </button>
         ) : null}
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <WordsSearch onSearchChange={setSearch} search={search} />
