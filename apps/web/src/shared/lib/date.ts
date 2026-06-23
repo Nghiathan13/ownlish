@@ -9,3 +9,11 @@ export function formatDisplayDate(value: string | null) {
     year: "numeric",
   }).format(new Date(value));
 }
+
+export function formatCreatedLabel(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  return formatDisplayDate(value);
+}

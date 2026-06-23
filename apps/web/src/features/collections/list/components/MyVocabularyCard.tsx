@@ -5,6 +5,7 @@ import { getCollectionPath } from "@/entities/collection/lib/collectionDisplay";
 import { CollectionCard } from "@/features/collections/shared/components/CollectionCard";
 import { CollectionReviewLink } from "@/features/collections/shared/components/CollectionReviewLink";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
+import { formatCreatedLabel } from "@/shared/lib/date";
 
 type MyVocabularyCardProps = {
   collection: CollectionSummary | null;
@@ -30,6 +31,7 @@ export function MyVocabularyCard({
 
   return (
     <CollectionCard
+      createdLabel={formatCreatedLabel(collection?.createdAt)}
       description={description}
       footerAction={
         collectionId

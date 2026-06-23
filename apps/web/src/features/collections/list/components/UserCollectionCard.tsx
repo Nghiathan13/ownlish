@@ -4,6 +4,7 @@ import { CollectionReviewLink } from "@/features/collections/shared/components/C
 import { CollectionCard } from "@/features/collections/shared/components/CollectionCard";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { DeleteForeverIcon } from "@/shared/ui/icons/DeleteForeverIcon";
+import { formatCreatedLabel } from "@/shared/lib/date";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type UserCollectionCardProps = {
@@ -26,6 +27,7 @@ export function UserCollectionCard({
 
   return (
     <CollectionCard
+      createdLabel={formatCreatedLabel(collection.createdAt)}
       description={description}
       footerAction={
         <CollectionReviewLink

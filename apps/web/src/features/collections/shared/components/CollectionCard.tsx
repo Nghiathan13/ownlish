@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 type CollectionCardProps = {
   badge?: string | null;
+  createdLabel?: string | null;
   description?: string | null;
   footerAction?: ReactNode;
   headerAction?: ReactNode;
@@ -14,6 +15,7 @@ type CollectionCardProps = {
 
 export function CollectionCard({
   badge = null,
+  createdLabel = null,
   description = null,
   footerAction,
   headerAction,
@@ -29,8 +31,8 @@ export function CollectionCard({
           <div className="flex items-start gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <h2 className="text-lg font-semibold">{title}</h2>
-              {description ? (
-                <p className="text-base text-muted-foreground">{description}</p>
+              {createdLabel ? (
+                <p className="text-base text-muted-foreground">{createdLabel}</p>
               ) : null}
             </div>
             {badge ? (
@@ -39,6 +41,9 @@ export function CollectionCard({
               </span>
             ) : null}
           </div>
+          {description ? (
+            <p className="text-base text-muted-foreground">{description}</p>
+          ) : null}
           <p className="text-base">{wordCountLabel}</p>
         </div>
       </article>
@@ -46,13 +51,13 @@ export function CollectionCard({
   }
 
   return (
-    <article className="relative rounded-xl border border-border">
+    <article className="group relative rounded-xl border border-border group-hover:border-foreground">
       <div className="relative z-10 flex flex-col gap-4 p-4 pointer-events-none">
         <div className="flex items-start gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 className="text-lg font-semibold">{title}</h2>
-            {description ? (
-              <p className="text-base text-muted-foreground">{description}</p>
+            {createdLabel ? (
+              <p className="text-base text-muted-foreground">{createdLabel}</p>
             ) : null}
           </div>
           {badge ? (
@@ -62,6 +67,9 @@ export function CollectionCard({
           ) : null}
           {headerAction ?? null}
         </div>
+        {description ? (
+          <p className="text-base text-muted-foreground">{description}</p>
+        ) : null}
         <div className="flex items-center justify-between gap-3">
           <p className="text-base">{wordCountLabel}</p>
           {footerAction ? <div className="shrink-0">{footerAction}</div> : null}
@@ -69,7 +77,7 @@ export function CollectionCard({
       </div>
       <Link
         aria-label={`Open ${title}`}
-        className="absolute inset-0 rounded-xl hover:bg-muted"
+        className="absolute inset-0 rounded-xl"
         href={href}
       />
     </article>

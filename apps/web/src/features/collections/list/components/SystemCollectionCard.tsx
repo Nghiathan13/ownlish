@@ -2,6 +2,7 @@ import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { getCollectionPath } from "@/entities/collection/lib/collectionDisplay";
 import { CollectionCard } from "@/features/collections/shared/components/CollectionCard";
 import { SystemCollectionImportButton } from "@/features/collections/list/components/SystemCollectionImportButton";
+import { formatCreatedLabel } from "@/shared/lib/date";
 
 type SystemCollectionCardProps = {
   collection: CollectionSummary;
@@ -19,6 +20,7 @@ export function SystemCollectionCard({
   return (
     <CollectionCard
       badge={collection.cefrLevel}
+      createdLabel={formatCreatedLabel(collection.createdAt)}
       description={collection.description}
       footerAction={
         canImport
