@@ -46,6 +46,7 @@ describe('CollectionsService', () => {
       delete: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
+      update: jest.fn(),
     },
   };
   const service = new CollectionsService(prisma as never);
@@ -131,6 +132,54 @@ describe('CollectionsService', () => {
         description: 'Words for exam prep',
         isDefault: false,
         isPublic: false,
+      },
+      include: {
+        _count: {
+          select: {
+            catalogItems: true,
+            vocabWords: true,
+          },
+        },
+      },
+    });
+  });
+
+  it('updates a user-owned collection including the default collection', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValue(defaultCollection);
+    prisma.wordCollection.update.mockResolvedValue({
+      ...defaultCollection,
+      name: 'Study Words',
+      description: 'Daily review list',
+      _count: {
+        catalogItems: 0,
+        vocabWords: 12,
+      },
+    });
+
+    await expect(
+      service.updateUserCollection('user-id', 'default-collection-id', {
+        name: '  Study Words  ',
+        description: ' Daily review list ',
+      }),
+    ).resolves.toEqual({
+      id: 'default-collection-id',
+      name: 'Study Words',
+      description: 'Daily review list',
+      kind: WordCollectionKind.USER,
+      source: null,
+      cefrLevel: null,
+      isDefault: true,
+      isPublic: false,
+      itemCount: 12,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    expect(prisma.wordCollection.update).toHaveBeenCalledWith({
+      where: { id: 'default-collection-id' },
+      data: {
+        name: 'Study Words',
+        description: 'Daily review list',
       },
       include: {
         _count: {

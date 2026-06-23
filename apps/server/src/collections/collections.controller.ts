@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -14,6 +15,7 @@ import type { AuthRequest } from '../auth/types/auth.types';
 import { CollectionsService } from './collections.service';
 import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 import { ImportCollectionDto } from './dto/import-collection.dto';
+import { UpdateUserCollectionDto } from './dto/update-user-collection.dto';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
@@ -51,6 +53,19 @@ export class CollectionsController {
       targetCollectionId: body.targetCollectionId,
       catalogDefinitionIds: body.catalogDefinitionIds,
     });
+  }
+
+  @Patch(':id')
+  update(
+    @Req() request: AuthRequest,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() body: UpdateUserCollectionDto,
+  ): ReturnType<CollectionsService['updateUserCollection']> {
+    return this.collectionsService.updateUserCollection(
+      request.user.id,
+      id,
+      body,
+    );
   }
 
   @Delete(':id')

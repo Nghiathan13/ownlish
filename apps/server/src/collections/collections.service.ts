@@ -143,6 +143,52 @@ export class CollectionsService {
     };
   }
 
+  async updateUserCollection(
+    userId: string,
+    id: string,
+    input: { name: string; description?: string },
+  ): Promise<CollectionSummary> {
+    const collection = await this.prisma.wordCollection.findFirst({
+      where: {
+        id,
+        ownerUserId: userId,
+        kind: WordCollectionKind.USER,
+      },
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
+
+    const name = input.name.trim();
+    const description = input.description?.trim() || null;
+
+    if (!name) {
+      throw new BadRequestException('Collection name is required.');
+    }
+
+    const updatedCollection = await this.prisma.wordCollection.update({
+      where: { id },
+      data: {
+        name,
+        description,
+      },
+      include: {
+        _count: {
+          select: {
+            catalogItems: true,
+            vocabWords: true,
+          },
+        },
+      },
+    });
+
+    return {
+      ...this.toSummary(updatedCollection),
+      itemCount: updatedCollection._count.vocabWords,
+    };
+  }
+
   async deleteUserCollection(userId: string, id: string): Promise<void> {
     const collection = await this.prisma.wordCollection.findFirst({
       where: {
