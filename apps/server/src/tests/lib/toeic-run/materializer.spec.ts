@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ToeicRunMode } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ToeicRunMaterializer } from './materializer';
+import { ToeicRunRepository } from './repository';
 import {
   createToeicTestsPrismaMock,
   useToeicTestsTransaction,
@@ -19,6 +20,7 @@ describe('ToeicRunMaterializer', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ToeicRunMaterializer,
+        ToeicRunRepository,
         {
           provide: PrismaService,
           useValue: prismaMock,

@@ -1,17 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { TestsStorageService } from '../../tests-storage.service';
 import { isWrongReviewToeicGroup } from './session.formatters';
 import { ToeicRunSessionMapper } from './session.mapper';
+import { TestsStorageService } from '../../tests-storage.service';
 import {
   buildPhotoRunGroup,
   buildToeicQuestion,
   buildToeicRunForResponse,
 } from '../../testing/toeic-run.fixtures';
-import {
-  createToeicTestsPrismaMock,
-  useToeicTestsTransaction,
-} from '../../testing/create-toeic-tests-prisma.mock';
 import {
   ToeicRunGroupStatus,
   ToeicRunQuestionStatus,
@@ -20,7 +15,6 @@ import {
 describe('ToeicRunSessionMapper', () => {
   let mapper: ToeicRunSessionMapper;
 
-  const prismaMock = createToeicTestsPrismaMock();
   const storageMock = {
     createSignedUrls: jest.fn(),
   };
@@ -42,7 +36,6 @@ describe('ToeicRunSessionMapper', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ToeicRunSessionMapper,
-        { provide: PrismaService, useValue: prismaMock },
         { provide: TestsStorageService, useValue: storageMock },
       ],
     }).compile();
@@ -73,9 +66,9 @@ describe('ToeicRunSessionMapper', () => {
       ],
     });
 
-    prismaMock.toeicTest.findUnique.mockResolvedValue({ year: 2026 });
-
-    await expect(mapper.formatSessionResponse(session, [1])).resolves.toEqual({
+    await expect(
+      mapper.formatSessionResponse(session, [1], { year: 2026 }),
+    ).resolves.toEqual({
       sessionId: 'run-id',
       mode: 'practice',
       testId: 1,
@@ -168,11 +161,11 @@ describe('ToeicRunSessionMapper', () => {
       ],
     });
 
-    prismaMock.toeicTest.findUnique.mockResolvedValue({ year: 2025 });
     storageMock.createSignedUrls.mockResolvedValue(new Map());
 
     await expect(
       mapper.formatSessionResponse(session, [1], {
+        year: 2025,
         mode: 'review_wrong',
         groupFilter: (group) => isWrongReviewToeicGroup(group),
       }),

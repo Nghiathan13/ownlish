@@ -53,6 +53,7 @@ export type ToeicRunForResponse = {
 };
 
 export type FormatToeicSessionResponseOptions = {
+  year: number;
   mode?: ToeicSessionResponseMode;
   groupFilter?: (group: ToeicRunGroupForResponse) => boolean;
 };

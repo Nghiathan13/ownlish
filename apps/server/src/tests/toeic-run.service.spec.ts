@@ -5,24 +5,27 @@ import {
   ToeicRunQuestionStatus,
 } from '@prisma/client';
 import { getMockCallArg } from '../testing/jest-mock-call';
-import { PrismaService } from '../prisma/prisma.service';
 import { ToeicRunService } from './toeic-run.service';
 import { ToeicRunGrader } from './lib/toeic-run/grader';
 import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
+import { ToeicRunRepository } from './lib/toeic-run/repository';
 import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
 import {
   buildToeicRunForResponse,
   buildPhotoRunGroup,
 } from './testing/toeic-run.fixtures';
-import {
-  createToeicTestsPrismaMock,
-  useToeicTestsTransaction,
-} from './testing/create-toeic-tests-prisma.mock';
 
 describe('ToeicRunService', () => {
   let service: ToeicRunService;
 
-  const prismaMock = createToeicTestsPrismaMock();
+  const runRepositoryMock = {
+    assertTestAndPartsExist: jest.fn(),
+    getTestYear: jest.fn(),
+    findOwnedRunMeta: jest.fn(),
+    findOwnedRun: jest.fn(),
+    findTestById: jest.fn(),
+    deleteRunsForUserAndTest: jest.fn(),
+  };
   const runMaterializerMock = {
     findLatestPracticeRun: jest.fn(),
     ensurePracticeRunIncludesParts: jest.fn(),
@@ -39,32 +42,23 @@ describe('ToeicRunService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    useToeicTestsTransaction(prismaMock);
+    runRepositoryMock.assertTestAndPartsExist.mockResolvedValue(undefined);
+    runRepositoryMock.getTestYear.mockResolvedValue(2026);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ToeicRunService,
+        { provide: ToeicRunRepository, useValue: runRepositoryMock },
         { provide: ToeicRunMaterializer, useValue: runMaterializerMock },
         { provide: ToeicRunSessionMapper, useValue: sessionMapperMock },
         { provide: ToeicRunGrader, useValue: runGraderMock },
-        { provide: PrismaService, useValue: prismaMock },
       ],
     }).compile();
 
     service = module.get(ToeicRunService);
   });
 
-  function mockTestAndPartsExist() {
-    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
-    prismaMock.toeicTestPart.findMany.mockResolvedValue([
-      { partNumber: 1 },
-      { partNumber: 2 },
-      { partNumber: 3 },
-    ]);
-  }
-
   it('reuses the latest practice run when creating a practice session', async () => {
-    mockTestAndPartsExist();
     const existingRun = buildToeicRunForResponse({ id: 'run-id' });
     const refreshedRun = buildToeicRunForResponse({
       id: 'run-id',
@@ -93,11 +87,11 @@ describe('ToeicRunService', () => {
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       refreshedRun,
       [1, 2],
+      { year: 2026 },
     );
   });
 
   it('creates a new practice run when none exists', async () => {
-    mockTestAndPartsExist();
     const createdRun = buildToeicRunForResponse({ id: 'new-run-id' });
     const formattedResponse = { sessionId: 'new-run-id', mode: 'practice' };
 
@@ -118,7 +112,6 @@ describe('ToeicRunService', () => {
   });
 
   it('creates a review wrong session from the shared practice run', async () => {
-    mockTestAndPartsExist();
     const existingRun = buildToeicRunForResponse({ id: 'practice-run-id' });
     const refreshedRun = buildToeicRunForResponse({
       id: 'practice-run-id',
@@ -147,6 +140,7 @@ describe('ToeicRunService', () => {
       refreshedRun,
       [1],
       {
+        year: 2026,
         mode: 'review_wrong',
         groupFilter: expect.any(Function) as (group: unknown) => boolean,
       },
@@ -163,7 +157,6 @@ describe('ToeicRunService', () => {
   });
 
   it('creates a practice run before formatting review wrong when no session exists', async () => {
-    mockTestAndPartsExist();
     const createdRun = buildToeicRunForResponse({ id: 'practice-run-id' });
     const formattedResponse = {
       sessionId: 'practice-run-id',
@@ -194,6 +187,7 @@ describe('ToeicRunService', () => {
       createdRun,
       [1],
       {
+        year: 2026,
         mode: 'review_wrong',
         groupFilter: expect.any(Function) as (group: unknown) => boolean,
       },
@@ -201,7 +195,6 @@ describe('ToeicRunService', () => {
   });
 
   it('always creates a new mock test run', async () => {
-    mockTestAndPartsExist();
     const createdRun = buildToeicRunForResponse({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
@@ -260,9 +253,11 @@ describe('ToeicRunService', () => {
       wrongCount: 2,
     };
 
-    prismaMock.toeicRun.findFirst.mockResolvedValue({
+    runRepositoryMock.findOwnedRun.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
+      toeicTestId: 1,
+      selectedParts: [1],
       completedAt: null,
     });
     runMaterializerMock.findRunForResponse.mockResolvedValue(finishedRun);
@@ -275,6 +270,8 @@ describe('ToeicRunService', () => {
     expect(runGraderMock.completeMockRun).toHaveBeenCalledWith('mock-run-id');
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       finishedRun,
+      [1],
+      { year: 2026 },
     );
   });
 
@@ -285,9 +282,11 @@ describe('ToeicRunService', () => {
       completedAt: new Date('2026-06-21T00:00:00.000Z'),
     });
 
-    prismaMock.toeicRun.findFirst.mockResolvedValue({
+    runRepositoryMock.findOwnedRun.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
+      toeicTestId: 1,
+      selectedParts: [1],
       completedAt: finishedRun.completedAt,
     });
     runMaterializerMock.findRunForResponse.mockResolvedValue(finishedRun);
@@ -301,19 +300,20 @@ describe('ToeicRunService', () => {
   });
 
   it('clears practice runs for a test', async () => {
-    prismaMock.toeicTest.findUnique.mockResolvedValue({ id: 1 });
-    prismaMock.toeicRun.deleteMany.mockReturnValue('delete-runs-query');
-    prismaMock.$transaction.mockResolvedValue([{ count: 2 }]);
+    runRepositoryMock.findTestById.mockResolvedValue({ id: 1, year: 2026 });
+    runRepositoryMock.deleteRunsForUserAndTest.mockResolvedValue(2);
 
     await expect(service.clearTestHistory('user-id', 1)).resolves.toEqual({
       deletedSessionCount: 2,
     });
 
-    expect(prismaMock.$transaction).toHaveBeenCalledWith(['delete-runs-query']);
+    expect(runRepositoryMock.deleteRunsForUserAndTest).toHaveBeenCalledWith(
+      'user-id',
+      1,
+    );
   });
 
   it('getRun filters practice sessions without mutating stored parts', async () => {
-    mockTestAndPartsExist();
     const loadedRun = {
       id: 'practice-run-id',
       mode: ToeicRunMode.PRACTICE,
@@ -330,7 +330,7 @@ describe('ToeicRunService', () => {
       year: 2026,
     };
 
-    prismaMock.toeicRun.findFirst.mockResolvedValue(loadedRun);
+    runRepositoryMock.findOwnedRunMeta.mockResolvedValue(loadedRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
     sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
 
@@ -342,15 +342,16 @@ describe('ToeicRunService', () => {
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       refreshedRun,
       [1],
+      { year: 2026 },
     );
   });
 
   it('expandRunParts persists additional parts on a practice session', async () => {
-    mockTestAndPartsExist();
     const loadedRun = {
       id: 'practice-run-id',
       mode: ToeicRunMode.PRACTICE,
       toeicTestId: 1,
+      selectedParts: [1],
     };
     const refreshedRun = buildToeicRunForResponse({
       id: 'practice-run-id',
@@ -362,7 +363,7 @@ describe('ToeicRunService', () => {
       year: 2026,
     };
 
-    prismaMock.toeicRun.findFirst.mockResolvedValue(loadedRun);
+    runRepositoryMock.findOwnedRunMeta.mockResolvedValue(loadedRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
     sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
 
@@ -380,14 +381,16 @@ describe('ToeicRunService', () => {
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       refreshedRun,
       [1, 2],
+      { year: 2026 },
     );
   });
 
   it('expandRunParts rejects mock sessions', async () => {
-    prismaMock.toeicRun.findFirst.mockResolvedValue({
+    runRepositoryMock.findOwnedRunMeta.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
       toeicTestId: 1,
+      selectedParts: [1],
     });
 
     await expect(
@@ -400,7 +403,7 @@ describe('ToeicRunService', () => {
   });
 
   it('getRun returns review wrong view over the shared practice session', async () => {
-    mockTestAndPartsExist();
+    runRepositoryMock.getTestYear.mockResolvedValue(2025);
     const loadedRun = {
       id: 'practice-run-id',
       mode: ToeicRunMode.PRACTICE,
@@ -425,7 +428,7 @@ describe('ToeicRunService', () => {
       year: 2025,
     };
 
-    prismaMock.toeicRun.findFirst.mockResolvedValue(loadedRun);
+    runRepositoryMock.findOwnedRunMeta.mockResolvedValue(loadedRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
     sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
 
@@ -440,6 +443,7 @@ describe('ToeicRunService', () => {
       refreshedRun,
       [1],
       {
+        year: 2025,
         mode: 'review_wrong',
         groupFilter: expect.any(Function) as (group: unknown) => boolean,
       },
@@ -456,7 +460,7 @@ describe('ToeicRunService', () => {
   });
 
   it('getRun rejects review wrong mode for mock sessions', async () => {
-    prismaMock.toeicRun.findFirst.mockResolvedValue({
+    runRepositoryMock.findOwnedRunMeta.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
       toeicTestId: 1,

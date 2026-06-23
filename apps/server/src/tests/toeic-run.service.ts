@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ToeicRunMode } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
 import { ExpandToeicRunPartsDto } from './dto/expand-toeic-run-parts.dto';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
@@ -12,13 +11,16 @@ import { GetToeicRunDto } from './dto/get-toeic-run.dto';
 import { ToeicRunGrader } from './lib/toeic-run/grader';
 import { isWrongReviewToeicGroup } from './lib/toeic-run/session.formatters';
 import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
+import { ToeicRunRepository } from './lib/toeic-run/repository';
 import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
+import type { FormatToeicSessionResponseOptions } from './lib/toeic-run/session.types';
 import type { ToeicSessionResponse } from './lib/toeic-run/session.response.types';
+import type { ToeicRunForResponse } from './lib/toeic-run/session.types';
 
 @Injectable()
 export class ToeicRunService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly runRepository: ToeicRunRepository,
     private readonly sessionMapper: ToeicRunSessionMapper,
     private readonly runMaterializer: ToeicRunMaterializer,
     private readonly runGrader: ToeicRunGrader,
@@ -31,7 +33,7 @@ export class ToeicRunService {
     const selectedParts = this.resolveSelectedParts(dto);
     const mode = dto.mode ?? 'practice';
 
-    await this.assertTestAndPartsExist(dto.testId, selectedParts);
+    await this.runRepository.assertTestAndPartsExist(dto.testId, selectedParts);
 
     if (mode === 'mock_test') {
       const run = await this.runMaterializer.createRunWithQuestions({
@@ -41,7 +43,7 @@ export class ToeicRunService {
         selectedParts,
       });
 
-      return this.sessionMapper.formatSessionResponse(run, selectedParts);
+      return this.formatSession(run, selectedParts);
     }
 
     if (mode === 'review_wrong') {
@@ -67,7 +69,7 @@ export class ToeicRunService {
         throw new NotFoundException('Practice session not found.');
       }
 
-      return this.sessionMapper.formatSessionResponse(refreshedRun, selectedParts);
+      return this.formatSession(refreshedRun, selectedParts);
     }
 
     const run = await this.runMaterializer.createRunWithQuestions({
@@ -77,7 +79,7 @@ export class ToeicRunService {
       selectedParts,
     });
 
-    return this.sessionMapper.formatSessionResponse(run, selectedParts);
+    return this.formatSession(run, selectedParts);
   }
 
   private resolveSelectedPartsFromNumbers(partNumbers: number[]): number[] {
@@ -103,31 +105,17 @@ export class ToeicRunService {
     return this.resolveSelectedPartsFromNumbers(parsed);
   }
 
-  private async assertTestAndPartsExist(
-    testId: number,
-    selectedParts: number[],
-  ) {
-    const test = await this.prisma.toeicTest.findUnique({
-      where: { id: testId },
+  private async formatSession(
+    run: ToeicRunForResponse,
+    visibleParts: number[] = run.selectedParts,
+    options?: Omit<FormatToeicSessionResponseOptions, 'year'>,
+  ): Promise<ToeicSessionResponse> {
+    const year = await this.runRepository.getTestYear(run.toeicTestId);
+
+    return this.sessionMapper.formatSessionResponse(run, visibleParts, {
+      ...options,
+      year,
     });
-
-    if (!test) {
-      throw new NotFoundException('Test not found.');
-    }
-
-    const parts = await this.prisma.toeicTestPart.findMany({
-      where: {
-        testId,
-        partNumber: { in: selectedParts },
-      },
-      select: { partNumber: true },
-    });
-    const foundParts = new Set(parts.map((part) => part.partNumber));
-    const missingPart = selectedParts.find((part) => !foundParts.has(part));
-
-    if (missingPart !== undefined) {
-      throw new NotFoundException('Test part not found.');
-    }
   }
 
   private async createReviewWrongSession(
@@ -148,7 +136,7 @@ export class ToeicRunService {
         selectedParts,
       });
 
-      return this.sessionMapper.formatSessionResponse(run, selectedParts, {
+      return this.formatSession(run, selectedParts, {
         mode: 'review_wrong',
         groupFilter: (group) => isWrongReviewToeicGroup(group),
       });
@@ -167,7 +155,7 @@ export class ToeicRunService {
       throw new NotFoundException('Practice session not found.');
     }
 
-    return this.sessionMapper.formatSessionResponse(refreshedRun, selectedParts, {
+    return this.formatSession(refreshedRun, selectedParts, {
       mode: 'review_wrong',
       groupFilter: (group) => isWrongReviewToeicGroup(group),
     });
@@ -178,15 +166,10 @@ export class ToeicRunService {
     sessionId: string,
     dto: GetToeicRunDto = {},
   ): Promise<ToeicSessionResponse> {
-    const loadedRun = await this.prisma.toeicRun.findFirst({
-      where: { id: sessionId, userId },
-      select: {
-        id: true,
-        mode: true,
-        toeicTestId: true,
-        selectedParts: true,
-      },
-    });
+    const loadedRun = await this.runRepository.findOwnedRunMeta(
+      userId,
+      sessionId,
+    );
 
     if (!loadedRun) {
       throw new NotFoundException('TOEIC run not found.');
@@ -203,17 +186,23 @@ export class ToeicRunService {
         );
       }
 
-      await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
+      await this.runRepository.assertTestAndPartsExist(
+        loadedRun.toeicTestId,
+        visibleParts,
+      );
 
       const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
       if (!run) {
         throw new NotFoundException('TOEIC run not found.');
       }
 
-      return this.sessionMapper.formatSessionResponse(run, visibleParts);
+      return this.formatSession(run, visibleParts);
     }
 
-    await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
+    await this.runRepository.assertTestAndPartsExist(
+      loadedRun.toeicTestId,
+      visibleParts,
+    );
 
     const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
     if (!run) {
@@ -221,13 +210,13 @@ export class ToeicRunService {
     }
 
     if (dto.mode === 'review_wrong') {
-      return this.sessionMapper.formatSessionResponse(run, visibleParts, {
+      return this.formatSession(run, visibleParts, {
         mode: 'review_wrong',
         groupFilter: (group) => isWrongReviewToeicGroup(group),
       });
     }
 
-    return this.sessionMapper.formatSessionResponse(run, visibleParts);
+    return this.formatSession(run, visibleParts);
   }
 
   async expandRunParts(
@@ -236,14 +225,10 @@ export class ToeicRunService {
     dto: ExpandToeicRunPartsDto,
   ): Promise<ToeicSessionResponse> {
     const selectedParts = this.resolveSelectedPartsFromNumbers(dto.partNumbers);
-    const loadedRun = await this.prisma.toeicRun.findFirst({
-      where: { id: sessionId, userId },
-      select: {
-        id: true,
-        mode: true,
-        toeicTestId: true,
-      },
-    });
+    const loadedRun = await this.runRepository.findOwnedRunMeta(
+      userId,
+      sessionId,
+    );
 
     if (!loadedRun) {
       throw new NotFoundException('TOEIC run not found.');
@@ -255,7 +240,10 @@ export class ToeicRunService {
       );
     }
 
-    await this.assertTestAndPartsExist(loadedRun.toeicTestId, selectedParts);
+    await this.runRepository.assertTestAndPartsExist(
+      loadedRun.toeicTestId,
+      selectedParts,
+    );
     await this.runMaterializer.ensurePracticeRunIncludesParts(
       loadedRun.id,
       loadedRun.toeicTestId,
@@ -267,7 +255,7 @@ export class ToeicRunService {
       throw new NotFoundException('Practice session not found.');
     }
 
-    return this.sessionMapper.formatSessionResponse(run, selectedParts);
+    return this.formatSession(run, selectedParts);
   }
 
   async submitAnswer(
@@ -282,9 +270,7 @@ export class ToeicRunService {
     userId: string,
     sessionId: string,
   ): Promise<ToeicSessionResponse> {
-    const run = await this.prisma.toeicRun.findFirst({
-      where: { id: sessionId, userId },
-    });
+    const run = await this.runRepository.findOwnedRun(userId, sessionId);
 
     if (!run) {
       throw new NotFoundException('TOEIC run not found.');
@@ -303,27 +289,19 @@ export class ToeicRunService {
       throw new NotFoundException('TOEIC run not found.');
     }
 
-    return this.sessionMapper.formatSessionResponse(finishedRun);
+    return this.formatSession(finishedRun);
   }
 
   async clearTestHistory(userId: string, testId: number) {
-    const test = await this.prisma.toeicTest.findUnique({
-      where: { id: testId },
-    });
+    const test = await this.runRepository.findTestById(testId);
 
     if (!test) {
       throw new NotFoundException('Test not found.');
     }
 
-    const [runResult] = await this.prisma.$transaction([
-      this.prisma.toeicRun.deleteMany({
-        where: {
-          userId,
-          toeicTestId: testId,
-        },
-      }),
-    ]);
+    const deletedSessionCount =
+      await this.runRepository.deleteRunsForUserAndTest(userId, testId);
 
-    return { deletedSessionCount: runResult.count };
+    return { deletedSessionCount };
   }
 }

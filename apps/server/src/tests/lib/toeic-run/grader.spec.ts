@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ToeicRunGrader } from './grader';
+import { ToeicRunRepository } from './repository';
 import {
   createToeicTestsPrismaMock,
   useToeicTestsTransaction,
@@ -18,6 +19,7 @@ describe('ToeicRunGrader', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ToeicRunGrader,
+        ToeicRunRepository,
         { provide: PrismaService, useValue: prismaMock },
       ],
     }).compile();

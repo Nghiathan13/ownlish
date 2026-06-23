@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ToeicRunQuestionStatus } from '@prisma/client';
-import { PrismaService } from '../../../prisma/prisma.service';
 import {
   countOptions,
   isToeicQuestionOptionKey,
@@ -23,21 +22,18 @@ import { TestsStorageService } from '../../tests-storage.service';
 
 @Injectable()
 export class ToeicRunSessionMapper {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly storageService: TestsStorageService,
-  ) {}
+  constructor(private readonly storageService: TestsStorageService) {}
 
   async formatSessionResponse(
     session: ToeicRunForResponse,
     visibleParts = session.selectedParts,
-    options?: FormatToeicSessionResponseOptions,
+    options: FormatToeicSessionResponseOptions,
   ): Promise<ToeicSessionResponse> {
     const visiblePartSet = new Set(visibleParts);
     const visibleGroups = this.sortVisibleGroups(
       session.groups
         .filter((group) => visiblePartSet.has(group.partNumber))
-        .filter(options?.groupFilter ?? (() => true)),
+        .filter(options.groupFilter ?? (() => true)),
     );
     const signedUrls = await this.storageService.createSignedUrls(
       visibleGroups.flatMap((group) => [
@@ -49,22 +45,14 @@ export class ToeicRunSessionMapper {
     const answerByQuestionId = new Map(
       session.questions.map((answer) => [answer.toeicQuestionId, answer]),
     );
-    const responseMode = options?.mode ?? formatToeicRunMode(session.mode);
+    const responseMode = options.mode ?? formatToeicRunMode(session.mode);
     let nextSessionQuestionNumber = 1;
-    const test = await this.prisma.toeicTest.findUnique({
-      where: { id: session.toeicTestId },
-      select: { year: true },
-    });
-
-    if (!test) {
-      throw new NotFoundException('Test not found.');
-    }
 
     return {
       sessionId: session.id,
       mode: responseMode,
       testId: session.toeicTestId,
-      year: test.year,
+      year: options.year,
       partNumbers: visibleParts,
       totalQuestions: visibleGroups.reduce(
         (total, group) => total + group.questions.length,

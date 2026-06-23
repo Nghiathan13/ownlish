@@ -10,7 +10,6 @@ import {
   ToeicRunQuestionStatus,
   type ToeicQuestion,
 } from '@prisma/client';
-import { PrismaService } from '../../../prisma/prisma.service';
 import { SubmitToeicAnswerDto } from '../../dto/submit-toeic-answer.dto';
 import {
   getOptionText,
@@ -25,22 +24,18 @@ import type {
   ToeicQuestionWithTestPart,
   ToeicRunQuestionWithQuestion,
 } from './grader.types';
+import { ToeicRunRepository } from './repository';
 
 @Injectable()
 export class ToeicRunGrader {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly runRepository: ToeicRunRepository) {}
 
   async submitAnswer(
     userId: string,
     sessionId: string,
     dto: SubmitToeicAnswerDto,
   ): Promise<SubmitToeicAnswerResponse> {
-    const run = await this.prisma.toeicRun.findFirst({
-      where: {
-        id: sessionId,
-        userId,
-      },
-    });
+    const run = await this.runRepository.findOwnedRun(userId, sessionId);
 
     if (!run) {
       throw new NotFoundException('Practice session not found.');
@@ -50,16 +45,9 @@ export class ToeicRunGrader {
       throw new BadRequestException('TOEIC run is already completed.');
     }
 
-    const question = await this.prisma.toeicQuestion.findUnique({
-      where: { id: dto.toeicQuestionId },
-      include: {
-        group: {
-          include: {
-            testPart: true,
-          },
-        },
-      },
-    });
+    const question = await this.runRepository.findQuestionWithTestPart(
+      dto.toeicQuestionId,
+    );
 
     if (!question || question.group.testPart.testId !== run.toeicTestId) {
       throw new BadRequestException(
@@ -78,15 +66,10 @@ export class ToeicRunGrader {
       throw new BadRequestException('Invalid answer.');
     }
 
-    const runQuestion = await this.prisma.toeicRunQuestion.findUnique({
-      where: {
-        runId_toeicQuestionId: {
-          runId: run.id,
-          toeicQuestionId: question.id,
-        },
-      },
-      include: { toeicQuestion: true },
-    });
+    const runQuestion = await this.runRepository.findRunQuestionWithQuestion(
+      run.id,
+      question.id,
+    );
 
     if (!runQuestion) {
       throw new BadRequestException(
@@ -113,7 +96,7 @@ export class ToeicRunGrader {
   }
 
   async completeMockRun(runId: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+    await this.runRepository.transaction(async (tx) => {
       const questions = await tx.toeicRunQuestion.findMany({
         where: { runId },
         include: { toeicQuestion: true },
@@ -188,14 +171,10 @@ export class ToeicRunGrader {
     runQuestion: ToeicRunQuestionWithQuestion,
     selectedKey: ToeicQuestionOptionKey,
   ): Promise<SubmitToeicAnswerResponse> {
-    await this.prisma.toeicRunQuestion.update({
-      where: { id: runQuestion.id },
-      data: {
-        selectedKey,
-        status: ToeicRunQuestionStatus.SELECTED,
-        answeredAt: new Date(),
-      },
-    });
+    await this.runRepository.updateRunQuestionSelection(
+      runQuestion.id,
+      selectedKey,
+    );
 
     return { graded: false };
   }
@@ -210,7 +189,7 @@ export class ToeicRunGrader {
   ): Promise<SubmitToeicAnswerResponse> {
     let graded = false;
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.runRepository.transaction(async (tx) => {
       await tx.toeicRunQuestion.update({
         where: { id: runQuestion.id },
         data: {
@@ -341,9 +320,7 @@ export class ToeicRunGrader {
   }
 
   private async recalculateRunTotals(
-    tx:
-      | Pick<PrismaService, 'toeicRunQuestion' | 'toeicRun'>
-      | Prisma.TransactionClient,
+    tx: Prisma.TransactionClient,
     runId: string,
   ): Promise<void> {
     const [totalRight, totalWrong] = await Promise.all([

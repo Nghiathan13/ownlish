@@ -1,37 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, ToeicRunMode } from '@prisma/client';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import type { ToeicRunForResponse } from './session.types';
-import { toeicRunResponseInclude } from './response.include';
 import type {
   CreateToeicRunWithQuestionsInput,
   ToeicQuestionGroupForRun,
 } from './materializer.types';
+import { ToeicRunRepository } from './repository';
 
 @Injectable()
 export class ToeicRunMaterializer {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly runRepository: ToeicRunRepository) {}
 
   findLatestPracticeRun(
     userId: string,
     testId: number,
   ): Promise<ToeicRunForResponse | null> {
-    return this.prisma.toeicRun.findFirst({
-      where: {
-        userId,
-        toeicTestId: testId,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      orderBy: { createdAt: 'desc' },
-      include: toeicRunResponseInclude(),
-    });
+    return this.runRepository.findLatestPracticeRun(userId, testId);
   }
 
   findRunForResponse(runId: string): Promise<ToeicRunForResponse | null> {
-    return this.prisma.toeicRun.findUnique({
-      where: { id: runId },
-      include: toeicRunResponseInclude(),
-    });
+    return this.runRepository.findRunForResponse(runId);
   }
 
   async ensurePracticeRunIncludesParts(
@@ -39,7 +27,7 @@ export class ToeicRunMaterializer {
     testId: number,
     selectedParts: number[],
   ): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+    await this.runRepository.transaction(async (tx) => {
       const run = await tx.toeicRun.findUnique({
         where: { id: runId },
         include: {
@@ -68,7 +56,7 @@ export class ToeicRunMaterializer {
           (highest, group) => Math.max(highest, group.sortOrder),
           -1,
         ) + 1;
-      const groups = await this.listQuestionGroupsForParts(
+      const groups = await this.runRepository.listQuestionGroupsForParts(
         tx,
         testId,
         selectedParts,
@@ -94,13 +82,12 @@ export class ToeicRunMaterializer {
   async createRunWithQuestions(
     input: CreateToeicRunWithQuestionsInput,
   ): Promise<ToeicRunForResponse> {
-    const groups = await this.listQuestionGroupsForParts(
-      this.prisma,
+    const groups = await this.runRepository.listQuestionGroupsForPartsForTest(
       input.testId,
       input.selectedParts,
     );
 
-    const run = await this.prisma.$transaction(async (tx) => {
+    const run = await this.runRepository.transaction(async (tx) => {
       const createdRun = await tx.toeicRun.create({
         data: {
           userId: input.userId,
@@ -121,34 +108,6 @@ export class ToeicRunMaterializer {
     }
 
     return created;
-  }
-
-  private listQuestionGroupsForParts(
-    db: Pick<PrismaService, 'toeicQuestionGroup'> | Prisma.TransactionClient,
-    testId: number,
-    selectedParts: number[],
-  ): Promise<ToeicQuestionGroupForRun[]> {
-    return db.toeicQuestionGroup.findMany({
-      where: {
-        testPart: {
-          testId,
-          partNumber: { in: selectedParts },
-        },
-      },
-      include: {
-        testPart: {
-          select: { partNumber: true },
-        },
-        questions: {
-          orderBy: { questionNumber: 'asc' },
-          select: {
-            id: true,
-            questionNumber: true,
-          },
-        },
-      },
-      orderBy: [{ questionStart: 'asc' }, { id: 'asc' }],
-    });
   }
 
   private async attachQuestionGroupsToRun(
