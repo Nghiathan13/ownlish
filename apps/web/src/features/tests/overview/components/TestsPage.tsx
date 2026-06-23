@@ -1,43 +1,32 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPartPickerModal";
 import { TestCard } from "@/features/tests/overview/components/TestCard";
+import { TestsPageSkeleton } from "@/features/tests/overview/components/TestsPageSkeleton";
+import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTabs";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
-import { getToeicYearButtonLabel, TOEIC_YEARS } from "@/features/tests/shared/constants/toeicYears";
 import {
-  primaryTextButtonClassName,
+  DEFAULT_TOEIC_YEAR,
+  getTestsListPath,
+  getToeicYearButtonLabel,
+  parseToeicYearParam,
+  type ToeicYear,
+} from "@/features/tests/shared/constants/toeicYears";
+import {
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 
-export function TestsPage() {
-  const overview = useTestsOverview();
+function TestsPageContent({ selectedYear }: { selectedYear: ToeicYear }) {
+  const overview = useTestsOverview(selectedYear);
   const selectedTest = overview.selectedTest;
 
   return (
     <PageShell>
-      <div className="mb-4 flex flex-col items-start gap-2 px-4">
-        <button className={primaryTextButtonClassName()} type="button">
-          TOEIC
-        </button>
-        <div className="flex flex-wrap gap-2">
-          {TOEIC_YEARS.map((year) => (
-            <button
-              className={
-                overview.selectedYear === year
-                  ? primaryTextButtonClassName()
-                  : secondaryTextButtonClassName()
-              }
-              key={year}
-              onClick={() => overview.selectYear(year)}
-              type="button"
-            >
-              {getToeicYearButtonLabel(year)}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ToeicYearTabs selectedYear={selectedYear} />
 
       <div className="mb-4 flex flex-col gap-4 px-4">
         {overview.isLoadingTests ? (
@@ -55,7 +44,7 @@ export function TestsPage() {
           </div>
         ) : overview.tests.length === 0 ? (
           <p className="text-muted-foreground">
-            No tests available for {getToeicYearButtonLabel(overview.selectedYear)} yet.
+            No tests available for {getToeicYearButtonLabel(selectedYear)} yet.
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -96,5 +85,28 @@ export function TestsPage() {
         />
       ) : null}
     </PageShell>
+  );
+}
+
+export function TestsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const yearParam = searchParams.get("year");
+  const selectedYear: ToeicYear =
+    parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;
+  const isYearParamValid = yearParam === String(selectedYear);
+
+  useEffect(() => {
+    if (!isYearParamValid) {
+      router.replace(getTestsListPath(selectedYear), { scroll: false });
+    }
+  }, [isYearParamValid, router, selectedYear]);
+
+  if (!isYearParamValid) {
+    return <TestsPageSkeleton />;
+  }
+
+  return (
+    <TestsPageContent key={selectedYear} selectedYear={selectedYear} />
   );
 }

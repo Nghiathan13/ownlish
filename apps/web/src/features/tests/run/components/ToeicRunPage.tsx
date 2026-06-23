@@ -11,6 +11,13 @@ import {
   normalizeSelectedParts,
   parseSelectedPartsParam,
 } from "@/features/tests/shared/lib/toeicParts";
+import {
+  DEFAULT_TOEIC_YEAR,
+  getTestsListPathFromSearchParams,
+  getTestsListPathFromYearValue,
+  parseToeicYearParam,
+  type ToeicYear,
+} from "@/features/tests/shared/constants/toeicYears";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -49,6 +56,13 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
   const { status, user } = useAuthSession();
   const copy = getCopy(mode);
 
+  const selectedYear = useMemo((): ToeicYear => {
+    return parseToeicYearParam(searchParams.get("year")) ?? DEFAULT_TOEIC_YEAR;
+  }, [searchParams]);
+  const testsListPath = useMemo(() => {
+    return getTestsListPathFromSearchParams(searchParams);
+  }, [searchParams]);
+
   const selectedParts = useMemo(() => {
     const fromQuery = parseSelectedPartsParam(searchParams.get("parts") ?? undefined);
     return normalizeSelectedParts(fromQuery);
@@ -57,6 +71,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
   const { tests, isLoadingTests, testsError } = useTestsList({
     isAuthenticated: isAuthenticatedStatus(status),
     userId: user?.id ?? null,
+    year: selectedYear,
   });
 
   if (isLoadingTests) {
@@ -77,7 +92,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() => router.push("/tests")}
+              onClick={() => router.push(testsListPath)}
               type="button"
             >
               Back to tests
@@ -98,7 +113,7 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() => router.push("/tests")}
+              onClick={() => router.push(testsListPath)}
               type="button"
             >
               Back to tests
@@ -117,7 +132,9 @@ function ToeicRunPageContent({ mode, testId }: ToeicRunPageContentProps) {
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() => router.push("/tests")}
+              onClick={() =>
+                router.push(getTestsListPathFromYearValue(test.year))
+              }
               type="button"
             >
               Back to tests

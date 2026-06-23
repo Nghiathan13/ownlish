@@ -19,7 +19,7 @@ import {
 } from "@/features/tests/overview/hooks/useTestsList";
 import { clearAllPracticeProgressForTest } from "@/features/tests/run/lib/practiceStorage";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
-import { DEFAULT_TOEIC_YEAR, type ToeicYear } from "@/features/tests/shared/constants/toeicYears";
+import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 
 const TOEIC_PART_COUNT = 7;
 const PRACTICE_MODES: PracticeMode[] = ["practice", "review_wrong"];
@@ -29,7 +29,7 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-export function useTestsOverview() {
+export function useTestsOverview(selectedYear: ToeicYear) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { status, user } = useAuthSession();
@@ -41,17 +41,11 @@ export function useTestsOverview() {
     useState<PartPickerIntent>("practice");
   const [clearingTestId, setClearingTestId] = useState<number | null>(null);
   const [startingTestId, setStartingTestId] = useState<number | null>(null);
-  const [selectedYear, setSelectedYear] = useState<ToeicYear>(DEFAULT_TOEIC_YEAR);
   const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
     isAuthenticated,
     userId: user?.id ?? null,
     year: selectedYear,
   });
-
-  const selectYear = (year: ToeicYear) => {
-    setSelectedYear(year);
-    setSelectedTest(null);
-  };
 
   const clearHistory = async (testId: number) => {
     if (
@@ -120,7 +114,9 @@ export function useTestsOverview() {
         session,
       );
 
-      router.push(`/tests/${testId}/${mode}?parts=${normalizedParts.join(",")}`);
+      router.push(
+        `/tests/${testId}/${mode}?parts=${normalizedParts.join(",")}&year=${selectedYear}`,
+      );
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start practice."));
     } finally {
@@ -157,7 +153,9 @@ export function useTestsOverview() {
       });
 
       queryClient.setQueryData(getToeicRunQueryKey(session.sessionId), session);
-      router.push(`/tests/${testId}/mock_test/${session.sessionId}`);
+      router.push(
+        `/tests/${testId}/mock_test/${session.sessionId}?year=${selectedYear}`,
+      );
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start mock test."));
     } finally {
@@ -176,8 +174,6 @@ export function useTestsOverview() {
     closePartPicker,
     startMock,
     startTest,
-    selectedYear,
-    selectYear,
     startingTestId,
     tests,
     testsError,

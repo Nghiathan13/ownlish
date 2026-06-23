@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PracticeStepContent } from "@/features/tests/run/components/PracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
@@ -29,6 +29,7 @@ import {
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
+import { getTestsListPathFromSearchParams } from "@/features/tests/shared/constants/toeicYears";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -49,6 +50,10 @@ export function PracticeRunView({
   practiceMode = "practice",
 }: PracticeRunViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const testsListPath = useMemo(() => {
+    return getTestsListPathFromSearchParams(searchParams);
+  }, [searchParams]);
   const [stepIndex, setStepIndex] = useState(0);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const initializedStorageKeyRef = useRef<string | null>(null);
@@ -232,7 +237,7 @@ export function PracticeRunView({
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() => router.push("/tests")}
+              onClick={() => router.push(testsListPath)}
               type="button"
             >
               Back to tests

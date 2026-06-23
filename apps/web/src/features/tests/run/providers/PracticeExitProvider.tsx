@@ -15,6 +15,7 @@ import {
   readBilingualEnabled,
   writeBilingualEnabled,
 } from "@/features/tests/run/lib/bilingualStorage";
+import { getTestsListPathFromSearchParams } from "@/features/tests/shared/constants/toeicYears";
 
 type ExitHandler = () => void | Promise<void>;
 type FinishHandler = () => void | Promise<void>;
@@ -114,7 +115,9 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
       // Exit should not be blocked by best-effort practice cleanup.
     }
 
-    router.push("/tests");
+    router.push(
+      getTestsListPathFromSearchParams(new URLSearchParams(window.location.search)),
+    );
   }, [router]);
 
   const finish = useCallback(async () => {

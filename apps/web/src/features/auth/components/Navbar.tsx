@@ -13,6 +13,10 @@ import {
   usePracticeFinish,
   usePracticeQuestionNav,
 } from "@/features/tests/run/providers/PracticeExitProvider";
+import {
+  DEFAULT_TOEIC_YEAR,
+  getTestsListPath,
+} from "@/features/tests/shared/constants/toeicYears";
 import { classNames } from "@/shared/lib/classNames";
 import {
   iconTextButtonClassName,
@@ -198,7 +202,10 @@ export function Navbar() {
             <Link href="/review" className={linkClass("/review")}>
               Review
             </Link>
-            <Link href="/tests" className={linkClass("/tests")}>
+            <Link
+              href={getTestsListPath(DEFAULT_TOEIC_YEAR)}
+              className={linkClass("/tests")}
+            >
               Tests
             </Link>
           </div>

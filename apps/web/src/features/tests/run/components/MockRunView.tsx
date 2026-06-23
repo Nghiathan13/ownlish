@@ -8,6 +8,7 @@ import { useMockTestRun } from "@/features/tests/run/hooks/useMockTestRun";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeFinish, useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import { getTestsListPathFromSearchParams } from "@/features/tests/shared/constants/toeicYears";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {
@@ -342,7 +343,13 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() => router.push("/tests")}
+              onClick={() =>
+                router.push(
+                  getTestsListPathFromSearchParams(
+                    new URLSearchParams(window.location.search),
+                  ),
+                )
+              }
               type="button"
             >
               Back to tests
