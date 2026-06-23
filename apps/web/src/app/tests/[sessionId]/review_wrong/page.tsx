@@ -1,4 +1,4 @@
-import { ToeicRunPage } from "@/features/tests/run/components/ToeicRunPage";
+import { ToeicSessionPage } from "@/features/tests/run/components/ToeicSessionPage";
 
 type ReviewWrongPageProps = {
   params: Promise<{
@@ -7,5 +7,5 @@ type ReviewWrongPageProps = {
 };
 
 export default function ReviewWrongPage({ params }: ReviewWrongPageProps) {
-  return <ToeicRunPage mode="review_wrong" params={params} />;
+  return <ToeicSessionPage mode="review_wrong" params={params} />;
 }

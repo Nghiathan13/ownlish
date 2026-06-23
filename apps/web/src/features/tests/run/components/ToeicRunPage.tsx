@@ -1,18 +1,5 @@
-"use client";
-
-import { Suspense, use, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { PracticeRunView } from "@/features/tests/run/components/PracticeRunView";
-import type { PracticeMode } from "@/features/tests/shared/api/types";
-import { getTestsListPath, DEFAULT_TOEIC_YEAR } from "@/features/tests/shared/constants/toeicYears";
-import {
-  isToeicSessionId,
-  parseToeicRunPartsParam,
-} from "@/features/tests/shared/lib/toeicRunPaths";
-import { secondaryTextButtonClassName } from "@/shared/ui/button";
-import { PageShell } from "@/shared/ui/PageShell";
-import { Panel } from "@/shared/ui/Panel";
+import type { PracticeMode } from "@/entities/toeic/api/types";
+import { ToeicSessionPage } from "./ToeicSessionPage";
 
 type ToeicRunPageProps = {
   params: Promise<{
@@ -21,94 +8,6 @@ type ToeicRunPageProps = {
   mode: PracticeMode;
 };
 
-type ToeicRunPageContentProps = {
-  mode: PracticeMode;
-  sessionId: string;
-};
-
-function getCopy(mode: PracticeMode) {
-  if (mode === "review_wrong") {
-    return {
-      invalidRoute: "Invalid review wrong route.",
-      loading: "Loading review wrong...",
-      selectParts: "Select at least one part to review wrong questions.",
-    };
-  }
-
-  return {
-    invalidRoute: "Invalid practice route.",
-    loading: "Loading practice...",
-    selectParts: "Select at least one test part.",
-  };
-}
-
-function ToeicRunPageContent({ mode, sessionId }: ToeicRunPageContentProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const copy = getCopy(mode);
-  const testsListPath = getTestsListPath(DEFAULT_TOEIC_YEAR);
-
-  const selectedParts = useMemo(() => {
-    return parseToeicRunPartsParam(searchParams.get("parts"));
-  }, [searchParams]);
-
-  if (selectedParts.length === 0) {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">{copy.selectParts}</p>
-          <div className="mt-4">
-            <button
-              className={secondaryTextButtonClassName()}
-              onClick={() => router.push(testsListPath)}
-              type="button"
-            >
-              Back to tests
-            </button>
-          </div>
-        </Panel>
-      </PageShell>
-    );
-  }
-
-  return (
-    <PracticeRunView
-      practiceMode={mode}
-      selectedParts={selectedParts}
-      sessionId={sessionId}
-    />
-  );
-}
-
 export function ToeicRunPage({ params, mode }: ToeicRunPageProps) {
-  const resolved = use(params);
-  const copy = getCopy(mode);
-
-  if (!isToeicSessionId(resolved.sessionId)) {
-    return (
-      <RequireAuth>
-        <PageShell>
-          <Panel>
-            <p className="text-muted-foreground">{copy.invalidRoute}</p>
-          </Panel>
-        </PageShell>
-      </RequireAuth>
-    );
-  }
-
-  return (
-    <RequireAuth>
-      <Suspense
-        fallback={
-          <PageShell>
-            <Panel>
-              <p className="text-muted-foreground">{copy.loading}</p>
-            </Panel>
-          </PageShell>
-        }
-      >
-        <ToeicRunPageContent mode={mode} sessionId={resolved.sessionId} />
-      </Suspense>
-    </RequireAuth>
-  );
+  return <ToeicSessionPage mode={mode} params={params} />;
 }

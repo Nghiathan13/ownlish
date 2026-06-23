@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { listToeicTests } from "@/features/tests/overview/api/toeicTestsOverviewApi";
+import { listToeicTests } from "@/entities/toeic/api/toeic";
+import { getToeicTestsQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 import { DEFAULT_TOEIC_YEAR, type ToeicYear } from "@/features/tests/shared/constants/toeicYears";
@@ -12,9 +13,7 @@ type UseTestsListParams = {
   year?: ToeicYear;
 };
 
-export function getTestsQueryKey(userId: string | null, year: ToeicYear) {
-  return ["tests", { userId, year }] as const;
-}
+export { getToeicTestsQueryKey as getTestsQueryKey };
 
 export function useTestsList({
   isAuthenticated,
@@ -22,7 +21,7 @@ export function useTestsList({
   year = DEFAULT_TOEIC_YEAR,
 }: UseTestsListParams) {
   const testsQuery = useQuery({
-    queryKey: getTestsQueryKey(userId, year),
+    queryKey: getToeicTestsQueryKey(userId, year),
     queryFn: ({ signal }) =>
       runAuthenticatedRequest({
         request: (token) => listToeicTests(token, year, { signal }),

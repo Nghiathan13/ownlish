@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { parseToeicRunResult } from "./parseToeicRunResult";
+import { parseToeicRunResult } from "@/entities/toeic/api/parseToeicRunResult";
 
 vi.mock("../../../../shared/api/http", () => ({
   invalidApiResponse: () => {

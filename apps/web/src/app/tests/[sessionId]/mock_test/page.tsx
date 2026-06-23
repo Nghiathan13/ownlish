@@ -1,4 +1,4 @@
-import { MockTestRunPage } from "@/features/tests/run/components/MockTestRunPage";
+import { ToeicSessionPage } from "@/features/tests/run/components/ToeicSessionPage";
 
 type MockTestPageProps = {
   params: Promise<{
@@ -7,5 +7,5 @@ type MockTestPageProps = {
 };
 
 export default function MockTestPage({ params }: MockTestPageProps) {
-  return <MockTestRunPage params={params} />;
+  return <ToeicSessionPage mode="mock_test" params={params} />;
 }

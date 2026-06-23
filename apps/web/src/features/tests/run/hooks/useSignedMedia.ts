@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { refreshToeicPartMedia } from "@/features/tests/run/api/refreshToeicPartMedia";
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import { refreshToeicPartMedia } from "@/entities/toeic/api/toeic";
+import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 

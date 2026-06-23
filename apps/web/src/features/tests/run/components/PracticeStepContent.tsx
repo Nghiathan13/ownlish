@@ -20,12 +20,10 @@ export function PracticeStepContent({
   if (step.kind === "group") {
     return (
       <PracticeGroupScreen
-        groups={[step.practiceGroup]}
-        initialGroupIndex={0}
         key={`${step.practiceGroup.group.id}-${sessionId}`}
-        navigation={null}
         partNumber={step.partNumber}
         practice={practice}
+        practiceGroup={step.practiceGroup}
         testId={testId}
       />
     );
@@ -33,17 +31,13 @@ export function PracticeStepContent({
 
   return (
     <PracticeGroupScreen
-      groups={[
-        {
-          group: step.item.group,
-          questions: [step.item.question],
-        },
-      ]}
-      initialGroupIndex={0}
       key={`${step.item.question.id}-${sessionId}`}
-      navigation={null}
       partNumber={step.partNumber}
       practice={practice}
+      practiceGroup={{
+        group: step.item.group,
+        questions: [step.item.question],
+      }}
       testId={testId}
     />
   );

@@ -1,54 +1,15 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getToeicRun } from "@/features/tests/run/api/getToeicRun";
-import { finishToeicRun } from "@/features/tests/run/api/finishToeicRun";
-import { submitToeicAnswer } from "@/features/tests/run/api/submitToeicAnswer";
+import { useCallback, useMemo } from "react";
+import { getToeicRunQueryKey } from "@/entities/toeic/lib/toeicCache";
+import { toAnswerMap } from "@/entities/toeic/lib/runState";
+import { useMockRunQuery } from "@/entities/toeic/hooks/useMockRunQuery";
+import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import type {
-  ToeicRunResult,
-  ToeicQuestion,
-} from "@/features/tests/shared/api/types";
-import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
+import { useFinishMockRun } from "./useFinishMockRun";
+import { useMockAnswerSync } from "./useMockAnswerSync";
 
-export function getToeicRunQueryKey(sessionId: string) {
-  return ["toeic-run", sessionId] as const;
-}
-
-function updateQuestionSelection(
-  current: ToeicRunResult,
-  toeicQuestionId: number,
-  selectedKey: OptionKey,
-): ToeicRunResult {
-  return {
-    ...current,
-    groups: current.groups.map((group) => ({
-      ...group,
-      questions: group.questions.map((question) => {
-        if (question.id !== toeicQuestionId) {
-          return question;
-        }
-
-        return {
-          ...question,
-          selectedKey,
-          status: "selected",
-          isCorrect: null,
-        };
-      }),
-    })),
-  };
-}
-
-function toAnswerMap(groups: ToeicRunResult["groups"]) {
-  return new Map(
-    groups.flatMap((group) =>
-      group.questions.map((question) => [question.id, question] as const),
-    ),
-  );
-}
+export { getToeicRunQueryKey };
 
 type UseMockTestRunParams = {
   sessionId: string;
@@ -61,109 +22,35 @@ export function useMockTestRun({
 }: UseMockTestRunParams) {
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const queryClient = useQueryClient();
-  const queryKey = getToeicRunQueryKey(sessionId);
-  const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(
-    () => new Set(),
-  );
-  const [finishError, setFinishError] = useState<string | null>(null);
-  const [isResultOpen, setIsResultOpen] = useState(false);
-  const pendingSubmitRequestsRef = useRef(new Set<Promise<unknown>>());
 
-  const runQuery = useQuery({
-    queryKey,
-    queryFn: () =>
-      runAuthenticatedRequest({
-        request: (token) =>
-          getToeicRun(token, sessionId, {
-            parts: selectedParts,
-          }),
-      }),
-    enabled: Boolean(isAuthenticated && sessionId),
-    staleTime: Infinity,
-    refetchOnMount: false,
-    retry: false,
-  });
-
+  const runQuery = useMockRunQuery({ sessionId, selectedParts });
   const sessionData = runQuery.data;
+  const isFinished = Boolean(sessionData?.completedAt);
+
   const answersByQuestionId = useMemo(
     () => toAnswerMap(sessionData?.groups ?? []),
     [sessionData?.groups],
   );
-  const isFinished = Boolean(sessionData?.completedAt);
+
+  const answerSync = useMockAnswerSync({
+    sessionId,
+    queryKey: runQuery.queryKey,
+    isAuthenticated,
+    isFinished,
+  });
+
+  const finish = useFinishMockRun({
+    sessionId,
+    queryKey: runQuery.queryKey,
+    isAuthenticated,
+    waitForPendingSubmissions: answerSync.waitForPendingSubmissions,
+  });
 
   const getAnswer = useCallback(
     (toeicQuestionId: number): ToeicQuestion | undefined =>
       answersByQuestionId.get(toeicQuestionId),
     [answersByQuestionId],
   );
-
-  const selectAnswer = useCallback(
-    (toeicQuestionId: number, selectedKey: OptionKey) => {
-      if (!isAuthenticated || isFinished) {
-        return;
-      }
-
-      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
-        if (!current) {
-          return current;
-        }
-
-        return updateQuestionSelection(current, toeicQuestionId, selectedKey);
-      });
-
-      setPendingQuestionIds((current) => new Set(current).add(toeicQuestionId));
-
-      const submitRequest = runAuthenticatedRequest({
-        request: (token) =>
-          submitToeicAnswer(token, sessionId, {
-            toeicQuestionId,
-            selectedKey,
-          }),
-      })
-        .then(() => {
-          setPendingQuestionIds((current) => {
-            const next = new Set(current);
-            next.delete(toeicQuestionId);
-            return next;
-          });
-        })
-        .catch(() => {
-          setPendingQuestionIds((current) => {
-            const next = new Set(current);
-            next.delete(toeicQuestionId);
-            return next;
-          });
-        })
-        .finally(() => {
-          pendingSubmitRequestsRef.current.delete(submitRequest);
-        });
-
-      pendingSubmitRequestsRef.current.add(submitRequest);
-    },
-    [isAuthenticated, isFinished, queryClient, queryKey, sessionId],
-  );
-
-  const finishRun = useCallback(async () => {
-    if (!isAuthenticated || !sessionId) {
-      return;
-    }
-
-    setFinishError(null);
-    try {
-      await Promise.allSettled(pendingSubmitRequestsRef.current);
-      const result = await runAuthenticatedRequest({
-        request: (token) => finishToeicRun(token, sessionId),
-      });
-      queryClient.setQueryData(queryKey, result);
-      await queryClient.invalidateQueries({ queryKey: ["tests"] });
-      setIsResultOpen(true);
-    } catch (error) {
-      setFinishError(
-        error instanceof Error ? error.message : "Cannot finish mock test.",
-      );
-    }
-  }, [isAuthenticated, queryClient, queryKey, sessionId]);
 
   return {
     correctCount: sessionData?.correctCount ?? 0,
@@ -175,18 +62,13 @@ export function useMockTestRun({
     getAnswer,
     isFinished,
     isLoading: runQuery.isLoading,
-    loadError: runQuery.error
-      ? runQuery.error instanceof Error
-        ? runQuery.error.message
-        : "Cannot load mock test."
-      : null,
-    finishError,
-    finishRun,
-    isQuestionPending: (toeicQuestionId: number) =>
-      pendingQuestionIds.has(toeicQuestionId),
-    isResultOpen,
-    closeResult: () => setIsResultOpen(false),
-    selectAnswer,
+    loadError: runQuery.error,
+    finishError: finish.finishError,
+    finishRun: finish.finishRun,
+    isQuestionPending: answerSync.isQuestionPending,
+    isResultOpen: finish.isResultOpen,
+    closeResult: finish.closeResult,
+    selectAnswer: answerSync.selectAnswer,
     sessionData,
   };
 }

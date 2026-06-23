@@ -1,4 +1,4 @@
-import { ToeicRunPage } from "@/features/tests/run/components/ToeicRunPage";
+import { ToeicSessionPage } from "@/features/tests/run/components/ToeicSessionPage";
 
 type PracticePageProps = {
   params: Promise<{
@@ -7,5 +7,5 @@ type PracticePageProps = {
 };
 
 export default function PracticePage({ params }: PracticePageProps) {
-  return <ToeicRunPage mode="practice" params={params} />;
+  return <ToeicSessionPage mode="practice" params={params} />;
 }
