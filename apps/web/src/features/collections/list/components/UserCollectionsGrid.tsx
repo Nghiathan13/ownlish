@@ -34,7 +34,7 @@ export function UserCollectionsGrid({
           collection={defaultCollection}
           isAuthenticated={isAuthenticated}
           userId={userId}
-        />
+        /> 
         {collections.map((collection) => (
           <UserCollectionCard
             collection={collection}
