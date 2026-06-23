@@ -59,6 +59,7 @@ export type ToeicRunResult = {
   sessionId: string;
   mode: ToeicRunMode;
   testId: number;
+  year: number;
   partNumbers: number[];
   totalQuestions: number;
   correctCount: number;

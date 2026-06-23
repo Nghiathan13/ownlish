@@ -1,10 +1,10 @@
-const PRACTICE_RUN_PATH = /^\/tests\/\d+\/(practice|review_wrong)$/;
-const MOCK_TEST_RUN_PATH = /^\/tests\/\d+\/mock_test\/[0-9a-f-]+$/i;
+const TOEIC_RUN_PATH =
+  /^\/tests\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/(practice|review_wrong|mock_test)$/i;
 
 export function isImmersiveTestPath(pathname: string) {
-  return PRACTICE_RUN_PATH.test(pathname) || MOCK_TEST_RUN_PATH.test(pathname);
+  return TOEIC_RUN_PATH.test(pathname);
 }
 
 export function isMockTestPath(pathname: string) {
-  return MOCK_TEST_RUN_PATH.test(pathname);
+  return /\/mock_test$/.test(pathname);
 }

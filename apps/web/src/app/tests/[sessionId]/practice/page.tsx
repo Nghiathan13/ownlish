@@ -2,7 +2,7 @@ import { ToeicRunPage } from "@/features/tests/run/components/ToeicRunPage";
 
 type PracticePageProps = {
   params: Promise<{
-    testId: string;
+    sessionId: string;
   }>;
 };
 

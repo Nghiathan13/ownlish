@@ -3,8 +3,7 @@
 import { Suspense, use, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { PracticeRunView } from "@/features/tests/run/components/PracticeRunView";
-import type { PracticeMode } from "@/features/tests/shared/api/types";
+import { MockRunView } from "@/features/tests/run/components/MockRunView";
 import { getTestsListPath, DEFAULT_TOEIC_YEAR } from "@/features/tests/shared/constants/toeicYears";
 import {
   isToeicSessionId,
@@ -14,40 +13,15 @@ import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
-type ToeicRunPageProps = {
+type MockTestRunPageProps = {
   params: Promise<{
     sessionId: string;
   }>;
-  mode: PracticeMode;
 };
 
-type ToeicRunPageContentProps = {
-  mode: PracticeMode;
-  sessionId: string;
-};
-
-function getCopy(mode: PracticeMode) {
-  if (mode === "review_wrong") {
-    return {
-      invalidRoute: "Invalid review wrong route.",
-      loading: "Loading review wrong...",
-      selectParts: "Select at least one part to review wrong questions.",
-    };
-  }
-
-  return {
-    invalidRoute: "Invalid practice route.",
-    loading: "Loading practice...",
-    selectParts: "Select at least one test part.",
-  };
-}
-
-function ToeicRunPageContent({ mode, sessionId }: ToeicRunPageContentProps) {
+function MockTestRunPageContent({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const copy = getCopy(mode);
-  const testsListPath = getTestsListPath(DEFAULT_TOEIC_YEAR);
-
   const selectedParts = useMemo(() => {
     return parseToeicRunPartsParam(searchParams.get("parts"));
   }, [searchParams]);
@@ -56,11 +30,11 @@ function ToeicRunPageContent({ mode, sessionId }: ToeicRunPageContentProps) {
     return (
       <PageShell>
         <Panel>
-          <p className="text-muted-foreground">{copy.selectParts}</p>
+          <p className="text-muted-foreground">Select at least one test part.</p>
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() => router.push(testsListPath)}
+              onClick={() => router.push(getTestsListPath(DEFAULT_TOEIC_YEAR))}
               type="button"
             >
               Back to tests
@@ -71,25 +45,18 @@ function ToeicRunPageContent({ mode, sessionId }: ToeicRunPageContentProps) {
     );
   }
 
-  return (
-    <PracticeRunView
-      practiceMode={mode}
-      selectedParts={selectedParts}
-      sessionId={sessionId}
-    />
-  );
+  return <MockRunView selectedParts={selectedParts} sessionId={sessionId} />;
 }
 
-export function ToeicRunPage({ params, mode }: ToeicRunPageProps) {
+export function MockTestRunPage({ params }: MockTestRunPageProps) {
   const resolved = use(params);
-  const copy = getCopy(mode);
 
   if (!isToeicSessionId(resolved.sessionId)) {
     return (
       <RequireAuth>
         <PageShell>
           <Panel>
-            <p className="text-muted-foreground">{copy.invalidRoute}</p>
+            <p className="text-muted-foreground">Invalid mock test route.</p>
           </Panel>
         </PageShell>
       </RequireAuth>
@@ -102,12 +69,12 @@ export function ToeicRunPage({ params, mode }: ToeicRunPageProps) {
         fallback={
           <PageShell>
             <Panel>
-              <p className="text-muted-foreground">{copy.loading}</p>
+              <p className="text-muted-foreground">Loading mock test...</p>
             </Panel>
           </PageShell>
         }
       >
-        <ToeicRunPageContent mode={mode} sessionId={resolved.sessionId} />
+        <MockTestRunPageContent sessionId={resolved.sessionId} />
       </Suspense>
     </RequireAuth>
   );

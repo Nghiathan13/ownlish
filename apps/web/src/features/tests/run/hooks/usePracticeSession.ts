@@ -19,12 +19,11 @@ import {
 } from "@/features/tests/run/lib/practiceAnswers";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { createToeicRunRequest } from "@/features/tests/run/lib/createToeicRunRequest";
+import { getToeicRun } from "@/features/tests/run/api/getToeicRun";
 
 type UsePracticeSessionParams = {
-  testId: number;
-  partNumber: number;
-  selectedParts?: number[];
+  sessionId: string;
+  selectedParts: number[];
   mode?: PracticeMode;
   enabled: boolean;
 };
@@ -39,9 +38,8 @@ type SyncAnswerOptions = {
   replace?: boolean;
 };
 
-function normalizePracticeParts(partNumber: number, selectedParts?: number[]) {
-  const parts = selectedParts?.length ? selectedParts : [partNumber];
-  return [...new Set(parts)].sort((a, b) => a - b);
+function normalizePracticeParts(selectedParts: number[]) {
+  return [...new Set(selectedParts)].sort((a, b) => a - b);
 }
 
 function getPracticePartsKey(parts: number[]) {
@@ -49,15 +47,15 @@ function getPracticePartsKey(parts: number[]) {
 }
 
 export function getPracticeSessionQueryKey(
-  testId: number,
+  sessionId: string,
   partNumberOrParts: number | number[],
   mode: PracticeMode = "practice",
 ) {
   const parts = Array.isArray(partNumberOrParts)
-    ? normalizePracticeParts(partNumberOrParts[0] ?? 1, partNumberOrParts)
+    ? normalizePracticeParts(partNumberOrParts)
     : [partNumberOrParts];
 
-  return ["practice-session", testId, getPracticePartsKey(parts), mode] as const;
+  return ["practice-session", sessionId, getPracticePartsKey(parts), mode] as const;
 }
 
 function toAnswerMap(groups: ToeicQuestionGroup[]) {
@@ -165,8 +163,7 @@ function revertGradedAnswer(
 }
 
 export function usePracticeSession({
-  testId,
-  partNumber,
+  sessionId,
   selectedParts: selectedPartsInput,
   mode = "practice",
   enabled,
@@ -175,10 +172,10 @@ export function usePracticeSession({
   const isAuthenticated = isAuthenticatedStatus(status);
   const queryClient = useQueryClient();
   const selectedParts = useMemo(
-    () => normalizePracticeParts(partNumber, selectedPartsInput),
-    [partNumber, selectedPartsInput],
+    () => normalizePracticeParts(selectedPartsInput),
+    [selectedPartsInput],
   );
-  const queryKey = getPracticeSessionQueryKey(testId, selectedParts, mode);
+  const queryKey = getPracticeSessionQueryKey(sessionId, selectedParts, mode);
   const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -192,14 +189,12 @@ export function usePracticeSession({
     queryFn: () =>
       runAuthenticatedRequest({
         request: (token) =>
-          createToeicRunRequest({
-            token,
-            testId,
-            partNumbers: selectedParts,
+          getToeicRun(token, sessionId, {
+            parts: selectedParts,
             mode,
           }),
       }),
-    enabled: enabled && isAuthenticated,
+    enabled: enabled && isAuthenticated && Boolean(sessionId),
     staleTime: Infinity,
     gcTime: mode === "review_wrong" ? 0 : 5 * 60 * 1000,
     refetchOnMount: false,
@@ -207,7 +202,6 @@ export function usePracticeSession({
   });
 
   const sessionData = sessionQuery.data;
-  const sessionId = sessionData?.sessionId ?? null;
   const answerKeyMap = useMemo(
     () => buildAnswerKeyMap(sessionData?.groups ?? []),
     [sessionData?.groups],
@@ -288,7 +282,7 @@ export function usePracticeSession({
             queryClient.invalidateQueries({ queryKey: ["tests"] }),
             queryClient.invalidateQueries({
               queryKey: getPracticeSessionQueryKey(
-                testId,
+                sessionId,
                 selectedParts,
                 "practice",
               ),
@@ -328,7 +322,6 @@ export function usePracticeSession({
       queryClient,
       queryKey,
       sessionId,
-      testId,
     ],
   );
 
@@ -495,6 +488,8 @@ export function usePracticeSession({
 
   return {
     sessionId,
+    testId: sessionData?.testId ?? null,
+    year: sessionData?.year ?? null,
     groups: sessionData?.groups ?? [],
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,

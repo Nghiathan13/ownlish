@@ -21,6 +21,7 @@ export function parseToeicRunResult(body: unknown): ToeicRunResult {
     !isString(body.sessionId) ||
     !mode ||
     !isNumber(body.testId) ||
+    !isNumber(body.year) ||
     !Array.isArray(body.partNumbers) ||
     !isNumber(body.totalQuestions) ||
     !isNumber(body.correctCount) ||
@@ -39,6 +40,7 @@ export function parseToeicRunResult(body: unknown): ToeicRunResult {
     sessionId: body.sessionId,
     mode,
     testId: body.testId,
+    year: body.year,
     partNumbers,
     totalQuestions: body.totalQuestions,
     correctCount: body.correctCount,

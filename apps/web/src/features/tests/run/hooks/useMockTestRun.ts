@@ -52,9 +52,13 @@ function toAnswerMap(groups: ToeicRunResult["groups"]) {
 
 type UseMockTestRunParams = {
   sessionId: string;
+  selectedParts?: number[];
 };
 
-export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
+export function useMockTestRun({
+  sessionId,
+  selectedParts,
+}: UseMockTestRunParams) {
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
   const queryClient = useQueryClient();
@@ -70,7 +74,10 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
     queryKey,
     queryFn: () =>
       runAuthenticatedRequest({
-        request: (token) => getToeicRun(token, sessionId),
+        request: (token) =>
+          getToeicRun(token, sessionId, {
+            parts: selectedParts,
+          }),
       }),
     enabled: Boolean(isAuthenticated && sessionId),
     staleTime: Infinity,
@@ -162,6 +169,8 @@ export function useMockTestRun({ sessionId }: UseMockTestRunParams) {
     correctCount: sessionData?.correctCount ?? 0,
     wrongCount: sessionData?.wrongCount ?? 0,
     groups: sessionData?.groups ?? [],
+    testId: sessionData?.testId ?? null,
+    year: sessionData?.year ?? null,
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isFinished,

@@ -8,7 +8,10 @@ import { useMockTestRun } from "@/features/tests/run/hooks/useMockTestRun";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeFinish, useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
-import { getTestsListPathFromSearchParams } from "@/features/tests/shared/constants/toeicYears";
+import {
+  DEFAULT_TOEIC_YEAR,
+  getTestsListPathFromYearValue,
+} from "@/features/tests/shared/constants/toeicYears";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {
@@ -21,7 +24,7 @@ import { Panel } from "@/shared/ui/Panel";
 
 type MockRunViewProps = {
   sessionId: string;
-  testId: number;
+  selectedParts: number[];
 };
 
 type HiddenMockAudioProps = {
@@ -198,9 +201,12 @@ function MockResultModal({
   );
 }
 
-export function MockRunView({ sessionId, testId }: MockRunViewProps) {
+export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
   const router = useRouter();
-  const mock = useMockTestRun({ sessionId });
+  const mock = useMockTestRun({ selectedParts, sessionId });
+  const testsListPath = getTestsListPathFromYearValue(
+    mock.year ?? DEFAULT_TOEIC_YEAR,
+  );
   const [selectedGroupIndex, setSelectedGroupIndex] = useState<number | null>(null);
   const [isReadingPhaseForced, setIsReadingPhaseForced] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -299,14 +305,17 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
     await mock.finishRun();
   }, [mock]);
 
+  const testLabel = mock.testId ? `Test ${mock.testId}` : null;
+
   useRegisterPracticeFinish(
     mock.isFinished ? null : handleFinish,
-    mock.isFinished ? null : `Test ${testId}`,
+    mock.isFinished ? null : testLabel,
   );
 
   useRegisterPracticeExit(
     mock.isFinished ? () => undefined : null,
-    mock.isFinished ? `Test ${testId}` : null,
+    mock.isFinished ? testLabel : null,
+    testsListPath,
   );
 
   const questionGridSections = useMemo(
@@ -343,13 +352,7 @@ export function MockRunView({ sessionId, testId }: MockRunViewProps) {
           <div className="mt-4">
             <button
               className={secondaryTextButtonClassName()}
-              onClick={() =>
-                router.push(
-                  getTestsListPathFromSearchParams(
-                    new URLSearchParams(window.location.search),
-                  ),
-                )
-              }
+              onClick={() => router.push(testsListPath)}
               type="button"
             >
               Back to tests

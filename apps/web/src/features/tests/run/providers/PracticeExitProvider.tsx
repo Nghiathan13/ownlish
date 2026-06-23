@@ -15,7 +15,10 @@ import {
   readBilingualEnabled,
   writeBilingualEnabled,
 } from "@/features/tests/run/lib/bilingualStorage";
-import { getTestsListPathFromSearchParams } from "@/features/tests/shared/constants/toeicYears";
+import {
+  DEFAULT_TOEIC_YEAR,
+  getTestsListPath,
+} from "@/features/tests/shared/constants/toeicYears";
 
 type ExitHandler = () => void | Promise<void>;
 type FinishHandler = () => void | Promise<void>;
@@ -31,6 +34,7 @@ type PracticeExitContextValue = {
   registerExitHandler: (
     handler: ExitHandler | null,
     title?: string | null,
+    backHref?: string | null,
   ) => void;
 };
 
@@ -70,6 +74,7 @@ const PracticeBilingualContext =
 export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const handlerRef = useRef<ExitHandler | null>(null);
+  const backHrefRef = useRef<string>(getTestsListPath(DEFAULT_TOEIC_YEAR));
   const finishHandlerRef = useRef<FinishHandler | null>(null);
   const [practiceTitle, setPracticeTitle] = useState<string | null>(null);
   const [mockTitle, setMockTitle] = useState<string | null>(null);
@@ -79,9 +84,16 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
   const [isBilingual, setIsBilingual] = useState(() => readBilingualEnabled());
 
   const registerExitHandler = useCallback(
-    (handler: ExitHandler | null, title: string | null = null) => {
+    (
+      handler: ExitHandler | null,
+      title: string | null = null,
+      backHref: string | null = null,
+    ) => {
       handlerRef.current = handler;
       setPracticeTitle(handler ? title : null);
+      if (backHref) {
+        backHrefRef.current = backHref;
+      }
     },
     [],
   );
@@ -115,9 +127,7 @@ export function PracticeExitProvider({ children }: { children: ReactNode }) {
       // Exit should not be blocked by best-effort practice cleanup.
     }
 
-    router.push(
-      getTestsListPathFromSearchParams(new URLSearchParams(window.location.search)),
-    );
+    router.push(backHrefRef.current);
   }, [router]);
 
   const finish = useCallback(async () => {
@@ -192,6 +202,7 @@ export function usePracticeFinish() {
 export function useRegisterPracticeExit(
   handler: ExitHandler | null,
   title: string | null = null,
+  backHref: string | null = null,
 ) {
   const context = usePracticeExit();
   const registerExitHandler = context?.registerExitHandler;
@@ -201,12 +212,12 @@ export function useRegisterPracticeExit(
       return;
     }
 
-    registerExitHandler(handler, title);
+    registerExitHandler(handler, title, backHref);
 
     return () => {
-      registerExitHandler(null, null);
+      registerExitHandler(null, null, null);
     };
-  }, [handler, registerExitHandler, title]);
+  }, [backHref, handler, registerExitHandler, title]);
 }
 
 export function useRegisterPracticeFinish(

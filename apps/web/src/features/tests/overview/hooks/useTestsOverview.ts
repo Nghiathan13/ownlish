@@ -12,6 +12,7 @@ import type {
 } from "@/features/tests/shared/api/types";
 import { createToeicRunRequest } from "@/features/tests/run/lib/createToeicRunRequest";
 import { getPracticeSessionQueryKey } from "@/features/tests/run/hooks/usePracticeSession";
+import { getToeicRunPath } from "@/features/tests/shared/lib/toeicRunPaths";
 import { getToeicRunQueryKey } from "@/features/tests/run/hooks/useMockTestRun";
 import {
   getTestsQueryKey,
@@ -21,8 +22,6 @@ import { clearAllPracticeProgressForTest } from "@/features/tests/run/lib/practi
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 
-const TOEIC_PART_COUNT = 7;
-const PRACTICE_MODES: PracticeMode[] = ["practice", "review_wrong"];
 type PartPickerIntent = "practice" | "mock";
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -69,15 +68,11 @@ export function useTestsOverview(selectedYear: ToeicYear) {
           queryKey: getTestsQueryKey(user?.id ?? null, selectedYear),
         }),
         queryClient.invalidateQueries({
+          queryKey: ["practice-session"],
+        }),
+        queryClient.invalidateQueries({
           queryKey: ["practice-session", testId],
         }),
-        ...Array.from({ length: TOEIC_PART_COUNT }, (_, index) =>
-          PRACTICE_MODES.map((mode) =>
-            queryClient.invalidateQueries({
-              queryKey: getPracticeSessionQueryKey(testId, index + 1, mode),
-            }),
-          ),
-        ).flat(),
       ]);
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot clear practice history."));
@@ -110,13 +105,15 @@ export function useTestsOverview(selectedYear: ToeicYear) {
       });
 
       queryClient.setQueryData(
-        getPracticeSessionQueryKey(testId, normalizedParts, mode),
+        getPracticeSessionQueryKey(
+          session.sessionId,
+          normalizedParts,
+          mode,
+        ),
         session,
       );
 
-      router.push(
-        `/tests/${testId}/${mode}?parts=${normalizedParts.join(",")}&year=${selectedYear}`,
-      );
+      router.push(getToeicRunPath(session.sessionId, mode, normalizedParts));
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start practice."));
     } finally {
@@ -154,7 +151,7 @@ export function useTestsOverview(selectedYear: ToeicYear) {
 
       queryClient.setQueryData(getToeicRunQueryKey(session.sessionId), session);
       router.push(
-        `/tests/${testId}/mock_test/${session.sessionId}?year=${selectedYear}`,
+        getToeicRunPath(session.sessionId, "mock_test", normalizedParts),
       );
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start mock test."));

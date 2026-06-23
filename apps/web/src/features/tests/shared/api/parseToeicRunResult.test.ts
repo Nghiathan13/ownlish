@@ -14,6 +14,7 @@ describe("parseToeicRunResult", () => {
         sessionId: "session-id",
         mode: "mock_test",
         testId: 1,
+        year: 2026,
         partNumbers: [1],
         totalQuestions: 1,
         correctCount: 1,

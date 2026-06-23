@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { PracticeStepContent } from "@/features/tests/run/components/PracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
@@ -29,13 +29,16 @@ import {
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
 import { useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
-import { getTestsListPathFromSearchParams } from "@/features/tests/shared/constants/toeicYears";
+import {
+  DEFAULT_TOEIC_YEAR,
+  getTestsListPathFromYearValue,
+} from "@/features/tests/shared/constants/toeicYears";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 
 type PracticeRunViewProps = {
-  testId: number;
+  sessionId: string;
   selectedParts: number[];
   practiceMode?: PracticeMode;
 };
@@ -45,15 +48,11 @@ function getPracticeStorageKey(sessionId: string) {
 }
 
 export function PracticeRunView({
-  testId,
+  sessionId,
   selectedParts,
   practiceMode = "practice",
 }: PracticeRunViewProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const testsListPath = useMemo(() => {
-    return getTestsListPathFromSearchParams(searchParams);
-  }, [searchParams]);
   const [stepIndex, setStepIndex] = useState(0);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const initializedStorageKeyRef = useRef<string | null>(null);
@@ -61,15 +60,17 @@ export function PracticeRunView({
     () => normalizeSelectedParts(selectedParts),
     [selectedParts],
   );
-  const primaryPartNumber = normalizedSelectedParts[0] ?? 1;
   const isWrongMode = practiceMode === "review_wrong";
   const practice = usePracticeSession({
     enabled: normalizedSelectedParts.length > 0,
     mode: practiceMode,
-    partNumber: primaryPartNumber,
     selectedParts: normalizedSelectedParts,
-    testId,
+    sessionId,
   });
+  const testsListPath = getTestsListPathFromYearValue(
+    practice.year ?? DEFAULT_TOEIC_YEAR,
+  );
+  const testId = practice.testId;
 
   const partGroups = useMemo(() => {
     const groupsByPart: Record<number, ToeicQuestionGroup[]> = {};
@@ -145,7 +146,8 @@ export function PracticeRunView({
 
   useRegisterPracticeExit(
     practice.sessionId ? () => undefined : null,
-    `Test ${testId}`,
+    testId ? `Test ${testId}` : null,
+    testsListPath,
   );
 
   const activeQuestionNumbers = useMemo(
@@ -262,7 +264,7 @@ export function PracticeRunView({
     );
   }
 
-  if (!currentStep || !practice.sessionId) {
+  if (!currentStep || !practice.sessionId || testId == null) {
     return (
       <PageShell>
         <Panel>
