@@ -10,7 +10,7 @@ function CollectionCardSkeleton() {
 
 export function CollectionsGridSkeleton() {
   return (
-    <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => (
         <CollectionCardSkeleton key={index} />
       ))}
