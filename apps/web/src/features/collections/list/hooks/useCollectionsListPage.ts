@@ -15,14 +15,10 @@ import {
   useImportCollection,
 } from "@/features/collections/shared/mutations/hooks";
 
-export function useCollectionsListPage(
-  initialCategory: CollectionCategory = "user",
-) {
+export function useCollectionsListPage(activeCategory: CollectionCategory) {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
   const userId = user?.id ?? null;
-  const [activeCategory, setActiveCategory] =
-    useState<CollectionCategory>(initialCategory);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
   const [editingCollection, setEditingCollection] =
     useState<CollectionSummary | null>(null);
@@ -139,7 +135,6 @@ export function useCollectionsListPage(
     openCreateCollection,
     openEditCollection,
     reloadCollections,
-    setActiveCategory,
     userId,
   };
 }

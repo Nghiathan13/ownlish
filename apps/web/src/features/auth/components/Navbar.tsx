@@ -189,7 +189,10 @@ export function Navbar() {
             <Link href="/" className={linkClass("/")}>
               Dashboard
             </Link>
-            <Link href="/collections" className={linkClass("/collections")}>
+            <Link
+              href="/collections?tab=user"
+              className={linkClass("/collections")}
+            >
               Collections
             </Link>
             <Link href="/review" className={linkClass("/review")}>

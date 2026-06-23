@@ -1,7 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
+  getCollectionsListPath,
   parseCollectionCategoryTab,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
@@ -9,22 +11,20 @@ import { CreateCollectionModal } from "@/features/collections/shared/components/
 import { EditCollectionModal } from "@/features/collections/shared/components/EditCollectionModal";
 import { CollectionCategoryTabs } from "@/features/collections/list/components/CollectionCategoryTabs";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
+import { CollectionsPageSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
 import { useCollectionsListPage } from "@/features/collections/list/hooks/useCollectionsListPage";
 import { PageShell } from "@/shared/ui/PageShell";
 
 function CollectionsPageContent({
-  initialCategory,
+  activeCategory,
 }: {
-  initialCategory: CollectionCategory;
+  activeCategory: CollectionCategory;
 }) {
-  const page = useCollectionsListPage(initialCategory);
+  const page = useCollectionsListPage(activeCategory);
 
   return (
     <PageShell>
-      <CollectionCategoryTabs
-        activeCategory={page.activeCategory}
-        onCategoryChange={page.setActiveCategory}
-      />
+      <CollectionCategoryTabs activeCategory={activeCategory} />
       <CollectionsListBody
         activeCollections={page.activeCollections}
         activeTabLabel={page.activeTabLabel}
@@ -59,14 +59,27 @@ function CollectionsPageContent({
 }
 
 export function CollectionsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialCategory =
-    parseCollectionCategoryTab(searchParams.get("tab")) ?? "user";
+  const tabParam = searchParams.get("tab");
+  const activeCategory: CollectionCategory =
+    parseCollectionCategoryTab(tabParam) ?? "user";
+  const isTabParamValid = tabParam === activeCategory;
+
+  useEffect(() => {
+    if (!isTabParamValid) {
+      router.replace(getCollectionsListPath(activeCategory), { scroll: false });
+    }
+  }, [activeCategory, isTabParamValid, router]);
+
+  if (!isTabParamValid) {
+    return <CollectionsPageSkeleton />;
+  }
 
   return (
     <CollectionsPageContent
-      key={initialCategory}
-      initialCategory={initialCategory}
+      key={activeCategory}
+      activeCategory={activeCategory}
     />
   );
 }

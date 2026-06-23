@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getDefaultUserCollection } from "@/entities/collection/lib/collectionDisplay";
+import { getCollectionsListPath, getDefaultUserCollection } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
@@ -88,7 +88,10 @@ export function HomeDashboard() {
                   Add your first word to start tracking review progress.
                 </p>
               </div>
-              <Link className={primaryTextButtonClassName()} href="/collections">
+              <Link
+                className={primaryTextButtonClassName()}
+                href={getCollectionsListPath("user")}
+              >
                 Browse collections
               </Link>
             </DashboardMessage>
@@ -121,7 +124,10 @@ export function HomeDashboard() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link className={primaryTextButtonClassName()} href="/collections">
+                <Link
+                className={primaryTextButtonClassName()}
+                href={getCollectionsListPath("user")}
+              >
                   Manage collections
                 </Link>
                 <Link className={secondaryTextButtonClassName()} href="/review">

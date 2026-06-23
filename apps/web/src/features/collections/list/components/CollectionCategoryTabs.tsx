@@ -1,5 +1,7 @@
+import Link from "next/link";
 import {
   collectionCategoryTabs,
+  getCollectionsListPath,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import {
@@ -9,30 +11,27 @@ import {
 
 type CollectionCategoryTabsProps = {
   activeCategory: CollectionCategory;
-  onCategoryChange: (category: CollectionCategory) => void;
 };
 
 export function CollectionCategoryTabs({
   activeCategory,
-  onCategoryChange,
 }: CollectionCategoryTabsProps) {
   return (
     <div className="mb-4 flex flex-wrap gap-2 px-4">
       {collectionCategoryTabs.map((tab) => (
-        <button
+        <Link
+          aria-current={activeCategory === tab.key ? "page" : undefined}
           className={
             activeCategory === tab.key
               ? primaryTextButtonClassName()
               : secondaryTextButtonClassName()
           }
+          href={getCollectionsListPath(tab.key)}
           key={tab.key}
-          onClick={() => {
-            onCategoryChange(tab.key);
-          }}
-          type="button"
+          scroll={false}
         >
           {tab.label}
-        </button>
+        </Link>
       ))}
     </div>
   );
