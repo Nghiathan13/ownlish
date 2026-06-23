@@ -19,6 +19,7 @@ export function SystemCollectionCard({
   return (
     <CollectionCard
       badge={collection.cefrLevel}
+      description={collection.description}
       footerAction={
         canImport
           ? (

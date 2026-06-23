@@ -29,6 +29,7 @@ export function MyVocabularyCard({
 
   return (
     <CollectionCard
+      description={collection?.description ?? null}
       footerAction={
         collectionId
           ? (

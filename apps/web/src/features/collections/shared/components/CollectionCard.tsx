@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 type CollectionCardProps = {
   badge?: string | null;
+  description?: string | null;
   footerAction?: ReactNode;
   headerAction?: ReactNode;
   href?: string | null;
@@ -13,6 +14,7 @@ type CollectionCardProps = {
 
 export function CollectionCard({
   badge = null,
+  description = null,
   footerAction,
   headerAction,
   href = null,
@@ -32,7 +34,10 @@ export function CollectionCard({
               </span>
             ) : null}
           </div>
-          <p className="text-sm font-semibold">{wordCountLabel}</p>
+          {description ? (
+            <p className="text-base text-muted-foreground">{description}</p>
+          ) : null}
+          <p className="text-base">{wordCountLabel}</p>
         </div>
       </article>
     );
@@ -50,10 +55,13 @@ export function CollectionCard({
           ) : null}
           {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
         </div>
-        <p className="text-sm font-semibold">{wordCountLabel}</p>
-        {footerAction ? (
-          <div className="flex justify-end">{footerAction}</div>
+        {description ? (
+          <p className="text-base text-muted-foreground">{description}</p>
         ) : null}
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-base">{wordCountLabel}</p>
+          {footerAction ? <div className="shrink-0">{footerAction}</div> : null}
+        </div>
       </div>
       <Link
         aria-label={`Open ${title}`}

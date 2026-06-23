@@ -25,6 +25,7 @@ export function UserCollectionCard({
 
   return (
     <CollectionCard
+      description={collection.description}
       footerAction={
         <CollectionReviewLink
           collectionId={collection.id}
