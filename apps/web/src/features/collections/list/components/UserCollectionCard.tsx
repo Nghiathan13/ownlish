@@ -22,10 +22,11 @@ export function UserCollectionCard({
   userId,
 }: UserCollectionCardProps) {
   const isDeleting = deletingCollectionId === collection.id;
+  const description = collection.description?.trim() || "No description.";
 
   return (
     <CollectionCard
-      description={collection.description}
+      description={description}
       footerAction={
         <CollectionReviewLink
           collectionId={collection.id}
