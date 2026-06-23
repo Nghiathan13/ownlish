@@ -62,6 +62,12 @@ export function SystemCollectionWordsPanelBody({
     hasCollectionsList &&
     userOwnedCollections.length > 0 &&
     Boolean(resolvedImportTargetCollectionId);
+  const selectedCount = selectedDefinitions.length;
+  const importLabel = isImporting
+    ? "Importing..."
+    : selectedCount > 0
+      ? `Import (${selectedCount})`
+      : "Import all";
 
   return (
     <>
@@ -74,11 +80,16 @@ export function SystemCollectionWordsPanelBody({
             )}
             disabled={isImporting}
             onClick={() => {
+              if (selectedCount > 0) {
+                void handleImportSelectedClick();
+                return;
+              }
+
               void handleImportAllClick();
             }}
             type="button"
           >
-            {isImporting ? "Importing..." : "Import all"}
+            {importLabel}
           </button>
         ) : null}
         <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -89,23 +100,6 @@ export function SystemCollectionWordsPanelBody({
             onToggleColumn={toggleColumn}
           />
         </div>
-        {selectedDefinitions.length > 0 ? (
-          <button
-            className={iconTextButtonClassName(
-              "w-fit shrink-0 sm:ml-auto",
-              "border-foreground bg-foreground text-background",
-            )}
-            disabled={isImporting}
-            onClick={() => {
-              void handleImportSelectedClick();
-            }}
-            type="button"
-          >
-            {isImporting
-              ? "Importing..."
-              : `Import (${selectedDefinitions.length})`}
-          </button>
-        ) : null}
       </div>
 
       {importResultMessage ? (
