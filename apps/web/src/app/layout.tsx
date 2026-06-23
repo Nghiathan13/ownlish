@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthQueryReset } from "@/features/auth/components/AuthQueryReset";
-import { Navbar } from "@/features/auth/components/Navbar";
+import { AppShell } from "@/features/auth/components/AppShell";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import { PracticeExitProvider } from "@/features/tests/run/providers/PracticeExitProvider";
 import { QueryProvider } from "@/shared/providers/QueryProvider";
@@ -37,8 +37,7 @@ export default function RootLayout({
           <QueryProvider>
             <PracticeExitProvider>
               <AuthQueryReset />
-              <Navbar />
-              {children}
+              <AppShell>{children}</AppShell>
             </PracticeExitProvider>
           </QueryProvider>
         </AuthProvider>
