@@ -2,13 +2,13 @@ export const statusColorClasses = {
   success: {
     text: "text-emerald-700 dark:text-emerald-400",
     background: "bg-emerald-200/30 dark:bg-emerald-900/30",
-    border: "border-emerald-700 dark:border-emerald-400",
+    border: "border-emerald-700/30 dark:border-emerald-400/30",
     backgroundHover: "hover:bg-emerald-200/30 dark:hover:bg-emerald-900/30",
   },
   danger: {
     text: "text-red-700 dark:text-red-400",
     background: "bg-red-200/30 dark:bg-red-900/30",
-    border: "border-red-700 dark:border-red-400",
+    border: "border-red-700/30 dark:border-red-400/30",
     backgroundHover: "hover:bg-red-200/30 dark:hover:bg-red-900/30",
   },
   amber: {
