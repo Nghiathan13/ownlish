@@ -48,15 +48,11 @@ export function CollectionCard({
               {badge}
             </span>
           ) : null}
-          {headerAction ? (
-            <div className="pointer-events-auto shrink-0">{headerAction}</div>
-          ) : null}
+          {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
         </div>
         <p className="text-sm font-semibold">{wordCountLabel}</p>
         {footerAction ? (
-          <div className="pointer-events-auto flex justify-end">
-            {footerAction}
-          </div>
+          <div className="flex justify-end">{footerAction}</div>
         ) : null}
       </div>
       <Link

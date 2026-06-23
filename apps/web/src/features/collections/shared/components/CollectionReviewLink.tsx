@@ -30,10 +30,10 @@ export function CollectionReviewLink({
         ? "Review"
         : `Review (${dueCount})`;
   const enabledClassName = iconTextButtonClassName(
-    "relative z-20 shrink-0 border-foreground bg-foreground text-background",
+    "pointer-events-auto relative z-20 shrink-0 border-foreground bg-foreground text-background",
   );
   const disabledClassName = iconTextButtonClassName(
-    "relative z-20 shrink-0 border-border bg-muted text-muted-foreground",
+    "pointer-events-auto relative z-20 shrink-0 border-border bg-muted text-muted-foreground",
   );
 
   if (isDisabled) {

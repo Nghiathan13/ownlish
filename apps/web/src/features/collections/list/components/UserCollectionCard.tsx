@@ -38,7 +38,7 @@ export function UserCollectionCard({
             isDeleting ? "Deleting collection" : `Delete ${collection.name}`
           }
           className={iconOnlyButtonClassName(
-            "bg-transparent",
+            "pointer-events-auto bg-transparent",
             statusColorClasses.danger.text,
             statusColorClasses.danger.backgroundHover,
           )}

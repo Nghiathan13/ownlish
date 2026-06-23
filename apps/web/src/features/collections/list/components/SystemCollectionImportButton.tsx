@@ -14,10 +14,10 @@ export function SystemCollectionImportButton({
   onImport,
 }: SystemCollectionImportButtonProps) {
   const enabledClassName = iconTextButtonClassName(
-    "shrink-0 border-foreground bg-foreground text-background",
+    "pointer-events-auto shrink-0 border-foreground bg-foreground text-background",
   );
   const disabledClassName = iconTextButtonClassName(
-    "shrink-0 border-border bg-muted text-muted-foreground",
+    "pointer-events-auto shrink-0 border-border bg-muted text-muted-foreground",
   );
 
   if (isDisabled) {
