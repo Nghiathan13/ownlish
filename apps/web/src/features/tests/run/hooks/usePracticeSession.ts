@@ -20,6 +20,7 @@ import {
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { getToeicRun } from "@/features/tests/run/api/getToeicRun";
+import { expandToeicRunParts } from "@/features/tests/run/api/expandToeicRunParts";
 
 type UsePracticeSessionParams = {
   sessionId: string;
@@ -188,11 +189,14 @@ export function usePracticeSession({
     queryKey,
     queryFn: () =>
       runAuthenticatedRequest({
-        request: (token) =>
-          getToeicRun(token, sessionId, {
+        request: async (token) => {
+          await expandToeicRunParts(token, sessionId, selectedParts);
+
+          return getToeicRun(token, sessionId, {
             parts: selectedParts,
             mode,
-          }),
+          });
+        },
       }),
     enabled: enabled && isAuthenticated && Boolean(sessionId),
     staleTime: Infinity,

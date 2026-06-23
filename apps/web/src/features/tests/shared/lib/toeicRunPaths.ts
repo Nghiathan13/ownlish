@@ -37,6 +37,10 @@ export function getToeicRunApiPath(
     : `/tests/runs/${sessionId}`;
 }
 
+export function getExpandToeicRunPartsApiPath(sessionId: string) {
+  return `/tests/runs/${sessionId}/expand-parts`;
+}
+
 export function parseToeicRunPartsParam(
   value: string | null | undefined,
 ): number[] {

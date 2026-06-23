@@ -56,6 +56,7 @@ export type SubmitAnswerResult = {
 };
 
 export type ToeicRunResult = {
+  /** Mirrors server `ToeicSessionResponse`. */
   sessionId: string;
   mode: ToeicRunMode;
   testId: number;

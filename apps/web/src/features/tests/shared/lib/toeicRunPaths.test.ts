@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getExpandToeicRunPartsApiPath,
   getToeicRunApiPath,
   getToeicRunPath,
   parseToeicRunPartsParam,
@@ -22,6 +23,14 @@ describe("toeicRunPaths", () => {
       }),
     ).toBe(
       "/tests/runs/11111111-1111-4111-8111-111111111111?parts=1%2C2&mode=review_wrong",
+    );
+  });
+
+  it("builds expand-parts API path", () => {
+    expect(
+      getExpandToeicRunPartsApiPath("11111111-1111-4111-8111-111111111111"),
+    ).toBe(
+      "/tests/runs/11111111-1111-4111-8111-111111111111/expand-parts",
     );
   });
 
