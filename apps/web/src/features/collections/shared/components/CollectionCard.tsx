@@ -88,8 +88,8 @@ export function CollectionCard({
 function CollectionCardCreatedLabel({ label }: { label: string }) {
   return (
     <p className="flex items-center gap-2 text-sm text-muted-foreground">
-      <CalenderIcon className="size-4 shrink-0" />
-      {label}
+      <CalenderIcon className="block size-4 shrink-0" />
+      <span className="leading-none">{label}</span>
     </p>
   );
 }
@@ -98,11 +98,11 @@ function CollectionCardWordCount({ label }: { label: string }) {
   const wordsSuffix = " words";
 
   if (!label.endsWith(wordsSuffix)) {
-    return <p className="text-base">{label}</p>;
+    return <p className="text-base whitespace-nowrap">{label}</p>;
   }
 
   return (
-    <p className="text-base">
+    <p className="text-base whitespace-nowrap">
       {label.slice(0, -wordsSuffix.length)}
       <span className="text-muted-foreground">{wordsSuffix}</span>
     </p>
