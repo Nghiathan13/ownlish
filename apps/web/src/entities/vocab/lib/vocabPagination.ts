@@ -1,4 +1,4 @@
-export const VOCABULARY_PAGE_SIZE_OPTIONS = [50, 100, 500] as const;
+export const VOCABULARY_PAGE_SIZE_OPTIONS = [20, 50, 100, 500] as const;
 
 export type VocabularyPageSize =
   (typeof VOCABULARY_PAGE_SIZE_OPTIONS)[number];
