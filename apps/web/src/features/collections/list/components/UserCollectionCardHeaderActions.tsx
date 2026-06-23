@@ -24,7 +24,7 @@ export function UserCollectionCardHeaderActions({
       <button
         aria-label={`Edit ${collection.name}`}
         className={iconOnlyButtonClassName(
-          "bg-transparent text-muted-foreground hover:text-foreground",
+          "bg-transparent text-muted-foreground hover:bg-muted",
         )}
         onClick={() => {
           onEdit(collection);

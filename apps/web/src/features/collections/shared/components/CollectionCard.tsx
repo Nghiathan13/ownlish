@@ -45,7 +45,7 @@ export function CollectionCard({
           {description ? (
             <p className="text-base text-muted-foreground">{description}</p>
           ) : null}
-          <p className="text-base">{wordCountLabel}</p>
+          <CollectionCardWordCount label={wordCountLabel} />
         </div>
       </article>
     );
@@ -72,7 +72,7 @@ export function CollectionCard({
           <p className="text-base text-muted-foreground">{description}</p>
         ) : null}
         <div className="flex items-center justify-between gap-3">
-          <p className="text-base">{wordCountLabel}</p>
+          <CollectionCardWordCount label={wordCountLabel} />
           {footerAction ? <div className="shrink-0">{footerAction}</div> : null}
         </div>
       </div>
@@ -90,6 +90,21 @@ function CollectionCardCreatedLabel({ label }: { label: string }) {
     <p className="flex items-center gap-2 text-sm text-muted-foreground">
       <CalenderIcon className="size-4 shrink-0" />
       {label}
+    </p>
+  );
+}
+
+function CollectionCardWordCount({ label }: { label: string }) {
+  const wordsSuffix = " words";
+
+  if (!label.endsWith(wordsSuffix)) {
+    return <p className="text-base">{label}</p>;
+  }
+
+  return (
+    <p className="text-base">
+      {label.slice(0, -wordsSuffix.length)}
+      <span className="text-muted-foreground">{wordsSuffix}</span>
     </p>
   );
 }
