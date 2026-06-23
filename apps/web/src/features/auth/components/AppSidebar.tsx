@@ -31,7 +31,7 @@ export function AppSidebar() {
     <aside
       className={classNames(
         "flex h-full shrink-0 flex-col border-r border-border bg-background/80 backdrop-blur-md",
-        collapsed ? "w-14" : "w-40",
+        collapsed ? "w-14" : "w-48",
       )}
     >
       <div className="flex flex-col gap-4 p-2">
