@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { classNames } from "@/shared/lib/classNames";
 
 type CollectionCardProps = {
   badge?: string | null;
@@ -21,14 +20,6 @@ export function CollectionCard({
   title,
   wordCountLabel,
 }: CollectionCardProps) {
-  const hasFooter = footerAction != null;
-  const hasHeaderAction = headerAction != null;
-  const contentClassName = classNames(
-    "flex flex-col gap-2 p-4",
-    hasFooter && "pb-14",
-    hasHeaderAction && "pr-12",
-  );
-
   if (isDisabled || !href) {
     return (
       <article className="rounded-xl border border-border p-4 opacity-50">
@@ -49,25 +40,30 @@ export function CollectionCard({
 
   return (
     <article className="relative rounded-xl border border-border">
-      {headerAction ? (
-        <div className="absolute right-4 top-4 z-10">{headerAction}</div>
-      ) : null}
-      <Link className="block rounded-xl hover:bg-muted" href={href}>
-        <div className={contentClassName}>
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            {badge ? (
-              <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-                {badge}
-              </span>
-            ) : null}
-          </div>
-          <p className="text-sm font-semibold">{wordCountLabel}</p>
+      <div className="relative z-10 flex flex-col gap-2 p-4 pointer-events-none">
+        <div className="flex items-start gap-3">
+          <h2 className="min-w-0 flex-1 text-lg font-semibold">{title}</h2>
+          {badge ? (
+            <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
+              {badge}
+            </span>
+          ) : null}
+          {headerAction ? (
+            <div className="pointer-events-auto shrink-0">{headerAction}</div>
+          ) : null}
         </div>
-      </Link>
-      {footerAction ? (
-        <div className="absolute bottom-4 right-4 z-10">{footerAction}</div>
-      ) : null}
+        <p className="text-sm font-semibold">{wordCountLabel}</p>
+        {footerAction ? (
+          <div className="pointer-events-auto flex justify-end">
+            {footerAction}
+          </div>
+        ) : null}
+      </div>
+      <Link
+        aria-label={`Open ${title}`}
+        className="absolute inset-0 rounded-xl hover:bg-muted"
+        href={href}
+      />
     </article>
   );
 }
