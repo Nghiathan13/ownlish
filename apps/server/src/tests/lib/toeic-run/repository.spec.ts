@@ -53,19 +53,49 @@ describe('ToeicRunRepository', () => {
     ).rejects.toThrow('Test part not found.');
   });
 
-  it('deletes only practice runs for a user and test', async () => {
-    prismaMock.toeicRun.deleteMany.mockResolvedValue({ count: 2 });
+  it('clears practice answer history without deleting runs', async () => {
+    prismaMock.toeicRun.findMany.mockResolvedValue([{ id: 'run-id' }]);
 
     await expect(
-      repository.deletePracticeRunsForUserAndTest('user-id', 1),
-    ).resolves.toBe(2);
+      repository.resetPracticeRunAnswers('user-id', 1),
+    ).resolves.toBe(1);
 
-    expect(prismaMock.toeicRun.deleteMany).toHaveBeenCalledWith({
+    expect(prismaMock.toeicRun.findMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-id',
         toeicTestId: 1,
         mode: ToeicRunMode.PRACTICE,
       },
+      select: { id: true },
     });
+    expect(prismaMock.toeicRunQuestion.updateMany).toHaveBeenCalledWith({
+      where: { runId: { in: ['run-id'] } },
+      data: {
+        selectedKey: null,
+        status: null,
+        answeredAt: null,
+        gradedAt: null,
+      },
+    });
+    expect(prismaMock.toeicRunGroup.updateMany).toHaveBeenCalledWith({
+      where: { runId: { in: ['run-id'] } },
+      data: { status: null },
+    });
+    expect(prismaMock.toeicRun.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['run-id'] } },
+      data: {
+        totalRight: 0,
+        totalWrong: 0,
+      },
+    });
+    expect(prismaMock.toeicRun.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('returns zero when no practice run exists to reset', async () => {
+    prismaMock.toeicRun.findMany.mockResolvedValue([]);
+
+    await expect(
+      repository.resetPracticeRunAnswers('user-id', 1),
+    ).resolves.toBe(0);
   });
 });

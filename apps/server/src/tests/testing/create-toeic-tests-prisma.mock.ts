@@ -10,8 +10,10 @@ export function createToeicTestsPrismaMock() {
     toeicRun: {
       create: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       deleteMany: jest.fn(),
     },
     toeicRunQuestion: {
@@ -20,10 +22,12 @@ export function createToeicTestsPrismaMock() {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     toeicRunGroup: {
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     toeicQuestion: {
       findUnique: jest.fn(),

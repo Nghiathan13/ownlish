@@ -118,19 +118,51 @@ export class ToeicRunRepository {
     }
   }
 
-  async deletePracticeRunsForUserAndTest(
+  async resetPracticeRunAnswers(
     userId: string,
     testId: number,
   ): Promise<number> {
-    const result = await this.prisma.toeicRun.deleteMany({
+    const runs = await this.prisma.toeicRun.findMany({
       where: {
         userId,
         toeicTestId: testId,
         mode: ToeicRunMode.PRACTICE,
       },
+      select: { id: true },
     });
 
-    return result.count;
+    if (runs.length === 0) {
+      return 0;
+    }
+
+    const runIds = runs.map((run) => run.id);
+
+    await this.transaction(async (tx) => {
+      await tx.toeicRunQuestion.updateMany({
+        where: { runId: { in: runIds } },
+        data: {
+          selectedKey: null,
+          status: null,
+          answeredAt: null,
+          gradedAt: null,
+        },
+      });
+
+      await tx.toeicRunGroup.updateMany({
+        where: { runId: { in: runIds } },
+        data: { status: null },
+      });
+
+      await tx.toeicRun.updateMany({
+        where: { id: { in: runIds } },
+        data: {
+          totalRight: 0,
+          totalWrong: 0,
+        },
+      });
+    });
+
+    return runs.length;
   }
 
   listQuestionGroupsForParts(

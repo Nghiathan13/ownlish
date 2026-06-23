@@ -24,7 +24,7 @@ describe('ToeicRunService', () => {
     findOwnedRunMeta: jest.fn(),
     findOwnedRun: jest.fn(),
     findTestById: jest.fn(),
-    deletePracticeRunsForUserAndTest: jest.fn(),
+    resetPracticeRunAnswers: jest.fn(),
   };
   const runMaterializerMock = {
     findLatestPracticeRun: jest.fn(),
@@ -299,15 +299,15 @@ describe('ToeicRunService', () => {
     expect(runGraderMock.completeMockRun).not.toHaveBeenCalled();
   });
 
-  it('clears practice runs for a test', async () => {
+  it('clears practice answer history for a test', async () => {
     runRepositoryMock.findTestById.mockResolvedValue({ id: 1, year: 2026 });
-    runRepositoryMock.deletePracticeRunsForUserAndTest.mockResolvedValue(2);
+    runRepositoryMock.resetPracticeRunAnswers.mockResolvedValue(1);
 
     await expect(service.clearTestHistory('user-id', 1)).resolves.toEqual({
-      deletedSessionCount: 2,
+      deletedSessionCount: 1,
     });
 
-    expect(runRepositoryMock.deletePracticeRunsForUserAndTest).toHaveBeenCalledWith(
+    expect(runRepositoryMock.resetPracticeRunAnswers).toHaveBeenCalledWith(
       'user-id',
       1,
     );

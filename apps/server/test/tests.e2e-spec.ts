@@ -325,7 +325,7 @@ describe('TestsController (e2e)', () => {
     ).expect(400);
   });
 
-  it('clears practice history for a test', async () => {
+  it('clears practice answer history for a test', async () => {
     const createResponse = await createToeicRunsRequest(
       app.getHttpServer(),
       accessToken,
@@ -339,6 +339,18 @@ describe('TestsController (e2e)', () => {
 
     const session = parseResponseBody<ToeicSessionE2eBody>(createResponse);
 
+    await submitToeicAnswerRequest(
+      app.getHttpServer(),
+      accessToken,
+      session.sessionId,
+    )
+      .send({
+        toeicQuestionId: fixture.part1QuestionId,
+        selectedKey: 'B',
+        mode: 'practice',
+      })
+      .expect(201);
+
     const clearResponse = await request(app.getHttpServer())
       .delete(`/tests/${fixture.testId}/practice-history`)
       .set(withBearerAuth(accessToken))
@@ -348,15 +360,35 @@ describe('TestsController (e2e)', () => {
       deletedSessionCount: 1,
     });
 
-    await getToeicRunRequest(
+    const clearedSessionResponse = await getToeicRunRequest(
       app.getHttpServer(),
       accessToken,
       session.sessionId,
       { parts: '1' },
-    ).expect(404);
+    ).expect(200);
+
+    const clearedSession = parseResponseBody<ToeicSessionE2eBody>(
+      clearedSessionResponse,
+    );
+    expect(clearedSession).toMatchObject({
+      sessionId: session.sessionId,
+      correctCount: 0,
+      wrongCount: 0,
+      groups: [
+        expect.objectContaining({
+          questions: [
+            expect.objectContaining({
+              selectedKey: null,
+              status: null,
+              isCorrect: null,
+            }),
+          ],
+        }),
+      ],
+    });
   });
 
-  it('clears practice history without deleting mock test runs', async () => {
+  it('clears practice answer history without deleting mock test runs', async () => {
     const practiceResponse = await createToeicRunsRequest(
       app.getHttpServer(),
       accessToken,
@@ -369,6 +401,18 @@ describe('TestsController (e2e)', () => {
       .expect(201);
 
     const practiceSession = parseResponseBody<ToeicSessionE2eBody>(practiceResponse);
+
+    await submitToeicAnswerRequest(
+      app.getHttpServer(),
+      accessToken,
+      practiceSession.sessionId,
+    )
+      .send({
+        toeicQuestionId: fixture.part1QuestionId,
+        selectedKey: 'B',
+        mode: 'practice',
+      })
+      .expect(201);
 
     const mockResponse = await createToeicRunsRequest(
       app.getHttpServer(),
@@ -392,12 +436,20 @@ describe('TestsController (e2e)', () => {
       deletedSessionCount: 1,
     });
 
-    await getToeicRunRequest(
+    const clearedPracticeResponse = await getToeicRunRequest(
       app.getHttpServer(),
       accessToken,
       practiceSession.sessionId,
       { parts: '1' },
-    ).expect(404);
+    ).expect(200);
+
+    expect(
+      parseResponseBody<ToeicSessionE2eBody>(clearedPracticeResponse),
+    ).toMatchObject({
+      sessionId: practiceSession.sessionId,
+      correctCount: 0,
+      wrongCount: 0,
+    });
 
     await getToeicRunRequest(
       app.getHttpServer(),
