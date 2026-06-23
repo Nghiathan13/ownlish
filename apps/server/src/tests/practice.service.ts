@@ -3,108 +3,23 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  Prisma,
-  ToeicRunGroupStatus,
-  ToeicRunMode,
-  ToeicRunQuestionStatus,
-  type ToeicQuestion,
-} from '@prisma/client';
+import { ToeicRunMode } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  countOptions,
-  getOptionText,
-  getOptionViText,
-  isToeicQuestionOptionKey,
-  mapQuestionOptions,
-  parseAnswerKey,
-} from './lib/toeic-question-mapper';
 import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
 import { GetToeicRunDto } from './dto/get-toeic-run.dto';
-import { TestsStorageService } from './tests-storage.service';
-
-type SubmitAnswerResponse = {
-  graded: boolean;
-  isCorrect?: boolean;
-  answerKey?: 'A' | 'B' | 'C' | 'D';
-  correctOptionEn?: string | null;
-  correctOptionVi?: string | null;
-};
-
-type SessionResponseMode = 'practice' | 'review_wrong' | 'mock_test';
-
-type RunQuestionForResponse = {
-  toeicQuestionId: number;
-  selectedKey: string | null;
-  status: ToeicRunQuestionStatus | null;
-  toeicQuestion: { answerKey: string | null };
-};
-
-type RunQuestionWithQuestionForResponse = {
-  toeicQuestionId: number;
-  selectedKey: string | null;
-  status: ToeicRunQuestionStatus | null;
-  toeicQuestion: ToeicQuestion;
-};
-
-type RunGroupForResponse = {
-  toeicQuestionGroupId: number;
-  partNumber: number;
-  questionStart: number;
-  questionEnd: number;
-  sortOrder: number;
-  status: ToeicRunGroupStatus | null;
-  toeicQuestionGroup: {
-    id: number;
-    groupType: string | null;
-    accent: string | null;
-    content: string | null;
-    contentVi: string | null;
-    audioStoragePath: string | null;
-    imageStoragePath: string | null;
-  };
-  questions: RunQuestionWithQuestionForResponse[];
-};
-
-type RunForResponse = {
-  id: string;
-  mode: ToeicRunMode;
-  toeicTestId: number;
-  selectedParts: number[];
-  totalRight: number;
-  totalWrong: number;
-  completedAt: Date | null;
-  questions: RunQuestionForResponse[];
-  groups: RunGroupForResponse[];
-};
-
-type QuestionWithGroup = ToeicQuestion & {
-  group: {
-    id: number;
-    testPart: {
-      testId: number;
-      partNumber: number;
-    };
-  };
-};
-
-type RunQuestionWithQuestion = {
-  id: string;
-  runId: string;
-  runGroupId: string;
-  toeicQuestionId: number;
-  partNumber: number;
-  selectedKey: string | null;
-  status: ToeicRunQuestionStatus | null;
-  toeicQuestion: ToeicQuestion;
-};
+import { ToeicRunGrader } from './lib/toeic-run-grader';
+import { isWrongReviewToeicGroup } from './lib/toeic-run-session.formatters';
+import { ToeicRunMaterializer } from './lib/toeic-run-materializer';
+import { ToeicRunSessionMapper } from './lib/toeic-run-session.mapper';
 
 @Injectable()
 export class PracticeService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly storageService: TestsStorageService,
+    private readonly sessionMapper: ToeicRunSessionMapper,
+    private readonly runMaterializer: ToeicRunMaterializer,
+    private readonly runGrader: ToeicRunGrader,
   ) {}
 
   async createRun(userId: string, dto: CreateToeicRunDto) {
@@ -114,45 +29,50 @@ export class PracticeService {
     await this.assertTestAndPartsExist(dto.testId, selectedParts);
 
     if (mode === 'mock_test') {
-      const run = await this.createRunWithQuestions({
+      const run = await this.runMaterializer.createRunWithQuestions({
         userId,
         testId: dto.testId,
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts,
       });
 
-      return this.formatSessionResponse(run, selectedParts);
+      return this.sessionMapper.formatSessionResponse(run, selectedParts);
     }
 
     if (mode === 'review_wrong') {
       return this.createReviewWrongSession(userId, dto.testId, selectedParts);
     }
 
-    const existingRun = await this.findLatestPracticeRun(userId, dto.testId);
+    const existingRun = await this.runMaterializer.findLatestPracticeRun(
+      userId,
+      dto.testId,
+    );
 
     if (existingRun) {
-      await this.ensurePracticeRunIncludesParts(
+      await this.runMaterializer.ensurePracticeRunIncludesParts(
         existingRun.id,
         dto.testId,
         selectedParts,
       );
 
-      const refreshedRun = await this.getRunForResponse(existingRun.id);
+      const refreshedRun = await this.runMaterializer.findRunForResponse(
+        existingRun.id,
+      );
       if (!refreshedRun) {
         throw new NotFoundException('Practice session not found.');
       }
 
-      return this.formatSessionResponse(refreshedRun, selectedParts);
+      return this.sessionMapper.formatSessionResponse(refreshedRun, selectedParts);
     }
 
-    const run = await this.createRunWithQuestions({
+    const run = await this.runMaterializer.createRunWithQuestions({
       userId,
       testId: dto.testId,
       mode: ToeicRunMode.PRACTICE,
       selectedParts,
     });
 
-    return this.formatSessionResponse(run, selectedParts);
+    return this.sessionMapper.formatSessionResponse(run, selectedParts);
   }
 
   private resolveSelectedPartsFromNumbers(partNumbers: number[]): number[] {
@@ -205,447 +125,46 @@ export class PracticeService {
     }
   }
 
-  private findLatestPracticeRun(
-    userId: string,
-    testId: number,
-  ): Promise<RunForResponse | null> {
-    return this.prisma.toeicRun.findFirst({
-      where: {
-        userId,
-        toeicTestId: testId,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      orderBy: { createdAt: 'desc' },
-      include: this.runResponseInclude(),
-    });
-  }
-
-  private runResponseInclude() {
-    return {
-      questions: {
-        orderBy: { sortOrder: 'asc' as const },
-        include: {
-          toeicQuestion: {
-            select: { answerKey: true },
-          },
-        },
-      },
-      groups: {
-        orderBy: { sortOrder: 'asc' as const },
-        include: {
-          toeicQuestionGroup: {
-            select: {
-              id: true,
-              groupType: true,
-              accent: true,
-              content: true,
-              contentVi: true,
-              audioStoragePath: true,
-              imageStoragePath: true,
-            },
-          },
-          questions: {
-            orderBy: { sortOrder: 'asc' as const },
-            include: {
-              toeicQuestion: true,
-            },
-          },
-        },
-      },
-    } satisfies Prisma.ToeicRunInclude;
-  }
-
-  private async formatSessionResponse(
-    session: RunForResponse,
-    visibleParts = session.selectedParts,
-    options?: {
-      mode?: SessionResponseMode;
-      groupFilter?: (group: RunGroupForResponse) => boolean;
-    },
-  ) {
-    const visiblePartSet = new Set(visibleParts);
-    const visibleGroups = session.groups
-      .filter((group) => visiblePartSet.has(group.partNumber))
-      .filter(options?.groupFilter ?? (() => true))
-      .map((group) => ({
-        ...group,
-        questions: [...group.questions].sort(
-          (left, right) =>
-            left.toeicQuestion.questionNumber -
-            right.toeicQuestion.questionNumber,
-        ),
-      }))
-      .sort(
-        (left, right) =>
-          left.partNumber - right.partNumber ||
-          left.questionStart - right.questionStart ||
-          left.questionEnd - right.questionEnd ||
-          left.toeicQuestionGroupId - right.toeicQuestionGroupId,
-      );
-    const signedUrls = await this.storageService.createSignedUrls(
-      visibleGroups.flatMap((group) => [
-        group.toeicQuestionGroup.audioStoragePath,
-        group.toeicQuestionGroup.imageStoragePath,
-      ]),
-    );
-
-    const answerByQuestionId = new Map(
-      session.questions.map((answer) => [answer.toeicQuestionId, answer]),
-    );
-    const responseMode = options?.mode ?? this.formatRunMode(session.mode);
-    let nextSessionQuestionNumber = 1;
-    const test = await this.prisma.toeicTest.findUnique({
-      where: { id: session.toeicTestId },
-      select: { year: true },
-    });
-
-    if (!test) {
-      throw new NotFoundException('Test not found.');
-    }
-
-    return {
-      sessionId: session.id,
-      mode: responseMode,
-      testId: session.toeicTestId,
-      year: test.year,
-      partNumbers: visibleParts,
-      totalQuestions: visibleGroups.reduce(
-        (total, group) => total + group.questions.length,
-        0,
-      ),
-      correctCount: session.totalRight,
-      wrongCount: session.totalWrong,
-      completedAt: session.completedAt?.toISOString() ?? null,
-      groups: visibleGroups.map((group) => {
-        const audioSigned = group.toeicQuestionGroup.audioStoragePath
-          ? signedUrls.get(group.toeicQuestionGroup.audioStoragePath)
-          : null;
-        const imageSigned = group.toeicQuestionGroup.imageStoragePath
-          ? signedUrls.get(group.toeicQuestionGroup.imageStoragePath)
-          : null;
-        const questions = group.questions.map((question) => {
-          const answer = answerByQuestionId.get(question.toeicQuestionId);
-          const answerStatus = answer?.status ?? null;
-          const isReviewRetryQuestion =
-            responseMode === 'review_wrong' &&
-            answerStatus !== ToeicRunQuestionStatus.RIGHT;
-          const selectedKey = isReviewRetryQuestion
-            ? null
-            : answer?.selectedKey?.trim().toUpperCase();
-          const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-          const sessionQuestionNumber = nextSessionQuestionNumber;
-          nextSessionQuestionNumber += 1;
-
-          return {
-            id: question.toeicQuestionId,
-            questionNumber: question.toeicQuestion.questionNumber,
-            sessionQuestionNumber,
-            question: question.toeicQuestion.question,
-            questionVi: question.toeicQuestion.questionVi,
-            options: mapQuestionOptions(question.toeicQuestion),
-            optionCount: countOptions(question.toeicQuestion),
-            answerKey,
-            selectedKey:
-              selectedKey && isToeicQuestionOptionKey(selectedKey)
-                ? selectedKey
-                : null,
-            status: isReviewRetryQuestion
-              ? null
-              : this.formatQuestionStatus(answerStatus),
-            isCorrect: isReviewRetryQuestion
-              ? null
-              : this.formatQuestionCorrectness(answerStatus),
-          };
-        });
-
-        return {
-          id: group.toeicQuestionGroupId,
-          partNumber: group.partNumber,
-          questionStart: group.questionStart,
-          questionEnd: group.questionEnd,
-          groupStatus: this.formatGroupStatus(group.status),
-          groupType: group.toeicQuestionGroup.groupType,
-          accent: group.toeicQuestionGroup.accent,
-          content: group.toeicQuestionGroup.content,
-          contentVi: group.toeicQuestionGroup.contentVi,
-          audioUrl: audioSigned?.url ?? null,
-          audioUrlExpiresAt: audioSigned?.expiresAt ?? null,
-          imageUrl: imageSigned?.url ?? null,
-          imageUrlExpiresAt: imageSigned?.expiresAt ?? null,
-          questions,
-        };
-      }),
-    };
-  }
-
-  private formatRunMode(mode: ToeicRunMode): SessionResponseMode {
-    if (mode === ToeicRunMode.MOCK_TEST) {
-      return 'mock_test';
-    }
-
-    return 'practice';
-  }
-
-  private isWrongReviewGroup(group: RunGroupForResponse) {
-    return (
-      group.status === ToeicRunGroupStatus.WRONG ||
-      group.questions.some(
-        (question) => question.status === ToeicRunQuestionStatus.WRONG,
-      )
-    );
-  }
-
-  private formatGroupStatus(status: ToeicRunGroupStatus | null) {
-    if (status === ToeicRunGroupStatus.RIGHT) {
-      return 'right';
-    }
-
-    if (status === ToeicRunGroupStatus.WRONG) {
-      return 'wrong';
-    }
-
-    return null;
-  }
-
-  private formatQuestionStatus(status: ToeicRunQuestionStatus | null) {
-    if (status === ToeicRunQuestionStatus.SELECTED) {
-      return 'selected';
-    }
-
-    if (status === ToeicRunQuestionStatus.RIGHT) {
-      return 'right';
-    }
-
-    if (status === ToeicRunQuestionStatus.WRONG) {
-      return 'wrong';
-    }
-
-    return null;
-  }
-
-  private formatQuestionCorrectness(status: ToeicRunQuestionStatus | null) {
-    if (status === ToeicRunQuestionStatus.RIGHT) {
-      return true;
-    }
-
-    if (status === ToeicRunQuestionStatus.WRONG) {
-      return false;
-    }
-
-    return null;
-  }
-
-  private async ensurePracticeRunIncludesParts(
-    runId: string,
-    testId: number,
-    selectedParts: number[],
-  ): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      const run = await tx.toeicRun.findUnique({
-        where: { id: runId },
-        include: {
-          groups: {
-            select: {
-              toeicQuestionGroupId: true,
-              partNumber: true,
-              sortOrder: true,
-            },
-          },
-        },
-      });
-
-      if (!run) {
-        return;
-      }
-
-      const nextSelectedParts = [
-        ...new Set([...run.selectedParts, ...selectedParts]),
-      ].sort((a, b) => a - b);
-      const existingGroupIds = new Set(
-        run.groups.map((group) => group.toeicQuestionGroupId),
-      );
-      let nextGroupSortOrder =
-        run.groups.reduce(
-          (highest, group) => Math.max(highest, group.sortOrder),
-          -1,
-        ) + 1;
-
-      const groups = await tx.toeicQuestionGroup.findMany({
-        where: {
-          testPart: {
-            testId,
-            partNumber: { in: selectedParts },
-          },
-        },
-        include: {
-          testPart: {
-            select: { partNumber: true },
-          },
-          questions: {
-            orderBy: { questionNumber: 'asc' },
-          },
-        },
-        orderBy: [{ questionStart: 'asc' }, { id: 'asc' }],
-      });
-
-      for (const group of groups) {
-        if (existingGroupIds.has(group.id)) {
-          continue;
-        }
-
-        const runGroup = await tx.toeicRunGroup.create({
-          data: {
-            runId,
-            toeicQuestionGroupId: group.id,
-            partNumber: group.testPart.partNumber,
-            questionStart: group.questionStart,
-            questionEnd: group.questionEnd,
-            sortOrder: nextGroupSortOrder,
-          },
-        });
-        nextGroupSortOrder += 1;
-
-        await tx.toeicRunQuestion.createMany({
-          data: group.questions.map((question) => ({
-            runId,
-            runGroupId: runGroup.id,
-            toeicQuestionId: question.id,
-            partNumber: group.testPart.partNumber,
-            questionNumber: question.questionNumber,
-            sortOrder: question.questionNumber,
-          })),
-        });
-      }
-
-      if (nextSelectedParts.join(',') !== run.selectedParts.join(',')) {
-        await tx.toeicRun.update({
-          where: { id: runId },
-          data: { selectedParts: nextSelectedParts },
-        });
-      }
-    });
-  }
-
-  private async createRunWithQuestions(input: {
-    userId: string;
-    testId: number;
-    mode: ToeicRunMode;
-    selectedParts: number[];
-  }): Promise<RunForResponse> {
-    const groups = await this.listGroupsForRun(
-      input.testId,
-      input.selectedParts,
-    );
-
-    const run = await this.prisma.$transaction(async (tx) => {
-      const createdRun = await tx.toeicRun.create({
-        data: {
-          userId: input.userId,
-          toeicTestId: input.testId,
-          mode: input.mode,
-          selectedParts: input.selectedParts,
-        },
-      });
-
-      for (const [groupIndex, group] of groups.entries()) {
-        const runGroup = await tx.toeicRunGroup.create({
-          data: {
-            runId: createdRun.id,
-            toeicQuestionGroupId: group.id,
-            partNumber: group.testPart.partNumber,
-            questionStart: group.questionStart,
-            questionEnd: group.questionEnd,
-            sortOrder: groupIndex,
-          },
-        });
-
-        await tx.toeicRunQuestion.createMany({
-          data: group.questions.map((question) => ({
-            runId: createdRun.id,
-            runGroupId: runGroup.id,
-            toeicQuestionId: question.id,
-            partNumber: group.testPart.partNumber,
-            questionNumber: question.questionNumber,
-            sortOrder: question.questionNumber,
-          })),
-        });
-      }
-
-      return createdRun;
-    });
-
-    const created = await this.getRunForResponse(run.id);
-    if (!created) {
-      throw new NotFoundException('Practice session not found.');
-    }
-
-    return created;
-  }
-
-  private async listGroupsForRun(testId: number, selectedParts: number[]) {
-    return this.prisma.toeicQuestionGroup.findMany({
-      where: {
-        testPart: {
-          testId,
-          partNumber: { in: selectedParts },
-        },
-      },
-      include: {
-        testPart: {
-          select: { partNumber: true },
-        },
-        questions: {
-          orderBy: { questionNumber: 'asc' },
-        },
-      },
-      orderBy: [{ questionStart: 'asc' }, { id: 'asc' }],
-    });
-  }
-
   private async createReviewWrongSession(
     userId: string,
     testId: number,
     selectedParts: number[],
   ) {
-    const existingRun = await this.findLatestPracticeRun(userId, testId);
+    const existingRun = await this.runMaterializer.findLatestPracticeRun(
+      userId,
+      testId,
+    );
 
     if (!existingRun) {
-      const run = await this.createRunWithQuestions({
+      const run = await this.runMaterializer.createRunWithQuestions({
         userId,
         testId,
         mode: ToeicRunMode.PRACTICE,
         selectedParts,
       });
 
-      return this.formatSessionResponse(run, selectedParts, {
+      return this.sessionMapper.formatSessionResponse(run, selectedParts, {
         mode: 'review_wrong',
-        groupFilter: (group) => this.isWrongReviewGroup(group),
+        groupFilter: (group) => isWrongReviewToeicGroup(group),
       });
     }
 
-    await this.ensurePracticeRunIncludesParts(
+    await this.runMaterializer.ensurePracticeRunIncludesParts(
       existingRun.id,
       testId,
       selectedParts,
     );
 
-    const refreshedRun = await this.getRunForResponse(existingRun.id);
+    const refreshedRun = await this.runMaterializer.findRunForResponse(
+      existingRun.id,
+    );
     if (!refreshedRun) {
       throw new NotFoundException('Practice session not found.');
     }
 
-    return this.formatSessionResponse(refreshedRun, selectedParts, {
+    return this.sessionMapper.formatSessionResponse(refreshedRun, selectedParts, {
       mode: 'review_wrong',
-      groupFilter: (group) => this.isWrongReviewGroup(group),
-    });
-  }
-
-  private async getRunForResponse(
-    runId: string,
-  ): Promise<RunForResponse | null> {
-    return this.prisma.toeicRun.findUnique({
-      where: { id: runId },
-      include: this.runResponseInclude(),
+      groupFilter: (group) => isWrongReviewToeicGroup(group),
     });
   }
 
@@ -677,51 +196,37 @@ export class PracticeService {
 
       await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
 
-      const run = await this.getRunForResponse(loadedRun.id);
+      const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
       if (!run) {
         throw new NotFoundException('TOEIC run not found.');
       }
 
-      return this.formatSessionResponse(run, visibleParts);
+      return this.sessionMapper.formatSessionResponse(run, visibleParts);
     }
 
     await this.assertTestAndPartsExist(loadedRun.toeicTestId, visibleParts);
 
     if (dto.parts) {
-      await this.ensurePracticeRunIncludesParts(
+      await this.runMaterializer.ensurePracticeRunIncludesParts(
         loadedRun.id,
         loadedRun.toeicTestId,
         visibleParts,
       );
     }
 
-    const run = await this.getRunForResponse(loadedRun.id);
+    const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
     if (!run) {
       throw new NotFoundException('Practice session not found.');
     }
 
     if (dto.mode === 'review_wrong') {
-      return this.formatSessionResponse(run, visibleParts, {
+      return this.sessionMapper.formatSessionResponse(run, visibleParts, {
         mode: 'review_wrong',
-        groupFilter: (group) => this.isWrongReviewGroup(group),
+        groupFilter: (group) => isWrongReviewToeicGroup(group),
       });
     }
 
-    return this.formatSessionResponse(run, visibleParts);
-  }
-
-  private buildGradedResponse(
-    question: ToeicQuestion,
-    answerKey: 'A' | 'B' | 'C' | 'D',
-    isCorrect: boolean,
-  ): SubmitAnswerResponse {
-    return {
-      graded: true,
-      isCorrect,
-      answerKey,
-      correctOptionEn: getOptionText(question, answerKey),
-      correctOptionVi: getOptionViText(question, answerKey),
-    };
+    return this.sessionMapper.formatSessionResponse(run, visibleParts);
   }
 
   async submitAnswer(
@@ -729,279 +234,7 @@ export class PracticeService {
     sessionId: string,
     dto: SubmitToeicAnswerDto,
   ) {
-    const run = await this.prisma.toeicRun.findFirst({
-      where: {
-        id: sessionId,
-        userId,
-      },
-    });
-
-    if (!run) {
-      throw new NotFoundException('Practice session not found.');
-    }
-
-    if (run.completedAt) {
-      throw new BadRequestException('TOEIC run is already completed.');
-    }
-
-    const question = await this.prisma.toeicQuestion.findUnique({
-      where: { id: dto.toeicQuestionId },
-      include: {
-        group: {
-          include: {
-            testPart: true,
-          },
-        },
-      },
-    });
-
-    if (!question || question.group.testPart.testId !== run.toeicTestId) {
-      throw new BadRequestException(
-        'Question does not belong to this session.',
-      );
-    }
-
-    const answerKey = parseAnswerKey(question.answerKey);
-    const selectedKey = dto.selectedKey.trim().toUpperCase();
-
-    if (!answerKey) {
-      throw new BadRequestException('Question has an invalid answer key.');
-    }
-
-    if (!isToeicQuestionOptionKey(selectedKey)) {
-      throw new BadRequestException('Invalid answer.');
-    }
-
-    const runQuestion = await this.prisma.toeicRunQuestion.findUnique({
-      where: {
-        runId_toeicQuestionId: {
-          runId: run.id,
-          toeicQuestionId: question.id,
-        },
-      },
-      include: { toeicQuestion: true },
-    });
-
-    if (!runQuestion) {
-      throw new BadRequestException(
-        'Question does not belong to this session.',
-      );
-    }
-
-    if (run.mode === ToeicRunMode.MOCK_TEST) {
-      return this.submitMockAnswer(runQuestion, selectedKey);
-    }
-
-    if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
-      return this.buildGradedResponse(question, answerKey, true);
-    }
-
-    return this.submitGroupAnswer(
-      run.id,
-      runQuestion,
-      question,
-      selectedKey,
-      answerKey,
-      dto.mode === 'review_wrong',
-    );
-  }
-
-  private async submitMockAnswer(
-    runQuestion: RunQuestionWithQuestion,
-    selectedKey: 'A' | 'B' | 'C' | 'D',
-  ): Promise<SubmitAnswerResponse> {
-    await this.prisma.toeicRunQuestion.update({
-      where: { id: runQuestion.id },
-      data: {
-        selectedKey,
-        status: ToeicRunQuestionStatus.SELECTED,
-        answeredAt: new Date(),
-      },
-    });
-
-    return { graded: false };
-  }
-
-  private async submitGroupAnswer(
-    runId: string,
-    runQuestion: RunQuestionWithQuestion,
-    question: QuestionWithGroup,
-    selectedKey: 'A' | 'B' | 'C' | 'D',
-    answerKey: 'A' | 'B' | 'C' | 'D',
-    isReviewWrongSubmission: boolean,
-  ): Promise<SubmitAnswerResponse> {
-    let graded = false;
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.toeicRunQuestion.update({
-        where: { id: runQuestion.id },
-        data: {
-          selectedKey,
-          status: ToeicRunQuestionStatus.SELECTED,
-          answeredAt: new Date(),
-        },
-      });
-
-      if (
-        await this.isRunGroupReadyToGrade(
-          tx,
-          runQuestion.runGroupId,
-          isReviewWrongSubmission,
-        )
-      ) {
-        await this.gradeRunGroup(tx, runId, runQuestion.runGroupId);
-        graded = true;
-      }
-    });
-
-    if (!graded) {
-      return { graded: false };
-    }
-
-    return this.buildGradedResponse(
-      question,
-      answerKey,
-      selectedKey === answerKey,
-    );
-  }
-
-  private async isRunGroupReadyToGrade(
-    tx: Prisma.TransactionClient,
-    runGroupId: string,
-    isReviewWrongSubmission = false,
-  ): Promise<boolean> {
-    const questions = await tx.toeicRunQuestion.findMany({
-      where: { runGroupId },
-      select: { selectedKey: true, status: true },
-    });
-
-    return (
-      questions.length > 0 &&
-      questions.every(
-        (question) =>
-          question.status === ToeicRunQuestionStatus.RIGHT ||
-          (isReviewWrongSubmission
-            ? question.status === ToeicRunQuestionStatus.SELECTED
-            : Boolean(question.selectedKey)),
-      )
-    );
-  }
-
-  private async gradeRunGroup(
-    tx: Prisma.TransactionClient,
-    runId: string,
-    runGroupId: string,
-  ): Promise<void> {
-    const questions = await tx.toeicRunQuestion.findMany({
-      where: { runGroupId },
-      include: { toeicQuestion: true },
-    });
-
-    for (const question of questions) {
-      if (question.status === ToeicRunQuestionStatus.RIGHT) {
-        continue;
-      }
-
-      const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-      const selectedKey = question.selectedKey?.trim().toUpperCase();
-
-      if (
-        !answerKey ||
-        !selectedKey ||
-        !isToeicQuestionOptionKey(selectedKey)
-      ) {
-        continue;
-      }
-
-      const isCorrect = selectedKey === answerKey;
-      await this.gradeRunQuestion(tx, {
-        runId,
-        runQuestion: question,
-        selectedKey,
-        isCorrect,
-      });
-    }
-  }
-
-  private async gradeRunQuestion(
-    tx: Prisma.TransactionClient,
-    input: {
-      runId: string;
-      runQuestion: {
-        id: string;
-        runId: string;
-        runGroupId: string;
-        status: ToeicRunQuestionStatus | null;
-      };
-      selectedKey: string;
-      isCorrect: boolean;
-    },
-  ): Promise<void> {
-    if (input.runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
-      return;
-    }
-
-    await tx.toeicRunQuestion.update({
-      where: { id: input.runQuestion.id },
-      data: {
-        selectedKey: input.selectedKey,
-        status: input.isCorrect
-          ? ToeicRunQuestionStatus.RIGHT
-          : ToeicRunQuestionStatus.WRONG,
-        answeredAt: new Date(),
-        gradedAt: new Date(),
-      },
-    });
-
-    await this.refreshRunGroupStatus(tx, input.runQuestion.runGroupId);
-    await this.recalculateRunTotals(tx, input.runId);
-  }
-
-  private async refreshRunGroupStatus(
-    tx: Prisma.TransactionClient,
-    runGroupId: string,
-  ): Promise<void> {
-    const questions = await tx.toeicRunQuestion.findMany({
-      where: { runGroupId },
-      select: { status: true },
-    });
-
-    const status = questions.some(
-      (question) => question.status === ToeicRunQuestionStatus.WRONG,
-    )
-      ? ToeicRunGroupStatus.WRONG
-      : questions.length > 0 &&
-          questions.every(
-            (question) => question.status === ToeicRunQuestionStatus.RIGHT,
-          )
-        ? ToeicRunGroupStatus.RIGHT
-        : null;
-
-    await tx.toeicRunGroup.update({
-      where: { id: runGroupId },
-      data: { status },
-    });
-  }
-
-  private async recalculateRunTotals(
-    tx:
-      | Pick<PrismaService, 'toeicRunQuestion' | 'toeicRun'>
-      | Prisma.TransactionClient,
-    runId: string,
-  ): Promise<void> {
-    const [totalRight, totalWrong] = await Promise.all([
-      tx.toeicRunQuestion.count({
-        where: { runId, status: ToeicRunQuestionStatus.RIGHT },
-      }),
-      tx.toeicRunQuestion.count({
-        where: { runId, status: ToeicRunQuestionStatus.WRONG },
-      }),
-    ]);
-
-    await tx.toeicRun.update({
-      where: { id: runId },
-      data: { totalRight, totalWrong },
-    });
+    return this.runGrader.submitAnswer(userId, sessionId, dto);
   }
 
   async finishRun(userId: string, sessionId: string) {
@@ -1018,69 +251,15 @@ export class PracticeService {
     }
 
     if (!run.completedAt) {
-      await this.prisma.$transaction(async (tx) => {
-        const questions = await tx.toeicRunQuestion.findMany({
-          where: { runId: run.id },
-          include: { toeicQuestion: true },
-        });
-        const now = new Date();
-        const runGroupIds = new Set<string>();
-
-        for (const question of questions) {
-          runGroupIds.add(question.runGroupId);
-
-          const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-          if (!answerKey) {
-            continue;
-          }
-
-          const selectedKey = question.selectedKey?.trim().toUpperCase();
-          const hasValidSelection =
-            selectedKey != null && isToeicQuestionOptionKey(selectedKey);
-
-          if (hasValidSelection) {
-            await tx.toeicRunQuestion.update({
-              where: { id: question.id },
-              data: {
-                selectedKey,
-                status:
-                  selectedKey === answerKey
-                    ? ToeicRunQuestionStatus.RIGHT
-                    : ToeicRunQuestionStatus.WRONG,
-                answeredAt: question.answeredAt ?? now,
-                gradedAt: now,
-              },
-            });
-            continue;
-          }
-
-          await tx.toeicRunQuestion.update({
-            where: { id: question.id },
-            data: {
-              status: ToeicRunQuestionStatus.WRONG,
-              gradedAt: now,
-            },
-          });
-        }
-
-        for (const runGroupId of runGroupIds) {
-          await this.refreshRunGroupStatus(tx, runGroupId);
-        }
-
-        await this.recalculateRunTotals(tx, run.id);
-        await tx.toeicRun.update({
-          where: { id: run.id },
-          data: { completedAt: now },
-        });
-      });
+      await this.runGrader.completeMockRun(run.id);
     }
 
-    const finishedRun = await this.getRunForResponse(run.id);
+    const finishedRun = await this.runMaterializer.findRunForResponse(run.id);
     if (!finishedRun) {
       throw new NotFoundException('TOEIC run not found.');
     }
 
-    return this.formatSessionResponse(finishedRun);
+    return this.sessionMapper.formatSessionResponse(finishedRun);
   }
 
   async clearTestHistory(userId: string, testId: number) {

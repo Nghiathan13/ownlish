@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
 import { PracticeService } from './practice.service';
 import { TestsStorageService } from './tests-storage.service';
+import { ToeicRunGrader } from './lib/toeic-run-grader';
+import { ToeicRunMaterializer } from './lib/toeic-run-materializer';
+import { ToeicRunSessionMapper } from './lib/toeic-run-session.mapper';
 
 describe('PracticeService', () => {
   let service: PracticeService;
@@ -61,6 +64,9 @@ describe('PracticeService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PracticeService,
+        ToeicRunSessionMapper,
+        ToeicRunMaterializer,
+        ToeicRunGrader,
         {
           provide: PrismaService,
           useValue: prismaMock,
