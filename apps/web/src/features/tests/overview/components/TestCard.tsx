@@ -8,6 +8,7 @@ import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { iconOnlyButtonClassName, iconTextButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
+import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
 import {
   getTestCorrectCount,
@@ -84,17 +85,7 @@ export function TestCard({
           >
             <ReplayIcon />
             {testWrongCount > 0 ? (
-              <span
-                aria-hidden
-                className={classNames(
-                  "pointer-events-none absolute -right-0.5 -top-0.5",
-                  "inline-flex min-h-4 min-w-4 items-center justify-center rounded-full px-1 py-px",
-                  "text-[10px] font-semibold leading-none tabular-nums text-background",
-                  "bg-red-700 dark:bg-red-400",
-                )}
-              >
-                {testWrongCount}
-              </span>
+              <TopRightCountBadge count={testWrongCount} />
             ) : null}
           </button>
           <button
