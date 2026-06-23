@@ -20,11 +20,11 @@ export function UserCollectionCardHeaderActions({
   const isDeleting = deletingCollectionId === collection.id;
 
   return (
-    <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+    <div className="pointer-events-none flex shrink-0 items-center gap-2 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100">
       <button
         aria-label={`Edit ${collection.name}`}
         className={iconOnlyButtonClassName(
-          "bg-transparent text-foreground hover:bg-muted",
+          "pointer-events-auto bg-transparent text-foreground hover:bg-muted",
         )}
         onClick={() => {
           onEdit(collection);
@@ -39,7 +39,7 @@ export function UserCollectionCardHeaderActions({
             isDeleting ? "Deleting collection" : `Delete ${collection.name}`
           }
           className={iconOnlyButtonClassName(
-            "bg-transparent",
+            "pointer-events-auto bg-transparent",
             statusColorClasses.danger.text,
             statusColorClasses.danger.backgroundHover,
           )}
