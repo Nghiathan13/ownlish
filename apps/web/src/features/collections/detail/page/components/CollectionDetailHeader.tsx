@@ -13,7 +13,7 @@ export function CollectionDetailHeader({
 }: CollectionDetailHeaderProps) {
   return (
     <div className="mb-4 grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4">
-      <BackToCollectionsLink />
+      <BackToCollectionsLink collectionId={collectionId} />
       <UserCollectionSwitcher collectionId={collectionId} />
       <SystemCollectionSwitcher collectionId={collectionId} />
     </div>

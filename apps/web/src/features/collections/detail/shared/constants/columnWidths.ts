@@ -4,7 +4,7 @@ export const TABLE_COLUMN_WIDTH = {
   ipaUs: "w-[100%]",
   meaning: "w-[150%]",
   example: "w-[250%]",
-  type: "w-[8rem]",
+  type: "w-[9rem]",
   level: "w-[4rem]",
   nextReview: "w-[8rem]",
   actions: "w-[5rem]",

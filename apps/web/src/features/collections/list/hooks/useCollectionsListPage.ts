@@ -14,16 +14,19 @@ import {
   useImportCollection,
 } from "@/features/collections/shared/hooks/useCollections";
 
-export function useCollectionsListPage() {
+export function useCollectionsListPage(
+  initialCategory: CollectionCategory = "user",
+) {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
   const userId = user?.id ?? null;
   const [activeCategory, setActiveCategory] =
-    useState<CollectionCategory>("user");
+    useState<CollectionCategory>(initialCategory);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
   const [importingCollectionId, setImportingCollectionId] = useState<
     string | null
   >(null);
+
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
     useCollectionsList({
       isAuthenticated,

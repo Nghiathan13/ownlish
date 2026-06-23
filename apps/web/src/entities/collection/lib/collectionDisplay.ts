@@ -92,6 +92,32 @@ export function getCollectionPath(collection: CollectionSummary) {
   return `/collections/${collection.id}?kind=${getCollectionKindHint(collection)}`;
 }
 
+export function getCollectionsListCategory(
+  collection: CollectionSummary,
+): CollectionCategory {
+  if (collection.kind === "USER") {
+    return "user";
+  }
+
+  return getCollectionCategory(collection) ?? "oxford";
+}
+
+export function getCollectionsListPath(category: CollectionCategory) {
+  return `/collections?tab=${category}`;
+}
+
+export function parseCollectionCategoryTab(
+  value: string | null,
+): CollectionCategory | null {
+  if (value == null) {
+    return null;
+  }
+
+  return collectionCategoryTabs.some((tab) => tab.key === value)
+    ? (value as CollectionCategory)
+    : null;
+}
+
 export function parseCollectionKindHint(
   value: string | null,
 ): CollectionSummary["kind"] | null {

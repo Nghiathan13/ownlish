@@ -1,13 +1,22 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import {
+  parseCollectionCategoryTab,
+  type CollectionCategory,
+} from "@/entities/collection/lib/collectionDisplay";
 import { CreateCollectionModal } from "@/features/collections/shared/components/CreateCollectionModal";
 import { CollectionCategoryTabs } from "@/features/collections/list/components/CollectionCategoryTabs";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
 import { useCollectionsListPage } from "@/features/collections/list/hooks/useCollectionsListPage";
 import { PageShell } from "@/shared/ui/PageShell";
 
-export function CollectionsPage() {
-  const page = useCollectionsListPage();
+function CollectionsPageContent({
+  initialCategory,
+}: {
+  initialCategory: CollectionCategory;
+}) {
+  const page = useCollectionsListPage(initialCategory);
 
   return (
     <PageShell>
@@ -39,5 +48,18 @@ export function CollectionsPage() {
         onClose={page.closeCreateCollection}
       />
     </PageShell>
+  );
+}
+
+export function CollectionsPage() {
+  const searchParams = useSearchParams();
+  const initialCategory =
+    parseCollectionCategoryTab(searchParams.get("tab")) ?? "user";
+
+  return (
+    <CollectionsPageContent
+      key={initialCategory}
+      initialCategory={initialCategory}
+    />
   );
 }

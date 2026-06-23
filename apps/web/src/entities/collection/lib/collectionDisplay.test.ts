@@ -5,7 +5,10 @@ import {
   findCollectionById,
   getCollectionCategory,
   getCollectionPath,
+  getCollectionsListCategory,
+  getCollectionsListPath,
   getUserOwnedCollections,
+  parseCollectionCategoryTab,
 } from "./collectionDisplay";
 
 function makeCollection(
@@ -49,6 +52,27 @@ describe("collection display helpers", () => {
     expect(
       getCollectionPath(makeCollection({ kind: "USER", isDefault: true })),
     ).toBe("/collections/collection-id?kind=user");
+  });
+
+  it("builds collections list paths from category", () => {
+    expect(getCollectionsListPath("user")).toBe("/collections?tab=user");
+    expect(getCollectionsListPath("oxford")).toBe("/collections?tab=oxford");
+    expect(parseCollectionCategoryTab("toeic")).toBe("toeic");
+    expect(parseCollectionCategoryTab("invalid")).toBeNull();
+  });
+
+  it("resolves collections list category from collection kind", () => {
+    expect(
+      getCollectionsListCategory(
+        makeCollection({ kind: "USER", isDefault: true }),
+      ),
+    ).toBe("user");
+    expect(getCollectionsListCategory(makeCollection())).toBe("oxford");
+    expect(
+      getCollectionsListCategory(
+        makeCollection({ name: "TOEIC Essential", source: "toeic" }),
+      ),
+    ).toBe("toeic");
   });
 
   it("finds a collection by id", () => {

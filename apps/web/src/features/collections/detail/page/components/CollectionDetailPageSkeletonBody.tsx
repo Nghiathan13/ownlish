@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { parseCollectionKindHint } from "@/entities/collection/lib/collectionDisplay";
 import { BackToCollectionsLink } from "@/features/collections/detail/page/components/BackToCollectionsLink";
@@ -42,6 +42,8 @@ function readCatalogColumnVisibilityFromStorage() {
 }
 
 export function CollectionDetailPageSkeletonBody() {
+  const params = useParams<{ collectionId: string }>();
+  const collectionId = params.collectionId;
   const searchParams = useSearchParams();
   const isSystemCollection =
     parseCollectionKindHint(searchParams.get("kind")) === "SYSTEM";
@@ -61,7 +63,7 @@ export function CollectionDetailPageSkeletonBody() {
   return (
     <>
       <div className="mb-4 grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4">
-        <BackToCollectionsLink />
+        <BackToCollectionsLink collectionId={collectionId} />
         <Skeleton className="h-10 min-w-[10rem] max-w-[14rem] shrink-0" />
       </div>
 
