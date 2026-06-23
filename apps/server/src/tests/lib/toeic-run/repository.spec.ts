@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ToeicRunMode } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ToeicRunRepository } from './repository';
@@ -52,11 +53,19 @@ describe('ToeicRunRepository', () => {
     ).rejects.toThrow('Test part not found.');
   });
 
-  it('deletes all runs for a user and test', async () => {
-    prismaMock.toeicRun.deleteMany.mockResolvedValue({ count: 3 });
+  it('deletes only practice runs for a user and test', async () => {
+    prismaMock.toeicRun.deleteMany.mockResolvedValue({ count: 2 });
 
     await expect(
-      repository.deleteRunsForUserAndTest('user-id', 1),
-    ).resolves.toBe(3);
+      repository.deletePracticeRunsForUserAndTest('user-id', 1),
+    ).resolves.toBe(2);
+
+    expect(prismaMock.toeicRun.deleteMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-id',
+        toeicTestId: 1,
+        mode: ToeicRunMode.PRACTICE,
+      },
+    });
   });
 });

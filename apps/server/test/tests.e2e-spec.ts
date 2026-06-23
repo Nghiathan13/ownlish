@@ -355,4 +355,55 @@ describe('TestsController (e2e)', () => {
       { parts: '1' },
     ).expect(404);
   });
+
+  it('clears practice history without deleting mock test runs', async () => {
+    const practiceResponse = await createToeicRunsRequest(
+      app.getHttpServer(),
+      accessToken,
+    )
+      .send({
+        testId: fixture.testId,
+        partNumbers: [1],
+        mode: 'practice',
+      })
+      .expect(201);
+
+    const practiceSession = parseResponseBody<ToeicSessionE2eBody>(practiceResponse);
+
+    const mockResponse = await createToeicRunsRequest(
+      app.getHttpServer(),
+      accessToken,
+    )
+      .send({
+        testId: fixture.testId,
+        partNumbers: [1],
+        mode: 'mock_test',
+      })
+      .expect(201);
+
+    const mockSession = parseResponseBody<ToeicSessionE2eBody>(mockResponse);
+
+    const clearResponse = await request(app.getHttpServer())
+      .delete(`/tests/${fixture.testId}/practice-history`)
+      .set(withBearerAuth(accessToken))
+      .expect(200);
+
+    expect(parseResponseBody<{ deletedSessionCount: number }>(clearResponse)).toEqual({
+      deletedSessionCount: 1,
+    });
+
+    await getToeicRunRequest(
+      app.getHttpServer(),
+      accessToken,
+      practiceSession.sessionId,
+      { parts: '1' },
+    ).expect(404);
+
+    await getToeicRunRequest(
+      app.getHttpServer(),
+      accessToken,
+      mockSession.sessionId,
+      { parts: '1' },
+    ).expect(200);
+  });
 });

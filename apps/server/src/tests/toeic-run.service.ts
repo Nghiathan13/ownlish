@@ -300,7 +300,7 @@ export class ToeicRunService {
     }
 
     const deletedSessionCount =
-      await this.runRepository.deleteRunsForUserAndTest(userId, testId);
+      await this.runRepository.deletePracticeRunsForUserAndTest(userId, testId);
 
     return { deletedSessionCount };
   }

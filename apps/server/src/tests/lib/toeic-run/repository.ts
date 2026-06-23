@@ -118,7 +118,7 @@ export class ToeicRunRepository {
     }
   }
 
-  async deleteRunsForUserAndTest(
+  async deletePracticeRunsForUserAndTest(
     userId: string,
     testId: number,
   ): Promise<number> {
@@ -126,6 +126,7 @@ export class ToeicRunRepository {
       where: {
         userId,
         toeicTestId: testId,
+        mode: ToeicRunMode.PRACTICE,
       },
     });
 
