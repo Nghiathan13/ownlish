@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CalenderIcon } from "@/shared/ui/icons/CalenderIcon";
 
-const COLLECTION_CARD_RADIUS_CLASS = "rounded-[32px]";
+const COLLECTION_CARD_RADIUS_CLASS = "rounded-[36px]";
 
 type CollectionCardProps = {
   badge?: string | null;
