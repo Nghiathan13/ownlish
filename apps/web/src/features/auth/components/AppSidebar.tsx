@@ -53,7 +53,7 @@ export function AppSidebar() {
         collapsed ? "w-16" : "w-56",
       )}
     >
-      <div className="flex flex-col gap-6 p-4">
+      <div className="flex flex-col gap-4 p-2">
         {collapsed ? (
           <div className="flex justify-center">
             <button
@@ -65,15 +65,18 @@ export function AppSidebar() {
               }}
               className={classNames(
                 iconOnlyButtonClassName(),
-                "text-muted-foreground hover:bg-muted hover:text-foreground",
+                "size-10 [&_svg]:size-5 text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              <PanelOpenIcon className="size-5" />
+              <PanelOpenIcon />
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-2">
-            <Link href="/" className="text-base font-bold hover:opacity-80">
+            <Link
+              href="/"
+              className="pl-2 text-base font-bold hover:opacity-80"
+            >
               EngVocab
             </Link>
             <button
@@ -85,10 +88,10 @@ export function AppSidebar() {
               }}
               className={classNames(
                 iconOnlyButtonClassName(),
-                "text-muted-foreground hover:bg-muted hover:text-foreground",
+                "size-10 [&_svg]:size-5 text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              <PanelCloseIcon className="size-5" />
+              <PanelCloseIcon />
             </button>
           </div>
         )}
@@ -106,8 +109,8 @@ export function AppSidebar() {
                   aria-label={collapsed ? link.label : undefined}
                   className={classNames(
                     getAppSidebarLinkClass(pathname, link),
-                    "flex items-center rounded-lg py-2 hover:bg-muted",
-                    collapsed ? "justify-center px-2" : "gap-3 px-3",
+                    "flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
+                    collapsed && "justify-center",
                   )}
                 >
                   <Icon className="size-5 shrink-0" />

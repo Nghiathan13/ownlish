@@ -62,7 +62,7 @@ export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
 
   return `text-base font-semibold ${
     isActive
-      ? "text-foreground"
+      ? "bg-muted text-foreground"
       : "text-muted-foreground hover:text-foreground"
   }`;
 }
