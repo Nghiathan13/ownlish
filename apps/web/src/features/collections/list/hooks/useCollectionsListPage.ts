@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import type { CollectionSummary } from "@/entities/collection/api/collections";
 import {
   collectionCategoryTabs,
   filterCollectionsByCategory,
@@ -8,11 +9,11 @@ import {
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import {
-  useCollectionsList,
   useDeleteCollection,
   useImportCollection,
-} from "@/features/collections/shared/hooks/useCollections";
+} from "@/features/collections/shared/mutations/hooks";
 
 export function useCollectionsListPage(
   initialCategory: CollectionCategory = "user",
@@ -23,12 +24,14 @@ export function useCollectionsListPage(
   const [activeCategory, setActiveCategory] =
     useState<CollectionCategory>(initialCategory);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
+  const [editingCollection, setEditingCollection] =
+    useState<CollectionSummary | null>(null);
   const [importingCollectionId, setImportingCollectionId] = useState<
     string | null
   >(null);
 
   const { collections, collectionsError, isLoadingCollections, reloadCollections } =
-    useCollectionsList({
+    useCollectionsListQuery({
       isAuthenticated,
       userId,
     });
@@ -105,16 +108,26 @@ export function useCollectionsListPage(
     setIsCreateCollectionOpen(false);
   }, []);
 
+  const openEditCollection = useCallback((collection: CollectionSummary) => {
+    setEditingCollection(collection);
+  }, []);
+
+  const closeEditCollection = useCallback(() => {
+    setEditingCollection(null);
+  }, []);
+
   return {
     activeCategory,
     activeCollections,
     activeTabLabel,
     canImportSystemCollections,
     closeCreateCollection,
+    closeEditCollection,
     collectionsError,
     defaultCollection,
     deleteError,
     deletingCollectionId,
+    editingCollection,
     handleDeleteCollection,
     handleImportSystemCollection,
     importError,
@@ -124,6 +137,7 @@ export function useCollectionsListPage(
     isLoadingCollections,
     isUserTab,
     openCreateCollection,
+    openEditCollection,
     reloadCollections,
     setActiveCategory,
     userId,

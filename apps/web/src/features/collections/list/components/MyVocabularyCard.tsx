@@ -4,18 +4,23 @@ import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { getCollectionPath } from "@/entities/collection/lib/collectionDisplay";
 import { CollectionCard } from "@/features/collections/shared/components/CollectionCard";
 import { CollectionReviewLink } from "@/features/collections/shared/components/CollectionReviewLink";
+import { UserCollectionCardHeaderActions } from "@/features/collections/list/components/UserCollectionCardHeaderActions";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import { formatCreatedLabel } from "@/shared/lib/date";
 
 type MyVocabularyCardProps = {
   collection: CollectionSummary | null;
+  deletingCollectionId: string | null;
   isAuthenticated: boolean;
+  onEdit: (collection: CollectionSummary) => void;
   userId: string | null;
 };
 
 export function MyVocabularyCard({
   collection,
+  deletingCollectionId,
   isAuthenticated,
+  onEdit,
   userId,
 }: MyVocabularyCardProps) {
   const collectionId = collection?.id ?? null;
@@ -44,9 +49,20 @@ export function MyVocabularyCard({
           )
           : null
       }
+      headerAction={
+        collection
+          ? (
+            <UserCollectionCardHeaderActions
+              collection={collection}
+              deletingCollectionId={deletingCollectionId}
+              onEdit={onEdit}
+            />
+          )
+          : null
+      }
       href={href}
       isDisabled={!href || !collectionId || !collection}
-      title="My Vocabulary"
+      title={collection?.name ?? "My Vocabulary"}
       wordCountLabel={wordCountLabel}
     />
   );

@@ -7,7 +7,7 @@ import {
   getSystemCollectionsInSameCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { useCollectionsList } from "@/features/collections/shared/hooks/useCollections";
+import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
 
 type SystemCollectionSwitcherProps = {
@@ -21,7 +21,7 @@ export function SystemCollectionSwitcher({
   const { status, user } = useAuthSession();
   const userId = user?.id ?? null;
   const isAuthenticated = isAuthenticatedStatus(status);
-  const { collections, hasCollectionsList } = useCollectionsList({
+  const { collections, hasCollectionsList } = useCollectionsListQuery({
     isAuthenticated,
     userId,
   });

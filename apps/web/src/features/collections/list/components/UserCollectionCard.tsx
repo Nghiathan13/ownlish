@@ -2,16 +2,15 @@ import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { getCollectionPath } from "@/entities/collection/lib/collectionDisplay";
 import { CollectionReviewLink } from "@/features/collections/shared/components/CollectionReviewLink";
 import { CollectionCard } from "@/features/collections/shared/components/CollectionCard";
-import { iconOnlyButtonClassName } from "@/shared/ui/button";
-import { DeleteForeverIcon } from "@/shared/ui/icons/DeleteForeverIcon";
+import { UserCollectionCardHeaderActions } from "@/features/collections/list/components/UserCollectionCardHeaderActions";
 import { formatCreatedLabel } from "@/shared/lib/date";
-import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type UserCollectionCardProps = {
   collection: CollectionSummary;
   deletingCollectionId: string | null;
   isAuthenticated: boolean;
   onDelete: (collectionId: string) => void;
+  onEdit: (collection: CollectionSummary) => void;
   userId: string | null;
 };
 
@@ -20,9 +19,9 @@ export function UserCollectionCard({
   deletingCollectionId,
   isAuthenticated,
   onDelete,
+  onEdit,
   userId,
 }: UserCollectionCardProps) {
-  const isDeleting = deletingCollectionId === collection.id;
   const description = collection.description?.trim() || "No description.";
 
   return (
@@ -37,23 +36,12 @@ export function UserCollectionCard({
         />
       }
       headerAction={
-        <button
-          aria-label={
-            isDeleting ? "Deleting collection" : `Delete ${collection.name}`
-          }
-          className={iconOnlyButtonClassName(
-            "pointer-events-auto bg-transparent",
-            statusColorClasses.danger.text,
-            statusColorClasses.danger.backgroundHover,
-          )}
-          disabled={isDeleting}
-          onClick={() => {
-            void onDelete(collection.id);
-          }}
-          type="button"
-        >
-          <DeleteForeverIcon />
-        </button>
+        <UserCollectionCardHeaderActions
+          collection={collection}
+          deletingCollectionId={deletingCollectionId}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
       }
       href={getCollectionPath(collection)}
       title={collection.name}

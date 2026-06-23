@@ -6,6 +6,7 @@ import {
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { CreateCollectionModal } from "@/features/collections/shared/components/CreateCollectionModal";
+import { EditCollectionModal } from "@/features/collections/shared/components/EditCollectionModal";
 import { CollectionCategoryTabs } from "@/features/collections/list/components/CollectionCategoryTabs";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
 import { useCollectionsListPage } from "@/features/collections/list/hooks/useCollectionsListPage";
@@ -39,6 +40,7 @@ function CollectionsPageContent({
         isUserTab={page.isUserTab}
         onCreateCollection={page.openCreateCollection}
         onDeleteCollection={page.handleDeleteCollection}
+        onEditCollection={page.openEditCollection}
         onImportSystemCollection={page.handleImportSystemCollection}
         onRetry={page.reloadCollections}
         userId={page.userId}
@@ -46,6 +48,11 @@ function CollectionsPageContent({
       <CreateCollectionModal
         isOpen={page.isCreateCollectionOpen}
         onClose={page.closeCreateCollection}
+      />
+      <EditCollectionModal
+        collection={page.editingCollection}
+        onClose={page.closeEditCollection}
+        userId={page.userId}
       />
     </PageShell>
   );

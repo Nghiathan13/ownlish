@@ -11,6 +11,7 @@ type UserCollectionsGridProps = {
   isAuthenticated: boolean;
   onCreateCollection: () => void;
   onDeleteCollection: (collectionId: string) => void;
+  onEditCollection: (collection: CollectionSummary) => void;
   userId: string | null;
 };
 
@@ -22,6 +23,7 @@ export function UserCollectionsGrid({
   isAuthenticated,
   onCreateCollection,
   onDeleteCollection,
+  onEditCollection,
   userId,
 }: UserCollectionsGridProps) {
   return (
@@ -32,7 +34,9 @@ export function UserCollectionsGrid({
       <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-4">
         <MyVocabularyCard
           collection={defaultCollection}
+          deletingCollectionId={deletingCollectionId}
           isAuthenticated={isAuthenticated}
+          onEdit={onEditCollection}
           userId={userId}
         />
         {collections.map((collection) => (
@@ -42,6 +46,7 @@ export function UserCollectionsGrid({
             isAuthenticated={isAuthenticated}
             key={collection.id}
             onDelete={onDeleteCollection}
+            onEdit={onEditCollection}
             userId={userId}
           />
         ))}

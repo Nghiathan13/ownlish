@@ -20,6 +20,7 @@ type CollectionsListBodyProps = {
   isUserTab: boolean;
   onCreateCollection: () => void;
   onDeleteCollection: (collectionId: string) => void;
+  onEditCollection: (collection: CollectionSummary) => void;
   onImportSystemCollection: (collectionId: string) => void;
   onRetry: () => void;
   userId: string | null;
@@ -40,6 +41,7 @@ export function CollectionsListBody({
   isUserTab,
   onCreateCollection,
   onDeleteCollection,
+  onEditCollection,
   onImportSystemCollection,
   onRetry,
   userId,
@@ -66,6 +68,7 @@ export function CollectionsListBody({
         isAuthenticated={isAuthenticated}
         onCreateCollection={onCreateCollection}
         onDeleteCollection={onDeleteCollection}
+        onEditCollection={onEditCollection}
         userId={userId}
       />
     );

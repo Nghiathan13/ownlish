@@ -2,7 +2,7 @@
 
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { CreateCollectionForm } from "@/features/collections/shared/components/CreateCollectionForm";
-import { useCreateCollection } from "@/features/collections/shared/hooks/useCollections";
+import { useCreateCollection } from "@/features/collections/shared/mutations/hooks";
 import { Modal } from "@/shared/ui/Modal";
 
 type CreateCollectionModalProps = {

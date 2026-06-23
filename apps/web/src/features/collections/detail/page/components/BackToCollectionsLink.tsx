@@ -12,7 +12,7 @@ import {
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { useCollectionsList } from "@/features/collections/shared/hooks/useCollections";
+import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 
@@ -48,7 +48,7 @@ export function BackToCollectionsLink({
   const { status, user } = useAuthSession();
   const userId = user?.id ?? null;
   const isAuthenticated = isAuthenticatedStatus(status);
-  const { collections } = useCollectionsList({
+  const { collections } = useCollectionsListQuery({
     isAuthenticated,
     userId,
   });

@@ -1,0 +1,50 @@
+import type { QueryClient } from "@tanstack/react-query";
+import { getReviewQueueUserQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
+import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
+import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
+
+export function getCollectionsQueryKey(userId: string | null) {
+  return ["collections", { userId }] as const;
+}
+
+export function getCollectionDetailQueryKey(
+  userId: string | null,
+  collectionId: string | null,
+) {
+  return ["collection", { userId, collectionId }] as const;
+}
+
+export function invalidateCollectionsList(
+  queryClient: QueryClient,
+  userId: string | null,
+) {
+  void queryClient.invalidateQueries({
+    queryKey: getCollectionsQueryKey(userId),
+  });
+}
+
+export function invalidateCollectionDetail(
+  queryClient: QueryClient,
+  userId: string | null,
+  collectionId: string,
+) {
+  void queryClient.invalidateQueries({
+    queryKey: getCollectionDetailQueryKey(userId, collectionId),
+  });
+}
+
+export function invalidateCollectionMutationQueries(
+  queryClient: QueryClient,
+  userId: string | null,
+) {
+  invalidateCollectionsList(queryClient, userId);
+  void queryClient.invalidateQueries({
+    queryKey: getVocabUserQueryKey(userId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: getReviewQueueUserQueryKey(userId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: getVocabStatsQueryKey(userId),
+  });
+}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { getDefaultUserCollection } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
-import { useCollectionsList } from "@/features/collections/shared/hooks/useCollections";
+import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
 import { classNames } from "@/shared/lib/classNames";
 import {
@@ -18,7 +18,7 @@ import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 export function HomeDashboard() {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const { collections, isLoadingCollections } = useCollectionsList({
+  const { collections, isLoadingCollections } = useCollectionsListQuery({
     isAuthenticated,
     userId: user?.id ?? null,
   });

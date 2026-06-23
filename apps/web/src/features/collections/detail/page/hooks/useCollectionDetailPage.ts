@@ -11,10 +11,10 @@ import {
 } from "@/entities/collection/lib/collectionDisplay";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import {
-  useCollectionDetail,
-  useCollectionsList,
-  useImportCollection,
-} from "@/features/collections/shared/hooks/useCollections";
+  useCollectionDetailQuery,
+  useCollectionsListQuery,
+} from "@/features/collections/shared/data/hooks";
+import { useImportCollection } from "@/features/collections/shared/mutations/hooks";
 
 type UseCollectionDetailPageParams = {
   collectionId: string;
@@ -40,7 +40,7 @@ export function useCollectionDetailPage({
     collectionsError,
     hasCollectionsList,
     reloadCollections,
-  } = useCollectionsList(authParams);
+  } = useCollectionsListQuery(authParams);
   const collectionSummary = useMemo(() => {
     return findCollectionById(collections, collectionId);
   }, [collectionId, collections]);
@@ -52,7 +52,7 @@ export function useCollectionDetailPage({
     collectionDetailError,
     isLoadingCollectionDetail,
     reloadCollectionDetail,
-  } = useCollectionDetail({
+  } = useCollectionDetailQuery({
     ...authParams,
     collectionId,
     enabled: isSystemCollection,

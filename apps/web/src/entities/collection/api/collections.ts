@@ -63,6 +63,11 @@ export type CreateCollectionInput = {
   description?: string;
 };
 
+export type UpdateCollectionInput = {
+  name: string;
+  description?: string;
+};
+
 function parseCollectionKind(value: unknown): WordCollectionKind {
   if (value === "SYSTEM" || value === "USER") return value;
 
@@ -238,6 +243,18 @@ export function getCollection(
 export function createCollection(token: string, input: CreateCollectionInput) {
   return apiRequest("/collections", {
     method: "POST",
+    token,
+    body: JSON.stringify(input),
+  }).then(parseCollectionSummary);
+}
+
+export function updateCollection(
+  token: string,
+  id: string,
+  input: UpdateCollectionInput,
+) {
+  return apiRequest(`/collections/${id}`, {
+    method: "PATCH",
     token,
     body: JSON.stringify(input),
   }).then(parseCollectionSummary);
