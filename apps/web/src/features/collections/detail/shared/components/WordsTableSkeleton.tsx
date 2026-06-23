@@ -1,5 +1,6 @@
 import type { WordsTableHeadColumn } from "@/features/collections/detail/shared/components/WordsTableHead";
 import { WordsTableHead } from "@/features/collections/detail/shared/components/WordsTableHead";
+import { WordsTableDesktopLayout } from "@/features/collections/detail/shared/components/WordsTableDesktopLayout";
 import { classNames } from "@/shared/lib/classNames";
 import { Skeleton } from "@/shared/ui/Skeleton";
 
@@ -19,34 +20,33 @@ export function WordsTableSkeleton({
   const bodyColSpan = 1 + columns.length + (showActions ? 1 : 0);
 
   return (
-    <div
-      className={classNames(
-        "mx-4 mb-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border",
-        className,
-      )}
-    >
-      <div className="hidden min-h-0 flex-1 overflow-auto md:block">
-        <table className="w-full min-w-[920px] table-fixed border-collapse text-left text-base">
-          <WordsTableHead columns={columns} actions={showActions} />
-          <tbody>
-            {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
-              <tr
-                className={classNames(
-                  "h-12",
-                  index < SKELETON_ROW_COUNT - 1 && "border-b border-border",
-                )}
-                key={index}
-              >
-                <td className="w-10 px-3 align-middle" />
-                <td className="px-2 align-middle" colSpan={bodyColSpan}>
-                  <Skeleton className="h-6 w-full rounded-md" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="flex flex-col gap-3 p-4 md:hidden">
+    <>
+      <WordsTableDesktopLayout
+        className={className}
+        head={
+          <WordsTableHead columns={columns} actions={showActions} checkbox />
+        }
+        body={Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
+          <tr
+            className={classNames(
+              "h-12",
+              index < SKELETON_ROW_COUNT - 1 && "border-b border-border",
+            )}
+            key={index}
+          >
+            <td className="w-10 px-3 align-middle" />
+            <td className="px-2 align-middle" colSpan={bodyColSpan}>
+              <Skeleton className="h-6 w-full rounded-md" />
+            </td>
+          </tr>
+        ))}
+      />
+      <div
+        className={classNames(
+          "mx-4 mb-4 flex flex-col gap-3 overflow-auto rounded-xl border border-border p-4 md:hidden",
+          className,
+        )}
+      >
         {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
           <Skeleton
             className={classNames(
@@ -57,6 +57,6 @@ export function WordsTableSkeleton({
           />
         ))}
       </div>
-    </div>
+    </>
   );
 }

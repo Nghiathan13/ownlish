@@ -1,0 +1,35 @@
+import type { ReactNode } from "react";
+import { classNames } from "@/shared/lib/classNames";
+
+const TABLE_CLASS_NAME =
+  "w-full min-w-[920px] table-fixed border-collapse text-left text-base";
+
+type WordsTableDesktopLayoutProps = {
+  body: ReactNode;
+  className?: string;
+  head: ReactNode;
+};
+
+export function WordsTableDesktopLayout({
+  body,
+  className,
+  head,
+}: WordsTableDesktopLayoutProps) {
+  return (
+    <div
+      className={classNames(
+        "mx-4 mb-4 hidden h-0 min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border md:flex",
+        className,
+      )}
+    >
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-auto">
+        <table className={TABLE_CLASS_NAME}>{head}</table>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <table className={TABLE_CLASS_NAME}>
+            <tbody>{body}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

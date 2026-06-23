@@ -19,6 +19,7 @@ import {
   type VocabularyToggleableColumnId,
 } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
 import { TableBodyState, TableMobileState } from "@/features/collections/detail/shared/components/TableBodyState";
+import { WordsTableDesktopLayout } from "@/features/collections/detail/shared/components/WordsTableDesktopLayout";
 import { WordsTableHead } from "@/features/collections/detail/shared/components/WordsTableHead";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
 import { getVocabularyWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
@@ -68,8 +69,8 @@ export function VocabularyTable({
   const emptyDescription = hasSearch
     ? "Try a different search term."
     : "Add your first word with the form above.";
-  const scrollShellClassName = classNames(
-    "mx-4 mb-4 h-0 min-h-0 min-w-0 flex-1 overflow-auto rounded-xl border border-border",
+  const mobileScrollClassName = classNames(
+    "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 gap-3 overflow-auto rounded-xl border border-border md:hidden",
     className,
   );
 
@@ -85,7 +86,7 @@ export function VocabularyTable({
 
   return (
     <>
-      <div className={classNames("grid gap-3 md:hidden", scrollShellClassName)}>
+      <div className={mobileScrollClassName}>
         {showBodyState ? (
           <TableMobileState
             emptyDescription={emptyDescription}
@@ -243,18 +244,20 @@ export function VocabularyTable({
         )}
       </div>
 
-      <div className={classNames("hidden md:block", scrollShellClassName)}>
-        <table className="w-full min-w-[920px] table-fixed border-collapse text-left text-base">
-        <WordsTableHead
-          columns={getVocabularyWordsTableHeadColumns(columnVisibility)}
-          actions
-          allDefinitionsSelected={allDefinitionsSelected}
-          checkbox
-          onToggleAllDefinitions={onToggleAllDefinitions}
-          someDefinitionsSelected={someDefinitionsSelected}
-        />
-        <tbody>
-          {showBodyState ? (
+      <WordsTableDesktopLayout
+        className={className}
+        head={
+          <WordsTableHead
+            columns={getVocabularyWordsTableHeadColumns(columnVisibility)}
+            actions
+            allDefinitionsSelected={allDefinitionsSelected}
+            checkbox
+            onToggleAllDefinitions={onToggleAllDefinitions}
+            someDefinitionsSelected={someDefinitionsSelected}
+          />
+        }
+        body={
+          showBodyState ? (
             <TableBodyState
               columnCount={columnCount}
               emptyDescription={emptyDescription}
@@ -262,6 +265,7 @@ export function VocabularyTable({
               error={error}
               isEmpty={words.length === 0}
               isLoading={isLoading}
+              loadingMessage="Loading words..."
               onRetry={onRetry}
             />
           ) : (
@@ -430,10 +434,9 @@ export function VocabularyTable({
               </tr>
             );
           })
-          )}
-        </tbody>
-        </table>
-      </div>
+          )
+        }
+      />
     </>
   );
 }

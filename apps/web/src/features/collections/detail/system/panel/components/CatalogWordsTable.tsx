@@ -19,6 +19,7 @@ import {
 } from "@/features/collections/detail/system/panel/lib/catalogTableColumns";
 import { TABLE_COLUMN_WIDTH } from "@/features/collections/detail/shared/constants/columnWidths";
 import { TableBodyState, TableMobileState } from "@/features/collections/detail/shared/components/TableBodyState";
+import { WordsTableDesktopLayout } from "@/features/collections/detail/shared/components/WordsTableDesktopLayout";
 import { WordsTableHead } from "@/features/collections/detail/shared/components/WordsTableHead";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
 import { getCatalogWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
@@ -63,8 +64,8 @@ export function CatalogWordsTable({
   const emptyDescription = hasSearch
     ? "Try a different search term."
     : "This collection does not have any catalog words yet.";
-  const scrollShellClassName = classNames(
-    "mx-4 mb-4 h-0 min-h-0 min-w-0 flex-1 overflow-auto rounded-xl border border-border",
+  const mobileScrollClassName = classNames(
+    "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 gap-3 overflow-auto rounded-xl border border-border md:hidden",
     className,
   );
 
@@ -79,7 +80,7 @@ export function CatalogWordsTable({
 
   return (
     <>
-      <div className={classNames("grid gap-3 md:hidden", scrollShellClassName)}>
+      <div className={mobileScrollClassName}>
         {showBodyState ? (
           <TableMobileState
             emptyDescription={emptyDescription}
@@ -212,17 +213,19 @@ export function CatalogWordsTable({
         )}
       </div>
 
-      <div className={classNames("hidden md:block", scrollShellClassName)}>
-        <table className="w-full min-w-[920px] table-fixed border-collapse text-left text-base">
-        <WordsTableHead
-          columns={getCatalogWordsTableHeadColumns(columnVisibility)}
-          allDefinitionsSelected={allDefinitionsSelected}
-          checkbox
-          onToggleAllDefinitions={onToggleAllDefinitions}
-          someDefinitionsSelected={someDefinitionsSelected}
-        />
-        <tbody>
-          {showBodyState ? (
+      <WordsTableDesktopLayout
+        className={className}
+        head={
+          <WordsTableHead
+            columns={getCatalogWordsTableHeadColumns(columnVisibility)}
+            allDefinitionsSelected={allDefinitionsSelected}
+            checkbox
+            onToggleAllDefinitions={onToggleAllDefinitions}
+            someDefinitionsSelected={someDefinitionsSelected}
+          />
+        }
+        body={
+          showBodyState ? (
             <TableBodyState
               columnCount={columnCount}
               emptyDescription={emptyDescription}
@@ -361,10 +364,9 @@ export function CatalogWordsTable({
               </tr>
             );
           })
-          )}
-        </tbody>
-        </table>
-      </div>
+          )
+        }
+      />
     </>
   );
 }

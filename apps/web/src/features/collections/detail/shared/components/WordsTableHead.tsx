@@ -16,8 +16,10 @@ type WordsTableHeadProps = {
   someDefinitionsSelected?: boolean;
 };
 
-const headerCellClassName = "bg-surface px-2 py-2 align-middle font-semibold";
-const checkboxHeaderClassName = "bg-surface w-10 px-3 py-3 align-middle";
+const headerCellClassName =
+  "bg-surface px-2 py-2 align-middle font-semibold border-b border-border";
+const checkboxHeaderClassName =
+  "bg-surface w-10 border-b border-border px-3 py-3 align-middle";
 
 export function WordsTableHead({
   columns,
@@ -28,9 +30,7 @@ export function WordsTableHead({
   someDefinitionsSelected = false,
 }: WordsTableHeadProps) {
   return (
-    <thead
-      className="sticky top-0 z-10 bg-surface shadow-[0_0.5px_0_0_var(--border)] [transform:translateZ(0)]"
-    >
+    <thead>
       <tr>
         <th className={checkboxHeaderClassName}>
           {checkbox && onToggleAllDefinitions ? (
