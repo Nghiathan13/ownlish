@@ -12,6 +12,7 @@ import { useSidebarCollapsed } from "@/features/shell/hooks/useSidebarCollapsed"
 import {
   APP_NAV_LINKS,
   getAppSidebarLinkClass,
+  isAppNavLinkActive,
 } from "@/features/shell/lib/appNavLinks";
 import { classNames } from "@/shared/lib/classNames";
 import {
@@ -81,7 +82,8 @@ export function AppSidebar() {
           {isAuth ? (
             <nav className="flex flex-col gap-1">
               {APP_NAV_LINKS.map((link) => {
-                const Icon = link.icon;
+                const isActive = isAppNavLinkActive(pathname, link);
+                const Icon = isActive ? link.activeIcon : link.icon;
 
                 return (
                   <Link

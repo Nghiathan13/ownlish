@@ -82,7 +82,7 @@ export function SidebarUserMenu({
         <div
           role="menu"
           className={classNames(
-            "absolute bottom-full left-0 z-50 mb-2 min-w-56 rounded-lg border border-border bg-background p-2 shadow-lg",
+            "absolute bottom-full left-0 z-50 mb-2 min-w-56 rounded-2xl border border-border bg-background p-2 shadow-lg",
             !collapsed && "right-0",
           )}
         >
@@ -105,7 +105,7 @@ export function SidebarUserMenu({
               setOpen(false);
               onLogout();
             }}
-            className="flex w-full items-center gap-2 p-2 text-base font-normal text-foreground hover:bg-muted"
+            className="flex w-full items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-muted"
           >
             <LogoutIcon className="size-6 shrink-0" />
             Logout
