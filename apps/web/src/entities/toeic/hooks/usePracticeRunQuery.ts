@@ -50,5 +50,6 @@ export function usePracticeRunQuery({
     data: query.data,
     isLoading: query.isLoading,
     error: toQueryErrorMessage(query.error, "Cannot start practice session."),
+    refetch: query.refetch,
   };
 }

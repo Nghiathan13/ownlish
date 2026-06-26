@@ -142,5 +142,6 @@ export function usePracticeSession({
     syncAnswerToServer: answerSync.syncAnswerToServer,
     retrySync: answerSync.retrySync,
     submitAnswer,
+    refetch: runQuery.refetch,
   };
 }

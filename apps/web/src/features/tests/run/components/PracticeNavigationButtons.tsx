@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { PracticeQuestionGridPanel } from "@/features/tests/run/components/PracticeQuestionGridPanel";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
@@ -9,6 +9,8 @@ import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { GridViewIcon } from "@/shared/ui/icons/GridViewIcon";
 
 type PracticeNavigationButtonsProps = {
+  leftSlot?: ReactNode;
+  navigationDisabled?: boolean;
   nextAriaLabel?: string;
   nextDisabled?: boolean;
   onNext: () => void;
@@ -21,6 +23,8 @@ type PracticeNavigationButtonsProps = {
 };
 
 export function PracticeNavigationButtons({
+  leftSlot,
+  navigationDisabled = false,
   nextAriaLabel = "Next",
   nextDisabled = false,
   onNext,
@@ -50,13 +54,15 @@ export function PracticeNavigationButtons({
           sections={questionGridSections}
         />
       ) : null}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center">{leftSlot ?? null}</div>
+        <div className="flex items-center justify-end gap-2">
         <button
           aria-label="Previous"
           className={iconOnlyButtonClassName(
             "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
           )}
-          disabled={previousDisabled}
+          disabled={previousDisabled || navigationDisabled}
           onClick={onPrevious}
           type="button"
         >
@@ -68,6 +74,7 @@ export function PracticeNavigationButtons({
             className={iconOnlyButtonClassName(
               "border border-border bg-transparent text-foreground hover:border-foreground",
             )}
+            disabled={navigationDisabled}
             onClick={() => setIsGridOpen(true)}
             type="button"
           >
@@ -79,12 +86,13 @@ export function PracticeNavigationButtons({
           className={iconOnlyButtonClassName(
             "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
           )}
-          disabled={nextDisabled}
+          disabled={nextDisabled || navigationDisabled}
           onClick={onNext}
           type="button"
         >
           <ArrowForwardIcon />
         </button>
+        </div>
       </div>
     </>
   );

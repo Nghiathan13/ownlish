@@ -45,5 +45,6 @@ export function usePartPracticeRunQuery({
     isLoading: query.isLoading,
     error: toQueryErrorMessage(query.error, "Cannot start part practice session."),
     userId: user?.id ?? null,
+    refetch: query.refetch,
   };
 }

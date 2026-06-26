@@ -15,8 +15,10 @@ import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/shared/a
 import {
   buildPracticeRunQuestions,
   buildPracticeRunSteps,
+  getCurrentGroupIdFromStep,
   resolveInitialStepIndex,
 } from "@/features/tests/run/lib/practiceRunSteps";
+import { useAdminGroupEditorUi } from "@/features/admin/toeic/hooks/useAdminGroupEditorUi";
 import { writePracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
 import {
   getQuestionGridResultFromAnswer,
@@ -136,6 +138,13 @@ export function PracticeRunView({
   const activeStepIndex =
     steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
   const currentStep = steps[activeStepIndex] ?? null;
+  const currentGroupId = getCurrentGroupIdFromStep(currentStep);
+  const adminEditor = useAdminGroupEditorUi({
+    groupId: currentGroupId,
+    onSaved: async () => {
+      await practice.refetch();
+    },
+  });
 
   const goToStepIndex = useCallback(
     (nextIndex: number) => {
@@ -207,6 +216,8 @@ export function PracticeRunView({
   const navigationBar = (
     <PracticeNavigationButtons
       isQuestionGridOpen={isQuestionGridOpen}
+      leftSlot={adminEditor.leftSlot}
+      navigationDisabled={adminEditor.navigationDisabled}
       nextAriaLabel="Next"
       nextDisabled={isLastStep}
       onNext={() => {
@@ -276,6 +287,7 @@ export function PracticeRunView({
 
   return (
     <PracticeContinuousShell navigation={navigationBar}>
+      {adminEditor.modal}
       <PracticeStepContent
         practice={practice}
         sessionId={practice.sessionId}
