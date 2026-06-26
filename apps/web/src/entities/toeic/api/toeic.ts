@@ -1,10 +1,8 @@
 import { apiRequest, invalidApiResponse } from "@/shared/api/http";
 import {
-  isBoolean,
   isNullableString,
   isNumber,
   isRecord,
-  isString,
 } from "@/shared/lib/parse";
 import {
   DEFAULT_TOEIC_YEAR,
@@ -16,12 +14,12 @@ import {
   getToeicRunApiPath,
 } from "@/features/tests/shared/lib/toeicRunPaths";
 import { parseToeicRunResult } from "./parseToeicRunResult";
+import { parseSubmitAnswerResult } from "./parseSubmitAnswerResult";
 import type {
   ClearToeicPracticeHistoryResult,
   CreateToeicRunInput,
   PracticeMode,
   RefreshMediaGroup,
-  SubmitAnswerResult,
   ToeicRunMode,
   ToeicTestSummary,
 } from "./types";
@@ -85,32 +83,6 @@ function parseRefreshGroup(value: unknown): RefreshMediaGroup | null {
     imageUrl: isNullableString(value.imageUrl) ? value.imageUrl : null,
     imageUrlExpiresAt: isNullableString(value.imageUrlExpiresAt)
       ? value.imageUrlExpiresAt
-      : null,
-  };
-}
-
-function parseSubmitAnswerResult(body: unknown): SubmitAnswerResult {
-  if (!isRecord(body) || !isBoolean(body.graded)) {
-    invalidApiResponse();
-  }
-
-  if (!body.graded) {
-    return { graded: false };
-  }
-
-  if (!isBoolean(body.isCorrect) || !isString(body.answerKey)) {
-    invalidApiResponse();
-  }
-
-  return {
-    graded: true,
-    isCorrect: body.isCorrect,
-    answerKey: body.answerKey as SubmitAnswerResult["answerKey"],
-    correctOptionEn: isNullableString(body.correctOptionEn)
-      ? body.correctOptionEn
-      : null,
-    correctOptionVi: isNullableString(body.correctOptionVi)
-      ? body.correctOptionVi
       : null,
   };
 }

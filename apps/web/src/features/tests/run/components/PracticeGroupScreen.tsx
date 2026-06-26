@@ -4,7 +4,7 @@ import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftP
 import { PracticeQuestionBlock } from "@/features/tests/run/components/PracticeQuestionBlock";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
-import type { usePracticeSession } from "@/features/tests/run/hooks/usePracticeSession";
+import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
 import { useDeferredGroupAnswerFlow } from "@/features/tests/run/hooks/useDeferredGroupAnswerFlow";
 import { useSignedMedia } from "@/features/tests/run/hooks/useSignedMedia";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
@@ -16,7 +16,7 @@ type PracticeGroupScreenProps = {
   testId: number;
   partNumber: number;
   practiceGroup: PracticeGroup;
-  practice: ReturnType<typeof usePracticeSession>;
+  practice: PracticeSessionController;
 };
 
 export function PracticeGroupScreen({

@@ -1,10 +1,13 @@
 import type {
   ToeicQuestion,
   ToeicQuestionGroup,
-  ToeicRunResult,
 } from "@/entities/toeic/api/types";
 import { isPracticeAnswerGraded } from "@/features/tests/run/lib/practiceAnswers";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
+
+type SessionWithGroups = {
+  groups: ToeicQuestionGroup[];
+};
 
 export function toAnswerMap(groups: ToeicQuestionGroup[]) {
   return new Map(
@@ -26,12 +29,12 @@ export function getNextGroupStatus(
     : "right";
 }
 
-export function updateQuestion(
-  current: ToeicRunResult,
+export function updateQuestion<T extends SessionWithGroups>(
+  current: T,
   toeicQuestionId: number,
   updater: (question: ToeicQuestion) => ToeicQuestion,
   options?: { updateGroupStatus?: boolean },
-): ToeicRunResult {
+): T {
   return {
     ...current,
     groups: current.groups.map((group) => {
@@ -60,12 +63,12 @@ export function updateQuestion(
   };
 }
 
-export function applyGradedAnswer(
-  current: ToeicRunResult,
+export function applyGradedAnswer<T extends SessionWithGroups>(
+  current: T,
   toeicQuestionId: number,
   selectedKey: OptionKey,
   isCorrect: boolean,
-): ToeicRunResult {
+): T {
   return updateQuestion(
     current,
     toeicQuestionId,
@@ -79,11 +82,11 @@ export function applyGradedAnswer(
   );
 }
 
-export function applySelectionOnly(
-  current: ToeicRunResult,
+export function applySelectionOnly<T extends SessionWithGroups>(
+  current: T,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-): ToeicRunResult {
+): T {
   return updateQuestion(current, toeicQuestionId, (question) => ({
     ...question,
     selectedKey,
@@ -92,11 +95,11 @@ export function applySelectionOnly(
   }));
 }
 
-export function revertGradedAnswer(
-  current: ToeicRunResult,
+export function revertGradedAnswer<T extends SessionWithGroups>(
+  current: T,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-): ToeicRunResult {
+): T {
   return updateQuestion(
     current,
     toeicQuestionId,
@@ -110,11 +113,11 @@ export function revertGradedAnswer(
   );
 }
 
-export function updateQuestionSelection(
-  current: ToeicRunResult,
+export function updateQuestionSelection<T extends SessionWithGroups>(
+  current: T,
   toeicQuestionId: number,
   selectedKey: OptionKey,
-): ToeicRunResult {
+): T {
   return updateQuestion(current, toeicQuestionId, (question) => ({
     ...question,
     selectedKey,

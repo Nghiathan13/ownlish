@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ToeicRunResult } from "@/entities/toeic/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
 import {
   applyGradedAnswer,
   applySelectionOnly,
@@ -27,7 +27,7 @@ export function usePracticeLocalGrade({
       selectedKey: OptionKey,
       options?: { deferGrade?: boolean },
     ) => {
-      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
+      queryClient.setQueryData<{ groups: ToeicQuestionGroup[] }>(queryKey, (current) => {
         if (!current) {
           return current;
         }
@@ -60,7 +60,7 @@ export function usePracticeLocalGrade({
         return;
       }
 
-      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
+      queryClient.setQueryData<{ groups: ToeicQuestionGroup[] }>(queryKey, (current) => {
         if (!current) {
           return current;
         }
@@ -91,7 +91,7 @@ export function usePracticeLocalGrade({
     (
       entries: Array<{ toeicQuestionId: number; selectedKey: OptionKey }>,
     ) => {
-      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
+      queryClient.setQueryData<{ groups: ToeicQuestionGroup[] }>(queryKey, (current) => {
         if (!current) {
           return current;
         }

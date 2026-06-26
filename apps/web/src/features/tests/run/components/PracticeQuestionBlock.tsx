@@ -3,7 +3,7 @@
 import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
-import type { usePracticeSession } from "@/features/tests/run/hooks/usePracticeSession";
+import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
 import type { PracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import type { ToeicQuestion } from "@/entities/toeic/api/types";
@@ -13,7 +13,7 @@ type PracticeQuestionBlockProps = {
   question: ToeicQuestion;
   presentation: PracticeQuestionPresentation;
   partConfig: PartPracticeConfig;
-  practice: ReturnType<typeof usePracticeSession>;
+  practice: PracticeSessionController;
   isPartialGroupPhase: boolean;
   usesSplitPlainLayout: boolean;
   isBilingual: boolean;

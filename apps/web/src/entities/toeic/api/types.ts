@@ -96,3 +96,36 @@ export type CreateToeicRunInput = {
 export type ClearToeicPracticeHistoryResult = {
   deletedSessionCount: number;
 };
+
+export type PartPracticePartSummary = {
+  partNumber: number;
+  total: number;
+  answered: number;
+  correct: number;
+  wrong: number;
+};
+
+export type PartPracticeQuestionGroup = ToeicQuestionGroup & {
+  testId: number;
+  year: number;
+  testNumber: number;
+};
+
+export type PartPracticeSessionResult = {
+  sessionId: string;
+  mode: PracticeMode;
+  partNumber: number;
+  totalQuestions: number;
+  correctCount: number;
+  wrongCount: number;
+  groups: PartPracticeQuestionGroup[];
+};
+
+export type CreatePartPracticeRunInput = {
+  partNumber: number;
+  mode?: PracticeMode;
+};
+
+export type ClearPartPracticeHistoryResult = {
+  resetRunCount: number;
+};

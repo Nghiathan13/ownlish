@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type { usePracticeSession } from "@/features/tests/run/hooks/usePracticeSession";
+import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { isPracticeAnswerGraded } from "@/features/tests/run/lib/practiceAnswers";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 
 type UseDeferredGroupAnswerFlowParams = {
   practiceGroup: PracticeGroup;
-  practice: ReturnType<typeof usePracticeSession>;
+  practice: PracticeSessionController;
   usesDeferredGroupGrading: boolean;
 };
 
