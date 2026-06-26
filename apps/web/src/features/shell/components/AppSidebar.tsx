@@ -89,16 +89,23 @@ export function AppSidebar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    title={collapsed ? link.label : undefined}
                     aria-label={collapsed ? link.label : undefined}
                     className={classNames(
                       getAppSidebarLinkClass(pathname, link),
-                      "flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
+                      "group/sidebar-link relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
                       collapsed && "justify-center",
                     )}
                   >
                     <Icon className="size-6 shrink-0" />
                     {!collapsed ? <span>{link.label}</span> : null}
+                    {collapsed ? (
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-sm font-normal text-foreground shadow-lg group-hover/sidebar-link:block group-focus-visible/sidebar-link:block"
+                      >
+                        {link.label}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}
