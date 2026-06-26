@@ -1,11 +1,7 @@
+import Link from "next/link";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
-
-const PLACEHOLDER_CARDS = [
-  "Users",
-  "Vocabulary Content",
-  "TOEIC Content",
-] as const;
+import { iconTextButtonClassName } from "@/shared/ui/button";
 
 function AdminPlaceholderCard({ title }: { title: string }) {
   return (
@@ -17,6 +13,27 @@ function AdminPlaceholderCard({ title }: { title: string }) {
       <p className="mt-2 text-sm text-muted-foreground">
         Admin tools for this area are not available yet.
       </p>
+    </div>
+  );
+}
+
+function AdminToeicContentCard() {
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">TOEIC Content</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Browse imported TOEIC tests, parts, groups, and questions.
+        </p>
+      </div>
+      <Link
+        className={iconTextButtonClassName(
+          "w-full border-foreground bg-foreground text-background",
+        )}
+        href="/admin/toeic"
+      >
+        Open
+      </Link>
     </div>
   );
 }
@@ -37,9 +54,9 @@ export function AdminDashboard() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {PLACEHOLDER_CARDS.map((title) => (
-              <AdminPlaceholderCard key={title} title={title} />
-            ))}
+            <AdminPlaceholderCard title="Users" />
+            <AdminPlaceholderCard title="Vocabulary Content" />
+            <AdminToeicContentCard />
           </div>
         </div>
       </Panel>

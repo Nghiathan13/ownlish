@@ -193,15 +193,3 @@ export function findGroupForQuestion(
 
   return null;
 }
-
-export function getCurrentGroupIdFromStep(
-  step: PracticeRunStep | null,
-): number | null {
-  if (!step) {
-    return null;
-  }
-
-  return step.kind === "group"
-    ? step.practiceGroup.group.id
-    : step.item.group.id;
-}

@@ -61,3 +61,51 @@ export type AdminToeicGroupRawPatchInput = {
     explanationVi: string | null;
   }>;
 };
+
+export type AdminToeicTestPartSummary = {
+  partNumber: number;
+  groupCount: number;
+  questionCount: number;
+};
+
+export type AdminToeicTestListItem = {
+  id: number;
+  year: number;
+  testNumber: number;
+  parts: AdminToeicTestPartSummary[];
+};
+
+export type AdminToeicTestListResponse = {
+  items: AdminToeicTestListItem[];
+};
+
+export type AdminToeicTestRawQuestion = AdminToeicGroupRawQuestion;
+
+export type AdminToeicTestRawGroup = {
+  id: number;
+  questionStart: number;
+  questionEnd: number;
+  groupType: string | null;
+  accent: string | null;
+  content: string | null;
+  contentVi: string | null;
+  audioUrl: string | null;
+  audioUrlExpiresAt: string | null;
+  imageUrl: string | null;
+  imageUrlExpiresAt: string | null;
+  questions: AdminToeicTestRawQuestion[];
+};
+
+export type AdminToeicTestRawPart = {
+  partNumber: number;
+  groups: AdminToeicTestRawGroup[];
+};
+
+export type AdminToeicTestRawResponse = {
+  test: {
+    id: number;
+    year: number;
+    testNumber: number;
+  };
+  parts: AdminToeicTestRawPart[];
+};

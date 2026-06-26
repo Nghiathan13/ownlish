@@ -1,7 +1,7 @@
-import type { AdminToeicGroupDraft } from "@/features/admin/toeic/lib/adminGroupEditorState";
 import type { AdminToeicAnswerKey } from "@/features/admin/toeic/api/types";
+import type { AdminToeicGroupDraft } from "@/features/admin/toeic/detail/lib/adminGroupDraft";
 
-type AdminGroupRawFormProps = {
+type AdminToeicGroupEditorFieldsProps = {
   draft: AdminToeicGroupDraft;
   onChange: (draft: AdminToeicGroupDraft) => void;
 };
@@ -63,15 +63,10 @@ function TextArea({
   );
 }
 
-function ReadOnlyValue({ value }: { value: string | null }) {
-  return (
-    <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-      {value ?? "—"}
-    </p>
-  );
-}
-
-export function AdminGroupRawForm({ draft, onChange }: AdminGroupRawFormProps) {
+export function AdminToeicGroupEditorFields({
+  draft,
+  onChange,
+}: AdminToeicGroupEditorFieldsProps) {
   const updateGroup = (patch: Partial<AdminToeicGroupDraft>) => {
     onChange({ ...draft, ...patch });
   };
@@ -123,16 +118,6 @@ export function AdminGroupRawForm({ draft, onChange }: AdminGroupRawFormProps) {
             rows={4}
             value={draft.contentVi}
           />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <FieldLabel>Audio storage path</FieldLabel>
-            <ReadOnlyValue value={draft.audioStoragePath} />
-          </div>
-          <div>
-            <FieldLabel>Image storage path</FieldLabel>
-            <ReadOnlyValue value={draft.imageStoragePath} />
-          </div>
         </div>
       </section>
 
@@ -218,10 +203,7 @@ export function AdminGroupRawForm({ draft, onChange }: AdminGroupRawFormProps) {
                   value={question.answerKey ?? ""}
                 >
                   {ANSWER_KEY_OPTIONS.map((option) => (
-                    <option
-                      key={option.label}
-                      value={option.value ?? ""}
-                    >
+                    <option key={option.label} value={option.value ?? ""}>
                       {option.label}
                     </option>
                   ))}
