@@ -9,33 +9,16 @@ import {
   TestsOverviewTabs,
   parseTestsOverviewTab,
 } from "@/features/tests/overview/components/TestsOverviewTabs";
-import type { TestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import {
   DEFAULT_TOEIC_YEAR,
   parseToeicYearParam,
   type ToeicYear,
 } from "@/features/tests/shared/constants/toeicYears";
-import { getTestsOverviewRedirectTarget } from "@/features/tests/shared/lib/partPracticePaths";
+import {
+  getTestsOverviewRedirectTarget,
+  parsePracticeOverviewPartParam,
+} from "@/features/tests/shared/lib/partPracticePaths";
 import { PageShell } from "@/shared/ui/PageShell";
-
-function TestsPageContent({
-  selectedYear,
-  selectedTab,
-}: {
-  selectedYear: ToeicYear;
-  selectedTab: TestsOverviewTab;
-}) {
-  return (
-    <PageShell>
-      <TestsOverviewTabs selectedTab={selectedTab} selectedYear={selectedYear} />
-      {selectedTab === "part_practice" ? (
-        <PracticeTab />
-      ) : (
-        <MockTestsTab selectedYear={selectedYear} />
-      )}
-    </PageShell>
-  );
-}
 
 export function TestsPage() {
   const router = useRouter();
@@ -44,7 +27,12 @@ export function TestsPage() {
   const selectedYear: ToeicYear =
     parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;
   const selectedTab = parseTestsOverviewTab(searchParams.get("tab"));
+  const selectedPartNumber = parsePracticeOverviewPartParam(
+    searchParams.get("part"),
+  );
   const redirectTarget = getTestsOverviewRedirectTarget(searchParams);
+  const mockYearForLinks = selectedYear;
+  const partForLinks = selectedPartNumber ?? 1;
 
   useEffect(() => {
     if (redirectTarget) {
@@ -62,10 +50,17 @@ export function TestsPage() {
   }
 
   return (
-    <TestsPageContent
-      key={`${selectedYear}-${selectedTab}`}
-      selectedTab={selectedTab}
-      selectedYear={selectedYear}
-    />
+    <PageShell>
+      <TestsOverviewTabs
+        mockYear={mockYearForLinks}
+        partNumber={partForLinks}
+        selectedTab={selectedTab}
+      />
+      {selectedTab === "part_practice" ? (
+        <PracticeTab />
+      ) : (
+        <MockTestsTab selectedYear={selectedYear} />
+      )}
+    </PageShell>
   );
 }

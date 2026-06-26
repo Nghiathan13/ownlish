@@ -41,8 +41,9 @@ export function TestsOverviewPageSkeleton({
     <PageShell>
       {selectedTab != null ? (
         <TestsOverviewTabs
+          mockYear={selectedYear}
+          partNumber={selectedTab === "part_practice" ? 1 : null}
           selectedTab={selectedTab}
-          selectedYear={selectedYear}
         />
       ) : (
         <TestsOverviewTabsSkeleton />

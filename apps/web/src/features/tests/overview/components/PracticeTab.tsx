@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { PartPracticeCard } from "@/features/tests/overview/components/PartPracticeCard";
 import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
 import { usePartPracticeOverview } from "@/features/tests/overview/hooks/usePartPracticeOverview";
+import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePaths";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -29,18 +31,22 @@ export function PracticeTab() {
           const isSelected = overview.selectedPartNumber === partNumber;
 
           return (
-            <button
+            <Link
+              aria-current={isSelected ? "page" : undefined}
               className={classNames(
                 isSelected
                   ? primaryTextButtonClassName()
                   : secondaryTextButtonClassName(),
               )}
+              href={getTestsOverviewPath({
+                tab: "part_practice",
+                part: partNumber,
+              })}
               key={partNumber}
-              onClick={() => overview.setSelectedPartNumber(partNumber)}
-              type="button"
+              scroll={false}
             >
               Part {partNumber}
-            </button>
+            </Link>
           );
         })}
       </div>

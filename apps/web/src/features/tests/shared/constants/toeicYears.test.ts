@@ -6,9 +6,9 @@ import {
 } from "./toeicYears";
 
 describe("toeicYears navigation helpers", () => {
-  it("builds tests list paths from year", () => {
-    expect(getTestsListPath(2026)).toBe("/tests?year=2026");
-    expect(getTestsListPath(2025)).toBe("/tests?year=2025");
+  it("builds canonical mock tests overview paths from year", () => {
+    expect(getTestsListPath(2026)).toBe("/tests?tab=mock_tests&year=2026");
+    expect(getTestsListPath(2025)).toBe("/tests?tab=mock_tests&year=2025");
   });
 
   it("parses valid year params", () => {
@@ -24,7 +24,11 @@ describe("toeicYears navigation helpers", () => {
   });
 
   it("falls back to the default year for unknown values", () => {
-    expect(getTestsListPathFromYearValue(1999)).toBe("/tests?year=2026");
-    expect(getTestsListPathFromYearValue(2024)).toBe("/tests?year=2024");
+    expect(getTestsListPathFromYearValue(1999)).toBe(
+      "/tests?tab=mock_tests&year=2026",
+    );
+    expect(getTestsListPathFromYearValue(2024)).toBe(
+      "/tests?tab=mock_tests&year=2024",
+    );
   });
 });

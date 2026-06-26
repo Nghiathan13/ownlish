@@ -22,19 +22,16 @@ export function parseToeicYearParam(
 }
 
 export function getTestsListPath(year: ToeicYear = DEFAULT_TOEIC_YEAR) {
-  return `/tests?year=${year}`;
+  const params = new URLSearchParams({
+    tab: "mock_tests",
+    year: String(year),
+  });
+
+  return `/tests?${params.toString()}`;
 }
 
 export function getTestsListPathFromYearValue(year: number) {
   return getTestsListPath(isToeicYear(year) ? year : DEFAULT_TOEIC_YEAR);
-}
-
-export function getTestsListPathFromSearchParams(
-  searchParams: Pick<URLSearchParams, "get">,
-) {
-  return getTestsListPath(
-    parseToeicYearParam(searchParams.get("year")) ?? DEFAULT_TOEIC_YEAR,
-  );
 }
 
 export function getToeicYearButtonLabel(year: ToeicYear) {

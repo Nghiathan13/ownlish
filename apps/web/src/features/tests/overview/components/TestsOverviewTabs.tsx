@@ -13,12 +13,14 @@ import {
 } from "@/shared/ui/button";
 
 type TestsOverviewTabsProps = {
-  selectedYear: ToeicYear;
+  mockYear: ToeicYear;
+  partNumber: number | null;
   selectedTab: TestsOverviewTab;
 };
 
 export function TestsOverviewTabs({
-  selectedYear,
+  mockYear,
+  partNumber,
   selectedTab,
 }: TestsOverviewTabsProps) {
   return (
@@ -30,7 +32,7 @@ export function TestsOverviewTabs({
             ? primaryTextButtonClassName()
             : secondaryTextButtonClassName()
         }
-        href={getTestsOverviewPath({ year: selectedYear, tab: "mock_tests" })}
+        href={getTestsOverviewPath({ year: mockYear, tab: "mock_tests" })}
         scroll={false}
       >
         Mock Tests
@@ -42,7 +44,10 @@ export function TestsOverviewTabs({
             ? primaryTextButtonClassName()
             : secondaryTextButtonClassName()
         }
-        href={getTestsOverviewPath({ tab: "part_practice" })}
+        href={getTestsOverviewPath({
+          tab: "part_practice",
+          part: partNumber ?? undefined,
+        })}
         scroll={false}
       >
         Part Practice
