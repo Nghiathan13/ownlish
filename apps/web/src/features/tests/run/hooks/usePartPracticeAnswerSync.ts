@@ -105,14 +105,7 @@ export function usePartPracticeAnswerSync({
           return result;
         }
 
-        if (mode === "review_wrong") {
-          await invalidatePartPracticeOverview(queryClient, userId);
-        } else {
-          await Promise.all([
-            queryClient.refetchQueries({ queryKey }),
-            invalidatePartPracticeOverview(queryClient, userId),
-          ]);
-        }
+        await invalidatePartPracticeOverview(queryClient, userId);
 
         return result;
       } catch {

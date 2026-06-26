@@ -6,6 +6,7 @@ import {
   getTestsOverviewRedirectTarget,
   isPartPracticeRunPath,
   parsePartPracticeRunMode,
+  parsePracticeOverviewPartParam,
   parseTestsOverviewTab,
 } from "./partPracticePaths";
 
@@ -30,15 +31,24 @@ describe("partPracticePaths", () => {
     ).toBe(`/tests/part-practice/runs/${SESSION_ID}?mode=review_wrong`);
   });
 
-  it("builds tests overview paths with optional tab", () => {
+  it("builds tests overview paths with optional tab and part", () => {
     expect(getTestsOverviewPath()).toBe("/tests");
     expect(getTestsOverviewPath({ tab: "practice" })).toBe("/tests?tab=practice");
+    expect(getTestsOverviewPath({ tab: "practice", part: 4 })).toBe(
+      "/tests?tab=practice&part=4",
+    );
     expect(getTestsOverviewPath({ year: 2024, tab: "practice" })).toBe(
       "/tests?year=2024&tab=practice",
     );
     expect(getTestsOverviewPath({ year: 2024, tab: "mock" })).toBe(
       "/tests?year=2024",
     );
+  });
+
+  it("parses practice overview part param", () => {
+    expect(parsePracticeOverviewPartParam("4")).toBe(4);
+    expect(parsePracticeOverviewPartParam("0")).toBeNull();
+    expect(parsePracticeOverviewPartParam("abc")).toBeNull();
   });
 
   it("only normalizes year for mock tab overview URLs", () => {

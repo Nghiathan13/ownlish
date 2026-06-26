@@ -15,7 +15,7 @@ type PracticeNavigationButtonsProps = {
   onPrevious: () => void;
   previousDisabled?: boolean;
   questionGridSections?: QuestionGridSection[];
-  onQuestionGridSelect?: (questionNumber: number) => void;
+  onQuestionGridSelect?: (questionId: number) => void;
   isQuestionGridOpen?: boolean;
   onQuestionGridOpenChange?: (open: boolean) => void;
 };
@@ -44,8 +44,8 @@ export function PracticeNavigationButtons({
       {isGridOpen && showQuestionGrid ? (
         <PracticeQuestionGridPanel
           onClose={() => setIsGridOpen(false)}
-          onSelect={(questionNumber) => {
-            onQuestionGridSelect(questionNumber);
+          onSelect={(questionId) => {
+            onQuestionGridSelect(questionId);
           }}
           sections={questionGridSections}
         />

@@ -11,8 +11,8 @@ import { PracticeNavigationButtons } from "@/features/tests/run/components/Pract
 import { usePartPracticeSession } from "@/features/tests/run/hooks/usePartPracticeSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
-  buildPracticeRunQuestions,
-  buildPracticeRunSteps,
+  buildAggregatePracticeRunQuestions,
+  buildAggregatePracticeRunSteps,
   resolveInitialStepIndex,
 } from "@/features/tests/run/lib/practiceRunSteps";
 import { writePracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
@@ -22,8 +22,9 @@ import {
 } from "@/features/tests/run/lib/practiceAnswers";
 import {
   buildPracticeRunGridSections,
-  findStepIndexForQuestion,
-  getActiveQuestionNumbersForStep,
+  findStepIndexForQuestionId,
+  getActiveQuestionIdsForStep,
+  getAggregateQuestionGridDisplayNumber,
 } from "@/features/tests/run/lib/practiceQuestionGrid";
 import { getSessionQuestionNumber } from "@/features/tests/run/lib/sessionQuestionPosition";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
@@ -56,8 +57,11 @@ export function PartPracticeRunView({
     mode: practiceMode,
     sessionId,
   });
-  const practiceOverviewPath = getTestsOverviewPath({ tab: "practice" });
   const partNumber = practice.partNumber;
+  const practiceOverviewPath = getTestsOverviewPath({
+    tab: "practice",
+    part: partNumber > 0 ? partNumber : undefined,
+  });
   const selectedParts = useMemo(
     () => (partNumber > 0 ? [partNumber] : []),
     [partNumber],
@@ -68,22 +72,20 @@ export function PartPracticeRunView({
     [practice.groups],
   );
 
-  const partGroups = useMemo(() => {
-    if (partNumber <= 0) {
-      return {};
-    }
-
-    return { [partNumber]: practice.groups };
-  }, [partNumber, practice.groups]);
-
   const questions = useMemo(
-    () => buildPracticeRunQuestions(partGroups, selectedParts),
-    [partGroups, selectedParts],
+    () =>
+      partNumber > 0
+        ? buildAggregatePracticeRunQuestions(partNumber, practice.groups)
+        : [],
+    [partNumber, practice.groups],
   );
 
   const steps = useMemo(
-    () => buildPracticeRunSteps(partGroups, selectedParts),
-    [partGroups, selectedParts],
+    () =>
+      partNumber > 0
+        ? buildAggregatePracticeRunSteps(partNumber, practice.groups)
+        : [],
+    [partNumber, practice.groups],
   );
 
   const storageKey = practice.sessionId
@@ -137,8 +139,8 @@ export function PartPracticeRunView({
     practiceOverviewPath,
   );
 
-  const activeQuestionNumbers = useMemo(
-    () => getActiveQuestionNumbersForStep(currentStep),
+  const activeQuestionIds = useMemo(
+    () => getActiveQuestionIdsForStep(currentStep),
     [currentStep],
   );
 
@@ -147,11 +149,14 @@ export function PartPracticeRunView({
       buildPracticeRunGridSections(
         steps,
         selectedParts,
-        activeQuestionNumbers,
+        activeQuestionIds,
         (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
         (questionId) => isQuestionGridSelected(practice.getAnswer(questionId)),
+        {
+          resolveDisplayLabel: getAggregateQuestionGridDisplayNumber,
+        },
       ),
-    [activeQuestionNumbers, practice, selectedParts, steps],
+    [activeQuestionIds, practice, selectedParts, steps],
   );
 
   const visibleQuestionGroups = useMemo(
@@ -193,8 +198,8 @@ export function PartPracticeRunView({
         goToStepIndex(activeStepIndex - 1);
       }}
       onQuestionGridOpenChange={setIsQuestionGridOpen}
-      onQuestionGridSelect={(questionNumber) => {
-        const stepIndexForQuestion = findStepIndexForQuestion(steps, questionNumber);
+      onQuestionGridSelect={(questionId) => {
+        const stepIndexForQuestion = findStepIndexForQuestionId(steps, questionId);
         if (stepIndexForQuestion >= 0) {
           goToStepIndex(stepIndexForQuestion);
         }

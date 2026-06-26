@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
+import {
+  getTestsOverviewPath,
+  parsePracticeOverviewPartParam,
+} from "@/features/tests/shared/lib/partPracticePaths";
 import { usePartPracticeOverviewList } from "@/features/tests/overview/hooks/usePartPracticeOverviewList";
 import { useClearPartPracticeHistory } from "@/features/tests/overview/mutations/hooks/useClearPartPracticeHistory";
 import { useStartPartPracticeRun } from "@/features/tests/overview/mutations/hooks/useStartPartPracticeRun";
@@ -13,9 +17,12 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export function usePartPracticeOverview() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const [selectedPartNumber, setSelectedPartNumber] = useState<number>(1);
+  const selectedPartNumber =
+    parsePracticeOverviewPartParam(searchParams.get("part")) ?? 1;
 
   const { summaries, isLoading, error, reload } = usePartPracticeOverviewList({
     isAuthenticated,
@@ -35,6 +42,12 @@ export function usePartPracticeOverview() {
     summaries.find((summary) => summary.partNumber === selectedPartNumber) ??
     summaries.find((summary) => summary.partNumber === 1) ??
     null;
+
+  const setSelectedPartNumber = (partNumber: number) => {
+    router.replace(getTestsOverviewPath({ tab: "practice", part: partNumber }), {
+      scroll: false,
+    });
+  };
 
   const startPartPractice = async (partNumber: number, mode: PracticeMode) => {
     if (!isAuthenticated) {

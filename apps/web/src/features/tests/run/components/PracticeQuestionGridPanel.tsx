@@ -9,7 +9,7 @@ import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuest
 type PracticeQuestionGridPanelProps = {
   sections: QuestionGridSection[];
   onClose: () => void;
-  onSelect: (questionNumber: number) => void;
+  onSelect: (questionId: number) => void;
 };
 
 export function PracticeQuestionGridPanel({
@@ -78,11 +78,11 @@ export function PracticeQuestionGridPanel({
                       cell.isActive &&
                         "ring-1 ring-foreground ring-offset-2 ring-offset-background",
                     )}
-                    key={cell.questionNumber}
-                    onClick={() => onSelect(cell.questionNumber)}
+                    key={cell.questionId}
+                    onClick={() => onSelect(cell.questionId)}
                     type="button"
                   >
-                    {cell.questionNumber}
+                    {cell.displayNumber}
                   </button>
                 ))}
               </div>

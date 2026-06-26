@@ -20,8 +20,8 @@ import {
 } from "@/features/tests/run/lib/practiceAnswers";
 import {
   buildPracticeRunGridSections,
-  findStepIndexForQuestion,
-  getActiveQuestionNumbersForStep,
+  findStepIndexForQuestionId,
+  getActiveQuestionIdsForStep,
 } from "@/features/tests/run/lib/practiceQuestionGrid";
 import {
   getSessionQuestionNumber,
@@ -150,8 +150,8 @@ export function PracticeRunView({
     testsListPath,
   );
 
-  const activeQuestionNumbers = useMemo(
-    () => getActiveQuestionNumbersForStep(currentStep),
+  const activeQuestionIds = useMemo(
+    () => getActiveQuestionIdsForStep(currentStep),
     [currentStep],
   );
 
@@ -160,11 +160,11 @@ export function PracticeRunView({
       buildPracticeRunGridSections(
         steps,
         normalizedSelectedParts,
-        activeQuestionNumbers,
+        activeQuestionIds,
         (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
         (questionId) => isQuestionGridSelected(practice.getAnswer(questionId)),
       ),
-    [activeQuestionNumbers, normalizedSelectedParts, practice, steps],
+    [activeQuestionIds, normalizedSelectedParts, practice, steps],
   );
 
   const visibleQuestionGroups = useMemo(
@@ -206,8 +206,8 @@ export function PracticeRunView({
         goToStepIndex(activeStepIndex - 1);
       }}
       onQuestionGridOpenChange={setIsQuestionGridOpen}
-      onQuestionGridSelect={(questionNumber) => {
-        const stepIndexForQuestion = findStepIndexForQuestion(steps, questionNumber);
+      onQuestionGridSelect={(questionId) => {
+        const stepIndexForQuestion = findStepIndexForQuestionId(steps, questionId);
         if (stepIndexForQuestion >= 0) {
           goToStepIndex(stepIndexForQuestion);
         }

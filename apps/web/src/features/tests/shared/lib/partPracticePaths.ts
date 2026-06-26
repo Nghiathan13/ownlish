@@ -4,6 +4,7 @@ import {
   getTestsListPath,
   parseToeicYearParam,
 } from "@/features/tests/shared/constants/toeicYears";
+import { isToeicPartNumber } from "@/features/tests/shared/lib/toeicParts";
 import { isToeicSessionId } from "@/features/tests/shared/lib/toeicRunPaths";
 
 export function getPartPracticeRunPath(
@@ -34,6 +35,7 @@ export function getPartPracticeRunApiPath(
 export function getTestsOverviewPath(options?: {
   year?: number;
   tab?: "mock" | "practice";
+  part?: number;
 }) {
   const params = new URLSearchParams();
 
@@ -45,8 +47,23 @@ export function getTestsOverviewPath(options?: {
     params.set("tab", "practice");
   }
 
+  if (options?.part != null && isToeicPartNumber(options.part)) {
+    params.set("part", String(options.part));
+  }
+
   const query = params.toString();
   return query ? `/tests?${query}` : "/tests";
+}
+
+export function parsePracticeOverviewPartParam(
+  value: string | null | undefined,
+): number | null {
+  if (value == null) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && isToeicPartNumber(parsed) ? parsed : null;
 }
 
 export function parseTestsOverviewTab(

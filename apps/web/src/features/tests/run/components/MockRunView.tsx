@@ -13,6 +13,7 @@ import {
   getTestsListPathFromYearValue,
 } from "@/features/tests/shared/constants/toeicYears";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
+import { getToeicQuestionGridDisplayNumber } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {
   getSessionQuestionNumber,
@@ -75,12 +76,12 @@ function isReadingGroup(group: ToeicQuestionGroup) {
   return group.partNumber != null && group.partNumber >= 5;
 }
 
-function findGroupIndexForQuestion(
+function findGroupIndexForQuestionId(
   groups: ToeicQuestionGroup[],
-  questionNumber: number,
+  questionId: number,
 ) {
   return groups.findIndex((group) =>
-    group.questions.some((question) => question.questionNumber === questionNumber),
+    group.questions.some((question) => question.id === questionId),
   );
 }
 
@@ -90,8 +91,8 @@ function buildMockGridSections(
   isFinished: boolean,
 ): QuestionGridSection[] {
   const sections = new Map<number, QuestionGridSection>();
-  const activeQuestionNumbers = new Set(
-    activeGroup?.questions.map((question) => question.questionNumber) ?? [],
+  const activeQuestionIds = new Set(
+    activeGroup?.questions.map((question) => question.id) ?? [],
   );
 
   for (const group of groups) {
@@ -106,8 +107,9 @@ function buildMockGridSections(
 
     for (const question of group.questions) {
       section.cells.push({
-        questionNumber: question.questionNumber,
-        isActive: activeQuestionNumbers.has(question.questionNumber),
+        questionId: question.id,
+        displayNumber: getToeicQuestionGridDisplayNumber(question),
+        isActive: activeQuestionIds.has(question.id),
         isSelected:
           !isFinished &&
           question.selectedKey != null &&
@@ -379,8 +381,8 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
         nextDisabled={activeGroupIndex >= groups.length - 1}
         onNext={() => goToGroupIndex(activeGroupIndex + 1)}
         onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
-        onQuestionGridSelect={(questionNumber) => {
-          const nextGroupIndex = findGroupIndexForQuestion(groups, questionNumber);
+        onQuestionGridSelect={(questionId) => {
+          const nextGroupIndex = findGroupIndexForQuestionId(groups, questionId);
           if (nextGroupIndex >= 0) {
             goToGroupIndex(nextGroupIndex);
           }
