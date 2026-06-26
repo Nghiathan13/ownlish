@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
@@ -26,12 +26,14 @@ export function usePartPracticeOverview() {
     parsePracticeOverviewPartParam(searchParams.get("part")) ?? 1;
   const [selectedPartNumber, setSelectedPartNumberState] =
     useState(partFromUrl);
-  const [prevPartFromUrl, setPrevPartFromUrl] = useState(partFromUrl);
 
-  if (partFromUrl !== prevPartFromUrl) {
-    setPrevPartFromUrl(partFromUrl);
-    setSelectedPartNumberState(partFromUrl);
-  }
+  // Sync selected part when URL changes via back/forward or deep link.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- external URL is source of truth for navigation history
+    setSelectedPartNumberState((current) =>
+      current === partFromUrl ? current : partFromUrl,
+    );
+  }, [partFromUrl]);
 
   const { summaries, isLoading, error, reload } = usePartPracticeOverviewList({
     isAuthenticated,
