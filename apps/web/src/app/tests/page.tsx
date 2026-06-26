@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { TestsPage } from "@/features/tests/overview/components/TestsPage";
-import { TestsPageSkeleton } from "@/features/tests/overview/components/TestsPageSkeleton";
+import { TestsOverviewPageSkeleton } from "@/features/tests/overview/components/TestsOverviewPageSkeleton";
 
 export default function TestsRoute() {
   return (
     <RequireAuth>
-      <Suspense fallback={<TestsPageSkeleton />}>
+      <Suspense fallback={<TestsOverviewPageSkeleton />}>
         <TestsPage />
       </Suspense>
     </RequireAuth>

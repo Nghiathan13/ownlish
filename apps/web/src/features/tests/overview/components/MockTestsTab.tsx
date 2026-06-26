@@ -5,6 +5,7 @@ import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
 import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
+import { MockTestsTabSkeleton } from "@/features/tests/overview/components/MockTestsTabSkeleton";
 import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTabs";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
@@ -22,7 +23,7 @@ export function MockTestsTab({ selectedYear }: MockTestsTabProps) {
 
       <div className="mb-4 flex flex-col gap-4 px-4">
         {overview.isLoadingTests ? (
-          <p className="text-muted-foreground">Loading tests...</p>
+          <MockTestsTabSkeleton />
         ) : overview.testsError ? (
           <div className="space-y-3">
             <p className="text-muted-foreground">{overview.testsError}</p>

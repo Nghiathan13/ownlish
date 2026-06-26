@@ -3,17 +3,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getCollectionsListPath, getDefaultUserCollection } from "@/entities/collection/lib/collectionDisplay";
+import { SessionLoadingSkeleton } from "@/features/auth/components/SessionLoadingSkeleton";
 import { useAuthSession, isAuthenticatedStatus, isLoadingStatus } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
+import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
-import { classNames } from "@/shared/lib/classNames";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
-import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 
 export function HomeDashboard() {
   const { status, user } = useAuthSession();
@@ -30,13 +30,7 @@ export function HomeDashboard() {
   });
 
   if (isLoadingStatus(status)) {
-    return (
-      <PageShell centered>
-        <Panel className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}>
-          <p className="text-muted-foreground">Loading session...</p>
-        </Panel>
-      </PageShell>
-    );
+    return <SessionLoadingSkeleton centered />;
   }
 
   if (!isAuthenticated) {
@@ -66,7 +60,7 @@ export function HomeDashboard() {
       <Panel>
         <div className="flex flex-col gap-6">
           {isLoading || isLoadingCollections ? (
-            <DashboardMessage>Loading your dashboard...</DashboardMessage>
+            <HomeDashboardSkeleton />
           ) : error ? (
             <DashboardMessage>
               <span>{error}</span>

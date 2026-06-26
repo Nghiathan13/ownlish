@@ -1,3 +1,4 @@
+import { ReviewCardSkeleton } from "@/features/review/components/ReviewCardSkeleton";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type ReviewStateBlockProps = {
@@ -14,7 +15,7 @@ export function ReviewStateBlock({
   onRetry,
 }: ReviewStateBlockProps) {
   if (isLoading) {
-    return <p className="text-muted-foreground">Loading review queue...</p>;
+    return <ReviewCardSkeleton />;
   }
 
   if (error) {

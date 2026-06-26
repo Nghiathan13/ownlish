@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MockTestsTab } from "@/features/tests/overview/components/MockTestsTab";
 import { PracticeTab } from "@/features/tests/overview/components/PracticeTab";
-import { TestsPageSkeleton } from "@/features/tests/overview/components/TestsPageSkeleton";
+import { TestsOverviewPageSkeleton } from "@/features/tests/overview/components/TestsOverviewPageSkeleton";
 import {
   TestsOverviewTabs,
   parseTestsOverviewTab,
@@ -52,7 +52,12 @@ export function TestsPage() {
   }, [redirectTarget, router]);
 
   if (redirectTarget) {
-    return <TestsPageSkeleton />;
+    return (
+      <TestsOverviewPageSkeleton
+        selectedTab={selectedTab}
+        selectedYear={selectedYear}
+      />
+    );
   }
 
   return (

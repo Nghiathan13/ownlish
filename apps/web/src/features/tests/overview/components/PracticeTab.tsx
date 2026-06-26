@@ -1,6 +1,7 @@
 "use client";
 
 import { PartPracticeCard } from "@/features/tests/overview/components/PartPracticeCard";
+import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
 import { usePartPracticeOverview } from "@/features/tests/overview/hooks/usePartPracticeOverview";
 import {
   primaryTextButtonClassName,
@@ -45,7 +46,7 @@ export function PracticeTab() {
       </div>
 
       {overview.isLoading ? (
-        <p className="text-muted-foreground">Loading part practice...</p>
+        <PracticeTabSkeleton includePartPills={false} />
       ) : overview.error ? (
         <div className="space-y-3">
           <p className="text-muted-foreground">{overview.error}</p>

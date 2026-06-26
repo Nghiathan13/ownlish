@@ -11,6 +11,7 @@ import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/use
 import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
+import { ReviewCollectionToolbarSkeleton } from "@/features/review/components/ReviewCollectionToolbarSkeleton";
 import { useReviewQueue } from "@/features/review/hooks/useReviewQueue";
 import type { ReviewGrade } from "@/features/review/lib/reviewSchedule";
 import { Panel } from "@/shared/ui/Panel";
@@ -131,7 +132,7 @@ function ReviewPageContent() {
             />
           </div>
         ) : isLoadingCollections ? (
-          <p className="mb-4 px-4 text-muted-foreground">Loading collections...</p>
+          <ReviewCollectionToolbarSkeleton />
         ) : null}
 
         {isLoading || error || isEmpty || !currentWord ? (
