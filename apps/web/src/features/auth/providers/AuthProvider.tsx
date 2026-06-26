@@ -10,9 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import {
+  googleLogin as googleLoginRequest,
   login as loginRequest,
   logoutSession,
   register as registerRequest,
+  type GoogleLoginInput,
   type LoginInput,
   type RegisterInput,
 } from "@/entities/auth/api/auth";
@@ -30,6 +32,7 @@ export type { AuthStatus } from "@/features/auth/lib/authStatus";
 
 type AuthSessionContextValue = {
   clearSession: () => void;
+  googleLogin: (input: GoogleLoginInput) => Promise<void>;
   login: (input: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
@@ -101,6 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("authenticated");
   }, []);
 
+  const googleLogin = useCallback(async (input: GoogleLoginInput) => {
+    const response = await googleLoginRequest(input);
+    establishSession({ accessToken: response.accessToken });
+    setUser(response.user);
+    setStatus("authenticated");
+  }, []);
+
   const logout = useCallback(async () => {
     await logoutSession().catch(() => undefined);
     clearSession();
@@ -111,13 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthSessionContextValue>(
     () => ({
       clearSession,
+      googleLogin,
       login,
       logout,
       register,
       status,
       user,
     }),
-    [clearSession, login, logout, register, status, user],
+    [clearSession, googleLogin, login, logout, register, status, user],
   );
 
   return (

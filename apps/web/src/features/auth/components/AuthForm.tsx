@@ -12,6 +12,7 @@ import { Field } from "@/shared/ui/Field";
 import { Panel } from "@/shared/ui/Panel";
 import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 import { TextInput } from "@/shared/ui/TextInput";
+import { GoogleSignInButton } from "@/features/auth/components/GoogleSignInButton";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { getAuthValidationError, type AuthMode } from "../lib/authValidation";
 
@@ -21,7 +22,7 @@ type AuthFormProps = {
 
 export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
   const router = useRouter();
-  const { login, register } = useAuthSession();
+  const { googleLogin, login, register } = useAuthSession();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -191,6 +192,33 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
               : "Sign in"}
         </button>
       </form>
+
+      <div className="my-4 flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-sm text-muted-foreground">or</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      <GoogleSignInButton
+        disabled={isSubmitting}
+        onCredential={async (idToken) => {
+          setError(null);
+          setIsSubmitting(true);
+
+          try {
+            await googleLogin({ idToken });
+            router.replace(redirectTo);
+          } catch (caughtError) {
+            setError(
+              caughtError instanceof ApiError
+                ? caughtError.message
+                : "Cannot connect to server.",
+            );
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      />
     </Panel>
   );
 }

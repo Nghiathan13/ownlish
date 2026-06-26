@@ -17,3 +17,7 @@ export type LoginInput = {
 export type RegisterInput = LoginInput & {
   name?: string;
 };
+
+export type GoogleLoginInput = {
+  idToken: string;
+};

@@ -4,9 +4,9 @@ import {
   parseAuthUser,
 } from "@/entities/auth/lib/parseAuthResponse";
 import { isRecord } from "@/shared/lib/parse";
-import type { LoginInput, RegisterInput } from "@/entities/auth/types";
+import type { GoogleLoginInput, LoginInput, RegisterInput } from "@/entities/auth/types";
 
-export type { AuthResponse, AuthUser, LoginInput, RegisterInput } from "@/entities/auth/types";
+export type { AuthResponse, AuthUser, GoogleLoginInput, LoginInput, RegisterInput } from "@/entities/auth/types";
 
 function parseLogoutResponse(body: unknown): { success: true } {
   if (!isRecord(body) || body.success !== true) {
@@ -26,6 +26,14 @@ export function login(input: LoginInput) {
 
 export function register(input: RegisterInput) {
   return apiRequest("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(input),
+    sameOrigin: true,
+  }).then(parseAuthResponse);
+}
+
+export function googleLogin(input: GoogleLoginInput) {
+  return apiRequest("/api/auth/google", {
     method: "POST",
     body: JSON.stringify(input),
     sameOrigin: true,
