@@ -12,7 +12,7 @@ import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlot
 import { ShellNavSkeleton } from "@/features/shell/components/ShellNavSkeleton";
 import { useSidebarCollapsed } from "@/features/shell/hooks/useSidebarCollapsed";
 import {
-  APP_NAV_LINKS,
+  getAppNavLinksForUser,
   getAppSidebarLinkClass,
   isAppNavLinkActive,
 } from "@/features/shell/lib/appNavLinks";
@@ -86,7 +86,7 @@ export function AppSidebar() {
             <ShellNavSkeleton collapsed={collapsed} />
           ) : isAuth ? (
             <nav className="flex flex-col gap-1">
-              {APP_NAV_LINKS.map((link) => {
+              {getAppNavLinksForUser(user).map((link) => {
                 const isActive = isAppNavLinkActive(pathname, link);
                 const Icon = isActive ? link.activeIcon : link.icon;
 

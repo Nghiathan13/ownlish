@@ -78,7 +78,7 @@ describe("accessTokenManager", () => {
     setStoredAccessToken(expiredToken);
     refreshSessionMock.mockResolvedValue({
       accessToken: freshToken,
-      user: { id: "user-1", email: "user@example.com", name: null },
+      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
     });
 
     await expect(getValidAccessToken()).resolves.toBe(freshToken);
@@ -97,7 +97,7 @@ describe("accessTokenManager", () => {
           setTimeout(() => {
             resolve({
               accessToken: freshToken,
-              user: { id: "user-1", email: "user@example.com", name: null },
+              user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
             });
           }, 20);
         }),
@@ -128,7 +128,7 @@ describe("accessTokenManager", () => {
     const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
     const session = {
       accessToken: freshToken,
-      user: { id: "user-1", email: "user@example.com", name: null },
+      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
     };
 
     refreshSessionMock.mockResolvedValue(session);

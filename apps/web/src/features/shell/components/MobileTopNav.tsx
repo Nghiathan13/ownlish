@@ -8,7 +8,7 @@ import {
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
 import {
-  APP_NAV_LINKS,
+  getAppNavLinksForUser,
   getAppNavLinkClass,
 } from "@/features/shell/lib/appNavLinks";
 import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
@@ -44,7 +44,7 @@ export function MobileTopNav() {
           <ShellNavSkeleton variant="mobile" />
         ) : isAuth ? (
           <div className="order-3 flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap sm:order-none sm:w-auto sm:gap-6 sm:overflow-visible">
-            {APP_NAV_LINKS.map((link) => (
+            {getAppNavLinksForUser(user).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
