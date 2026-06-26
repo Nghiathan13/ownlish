@@ -6,18 +6,21 @@ import type {
 } from "./types";
 
 export function getAdminToeicGroupRaw(
+  token: string,
   groupId: number,
 ): Promise<AdminToeicGroupRawPayload> {
-  return apiRequest(`/admin/tests/groups/${groupId}/raw`).then(
+  return apiRequest(`/admin/tests/groups/${groupId}/raw`, { token }).then(
     parseAdminToeicGroupRawPayload,
   );
 }
 
 export function patchAdminToeicGroupRaw(
+  token: string,
   groupId: number,
   input: AdminToeicGroupRawPatchInput,
 ): Promise<AdminToeicGroupRawPayload> {
   return apiRequest(`/admin/tests/groups/${groupId}/raw`, {
+    token,
     method: "PATCH",
     body: JSON.stringify(input),
     headers: {

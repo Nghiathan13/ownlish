@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import {
   getAdminToeicGroupRaw,
   patchAdminToeicGroupRaw,
@@ -78,7 +79,9 @@ export function useAdminGroupRawEditor({
     setError(null);
 
     try {
-      const payload = await getAdminToeicGroupRaw(groupId);
+      const payload = await runAuthenticatedRequest({
+        request: (token) => getAdminToeicGroupRaw(token, groupId),
+      });
       setBaseline(payload.group);
       setDraft(cloneAdminToeicGroupDraft(payload.group));
     } catch (loadError) {
@@ -116,10 +119,10 @@ export function useAdminGroupRawEditor({
     setError(null);
 
     try {
-      const payload = await patchAdminToeicGroupRaw(
-        groupId,
-        toPatchInput(draft),
-      );
+      const payload = await runAuthenticatedRequest({
+        request: (token) =>
+          patchAdminToeicGroupRaw(token, groupId, toPatchInput(draft)),
+      });
       setBaseline(payload.group);
       setDraft(cloneAdminToeicGroupDraft(payload.group));
       await onSaved();
