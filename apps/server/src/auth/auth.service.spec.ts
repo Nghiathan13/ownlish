@@ -1,4 +1,5 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
@@ -46,6 +47,7 @@ describe('AuthService', () => {
     passwordHash: 'hashed-password',
     googleSub: null,
     name: 'Test User',
+    role: UserRole.USER,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -106,6 +108,11 @@ describe('AuthService', () => {
       passwordHash: 'hashed-password',
       name: 'Test User',
     });
+    expect(jwtServiceMock.signAsync).toHaveBeenCalledWith({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
     expect(refreshSessionsServiceMock.create).toHaveBeenCalledTimes(1);
     const sessionCreateArgs = getMockCallArg<{
       userId: string;
@@ -121,6 +128,7 @@ describe('AuthService', () => {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -290,6 +298,7 @@ describe('AuthService', () => {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     });

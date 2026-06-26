@@ -11,12 +11,18 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id                  String                 @id @default(uuid())
   email               String                 @unique
   passwordHash        String?                @map("password_hash")
   googleSub           String?                @unique @map("google_sub")
   name                String?
+  role                UserRole               @default(USER)
   createdAt           DateTime               @default(now()) @map("created_at")
   updatedAt           DateTime               @updatedAt @map("updated_at")
   collections         WordCollection[]

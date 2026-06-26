@@ -1,4 +1,5 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { AuthRequest } from './types/auth.types';
@@ -48,6 +49,7 @@ describe('JwtAuthGuard', () => {
     jwtServiceMock.verifyAsync.mockResolvedValue({
       sub: 'user-id',
       email: 'test@example.com',
+      role: UserRole.USER,
     });
 
     const request = {
@@ -62,6 +64,26 @@ describe('JwtAuthGuard', () => {
     expect(request.user).toEqual({
       id: 'user-id',
       email: 'test@example.com',
+      role: UserRole.USER,
     });
+  });
+
+  it('throws unauthorized when role payload is invalid', async () => {
+    jwtServiceMock.verifyAsync.mockResolvedValue({
+      sub: 'user-id',
+      email: 'test@example.com',
+      role: 'SUPERADMIN',
+    });
+
+    const request = {
+      headers: {
+        authorization: 'Bearer valid-token',
+      },
+    } as Partial<AuthRequest>;
+    const context = createContext(request);
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
   });
 });

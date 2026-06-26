@@ -1,6 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { UserRole } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { env } from '../config/env';
 import { AuthController } from './auth.controller';
@@ -74,6 +75,7 @@ describe('AuthController', () => {
         id: 'user-id',
         email: dto.email,
         name: dto.name,
+        role: UserRole.USER,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       },
@@ -106,6 +108,7 @@ describe('AuthController', () => {
         id: 'user-id',
         email: dto.email,
         name: 'Test User',
+        role: UserRole.USER,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       },
@@ -137,6 +140,7 @@ describe('AuthController', () => {
         id: 'user-id',
         email: 'test@example.com',
         name: 'Test User',
+        role: UserRole.USER,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       },
@@ -168,6 +172,7 @@ describe('AuthController', () => {
         id: 'user-id',
         email: 'test@example.com',
         name: 'Test User',
+        role: UserRole.USER,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       },
@@ -200,6 +205,7 @@ describe('AuthController', () => {
         id: 'user-id',
         email: 'test@example.com',
         name: 'Test User',
+        role: UserRole.USER,
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         updatedAt: new Date('2026-01-01T00:00:00.000Z'),
       },
@@ -251,12 +257,14 @@ describe('AuthController', () => {
       user: {
         id: 'user-id',
         email: 'test@example.com',
+        role: UserRole.USER,
       },
     } as AuthRequest;
     const response = {
       id: 'user-id',
       email: 'test@example.com',
       name: 'Test User',
+      role: UserRole.USER,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     };

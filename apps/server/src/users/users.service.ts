@@ -1,3 +1,4 @@
+import { UserRole } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { WordCollectionKind } from '@prisma/client';
 import { DEFAULT_USER_COLLECTION_NAME } from '../collections/collections.constants';
@@ -17,6 +18,7 @@ type CreatedUserResult = Promise<{
   passwordHash: string | null;
   googleSub: string | null;
   name: string | null;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }>;

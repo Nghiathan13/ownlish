@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { UserRole } from '@prisma/client';
 
 export type AuthUser = {
   id: string;
@@ -6,11 +7,19 @@ export type AuthUser = {
   passwordHash: string | null;
   googleSub: string | null;
   name: string | null;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 };
 
-export type PublicUser = Omit<AuthUser, 'passwordHash' | 'googleSub'>;
+export type PublicUser = {
+  id: string;
+  email: string;
+  name: string | null;
+  role: UserRole;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export type AuthResponse = {
   accessToken: string;
@@ -21,11 +30,13 @@ export type AuthResponse = {
 export type JwtPayload = {
   sub: string;
   email: string;
+  role: UserRole;
 };
 
 export type AuthRequest = Request & {
   user: {
     id: string;
     email: string;
+    role: UserRole;
   };
 };

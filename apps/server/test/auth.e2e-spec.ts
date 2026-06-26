@@ -68,6 +68,7 @@ describe('AuthController (e2e)', () => {
     expect(registerBody.user).toMatchObject({
       email,
       name: 'Auth E2E',
+      role: 'USER',
     });
     expect(registerBody.user).not.toHaveProperty('passwordHash');
 
@@ -96,6 +97,7 @@ describe('AuthController (e2e)', () => {
         expect(meBody).toMatchObject({
           email,
           name: 'Auth E2E',
+          role: 'USER',
         });
         expect(meBody).not.toHaveProperty('passwordHash');
       });
