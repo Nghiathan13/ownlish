@@ -1,11 +1,12 @@
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
   DEFAULT_TOEIC_YEAR,
-  getTestsListPath,
   parseToeicYearParam,
 } from "@/features/tests/shared/constants/toeicYears";
 import { isToeicPartNumber } from "@/features/tests/shared/lib/toeicParts";
 import { isToeicSessionId } from "@/features/tests/shared/lib/toeicRunPaths";
+
+export type TestsOverviewTab = "mock_tests" | "part_practice";
 
 export function getPartPracticeRunPath(
   sessionId: string,
@@ -34,25 +35,30 @@ export function getPartPracticeRunApiPath(
 
 export function getTestsOverviewPath(options?: {
   year?: number;
-  tab?: "mock" | "practice";
+  tab?: TestsOverviewTab;
   part?: number;
 }) {
-  const params = new URLSearchParams();
+  const tab = options?.tab ?? "mock_tests";
 
-  if (options?.year != null) {
-    params.set("year", String(options.year));
+  if (tab === "part_practice") {
+    const params = new URLSearchParams({ tab: "part_practice" });
+
+    if (options?.part != null && isToeicPartNumber(options.part)) {
+      params.set("part", String(options.part));
+    }
+
+    return `/tests?${params.toString()}`;
   }
 
-  if (options?.tab === "practice") {
-    params.set("tab", "practice");
-  }
+  const year = parseToeicYearParam(
+    options?.year != null ? String(options.year) : null,
+  ) ?? DEFAULT_TOEIC_YEAR;
+  const params = new URLSearchParams({
+    tab: "mock_tests",
+    year: String(year),
+  });
 
-  if (options?.part != null && isToeicPartNumber(options.part)) {
-    params.set("part", String(options.part));
-  }
-
-  const query = params.toString();
-  return query ? `/tests?${query}` : "/tests";
+  return `/tests?${params.toString()}`;
 }
 
 export function parsePracticeOverviewPartParam(
@@ -68,27 +74,43 @@ export function parsePracticeOverviewPartParam(
 
 export function parseTestsOverviewTab(
   value: string | null | undefined,
-): "mock" | "practice" {
-  return value === "practice" ? "practice" : "mock";
+): TestsOverviewTab {
+  if (value === "part_practice" || value === "practice") {
+    return "part_practice";
+  }
+
+  return "mock_tests";
+}
+
+function buildCanonicalTestsOverviewPath(
+  searchParams: Pick<URLSearchParams, "get">,
+): string {
+  const tab = parseTestsOverviewTab(searchParams.get("tab"));
+
+  if (tab === "part_practice") {
+    const params = new URLSearchParams({ tab: "part_practice" });
+    const part = parsePracticeOverviewPartParam(searchParams.get("part"));
+
+    if (part != null) {
+      params.set("part", String(part));
+    }
+
+    return `/tests?${params.toString()}`;
+  }
+
+  const year = parseToeicYearParam(searchParams.get("year")) ?? DEFAULT_TOEIC_YEAR;
+
+  return getTestsOverviewPath({ tab: "mock_tests", year });
 }
 
 export function getTestsOverviewRedirectTarget(
-  searchParams: Pick<URLSearchParams, "get">,
+  searchParams: Pick<URLSearchParams, "get" | "toString">,
 ): string | null {
-  const tab = parseTestsOverviewTab(searchParams.get("tab"));
+  const canonical = buildCanonicalTestsOverviewPath(searchParams);
+  const query = searchParams.toString();
+  const current = query ? `/tests?${query}` : "/tests";
 
-  if (tab === "practice") {
-    return null;
-  }
-
-  const yearParam = searchParams.get("year");
-  const year = parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;
-
-  if (yearParam === String(year)) {
-    return null;
-  }
-
-  return getTestsListPath(year);
+  return current === canonical ? null : canonical;
 }
 
 const PART_PRACTICE_RUN_PATH =

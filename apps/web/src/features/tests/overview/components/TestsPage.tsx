@@ -9,6 +9,7 @@ import {
   TestsOverviewTabs,
   parseTestsOverviewTab,
 } from "@/features/tests/overview/components/TestsOverviewTabs";
+import type { TestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import {
   DEFAULT_TOEIC_YEAR,
   parseToeicYearParam,
@@ -22,12 +23,12 @@ function TestsPageContent({
   selectedTab,
 }: {
   selectedYear: ToeicYear;
-  selectedTab: "mock" | "practice";
+  selectedTab: TestsOverviewTab;
 }) {
   return (
     <PageShell>
       <TestsOverviewTabs selectedTab={selectedTab} selectedYear={selectedYear} />
-      {selectedTab === "practice" ? (
+      {selectedTab === "part_practice" ? (
         <PracticeTab />
       ) : (
         <MockTestsTab selectedYear={selectedYear} />

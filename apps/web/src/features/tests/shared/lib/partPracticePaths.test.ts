@@ -31,17 +31,19 @@ describe("partPracticePaths", () => {
     ).toBe(`/tests/part-practice/runs/${SESSION_ID}?mode=review_wrong`);
   });
 
-  it("builds tests overview paths with optional tab and part", () => {
-    expect(getTestsOverviewPath()).toBe("/tests");
-    expect(getTestsOverviewPath({ tab: "practice" })).toBe("/tests?tab=practice");
-    expect(getTestsOverviewPath({ tab: "practice", part: 4 })).toBe(
-      "/tests?tab=practice&part=4",
+  it("builds canonical tests overview paths", () => {
+    expect(getTestsOverviewPath()).toBe("/tests?tab=mock_tests&year=2026");
+    expect(getTestsOverviewPath({ tab: "part_practice" })).toBe(
+      "/tests?tab=part_practice",
     );
-    expect(getTestsOverviewPath({ year: 2024, tab: "practice" })).toBe(
-      "/tests?year=2024&tab=practice",
+    expect(getTestsOverviewPath({ tab: "part_practice", part: 4 })).toBe(
+      "/tests?tab=part_practice&part=4",
     );
-    expect(getTestsOverviewPath({ year: 2024, tab: "mock" })).toBe(
-      "/tests?year=2024",
+    expect(getTestsOverviewPath({ year: 2024, tab: "part_practice" })).toBe(
+      "/tests?tab=part_practice",
+    );
+    expect(getTestsOverviewPath({ year: 2024, tab: "mock_tests" })).toBe(
+      "/tests?tab=mock_tests&year=2024",
     );
   });
 
@@ -51,25 +53,45 @@ describe("partPracticePaths", () => {
     expect(parsePracticeOverviewPartParam("abc")).toBeNull();
   });
 
-  it("only normalizes year for mock tab overview URLs", () => {
-    expect(
-      getTestsOverviewRedirectTarget(new URLSearchParams("tab=practice")),
-    ).toBeNull();
-    expect(
-      getTestsOverviewRedirectTarget(new URLSearchParams("tab=practice&year=2024")),
-    ).toBeNull();
+  it("normalizes overview URLs to canonical tab params", () => {
     expect(getTestsOverviewRedirectTarget(new URLSearchParams())).toBe(
-      "/tests?year=2026",
+      "/tests?tab=mock_tests&year=2026",
     );
-    expect(getTestsOverviewRedirectTarget(new URLSearchParams("year=2024"))).toBeNull();
+    expect(
+      getTestsOverviewRedirectTarget(new URLSearchParams("tab=practice&part=4")),
+    ).toBe("/tests?tab=part_practice&part=4");
+    expect(
+      getTestsOverviewRedirectTarget(
+        new URLSearchParams("tab=part_practice&part=4"),
+      ),
+    ).toBeNull();
+    expect(
+      getTestsOverviewRedirectTarget(
+        new URLSearchParams("tab=mock_tests&year=2024"),
+      ),
+    ).toBeNull();
+    expect(
+      getTestsOverviewRedirectTarget(new URLSearchParams("tab=mock&year=2024")),
+    ).toBe("/tests?tab=mock_tests&year=2024");
+    expect(getTestsOverviewRedirectTarget(new URLSearchParams("year=2024"))).toBe(
+      "/tests?tab=mock_tests&year=2024",
+    );
+    expect(
+      getTestsOverviewRedirectTarget(
+        new URLSearchParams("tab=practice&year=2024"),
+      ),
+    ).toBe("/tests?tab=part_practice");
     expect(getTestsOverviewRedirectTarget(new URLSearchParams("year=abc"))).toBe(
-      "/tests?year=2026",
+      "/tests?tab=mock_tests&year=2026",
     );
   });
 
-  it("parses overview tab and run mode", () => {
-    expect(parseTestsOverviewTab("practice")).toBe("practice");
-    expect(parseTestsOverviewTab("mock")).toBe("mock");
+  it("parses overview tab and run mode with legacy aliases", () => {
+    expect(parseTestsOverviewTab("part_practice")).toBe("part_practice");
+    expect(parseTestsOverviewTab("practice")).toBe("part_practice");
+    expect(parseTestsOverviewTab("mock_tests")).toBe("mock_tests");
+    expect(parseTestsOverviewTab("mock")).toBe("mock_tests");
+    expect(parseTestsOverviewTab(null)).toBe("mock_tests");
     expect(parsePartPracticeRunMode("review_wrong")).toBe("review_wrong");
     expect(parsePartPracticeRunMode("practice")).toBe("practice");
   });

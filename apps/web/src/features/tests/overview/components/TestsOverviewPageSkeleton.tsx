@@ -5,12 +5,13 @@ import {
   DEFAULT_TOEIC_YEAR,
   type ToeicYear,
 } from "@/features/tests/shared/constants/toeicYears";
+import type { TestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import { SkeletonTabPills } from "@/shared/skeletons/SkeletonTabPills";
 import { Skeleton } from "@/shared/ui/Skeleton";
 import { PageShell } from "@/shared/ui/PageShell";
 
 type TestsOverviewPageSkeletonProps = {
-  selectedTab?: "mock" | "practice";
+  selectedTab?: TestsOverviewTab;
   selectedYear?: ToeicYear;
 };
 
@@ -47,9 +48,9 @@ export function TestsOverviewPageSkeleton({
         <TestsOverviewTabsSkeleton />
       )}
 
-      {selectedTab === "practice" ? (
+      {selectedTab === "part_practice" ? (
         <PracticeTabSkeleton />
-      ) : selectedTab === "mock" ? (
+      ) : selectedTab === "mock_tests" ? (
         <MockTestsTabSkeleton includeYearTabs />
       ) : (
         <TestsOverviewNeutralBodySkeleton />

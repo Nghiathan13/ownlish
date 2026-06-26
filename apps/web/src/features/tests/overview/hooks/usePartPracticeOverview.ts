@@ -56,7 +56,7 @@ export function usePartPracticeOverview() {
 
   const setSelectedPartNumber = (partNumber: number) => {
     setSelectedPartNumberState(partNumber);
-    router.replace(getTestsOverviewPath({ tab: "practice", part: partNumber }), {
+    router.replace(getTestsOverviewPath({ tab: "part_practice", part: partNumber }), {
       scroll: false,
     });
   };

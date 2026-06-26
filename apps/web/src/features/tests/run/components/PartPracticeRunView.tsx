@@ -60,7 +60,7 @@ export function PartPracticeRunView({
   });
   const partNumber = practice.partNumber;
   const practiceOverviewPath = getTestsOverviewPath({
-    tab: "practice",
+    tab: "part_practice",
     part: partNumber > 0 ? partNumber : undefined,
   });
   const selectedParts = useMemo(

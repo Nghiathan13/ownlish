@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { TestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import {
   getTestsOverviewPath,
   parseTestsOverviewTab,
@@ -13,7 +14,7 @@ import {
 
 type TestsOverviewTabsProps = {
   selectedYear: ToeicYear;
-  selectedTab: "mock" | "practice";
+  selectedTab: TestsOverviewTab;
 };
 
 export function TestsOverviewTabs({
@@ -23,28 +24,28 @@ export function TestsOverviewTabs({
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 px-4">
       <Link
-        aria-current={selectedTab === "mock" ? "page" : undefined}
+        aria-current={selectedTab === "mock_tests" ? "page" : undefined}
         className={
-          selectedTab === "mock"
+          selectedTab === "mock_tests"
             ? primaryTextButtonClassName()
             : secondaryTextButtonClassName()
         }
-        href={getTestsOverviewPath({ year: selectedYear, tab: "mock" })}
+        href={getTestsOverviewPath({ year: selectedYear, tab: "mock_tests" })}
         scroll={false}
       >
         Mock Tests
       </Link>
       <Link
-        aria-current={selectedTab === "practice" ? "page" : undefined}
+        aria-current={selectedTab === "part_practice" ? "page" : undefined}
         className={
-          selectedTab === "practice"
+          selectedTab === "part_practice"
             ? primaryTextButtonClassName()
             : secondaryTextButtonClassName()
         }
-        href={getTestsOverviewPath({ tab: "practice" })}
+        href={getTestsOverviewPath({ tab: "part_practice" })}
         scroll={false}
       >
-        Practice
+        Part Practice
       </Link>
     </div>
   );
