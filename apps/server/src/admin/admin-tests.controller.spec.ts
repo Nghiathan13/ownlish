@@ -7,11 +7,17 @@ import type { AuthRequest } from '../auth/types/auth.types';
 import { UsersService } from '../users/users.service';
 import { AdminTestsController } from './admin-tests.controller';
 import { AdminToeicGroupService } from './admin-toeic-group.service';
+import { AdminToeicTestService } from './admin-toeic-test.service';
 
 describe('AdminTestsController', () => {
-  const serviceMock = {
+  const groupServiceMock = {
     getRawGroup: jest.fn(),
     patchRawGroup: jest.fn(),
+  };
+
+  const testServiceMock = {
+    listTests: jest.fn(),
+    getRawTest: jest.fn(),
   };
 
   const usersServiceMock = {
@@ -26,7 +32,8 @@ describe('AdminTestsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminTestsController],
       providers: [
-        { provide: AdminToeicGroupService, useValue: serviceMock },
+        { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicTestService, useValue: testServiceMock },
         AdminGuard,
         { provide: UsersService, useValue: usersServiceMock },
       ],
@@ -49,13 +56,61 @@ describe('AdminTestsController', () => {
       id: 'admin-id',
       role: UserRole.ADMIN,
     });
-    serviceMock.getRawGroup.mockResolvedValue({ group: { id: 101 } });
+    groupServiceMock.getRawGroup.mockResolvedValue({ group: { id: 101 } });
 
     const controller = module.get(AdminTestsController);
     await expect(controller.getGroupRaw(101)).resolves.toEqual({
       group: { id: 101 },
     });
-    expect(serviceMock.getRawGroup).toHaveBeenCalledWith(101);
+    expect(groupServiceMock.getRawGroup).toHaveBeenCalledWith(101);
+  });
+
+  it('delegates listTests to AdminToeicTestService when admin', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AdminTestsController],
+      providers: [
+        { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicTestService, useValue: testServiceMock },
+        AdminGuard,
+        { provide: UsersService, useValue: usersServiceMock },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+
+    testServiceMock.listTests.mockResolvedValue({ items: [] });
+
+    const controller = module.get(AdminTestsController);
+    await expect(controller.listTests()).resolves.toEqual({ items: [] });
+    expect(testServiceMock.listTests).toHaveBeenCalledWith();
+  });
+
+  it('delegates getTestRaw to AdminToeicTestService when admin', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AdminTestsController],
+      providers: [
+        { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicTestService, useValue: testServiceMock },
+        AdminGuard,
+        { provide: UsersService, useValue: usersServiceMock },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+
+    testServiceMock.getRawTest.mockResolvedValue({
+      test: { id: 5, year: 2026, testNumber: 1 },
+      parts: [],
+    });
+
+    const controller = module.get(AdminTestsController);
+    await expect(controller.getTestRaw(5)).resolves.toEqual({
+      test: { id: 5, year: 2026, testNumber: 1 },
+      parts: [],
+    });
+    expect(testServiceMock.getRawTest).toHaveBeenCalledWith(5);
   });
 
   it('forbids non-admin users', async () => {
@@ -81,6 +136,6 @@ describe('AdminTestsController', () => {
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
-    expect(serviceMock.getRawGroup).not.toHaveBeenCalled();
+    expect(groupServiceMock.getRawGroup).not.toHaveBeenCalled();
   });
 });

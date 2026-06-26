@@ -32,5 +32,6 @@ import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
     PartPracticeService,
   ],
   controllers: [TestsController],
+  exports: [TestsStorageService],
 })
 export class TestsModule {}

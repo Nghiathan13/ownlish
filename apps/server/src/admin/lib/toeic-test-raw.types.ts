@@ -1,0 +1,63 @@
+export type AdminToeicTestPartSummary = {
+  partNumber: number;
+  groupCount: number;
+  questionCount: number;
+};
+
+export type AdminToeicTestListItem = {
+  id: number;
+  year: number;
+  testNumber: number;
+  parts: AdminToeicTestPartSummary[];
+};
+
+export type AdminToeicTestListResponse = {
+  items: AdminToeicTestListItem[];
+};
+
+export type AdminToeicTestRawQuestion = {
+  id: number;
+  questionNumber: number;
+  question: string | null;
+  questionVi: string | null;
+  questionType: string | null;
+  optionA: string | null;
+  optionB: string | null;
+  optionC: string | null;
+  optionD: string | null;
+  optionAVi: string | null;
+  optionBVi: string | null;
+  optionCVi: string | null;
+  optionDVi: string | null;
+  answerKey: 'A' | 'B' | 'C' | 'D' | null;
+  explanationVi: string | null;
+};
+
+export type AdminToeicTestRawGroup = {
+  id: number;
+  questionStart: number;
+  questionEnd: number;
+  groupType: string | null;
+  accent: string | null;
+  content: string | null;
+  contentVi: string | null;
+  audioUrl: string | null;
+  audioUrlExpiresAt: string | null;
+  imageUrl: string | null;
+  imageUrlExpiresAt: string | null;
+  questions: AdminToeicTestRawQuestion[];
+};
+
+export type AdminToeicTestRawPart = {
+  partNumber: number;
+  groups: AdminToeicTestRawGroup[];
+};
+
+export type AdminToeicTestRawResponse = {
+  test: {
+    id: number;
+    year: number;
+    testNumber: number;
+  };
+  parts: AdminToeicTestRawPart[];
+};
