@@ -12,6 +12,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { env } from '../config/env';
 import { AuthService } from './auth.service';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -74,6 +75,22 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<ClientAuthResponse> {
     const authResponse = await this.authService.login(dto);
+
+    return this.setRefreshCookie(response, authResponse);
+  }
+
+  @Post('google')
+  @Throttle({
+    default: {
+      limit: env.authRateLimit.limit,
+      ttl: env.authRateLimit.ttlMs,
+    },
+  })
+  async googleLogin(
+    @Body() dto: GoogleLoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ClientAuthResponse> {
+    const authResponse = await this.authService.googleLogin(dto);
 
     return this.setRefreshCookie(response, authResponse);
   }

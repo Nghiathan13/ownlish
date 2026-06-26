@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
+import { GoogleTokenService } from './google-token.service';
 import { RefreshSessionsService } from './refresh-sessions.service';
 import { getMockCallArg } from '../testing/jest-mock-call';
 
@@ -18,8 +19,10 @@ describe('AuthService', () => {
 
   const usersServiceMock = {
     findByEmail: jest.fn(),
+    findByGoogleSub: jest.fn(),
     findById: jest.fn(),
     create: jest.fn(),
+    linkGoogleSub: jest.fn(),
   };
 
   const refreshSessionsServiceMock = {
@@ -33,10 +36,15 @@ describe('AuthService', () => {
     signAsync: jest.fn(),
   };
 
+  const googleTokenServiceMock = {
+    verifyIdToken: jest.fn(),
+  };
+
   const user = {
     id: 'user-id',
     email: 'test@example.com',
     passwordHash: 'hashed-password',
+    googleSub: null,
     name: 'Test User',
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -59,6 +67,10 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: jwtServiceMock,
+        },
+        {
+          provide: GoogleTokenService,
+          useValue: googleTokenServiceMock,
         },
       ],
     }).compile();
@@ -179,6 +191,96 @@ describe('AuthService', () => {
         password: 'wrong-password',
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('throws unauthorized when password login is used for Google-only user', async () => {
+    usersServiceMock.findByEmail.mockResolvedValue({
+      ...user,
+      passwordHash: null,
+      googleSub: 'google-sub',
+    });
+
+    await expect(
+      service.login({
+        email: 'test@example.com',
+        password: 'password123',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(bcrypt.compare).not.toHaveBeenCalled();
+  });
+
+  it('creates a Google user and returns auth response', async () => {
+    const googleUser = {
+      ...user,
+      passwordHash: null,
+      googleSub: 'google-sub',
+      name: 'Google User',
+    };
+
+    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+      sub: 'google-sub',
+      email: 'test@example.com',
+      name: 'Google User',
+    });
+    usersServiceMock.findByGoogleSub.mockResolvedValue(null);
+    usersServiceMock.findByEmail.mockResolvedValue(null);
+    usersServiceMock.create.mockResolvedValue(googleUser);
+    jwtServiceMock.signAsync.mockResolvedValue('access-token');
+
+    const result = await service.googleLogin({ idToken: 'id-token' });
+
+    expect(usersServiceMock.create).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      googleSub: 'google-sub',
+      name: 'Google User',
+      passwordHash: null,
+    });
+    expect(result.accessToken).toBe('access-token');
+  });
+
+  it('links Google to an existing password account by email', async () => {
+    const linkedUser = {
+      ...user,
+      googleSub: 'google-sub',
+    };
+
+    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+      sub: 'google-sub',
+      email: 'test@example.com',
+      name: 'Google User',
+    });
+    usersServiceMock.findByGoogleSub.mockResolvedValue(null);
+    usersServiceMock.findByEmail.mockResolvedValue(user);
+    usersServiceMock.linkGoogleSub.mockResolvedValue(linkedUser);
+    jwtServiceMock.signAsync.mockResolvedValue('access-token');
+
+    const result = await service.googleLogin({ idToken: 'id-token' });
+
+    expect(usersServiceMock.linkGoogleSub).toHaveBeenCalledWith(
+      user.id,
+      'google-sub',
+      {
+        name: undefined,
+      },
+    );
+    expect(result.user.email).toBe('test@example.com');
+  });
+
+  it('throws conflict when email is linked to another Google account', async () => {
+    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+      sub: 'new-google-sub',
+      email: 'test@example.com',
+      name: 'Google User',
+    });
+    usersServiceMock.findByGoogleSub.mockResolvedValue(null);
+    usersServiceMock.findByEmail.mockResolvedValue({
+      ...user,
+      googleSub: 'existing-google-sub',
+    });
+
+    await expect(
+      service.googleLogin({ idToken: 'id-token' }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('returns the current public user', async () => {

@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { GoogleTokenService } from './google-token.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RefreshSessionsService } from './refresh-sessions.service';
 
@@ -27,7 +28,12 @@ import { RefreshSessionsService } from './refresh-sessions.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthGuard, RefreshSessionsService],
+  providers: [
+    AuthService,
+    GoogleTokenService,
+    JwtAuthGuard,
+    RefreshSessionsService,
+  ],
   exports: [JwtModule],
 })
 export class AuthModule {}

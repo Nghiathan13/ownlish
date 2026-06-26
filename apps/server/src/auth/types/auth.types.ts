@@ -3,13 +3,14 @@ import { Request } from 'express';
 export type AuthUser = {
   id: string;
   email: string;
-  passwordHash: string;
+  passwordHash: string | null;
+  googleSub: string | null;
   name: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
-export type PublicUser = Omit<AuthUser, 'passwordHash'>;
+export type PublicUser = Omit<AuthUser, 'passwordHash' | 'googleSub'>;
 
 export type AuthResponse = {
   accessToken: string;

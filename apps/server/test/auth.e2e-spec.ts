@@ -4,6 +4,7 @@ import type { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app/app.module';
+import { GoogleTokenService } from '../src/auth/google-token.service';
 import type { PublicUser } from '../src/auth/types/auth.types';
 import { getRefreshCookie, type ClientAuthBody } from './helpers/e2e-auth';
 import { getE2ePrisma } from './helpers/e2e-prisma';
@@ -15,11 +16,19 @@ describe('AuthController (e2e)', () => {
 
   const email = 'auth-e2e@example.com';
   const password = 'test123456';
+  const googleSub = 'google-sub-auth-e2e';
+
+  const googleTokenServiceMock = {
+    verifyIdToken: jest.fn(),
+  };
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(GoogleTokenService)
+      .useValue(googleTokenServiceMock)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     prisma = getE2ePrisma(app);
@@ -28,6 +37,7 @@ describe('AuthController (e2e)', () => {
       where: { email },
     });
 
+    jest.clearAllMocks();
     await app.init();
   });
 
@@ -165,6 +175,69 @@ describe('AuthController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/auth/me')
       .set('Authorization', 'Bearer invalid-token')
+      .expect(401);
+  });
+
+  it('logs in with Google, links an existing password account, and refreshes', async () => {
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email,
+        password,
+        name: 'Auth E2E',
+      })
+      .expect(201);
+
+    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+      sub: googleSub,
+      email,
+      name: 'Google Linked',
+    });
+
+    const agent = request.agent(app.getHttpServer());
+    const googleResponse = await agent
+      .post('/auth/google')
+      .send({ idToken: 'mock-google-id-token' })
+      .expect(201);
+
+    const googleBody = parseResponseBody<ClientAuthBody>(googleResponse);
+    expect(googleBody.user).toMatchObject({
+      email,
+      name: 'Auth E2E',
+    });
+    expect(getRefreshCookie(googleResponse)).toEqual(
+      expect.stringContaining('engvocab.refreshToken='),
+    );
+
+    const linkedUser = await prisma.user.findUnique({
+      where: { email },
+    });
+    expect(linkedUser?.googleSub).toBe(googleSub);
+    expect(linkedUser?.passwordHash).not.toBeNull();
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email, password })
+      .expect(201);
+
+    await agent.post('/auth/refresh').expect(201);
+  });
+
+  it('rejects password login for Google-only users', async () => {
+    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+      sub: googleSub,
+      email,
+      name: 'Google Only',
+    });
+
+    await request(app.getHttpServer())
+      .post('/auth/google')
+      .send({ idToken: 'mock-google-id-token' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email, password })
       .expect(401);
   });
 });

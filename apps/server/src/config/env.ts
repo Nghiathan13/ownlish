@@ -80,6 +80,7 @@ const secureRefreshTokenCookie = optionalBooleanEnv(
 
 export const env = {
   databaseUrl: requiredEnv('DATABASE_URL'),
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   jwtSecret: requiredSecretEnv('JWT_SECRET', 32),
   port: process.env.PORT ?? '3001',
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',

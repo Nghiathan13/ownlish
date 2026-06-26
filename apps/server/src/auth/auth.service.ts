@@ -9,8 +9,10 @@ import { createHash, randomBytes } from 'node:crypto';
 import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { GoogleTokenService } from './google-token.service';
 import { RefreshSessionsService } from './refresh-sessions.service';
 import type { AuthResponse, AuthUser, PublicUser } from './types/auth.types';
 
@@ -24,6 +26,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly refreshSessionsService: RefreshSessionsService,
+    private readonly googleTokenService: GoogleTokenService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -52,6 +55,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
     const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.passwordHash,
@@ -60,6 +67,44 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
+
+    return this.createAuthResponse(user);
+  }
+
+  async googleLogin(dto: GoogleLoginDto): Promise<AuthResponse> {
+    const verified = await this.googleTokenService.verifyIdToken(dto.idToken);
+    const email = verified.email.trim().toLowerCase();
+
+    const userByGoogleSub = await this.usersService.findByGoogleSub(
+      verified.sub,
+    );
+    if (userByGoogleSub) {
+      return this.createAuthResponse(userByGoogleSub);
+    }
+
+    const userByEmail = await this.usersService.findByEmail(email);
+    if (userByEmail) {
+      if (userByEmail.googleSub && userByEmail.googleSub !== verified.sub) {
+        throw new ConflictException(
+          'Email is linked to another Google account',
+        );
+      }
+
+      const linkedUser = userByEmail.googleSub
+        ? userByEmail
+        : await this.usersService.linkGoogleSub(userByEmail.id, verified.sub, {
+            name: userByEmail.name ? undefined : (verified.name ?? undefined),
+          });
+
+      return this.createAuthResponse(linkedUser);
+    }
+
+    const user = await this.usersService.create({
+      email,
+      googleSub: verified.sub,
+      name: verified.name ?? undefined,
+      passwordHash: null,
+    });
 
     return this.createAuthResponse(user);
   }

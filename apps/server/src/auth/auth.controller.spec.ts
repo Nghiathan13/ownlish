@@ -14,6 +14,7 @@ describe('AuthController', () => {
   const authServiceMock = {
     register: jest.fn(),
     login: jest.fn(),
+    googleLogin: jest.fn(),
     refresh: jest.fn(),
     logout: jest.fn(),
     me: jest.fn(),
@@ -118,6 +119,37 @@ describe('AuthController', () => {
       user: response.user,
     });
     expect(authServiceMock.login).toHaveBeenCalledWith(dto);
+    expect(responseMock.cookie).toHaveBeenCalledWith(
+      env.refreshTokenCookie.name,
+      response.refreshToken,
+      expect.objectContaining({ httpOnly: true, path: '/auth' }),
+    );
+  });
+
+  it('delegates google login to AuthService', async () => {
+    const dto = {
+      idToken: 'google-id-token',
+    };
+    const response = {
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      user: {
+        id: 'user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    };
+    authServiceMock.googleLogin.mockResolvedValue(response);
+
+    await expect(
+      controller.googleLogin(dto, responseMock as Response),
+    ).resolves.toEqual({
+      accessToken: response.accessToken,
+      user: response.user,
+    });
+    expect(authServiceMock.googleLogin).toHaveBeenCalledWith(dto);
     expect(responseMock.cookie).toHaveBeenCalledWith(
       env.refreshTokenCookie.name,
       response.refreshToken,

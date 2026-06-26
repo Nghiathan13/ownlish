@@ -5,7 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 type CreateUserInput = {
   email: string;
-  passwordHash: string;
+  passwordHash?: string | null;
+  googleSub?: string | null;
   name?: string;
 };
 
@@ -13,7 +14,8 @@ type UserResult = ReturnType<PrismaService['user']['findUnique']>;
 type CreatedUserResult = Promise<{
   id: string;
   email: string;
-  passwordHash: string;
+  passwordHash: string | null;
+  googleSub: string | null;
   name: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -29,6 +31,12 @@ export class UsersService {
     });
   }
 
+  findByGoogleSub(googleSub: string): UserResult {
+    return this.prisma.user.findUnique({
+      where: { googleSub },
+    });
+  }
+
   findById(id: string): UserResult {
     return this.prisma.user.findUnique({
       where: { id },
@@ -38,7 +46,12 @@ export class UsersService {
   create(input: CreateUserInput): CreatedUserResult {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
-        data: input,
+        data: {
+          email: input.email,
+          passwordHash: input.passwordHash ?? null,
+          googleSub: input.googleSub ?? null,
+          name: input.name,
+        },
       });
 
       await tx.wordCollection.create({
@@ -52,6 +65,20 @@ export class UsersService {
       });
 
       return user;
+    });
+  }
+
+  linkGoogleSub(
+    userId: string,
+    googleSub: string,
+    options?: { name?: string | null },
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        googleSub,
+        ...(options?.name ? { name: options.name } : {}),
+      },
     });
   }
 }
