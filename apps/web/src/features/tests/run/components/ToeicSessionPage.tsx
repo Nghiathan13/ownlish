@@ -14,6 +14,7 @@ import {
   isToeicSessionId,
   parseToeicRunPartsParam,
 } from "@/features/tests/shared/lib/toeicRunPaths";
+import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -29,24 +30,20 @@ type ToeicSessionPageProps = {
 
 type SessionCopy = {
   invalidRoute: string;
-  loading: string;
   selectParts: string;
 };
 
 const SESSION_COPY: Record<ToeicSessionMode, SessionCopy> = {
   practice: {
     invalidRoute: "Invalid practice route.",
-    loading: "Loading practice...",
     selectParts: "Select at least one test part.",
   },
   review_wrong: {
     invalidRoute: "Invalid review wrong route.",
-    loading: "Loading review wrong...",
     selectParts: "Select at least one part to review wrong questions.",
   },
   mock_test: {
     invalidRoute: "Invalid mock test route.",
-    loading: "Loading mock test...",
     selectParts: "Select at least one test part.",
   },
 };
@@ -121,15 +118,7 @@ export function ToeicSessionPage({ params, mode }: ToeicSessionPageProps) {
 
   return (
     <RequireAuth>
-      <Suspense
-        fallback={
-          <PageShell>
-            <Panel>
-              <p className="text-muted-foreground">{copy.loading}</p>
-            </Panel>
-          </PageShell>
-        }
-      >
+      <Suspense fallback={<TestRunLoadingSkeleton variant={mode} />}>
         <ToeicSessionPageContent mode={mode} sessionId={resolved.sessionId} />
       </Suspense>
     </RequireAuth>

@@ -4,6 +4,7 @@ import { Suspense, use } from "react";
 import { useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { PartPracticeRunView } from "@/features/tests/run/components/PartPracticeRunView";
+import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import {
   isPartPracticeSessionId,
   parsePartPracticeRunMode,
@@ -45,15 +46,7 @@ export function PartPracticeSessionPage({ params }: PartPracticeSessionPageProps
 
   return (
     <RequireAuth>
-      <Suspense
-        fallback={
-          <PageShell>
-            <Panel>
-              <p className="text-muted-foreground">Loading part practice...</p>
-            </Panel>
-          </PageShell>
-        }
-      >
+      <Suspense fallback={<TestRunLoadingSkeleton variant="part_practice" />}>
         <PartPracticeSessionPageContent sessionId={resolved.sessionId} />
       </Suspense>
     </RequireAuth>

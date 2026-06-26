@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { PracticeStepContent } from "@/features/tests/run/components/PracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
+import {
+  TestRunLoadingSkeleton,
+  type TestRunLoadingVariant,
+} from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { usePracticeSession } from "@/features/tests/run/hooks/usePracticeSession";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import {
@@ -45,6 +49,12 @@ type PracticeRunViewProps = {
 
 function getPracticeStorageKey(sessionId: string) {
   return `practice-${sessionId}`;
+}
+
+function getPracticeRunLoadingVariant(
+  practiceMode: PracticeMode,
+): TestRunLoadingVariant {
+  return practiceMode === "review_wrong" ? "review_wrong" : "practice";
 }
 
 export function PracticeRunView({
@@ -217,15 +227,9 @@ export function PracticeRunView({
     />
   );
 
-  if (
-    practice.isStarting
-  ) {
+  if (practice.isStarting) {
     return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Loading practice...</p>
-        </Panel>
-      </PageShell>
+      <TestRunLoadingSkeleton variant={getPracticeRunLoadingVariant(practiceMode)} />
     );
   }
 
@@ -266,11 +270,7 @@ export function PracticeRunView({
 
   if (!currentStep || !practice.sessionId || testId == null) {
     return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Loading practice...</p>
-        </Panel>
-      </PageShell>
+      <TestRunLoadingSkeleton variant={getPracticeRunLoadingVariant(practiceMode)} />
     );
   }
 

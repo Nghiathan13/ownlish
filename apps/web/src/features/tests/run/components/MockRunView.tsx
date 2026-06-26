@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MockGroupScreen } from "@/features/tests/run/components/MockGroupScreen";
+import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { useMockTestRun } from "@/features/tests/run/hooks/useMockTestRun";
 import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
@@ -337,13 +338,7 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
   });
 
   if (mock.isLoading) {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Loading mock test...</p>
-        </Panel>
-      </PageShell>
-    );
+    return <TestRunLoadingSkeleton variant="mock_test" />;
   }
 
   if (mock.loadError) {

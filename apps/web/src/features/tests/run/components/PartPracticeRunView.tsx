@@ -8,6 +8,7 @@ import {
 } from "@/features/tests/run/components/PartPracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
+import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { usePartPracticeSession } from "@/features/tests/run/hooks/usePartPracticeSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
@@ -210,13 +211,7 @@ export function PartPracticeRunView({
   );
 
   if (practice.isStarting) {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Loading part practice...</p>
-        </Panel>
-      </PageShell>
-    );
+    return <TestRunLoadingSkeleton variant="part_practice" />;
   }
 
   if (practice.startError) {
@@ -262,13 +257,7 @@ export function PartPracticeRunView({
   }
 
   if (!currentStep || !practice.sessionId || partNumber <= 0) {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Loading part practice...</p>
-        </Panel>
-      </PageShell>
-    );
+    return <TestRunLoadingSkeleton variant="part_practice" />;
   }
 
   return (
