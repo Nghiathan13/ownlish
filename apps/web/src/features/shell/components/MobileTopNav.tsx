@@ -7,8 +7,9 @@ import {
   isAuthenticatedStatus,
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
+import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import {
-  getAppNavLinksForUser,
+  APP_NAV_LINKS,
   getAppNavLinkClass,
 } from "@/features/shell/lib/appNavLinks";
 import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
@@ -44,7 +45,7 @@ export function MobileTopNav() {
           <ShellNavSkeleton variant="mobile" />
         ) : isAuth ? (
           <div className="order-3 flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap sm:order-none sm:w-auto sm:gap-6 sm:overflow-visible">
-            {getAppNavLinksForUser(user).map((link) => (
+            {APP_NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -64,6 +65,11 @@ export function MobileTopNav() {
               <span className="hidden text-xs text-muted-foreground sm:inline">
                 {user?.email}
               </span>
+              {isAdminUser(user) ? (
+                <Link href="/admin" className={secondaryTextButtonClassName()}>
+                  Admin
+                </Link>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {

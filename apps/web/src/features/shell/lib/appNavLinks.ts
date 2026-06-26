@@ -1,12 +1,8 @@
 import type { ComponentType, SVGProps } from "react";
-import type { AuthUser } from "@/entities/auth/types";
-import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPath,
 } from "@/features/tests/shared/constants/toeicYears";
-import { AdminNavFillIcon } from "@/shared/ui/icons/AdminNavFillIcon";
-import { AdminNavIcon } from "@/shared/ui/icons/AdminNavIcon";
 import { CollectionsNavFillIcon } from "@/shared/ui/icons/CollectionsNavFillIcon";
 import { CollectionsNavIcon } from "@/shared/ui/icons/CollectionsNavIcon";
 import { DashboardNavFillIcon } from "@/shared/ui/icons/DashboardNavFillIcon";
@@ -55,20 +51,8 @@ export const APP_NAV_LINKS: AppNavLink[] = [
   },
 ];
 
-export const ADMIN_NAV_LINK: AppNavLink = {
-  href: "/admin",
-  label: "Admin",
-  activeMatch: "/admin",
-  icon: AdminNavIcon,
-  activeIcon: AdminNavFillIcon,
-};
-
-export function getAppNavLinksForUser(user: AuthUser | null): AppNavLink[] {
-  if (!isAdminUser(user)) {
-    return APP_NAV_LINKS;
-  }
-
-  return [...APP_NAV_LINKS, ADMIN_NAV_LINK];
+export function getAppNavLinksForUser(): AppNavLink[] {
+  return APP_NAV_LINKS;
 }
 
 export function isAppNavLinkActive(

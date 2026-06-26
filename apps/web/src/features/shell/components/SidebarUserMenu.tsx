@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "@/entities/auth/types";
+import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import { classNames } from "@/shared/lib/classNames";
 import { AccountIcon } from "@/shared/ui/icons/AccountIcon";
+import { AdminNavIcon } from "@/shared/ui/icons/AdminNavIcon";
 import { LogoutIcon } from "@/shared/ui/icons/LogoutIcon";
 
 type SidebarUserMenuProps = {
@@ -18,6 +21,14 @@ function getUserDisplayName(user: AuthUser) {
   return trimmedName || user.email;
 }
 
+function AdminBadge() {
+  return (
+    <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      Admin
+    </span>
+  );
+}
+
 export function SidebarUserMenu({
   collapsed,
   onLogout,
@@ -26,6 +37,7 @@ export function SidebarUserMenu({
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const displayName = getUserDisplayName(user);
+  const isAdmin = isAdminUser(user);
 
   useEffect(() => {
     if (!open) {
@@ -72,8 +84,9 @@ export function SidebarUserMenu({
       >
         <AccountIcon className="size-6 shrink-0" />
         {!collapsed ? (
-          <span className="min-w-0 truncate text-base font-normal">
-            {displayName}
+          <span className="flex min-w-0 items-center gap-2 truncate text-base font-normal">
+            <span className="truncate">{displayName}</span>
+            {isAdmin ? <AdminBadge /> : null}
           </span>
         ) : null}
       </button>
@@ -89,14 +102,29 @@ export function SidebarUserMenu({
           <div className="flex items-center gap-2 p-2">
             <AccountIcon className="size-6 shrink-0" />
             <div className="min-w-0">
-              <p className="truncate text-base font-normal text-foreground">
-                {displayName}
+              <p className="flex min-w-0 items-center gap-2 truncate text-base font-normal text-foreground">
+                <span className="truncate">{displayName}</span>
+                {isAdmin ? <AdminBadge /> : null}
               </p>
               <p className="truncate text-sm text-muted-foreground">
                 {user.email}
               </p>
             </div>
           </div>
+
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-muted"
+            >
+              <AdminNavIcon className="size-6 shrink-0" />
+              Admin
+            </Link>
+          ) : null}
 
           <button
             type="button"
