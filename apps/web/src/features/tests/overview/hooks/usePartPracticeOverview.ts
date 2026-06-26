@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
@@ -21,8 +22,16 @@ export function usePartPracticeOverview() {
   const searchParams = useSearchParams();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const selectedPartNumber =
+  const partFromUrl =
     parsePracticeOverviewPartParam(searchParams.get("part")) ?? 1;
+  const [selectedPartNumber, setSelectedPartNumberState] =
+    useState(partFromUrl);
+  const [prevPartFromUrl, setPrevPartFromUrl] = useState(partFromUrl);
+
+  if (partFromUrl !== prevPartFromUrl) {
+    setPrevPartFromUrl(partFromUrl);
+    setSelectedPartNumberState(partFromUrl);
+  }
 
   const { summaries, isLoading, error, reload } = usePartPracticeOverviewList({
     isAuthenticated,
@@ -44,6 +53,7 @@ export function usePartPracticeOverview() {
     null;
 
   const setSelectedPartNumber = (partNumber: number) => {
+    setSelectedPartNumberState(partNumber);
     router.replace(getTestsOverviewPath({ tab: "practice", part: partNumber }), {
       scroll: false,
     });

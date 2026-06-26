@@ -93,7 +93,7 @@ export function PartPracticeCard({
           className={iconTextButtonClassName(
             "flex-1 border-foreground bg-foreground text-background",
           )}
-          disabled={isClearingHistory || isStarting || total === 0}
+          disabled={isClearingHistory || isStarting}
           onClick={onPractice}
           type="button"
         >
