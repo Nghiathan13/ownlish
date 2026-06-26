@@ -11,6 +11,8 @@ import {
   APP_NAV_LINKS,
   getAppNavLinkClass,
 } from "@/features/shell/lib/appNavLinks";
+import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
+import { ShellNavSkeleton } from "@/features/shell/components/ShellNavSkeleton";
 import { classNames } from "@/shared/lib/classNames";
 import {
   primaryTextButtonClassName,
@@ -22,6 +24,7 @@ export function MobileTopNav() {
   const pathname = usePathname();
   const { logout, status, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
+  const isLoading = isLoadingStatus(status);
 
   return (
     <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-background/80 backdrop-blur-md">
@@ -37,7 +40,9 @@ export function MobileTopNav() {
           </Link>
         </div>
 
-        {isAuth ? (
+        {isLoading ? (
+          <ShellNavSkeleton variant="mobile" />
+        ) : isAuth ? (
           <div className="order-3 flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap sm:order-none sm:w-auto sm:gap-6 sm:overflow-visible">
             {APP_NAV_LINKS.map((link) => (
               <Link
@@ -52,7 +57,9 @@ export function MobileTopNav() {
         ) : null}
 
         <div className="order-2 flex shrink-0 items-center gap-3 sm:order-none sm:gap-4">
-          {isLoadingStatus(status) ? null : isAuth ? (
+          {isLoading ? (
+            <ShellAuthSlotSkeleton variant="mobile" />
+          ) : isAuth ? (
             <>
               <span className="hidden text-xs text-muted-foreground sm:inline">
                 {user?.email}

@@ -2,8 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { Panel } from "@/shared/ui/Panel";
-import { PageShell } from "@/shared/ui/PageShell";
+import { SessionLoadingSkeleton } from "@/features/auth/components/SessionLoadingSkeleton";
 import { useAuthSession, isLoadingStatus } from "../hooks/useAuthSession";
 
 type RequireAuthProps = {
@@ -23,13 +22,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
   }, [pathname, router, status]);
 
   if (isLoadingStatus(status)) {
-    return (
-      <PageShell>
-        <Panel>
-          <p className="text-muted-foreground">Loading session...</p>
-        </Panel>
-      </PageShell>
-    );
+    return <SessionLoadingSkeleton />;
   }
 
   if (status === "guest") {

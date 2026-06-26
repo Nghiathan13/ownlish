@@ -8,6 +8,8 @@ import {
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
+import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
+import { ShellNavSkeleton } from "@/features/shell/components/ShellNavSkeleton";
 import { useSidebarCollapsed } from "@/features/shell/hooks/useSidebarCollapsed";
 import {
   APP_NAV_LINKS,
@@ -26,6 +28,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { logout, status, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
+  const isLoading = isLoadingStatus(status);
   const { collapsed, setCollapsed } = useSidebarCollapsed();
 
   return (
@@ -79,7 +82,9 @@ export function AppSidebar() {
             </div>
           )}
 
-          {isAuth ? (
+          {isLoading ? (
+            <ShellNavSkeleton collapsed={collapsed} />
+          ) : isAuth ? (
             <nav className="flex flex-col gap-1">
               {APP_NAV_LINKS.map((link) => {
                 const isActive = isAppNavLinkActive(pathname, link);
@@ -114,7 +119,9 @@ export function AppSidebar() {
         </div>
 
         <div className="mt-auto border-t border-border p-2">
-          {isLoadingStatus(status) ? null : isAuth && user ? (
+          {isLoading ? (
+            <ShellAuthSlotSkeleton collapsed={collapsed} />
+          ) : isAuth && user ? (
             <SidebarUserMenu
               collapsed={collapsed}
               user={user}
