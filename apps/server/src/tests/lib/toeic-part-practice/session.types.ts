@@ -1,36 +1,36 @@
 import {
   ToeicRunGroupStatus,
-  ToeicRunMode,
   ToeicRunQuestionStatus,
   type ToeicQuestion,
 } from '@prisma/client';
+import type { ToeicPartPracticeSessionMode } from './session.response.types';
 
-export type ToeicSessionResponseMode =
-  | 'practice'
-  | 'review_wrong'
-  | 'mock_test';
-
-export type ToeicRunQuestionForResponse = {
+export type PartPracticeRunQuestionForResponse = {
   toeicQuestionId: number;
   selectedKey: string | null;
   status: ToeicRunQuestionStatus | null;
   toeicQuestion: { answerKey: string | null };
 };
 
-export type ToeicRunQuestionWithQuestionForResponse = {
+export type PartPracticeRunQuestionWithQuestionForResponse = {
   toeicQuestionId: number;
   selectedKey: string | null;
   status: ToeicRunQuestionStatus | null;
   toeicQuestion: ToeicQuestion;
 };
 
-export type ToeicRunGroupForResponse = {
+export type PartPracticeRunGroupForResponse = {
   toeicQuestionGroupId: number;
+  toeicTestId: number;
   partNumber: number;
   questionStart: number;
   questionEnd: number;
   sortOrder: number;
   status: ToeicRunGroupStatus | null;
+  test: {
+    year: number;
+    testNumber: number;
+  };
   toeicQuestionGroup: {
     id: number;
     groupType: string | null;
@@ -40,23 +40,19 @@ export type ToeicRunGroupForResponse = {
     audioStoragePath: string | null;
     imageStoragePath: string | null;
   };
-  questions: ToeicRunQuestionWithQuestionForResponse[];
+  questions: PartPracticeRunQuestionWithQuestionForResponse[];
 };
 
-export type ToeicRunForResponse = {
+export type PartPracticeRunForResponse = {
   id: string;
-  mode: ToeicRunMode;
-  toeicTestId: number;
-  selectedParts: number[];
+  partNumber: number;
   totalRight: number;
   totalWrong: number;
-  completedAt: Date | null;
-  questions: ToeicRunQuestionForResponse[];
-  groups: ToeicRunGroupForResponse[];
+  questions: PartPracticeRunQuestionForResponse[];
+  groups: PartPracticeRunGroupForResponse[];
 };
 
-export type FormatToeicSessionResponseOptions = {
-  year: number;
-  mode?: ToeicSessionResponseMode;
-  groupFilter?: (group: ToeicRunGroupForResponse) => boolean;
+export type FormatPartPracticeSessionResponseOptions = {
+  mode?: ToeicPartPracticeSessionMode;
+  groupFilter?: (group: PartPracticeRunGroupForResponse) => boolean;
 };

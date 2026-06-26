@@ -197,11 +197,7 @@ export class ToeicRunRepository {
     testId: number,
     selectedParts: number[],
   ): Promise<ToeicQuestionGroupForRun[]> {
-    return this.listQuestionGroupsForParts(
-      this.prisma,
-      testId,
-      selectedParts,
-    );
+    return this.listQuestionGroupsForParts(this.prisma, testId, selectedParts);
   }
 
   findQuestionWithTestPart(toeicQuestionId: number) {

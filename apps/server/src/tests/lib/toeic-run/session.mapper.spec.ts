@@ -7,10 +7,7 @@ import {
   buildToeicQuestion,
   buildToeicRunForResponse,
 } from '../../testing/toeic-run.fixtures';
-import {
-  ToeicRunGroupStatus,
-  ToeicRunQuestionStatus,
-} from '@prisma/client';
+import { ToeicRunGroupStatus, ToeicRunQuestionStatus } from '@prisma/client';
 
 describe('ToeicRunSessionMapper', () => {
   let mapper: ToeicRunSessionMapper;

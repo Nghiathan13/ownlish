@@ -299,10 +299,8 @@ export class ToeicRunService {
       throw new NotFoundException('Test not found.');
     }
 
-    const deletedSessionCount = await this.runRepository.resetPracticeRunAnswers(
-      userId,
-      testId,
-    );
+    const deletedSessionCount =
+      await this.runRepository.resetPracticeRunAnswers(userId, testId);
     return { deletedSessionCount };
   }
 }

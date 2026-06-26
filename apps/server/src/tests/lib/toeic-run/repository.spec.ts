@@ -48,9 +48,9 @@ describe('ToeicRunRepository', () => {
       repository.assertTestAndPartsExist(1, [1, 2]),
     ).resolves.toBeUndefined();
 
-    await expect(
-      repository.assertTestAndPartsExist(1, [1, 3]),
-    ).rejects.toThrow('Test part not found.');
+    await expect(repository.assertTestAndPartsExist(1, [1, 3])).rejects.toThrow(
+      'Test part not found.',
+    );
   });
 
   it('clears practice answer history without deleting runs', async () => {

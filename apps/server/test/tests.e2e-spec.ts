@@ -22,7 +22,6 @@ import type {
   ToeicSessionE2eBody,
   ToeicTestListE2eBody,
 } from './helpers/e2e-toeic-types';
-import { E2E_TOEIC_YEAR } from './helpers/e2e-toeic-types';
 import { parseResponseBody } from './helpers/parse-response-body';
 
 describe('TestsController (e2e)', () => {
@@ -95,7 +94,8 @@ describe('TestsController (e2e)', () => {
       })
       .expect(201);
 
-    const createdSession = parseResponseBody<ToeicSessionE2eBody>(createResponse);
+    const createdSession =
+      parseResponseBody<ToeicSessionE2eBody>(createResponse);
     expect(createdSession).toMatchObject({
       mode: 'practice',
       testId: fixture.testId,
@@ -131,9 +131,8 @@ describe('TestsController (e2e)', () => {
       })
       .expect(201);
 
-    const gradedAnswer = parseResponseBody<SubmitToeicAnswerE2eBody>(
-      answerResponse,
-    );
+    const gradedAnswer =
+      parseResponseBody<SubmitToeicAnswerE2eBody>(answerResponse);
     expect(gradedAnswer).toMatchObject({
       graded: true,
       isCorrect: false,
@@ -152,7 +151,8 @@ describe('TestsController (e2e)', () => {
       })
       .expect(201);
 
-    const resumedSession = parseResponseBody<ToeicSessionE2eBody>(resumeResponse);
+    const resumedSession =
+      parseResponseBody<ToeicSessionE2eBody>(resumeResponse);
     expect(resumedSession.sessionId).toBe(createdSession.sessionId);
     expect(resumedSession.wrongCount).toBe(1);
   });
@@ -185,9 +185,8 @@ describe('TestsController (e2e)', () => {
       { parts: '1,2' },
     ).expect(200);
 
-    const expandedSession = parseResponseBody<ToeicSessionE2eBody>(
-      expandedResponse,
-    );
+    const expandedSession =
+      parseResponseBody<ToeicSessionE2eBody>(expandedResponse);
     expect(expandedSession.partNumbers).toEqual([1, 2]);
     expect(expandedSession.totalQuestions).toBe(2);
     expect(expandedSession.groups.map((group) => group.partNumber)).toEqual([
@@ -228,9 +227,8 @@ describe('TestsController (e2e)', () => {
       { parts: '1', mode: 'review_wrong' },
     ).expect(200);
 
-    const reviewWrongSession = parseResponseBody<ToeicSessionE2eBody>(
-      reviewWrongResponse,
-    );
+    const reviewWrongSession =
+      parseResponseBody<ToeicSessionE2eBody>(reviewWrongResponse);
     expect(reviewWrongSession).toMatchObject({
       sessionId: session.sessionId,
       mode: 'review_wrong',
@@ -272,9 +270,11 @@ describe('TestsController (e2e)', () => {
       })
       .expect(201);
 
-    expect(parseResponseBody<SubmitToeicAnswerE2eBody>(answerResponse)).toEqual({
-      graded: false,
-    });
+    expect(parseResponseBody<SubmitToeicAnswerE2eBody>(answerResponse)).toEqual(
+      {
+        graded: false,
+      },
+    );
 
     const finishResponse = await finishToeicRunRequest(
       app.getHttpServer(),
@@ -282,7 +282,8 @@ describe('TestsController (e2e)', () => {
       session.sessionId,
     ).expect(200);
 
-    const finishedSession = parseResponseBody<ToeicSessionE2eBody>(finishResponse);
+    const finishedSession =
+      parseResponseBody<ToeicSessionE2eBody>(finishResponse);
     expect(finishedSession).toMatchObject({
       sessionId: session.sessionId,
       mode: 'mock_test',
@@ -356,7 +357,9 @@ describe('TestsController (e2e)', () => {
       .set(withBearerAuth(accessToken))
       .expect(200);
 
-    expect(parseResponseBody<{ deletedSessionCount: number }>(clearResponse)).toEqual({
+    expect(
+      parseResponseBody<{ deletedSessionCount: number }>(clearResponse),
+    ).toEqual({
       deletedSessionCount: 1,
     });
 
@@ -400,7 +403,8 @@ describe('TestsController (e2e)', () => {
       })
       .expect(201);
 
-    const practiceSession = parseResponseBody<ToeicSessionE2eBody>(practiceResponse);
+    const practiceSession =
+      parseResponseBody<ToeicSessionE2eBody>(practiceResponse);
 
     await submitToeicAnswerRequest(
       app.getHttpServer(),
@@ -432,7 +436,9 @@ describe('TestsController (e2e)', () => {
       .set(withBearerAuth(accessToken))
       .expect(200);
 
-    expect(parseResponseBody<{ deletedSessionCount: number }>(clearResponse)).toEqual({
+    expect(
+      parseResponseBody<{ deletedSessionCount: number }>(clearResponse),
+    ).toEqual({
       deletedSessionCount: 1,
     });
 

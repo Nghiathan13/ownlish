@@ -48,12 +48,12 @@ describe('session.formatters', () => {
 
   describe('formatToeicQuestionCorrectness', () => {
     it('maps graded question statuses to booleans', () => {
-      expect(
-        formatToeicQuestionCorrectness(ToeicRunQuestionStatus.RIGHT),
-      ).toBe(true);
-      expect(
-        formatToeicQuestionCorrectness(ToeicRunQuestionStatus.WRONG),
-      ).toBe(false);
+      expect(formatToeicQuestionCorrectness(ToeicRunQuestionStatus.RIGHT)).toBe(
+        true,
+      );
+      expect(formatToeicQuestionCorrectness(ToeicRunQuestionStatus.WRONG)).toBe(
+        false,
+      );
       expect(formatToeicQuestionCorrectness(null)).toBeNull();
     });
   });
@@ -96,7 +96,8 @@ describe('session.formatters', () => {
               toeicQuestionId: 1,
               selectedKey: 'A',
               status: ToeicRunQuestionStatus.WRONG,
-              toeicQuestion: {} as ToeicRunGroupForResponse['questions'][number]['toeicQuestion'],
+              toeicQuestion:
+                {} as ToeicRunGroupForResponse['questions'][number]['toeicQuestion'],
             },
           ],
         }),
@@ -112,7 +113,8 @@ describe('session.formatters', () => {
               toeicQuestionId: 1,
               selectedKey: 'A',
               status: ToeicRunQuestionStatus.RIGHT,
-              toeicQuestion: {} as ToeicRunGroupForResponse['questions'][number]['toeicQuestion'],
+              toeicQuestion:
+                {} as ToeicRunGroupForResponse['questions'][number]['toeicQuestion'],
             },
           ],
         }),

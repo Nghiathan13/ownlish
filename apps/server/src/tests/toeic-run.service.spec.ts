@@ -10,6 +10,7 @@ import { ToeicRunGrader } from './lib/toeic-run/grader';
 import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
 import { ToeicRunRepository } from './lib/toeic-run/repository';
 import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
+import type { FormatToeicSessionResponseOptions } from './lib/toeic-run/session.types';
 import {
   buildToeicRunForResponse,
   buildPhotoRunGroup,
@@ -68,7 +69,9 @@ describe('ToeicRunService', () => {
 
     runMaterializerMock.findLatestPracticeRun.mockResolvedValue(existingRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.createRun('user-id', { testId: 1, partNumbers: [1, 2] }),
@@ -78,11 +81,9 @@ describe('ToeicRunService', () => {
       'user-id',
       1,
     );
-    expect(runMaterializerMock.ensurePracticeRunIncludesParts).toHaveBeenCalledWith(
-      'run-id',
-      1,
-      [1, 2],
-    );
+    expect(
+      runMaterializerMock.ensurePracticeRunIncludesParts,
+    ).toHaveBeenCalledWith('run-id', 1, [1, 2]);
     expect(runMaterializerMock.createRunWithQuestions).not.toHaveBeenCalled();
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       refreshedRun,
@@ -97,7 +98,9 @@ describe('ToeicRunService', () => {
 
     runMaterializerMock.findLatestPracticeRun.mockResolvedValue(null);
     runMaterializerMock.createRunWithQuestions.mockResolvedValue(createdRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.createRun('user-id', { testId: 1, partNumbers: [1] }),
@@ -125,7 +128,9 @@ describe('ToeicRunService', () => {
 
     runMaterializerMock.findLatestPracticeRun.mockResolvedValue(existingRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.createRun('user-id', {
@@ -145,12 +150,14 @@ describe('ToeicRunService', () => {
         groupFilter: expect.any(Function) as (group: unknown) => boolean,
       },
     );
-    expect(
-      getMockCallArg<Parameters<typeof sessionMapperMock.formatSessionResponse>>(
+    const reviewFormatOptions =
+      getMockCallArg<FormatToeicSessionResponseOptions>(
         sessionMapperMock.formatSessionResponse,
         0,
         2,
-      ).groupFilter?.(
+      );
+    expect(
+      reviewFormatOptions.groupFilter?.(
         buildPhotoRunGroup({ status: ToeicRunGroupStatus.WRONG }),
       ),
     ).toBe(true);
@@ -167,7 +174,9 @@ describe('ToeicRunService', () => {
 
     runMaterializerMock.findLatestPracticeRun.mockResolvedValue(null);
     runMaterializerMock.createRunWithQuestions.mockResolvedValue(createdRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.createRun('user-id', {
@@ -206,7 +215,9 @@ describe('ToeicRunService', () => {
     };
 
     runMaterializerMock.createRunWithQuestions.mockResolvedValue(createdRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.createRun('user-id', {
@@ -261,7 +272,9 @@ describe('ToeicRunService', () => {
       completedAt: null,
     });
     runMaterializerMock.findRunForResponse.mockResolvedValue(finishedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(service.finishRun('user-id', 'mock-run-id')).resolves.toBe(
       formattedResponse,
@@ -332,13 +345,17 @@ describe('ToeicRunService', () => {
 
     runRepositoryMock.findOwnedRunMeta.mockResolvedValue(loadedRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.getRun('user-id', 'practice-run-id', { parts: '1' }),
     ).resolves.toBe(formattedResponse);
 
-    expect(runMaterializerMock.ensurePracticeRunIncludesParts).not.toHaveBeenCalled();
+    expect(
+      runMaterializerMock.ensurePracticeRunIncludesParts,
+    ).not.toHaveBeenCalled();
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       refreshedRun,
       [1],
@@ -365,7 +382,9 @@ describe('ToeicRunService', () => {
 
     runRepositoryMock.findOwnedRunMeta.mockResolvedValue(loadedRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.expandRunParts('user-id', 'practice-run-id', {
@@ -373,11 +392,9 @@ describe('ToeicRunService', () => {
       }),
     ).resolves.toBe(formattedResponse);
 
-    expect(runMaterializerMock.ensurePracticeRunIncludesParts).toHaveBeenCalledWith(
-      'practice-run-id',
-      1,
-      [1, 2],
-    );
+    expect(
+      runMaterializerMock.ensurePracticeRunIncludesParts,
+    ).toHaveBeenCalledWith('practice-run-id', 1, [1, 2]);
     expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
       refreshedRun,
       [1, 2],
@@ -399,7 +416,9 @@ describe('ToeicRunService', () => {
       'Only practice runs can be expanded with additional parts.',
     );
 
-    expect(runMaterializerMock.ensurePracticeRunIncludesParts).not.toHaveBeenCalled();
+    expect(
+      runMaterializerMock.ensurePracticeRunIncludesParts,
+    ).not.toHaveBeenCalled();
   });
 
   it('getRun returns review wrong view over the shared practice session', async () => {
@@ -430,7 +449,9 @@ describe('ToeicRunService', () => {
 
     runRepositoryMock.findOwnedRunMeta.mockResolvedValue(loadedRun);
     runMaterializerMock.findRunForResponse.mockResolvedValue(refreshedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(formattedResponse);
+    sessionMapperMock.formatSessionResponse.mockResolvedValue(
+      formattedResponse,
+    );
 
     await expect(
       service.getRun('user-id', 'practice-run-id', {
@@ -448,12 +469,14 @@ describe('ToeicRunService', () => {
         groupFilter: expect.any(Function) as (group: unknown) => boolean,
       },
     );
-    expect(
-      getMockCallArg<Parameters<typeof sessionMapperMock.formatSessionResponse>>(
+    const reviewFormatOptions =
+      getMockCallArg<FormatToeicSessionResponseOptions>(
         sessionMapperMock.formatSessionResponse,
         0,
         2,
-      ).groupFilter?.(
+      );
+    expect(
+      reviewFormatOptions.groupFilter?.(
         buildPhotoRunGroup({ status: ToeicRunGroupStatus.WRONG }),
       ),
     ).toBe(true);

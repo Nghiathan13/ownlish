@@ -61,7 +61,9 @@ export class ToeicRunMaterializer {
         testId,
         selectedParts,
       );
-      const newGroups = groups.filter((group) => !existingGroupIds.has(group.id));
+      const newGroups = groups.filter(
+        (group) => !existingGroupIds.has(group.id),
+      );
 
       await this.attachQuestionGroupsToRun(
         tx,

@@ -39,7 +39,9 @@ export function createToeicTestsPrismaMock() {
   };
 }
 
-export type ToeicTestsPrismaMock = ReturnType<typeof createToeicTestsPrismaMock>;
+export type ToeicTestsPrismaMock = ReturnType<
+  typeof createToeicTestsPrismaMock
+>;
 
 export function useToeicTestsTransaction(prismaMock: ToeicTestsPrismaMock) {
   prismaMock.$transaction.mockImplementation(

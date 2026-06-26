@@ -12,7 +12,9 @@ import type {
   ToeicSessionQuestionStatusResponse,
 } from './session.response.types';
 
-export function formatToeicRunMode(mode: ToeicRunMode): ToeicSessionResponseMode {
+export function formatToeicRunMode(
+  mode: ToeicRunMode,
+): ToeicSessionResponseMode {
   if (mode === ToeicRunMode.MOCK_TEST) {
     return 'mock_test';
   }

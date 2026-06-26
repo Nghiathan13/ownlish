@@ -16,7 +16,10 @@ export function withBearerAuth(accessToken: string) {
 
 export function buildToeicGetRunPath(
   sessionId: string,
-  params: { parts?: string; mode?: 'practice' | 'review_wrong' | 'mock_test' } = {},
+  params: {
+    parts?: string;
+    mode?: 'practice' | 'review_wrong' | 'mock_test';
+  } = {},
 ) {
   const searchParams = new URLSearchParams();
 
@@ -34,10 +37,7 @@ export function buildToeicGetRunPath(
     : `/tests/runs/${sessionId}`;
 }
 
-export async function cleanupE2eToeicData(
-  prisma: PrismaClient,
-  email: string,
-) {
+export async function cleanupE2eToeicData(prisma: PrismaClient, email: string) {
   await prisma.user.deleteMany({
     where: { email },
   });
@@ -49,7 +49,9 @@ export async function cleanupE2eToeicData(
   });
 }
 
-export async function seedE2eToeicTest(prisma: PrismaClient): Promise<E2eToeicFixture> {
+export async function seedE2eToeicTest(
+  prisma: PrismaClient,
+): Promise<E2eToeicFixture> {
   await prisma.toeicTest.deleteMany({
     where: {
       year: E2E_TOEIC_YEAR,
@@ -145,16 +147,17 @@ export function createToeicRunsRequest(
   server: SupertestServer,
   accessToken: string,
 ) {
-  return request(server)
-    .post('/tests/runs')
-    .set(withBearerAuth(accessToken));
+  return request(server).post('/tests/runs').set(withBearerAuth(accessToken));
 }
 
 export function getToeicRunRequest(
   server: SupertestServer,
   accessToken: string,
   sessionId: string,
-  params: { parts?: string; mode?: 'practice' | 'review_wrong' | 'mock_test' } = {},
+  params: {
+    parts?: string;
+    mode?: 'practice' | 'review_wrong' | 'mock_test';
+  } = {},
 ) {
   return request(server)
     .get(buildToeicGetRunPath(sessionId, params))
