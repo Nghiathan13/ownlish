@@ -10,7 +10,7 @@ import {
 } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
 import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
 
-const group: AdminToeicTestRawGroup = {
+const part3Group: AdminToeicTestRawGroup = {
   id: 101,
   questionStart: 32,
   questionEnd: 34,
@@ -77,11 +77,34 @@ const group: AdminToeicTestRawGroup = {
   ],
 };
 
+const part1Group: AdminToeicTestRawGroup = {
+  ...part3Group,
+  id: 201,
+  questionStart: 1,
+  questionEnd: 1,
+  groupType: null,
+  content: null,
+  contentVi: null,
+  questions: [part3Group.questions[0]!],
+};
+
+const part5Group: AdminToeicTestRawGroup = {
+  ...part3Group,
+  id: 301,
+  questionStart: 101,
+  questionEnd: 101,
+  groupType: null,
+  accent: null,
+  content: null,
+  contentVi: null,
+  questions: [part3Group.questions[0]!],
+};
+
 describe("adminGroupRawEditDocument", () => {
-  it("omits read-only fields from serialized JSON", () => {
-    const state = createEditorStateFromGroup(group);
+  it("omits read-only and part-hidden fields from serialized JSON for part 3", () => {
+    const state = createEditorStateFromGroup(part3Group);
     const document = JSON.parse(
-      serializeAdminGroupRawEditDocument(state),
+      serializeAdminGroupRawEditDocument(state, 3),
     ) as Record<string, unknown>;
 
     expect(document).not.toHaveProperty("groupId");
@@ -92,13 +115,48 @@ describe("adminGroupRawEditDocument", () => {
     for (const question of questions) {
       expect(question).not.toHaveProperty("id");
       expect(question).not.toHaveProperty("questionNumber");
+      expect(question).not.toHaveProperty("questionType");
+      expect(question).not.toHaveProperty("explanationVi");
     }
   });
 
+  it("omits part 1 group and question fields hidden in form edit", () => {
+    const state = createEditorStateFromGroup(part1Group);
+    const document = JSON.parse(
+      serializeAdminGroupRawEditDocument(state, 1),
+    ) as Record<string, unknown>;
+
+    expect(document).not.toHaveProperty("groupType");
+    expect(document).not.toHaveProperty("content");
+    expect(document).not.toHaveProperty("contentVi");
+    expect(document).toHaveProperty("accent");
+
+    const question = (document.questions as Array<Record<string, unknown>>)[0]!;
+    expect(question).not.toHaveProperty("question");
+    expect(question).not.toHaveProperty("questionVi");
+    expect(question).not.toHaveProperty("questionType");
+    expect(question).not.toHaveProperty("explanationVi");
+    expect(question).toHaveProperty("optionA");
+    expect(question).toHaveProperty("answerKey");
+  });
+
+  it("omits all group fields for part 5", () => {
+    const state = createEditorStateFromGroup(part5Group);
+    const document = JSON.parse(
+      serializeAdminGroupRawEditDocument(state, 5),
+    ) as Record<string, unknown>;
+
+    expect(document).not.toHaveProperty("groupType");
+    expect(document).not.toHaveProperty("accent");
+    expect(document).not.toHaveProperty("content");
+    expect(document).not.toHaveProperty("contentVi");
+    expect(document).toHaveProperty("questions");
+  });
+
   it("round-trips serialize and parse without changing draft", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
-    const parsed = parseAdminGroupRawEditDocument(json, state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
+    const parsed = parseAdminGroupRawEditDocument(json, state, 3);
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) {
@@ -112,14 +170,18 @@ describe("adminGroupRawEditDocument", () => {
   });
 
   it("applies content and question edits from parsed JSON", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     document.content = "Updated passage";
     const questions = document.questions as Array<Record<string, unknown>>;
     questions[1]!.optionB = "Updated B";
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) {
@@ -141,12 +203,16 @@ describe("adminGroupRawEditDocument", () => {
   });
 
   it("normalizes empty strings to null", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     document.contentVi = "   ";
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) {
@@ -157,19 +223,23 @@ describe("adminGroupRawEditDocument", () => {
   });
 
   it("rejects invalid JSON", () => {
-    const state = createEditorStateFromGroup(group);
-    const parsed = parseAdminGroupRawEditDocument("{", state);
+    const state = createEditorStateFromGroup(part3Group);
+    const parsed = parseAdminGroupRawEditDocument("{", state, 3);
 
     expect(parsed).toEqual({ ok: false, error: "Invalid JSON syntax." });
   });
 
   it("rejects read-only top-level fields", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     document.groupId = 101;
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed).toEqual({
       ok: false,
@@ -177,28 +247,37 @@ describe("adminGroupRawEditDocument", () => {
     });
   });
 
-  it("rejects read-only question fields", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+  it("rejects part-hidden question fields", () => {
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     const questions = document.questions as Array<Record<string, unknown>>;
-    questions[0]!.id = 320;
+    questions[0]!.explanationVi = "Hidden in part 3";
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed).toEqual({
       ok: false,
-      error: "Read-only fields must not be included in questions[0]: id",
+      error:
+        "Fields not editable in this part must not be included in questions[0]: explanationVi",
     });
   });
 
   it("rejects missing questions", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     document.questions = [];
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed).toEqual({
       ok: false,
@@ -207,13 +286,17 @@ describe("adminGroupRawEditDocument", () => {
   });
 
   it("rejects invalid answerKey", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     const questions = document.questions as Array<Record<string, unknown>>;
     questions[0]!.answerKey = "E";
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed).toEqual({
       ok: false,
@@ -222,12 +305,16 @@ describe("adminGroupRawEditDocument", () => {
   });
 
   it("rejects unknown top-level keys", () => {
-    const state = createEditorStateFromGroup(group);
-    const json = serializeAdminGroupRawEditDocument(state);
+    const state = createEditorStateFromGroup(part3Group);
+    const json = serializeAdminGroupRawEditDocument(state, 3);
     const document = JSON.parse(json) as Record<string, unknown>;
     document.audioUrl = "https://example.com/audio.mp3";
 
-    const parsed = parseAdminGroupRawEditDocument(JSON.stringify(document), state);
+    const parsed = parseAdminGroupRawEditDocument(
+      JSON.stringify(document),
+      state,
+      3,
+    );
 
     expect(parsed).toEqual({
       ok: false,

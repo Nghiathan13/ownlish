@@ -8,10 +8,18 @@ import {
   normalizeEditorNullableString,
   type AdminGroupEditorState,
 } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
+import {
+  getVisibleAdminToeicGroupEditorFields,
+  getVisibleAdminToeicQuestionEditorFields,
+  isAdminToeicGroupEditorFieldVisible,
+  isAdminToeicQuestionEditorFieldVisible,
+  type AdminToeicGroupEditorField,
+  type AdminToeicQuestionEditorField,
+} from "@/features/admin/toeic/detail/lib/adminToeicEditorVisibility";
 
-export type AdminGroupRawEditQuestionDocument = AdminToeicQuestionFields;
+export type AdminGroupRawEditQuestionDocument = Partial<AdminToeicQuestionFields>;
 
-export type AdminGroupRawEditDocument = AdminToeicGroupFields & {
+export type AdminGroupRawEditDocument = Partial<AdminToeicGroupFields> & {
   questions: AdminGroupRawEditQuestionDocument[];
 };
 
@@ -23,20 +31,12 @@ const READ_ONLY_TOP_LEVEL_KEYS = new Set([
 
 const READ_ONLY_QUESTION_KEYS = new Set(["id", "questionNumber"]);
 
-const DOCUMENT_TOP_LEVEL_KEYS = new Set([
-  "groupType",
-  "accent",
-  "content",
-  "contentVi",
-  "questions",
-]);
-
 const GROUP_FIELD_KEYS = [
   "groupType",
   "accent",
   "content",
   "contentVi",
-] as const satisfies ReadonlyArray<keyof AdminToeicGroupFields>;
+] as const satisfies ReadonlyArray<AdminToeicGroupEditorField>;
 
 const QUESTION_STRING_FIELD_KEYS = [
   "question",
@@ -51,12 +51,9 @@ const QUESTION_STRING_FIELD_KEYS = [
   "optionCVi",
   "optionDVi",
   "explanationVi",
-] as const satisfies ReadonlyArray<keyof AdminToeicQuestionFields>;
-
-const QUESTION_TOP_LEVEL_KEYS = new Set<string>([
-  ...QUESTION_STRING_FIELD_KEYS,
-  "answerKey",
-]);
+] as const satisfies ReadonlyArray<
+  Exclude<AdminToeicQuestionEditorField, "answerKey">
+>;
 
 type ParseError = { error: string };
 
@@ -98,6 +95,48 @@ function isParseError<T>(value: T | ParseError): value is ParseError {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
+function getAllowedTopLevelKeys(partNumber: number) {
+  return new Set<string>([
+    "questions",
+    ...getVisibleAdminToeicGroupEditorFields(partNumber),
+  ]);
+}
+
+function getAllowedQuestionKeys(partNumber: number) {
+  return new Set<string>(
+    getVisibleAdminToeicQuestionEditorFields(partNumber).map(String),
+  );
+}
+
+function findHiddenTopLevelKeys(
+  parsed: Record<string, unknown>,
+  partNumber: number,
+) {
+  return GROUP_FIELD_KEYS.filter(
+    (key) =>
+      key in parsed &&
+      !isAdminToeicGroupEditorFieldVisible(partNumber, key),
+  );
+}
+
+function isEditableQuestionField(key: string): key is AdminToeicQuestionEditorField {
+  return (
+    (QUESTION_STRING_FIELD_KEYS as readonly string[]).includes(key) ||
+    key === "answerKey"
+  );
+}
+
+function findHiddenQuestionKeys(
+  rawQuestion: Record<string, unknown>,
+  partNumber: number,
+) {
+  return Object.keys(rawQuestion).filter(
+    (key): key is AdminToeicQuestionEditorField =>
+      isEditableQuestionField(key) &&
+      !isAdminToeicQuestionEditorFieldVisible(partNumber, key),
+  );
+}
+
 function findReadOnlyTopLevelKeys(parsed: Record<string, unknown>) {
   return Object.keys(parsed).filter((key) => READ_ONLY_TOP_LEVEL_KEYS.has(key));
 }
@@ -108,16 +147,32 @@ function findReadOnlyQuestionKeys(rawQuestion: Record<string, unknown>) {
   );
 }
 
+function serializeQuestionDraft(
+  draft: AdminToeicQuestionFields,
+  partNumber: number,
+) {
+  const question: AdminGroupRawEditQuestionDocument = {};
+
+  for (const field of getVisibleAdminToeicQuestionEditorFields(partNumber)) {
+    question[field] = draft[field];
+  }
+
+  return question;
+}
+
 export function serializeAdminGroupRawEditDocument(
   state: AdminGroupEditorState,
+  partNumber: number,
 ): string {
   const doc: AdminGroupRawEditDocument = {
-    groupType: state.draftGroup.groupType,
-    accent: state.draftGroup.accent,
-    content: state.draftGroup.content,
-    contentVi: state.draftGroup.contentVi,
-    questions: state.questions.map((question) => ({ ...question.draft })),
+    questions: state.questions.map((question) =>
+      serializeQuestionDraft(question.draft, partNumber),
+    ),
   };
+
+  for (const field of getVisibleAdminToeicGroupEditorFields(partNumber)) {
+    doc[field] = state.draftGroup[field];
+  }
 
   return JSON.stringify(doc, null, 2);
 }
@@ -129,6 +184,7 @@ export type ParseAdminGroupRawEditDocumentResult =
 export function parseAdminGroupRawEditDocument(
   text: string,
   currentState: AdminGroupEditorState,
+  partNumber: number,
 ): ParseAdminGroupRawEditDocumentResult {
   let parsed: unknown;
 
@@ -150,8 +206,17 @@ export function parseAdminGroupRawEditDocument(
     };
   }
 
+  const hiddenTopLevelKeys = findHiddenTopLevelKeys(parsed, partNumber);
+  if (hiddenTopLevelKeys.length > 0) {
+    return {
+      ok: false,
+      error: `Fields not editable in this part must not be included: ${hiddenTopLevelKeys.join(", ")}`,
+    };
+  }
+
+  const allowedTopLevelKeys = getAllowedTopLevelKeys(partNumber);
   const unknownTopLevelKeys = Object.keys(parsed).filter(
-    (key) => !DOCUMENT_TOP_LEVEL_KEYS.has(key),
+    (key) => !allowedTopLevelKeys.has(key),
   );
 
   if (unknownTopLevelKeys.length > 0) {
@@ -173,8 +238,11 @@ export function parseAdminGroupRawEditDocument(
   }
 
   const nextState = cloneEditorState(currentState);
+  const visibleGroupFields = getVisibleAdminToeicGroupEditorFields(partNumber);
+  const visibleQuestionFields =
+    getVisibleAdminToeicQuestionEditorFields(partNumber);
 
-  for (const key of GROUP_FIELD_KEYS) {
+  for (const key of visibleGroupFields) {
     if (!(key in parsed)) {
       return { ok: false, error: `Missing field: ${key}` };
     }
@@ -203,8 +271,17 @@ export function parseAdminGroupRawEditDocument(
       };
     }
 
+    const hiddenQuestionKeys = findHiddenQuestionKeys(rawQuestion, partNumber);
+    if (hiddenQuestionKeys.length > 0) {
+      return {
+        ok: false,
+        error: `Fields not editable in this part must not be included in ${path}: ${hiddenQuestionKeys.join(", ")}`,
+      };
+    }
+
+    const allowedQuestionKeys = getAllowedQuestionKeys(partNumber);
     const unknownQuestionKeys = Object.keys(rawQuestion).filter(
-      (key) => !QUESTION_TOP_LEVEL_KEYS.has(key),
+      (key) => !allowedQuestionKeys.has(key),
     );
 
     if (unknownQuestionKeys.length > 0) {
@@ -219,32 +296,38 @@ export function parseAdminGroupRawEditDocument(
       return { ok: false, error: `${path} is out of range.` };
     }
 
-    for (const key of QUESTION_STRING_FIELD_KEYS) {
+    for (const key of visibleQuestionFields) {
+      if (key === "answerKey") {
+        if (!("answerKey" in rawQuestion)) {
+          return { ok: false, error: `Missing field: ${path}.answerKey` };
+        }
+
+        const parsedAnswerKey = parseAnswerKey(
+          rawQuestion.answerKey,
+          `${path}.answerKey`,
+        );
+        if (isParseError(parsedAnswerKey)) {
+          return { ok: false, error: parsedAnswerKey.error };
+        }
+
+        questionEntry.draft.answerKey = parsedAnswerKey;
+        continue;
+      }
+
       if (!(key in rawQuestion)) {
         return { ok: false, error: `Missing field: ${path}.${key}` };
       }
 
-      const parsedValue = parseNullableString(rawQuestion[key], `${path}.${key}`);
+      const parsedValue = parseNullableString(
+        rawQuestion[key],
+        `${path}.${key}`,
+      );
       if (isParseError(parsedValue)) {
         return { ok: false, error: parsedValue.error };
       }
 
       questionEntry.draft[key] = parsedValue;
     }
-
-    if (!("answerKey" in rawQuestion)) {
-      return { ok: false, error: `Missing field: ${path}.answerKey` };
-    }
-
-    const parsedAnswerKey = parseAnswerKey(
-      rawQuestion.answerKey,
-      `${path}.answerKey`,
-    );
-    if (isParseError(parsedAnswerKey)) {
-      return { ok: false, error: parsedAnswerKey.error };
-    }
-
-    questionEntry.draft.answerKey = parsedAnswerKey;
   }
 
   return { ok: true, state: nextState };

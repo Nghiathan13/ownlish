@@ -13,6 +13,22 @@ const ALL_GROUP_FIELDS = [
   "contentVi",
 ] as const satisfies ReadonlyArray<AdminToeicGroupEditorField>;
 
+const ALL_QUESTION_FIELDS = [
+  "question",
+  "questionVi",
+  "questionType",
+  "optionA",
+  "optionB",
+  "optionC",
+  "optionD",
+  "optionAVi",
+  "optionBVi",
+  "optionCVi",
+  "optionDVi",
+  "answerKey",
+  "explanationVi",
+] as const satisfies ReadonlyArray<AdminToeicQuestionEditorField>;
+
 const HIDDEN_GROUP_FIELDS_BY_PART: Record<
   number,
   ReadonlyArray<AdminToeicGroupEditorField>
@@ -49,4 +65,16 @@ export function isAdminToeicQuestionEditorFieldVisible(
   field: AdminToeicQuestionEditorField,
 ) {
   return !HIDDEN_QUESTION_FIELDS_BY_PART[partNumber]?.includes(field);
+}
+
+export function getVisibleAdminToeicGroupEditorFields(partNumber: number) {
+  return ALL_GROUP_FIELDS.filter((field) =>
+    isAdminToeicGroupEditorFieldVisible(partNumber, field),
+  );
+}
+
+export function getVisibleAdminToeicQuestionEditorFields(partNumber: number) {
+  return ALL_QUESTION_FIELDS.filter((field) =>
+    isAdminToeicQuestionEditorFieldVisible(partNumber, field),
+  );
 }
