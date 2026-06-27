@@ -16,10 +16,13 @@ import type { AdminToeicRunStep } from "@/features/admin/toeic/detail/lib/adminT
 import { getAdminStepQuestions } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
 import {
+  iconOnlyButtonClassName,
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
   textButtonClassName,
 } from "@/shared/ui/button";
+import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type AdminToeicGroupEditingContentProps = {
   editor: ReturnType<typeof useAdminGroupEditor>;
@@ -269,18 +272,92 @@ export function AdminToeicGroupEditingContent({
     </div>
   ) : null;
 
+  const pendingAudioActions = hasPendingAudioUpload ? (
+    <div className="flex justify-end gap-2">
+      <button
+        className={secondaryTextButtonClassName()}
+        disabled={editor.isUploadingAudio}
+        onClick={clearPendingAudioUpload}
+        type="button"
+      >
+        Cancel
+      </button>
+      <button
+        className={primaryTextButtonClassName()}
+        disabled={editor.isUploadingAudio}
+        onClick={handleSavePendingAudio}
+        type="button"
+      >
+        {editor.isUploadingAudio ? "Saving…" : "Save"}
+      </button>
+    </div>
+  ) : null;
+
+  const pendingImageActions = hasPendingImageUpload ? (
+    <div className="flex justify-end gap-2">
+      <button
+        className={secondaryTextButtonClassName()}
+        disabled={editor.isUploadingImage}
+        onClick={clearPendingImageUpload}
+        type="button"
+      >
+        Cancel
+      </button>
+      <button
+        className={primaryTextButtonClassName()}
+        disabled={editor.isUploadingImage}
+        onClick={handleSavePendingImage}
+        type="button"
+      >
+        {editor.isUploadingImage ? "Saving…" : "Save"}
+      </button>
+    </div>
+  ) : null;
+
+  const deleteAudioSlot = canDeleteAudio ? (
+    <div className="flex justify-end">
+      <button
+        aria-label="Delete audio"
+        className={iconOnlyButtonClassName(
+          "border border-border bg-background",
+          statusColorClasses.danger.text,
+          statusColorClasses.danger.backgroundHover,
+        )}
+        onClick={() => setIsDeleteAudioConfirmOpen(true)}
+        type="button"
+      >
+        <DeleteIcon />
+      </button>
+    </div>
+  ) : null;
+
+  const deleteImageSlot = canDeleteImage ? (
+    <div className="flex justify-end">
+      <button
+        aria-label="Delete image"
+        className={iconOnlyButtonClassName(
+          "border border-border bg-background",
+          statusColorClasses.danger.text,
+          statusColorClasses.danger.backgroundHover,
+        )}
+        onClick={() => setIsDeleteImageConfirmOpen(true)}
+        type="button"
+      >
+        <DeleteIcon />
+      </button>
+    </div>
+  ) : null;
+
   const mediaPreview = (
     <AdminToeicMediaPreview
+      aboveAudioSlot={groupMayHaveAudio ? deleteAudioSlot : undefined}
+      afterAudioPlayerSlot={groupMayHaveAudio ? pendingAudioActions : undefined}
       afterAudioSlot={groupMayHaveImage ? uploadImageSlot : undefined}
+      afterImageSlot={groupMayHaveImage ? pendingImageActions : undefined}
       audioUrl={group.audioUrl}
       beforeAudioSlot={groupMayHaveAudio ? uploadAudioSlot : undefined}
+      beforeImageSlot={groupMayHaveImage ? deleteImageSlot : undefined}
       imageUrl={group.imageUrl}
-      onRequestDeleteAudio={
-        canDeleteAudio ? () => setIsDeleteAudioConfirmOpen(true) : undefined
-      }
-      onRequestDeleteImage={
-        canDeleteImage ? () => setIsDeleteImageConfirmOpen(true) : undefined
-      }
       previewAudioUrl={pendingAudioPreviewUrl}
       previewImageUrl={pendingImagePreviewUrl}
       questionNumber={questionNumber}
@@ -299,48 +376,6 @@ export function AdminToeicGroupEditingContent({
               {hasMediaControls ? (
                 <div className="flex flex-col gap-3">
                   {mediaPreview}
-
-                  {hasPendingAudioUpload ? (
-                    <div className="flex justify-end gap-2">
-                      <button
-                        className={secondaryTextButtonClassName()}
-                        disabled={editor.isUploadingAudio}
-                        onClick={clearPendingAudioUpload}
-                        type="button"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className={primaryTextButtonClassName()}
-                        disabled={editor.isUploadingAudio}
-                        onClick={handleSavePendingAudio}
-                        type="button"
-                      >
-                        {editor.isUploadingAudio ? "Saving…" : "Save"}
-                      </button>
-                    </div>
-                  ) : null}
-
-                  {hasPendingImageUpload ? (
-                    <div className="flex justify-end gap-2">
-                      <button
-                        className={secondaryTextButtonClassName()}
-                        disabled={editor.isUploadingImage}
-                        onClick={clearPendingImageUpload}
-                        type="button"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className={primaryTextButtonClassName()}
-                        disabled={editor.isUploadingImage}
-                        onClick={handleSavePendingImage}
-                        type="button"
-                      >
-                        {editor.isUploadingImage ? "Saving…" : "Save"}
-                      </button>
-                    </div>
-                  ) : null}
 
                   {audioUploadError ? (
                     <p className="text-sm text-muted-foreground">
