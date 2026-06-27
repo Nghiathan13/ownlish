@@ -180,8 +180,8 @@ function AdminToeicCurrentStepDetail({
   });
 
   const rawEditInitialJson = useMemo(
-    () => serializeAdminGroupRawEditDocument(editor.draft, currentGroup),
-    [currentGroup, editor.draft],
+    () => serializeAdminGroupRawEditDocument(editor.draft),
+    [editor.draft],
   );
 
   const handleOpenRawEdit = useCallback(() => {
@@ -202,11 +202,7 @@ function AdminToeicCurrentStepDetail({
     async (jsonText: string) => {
       setRawEditError(null);
 
-      const parsed = parseAdminGroupRawEditDocument(
-        jsonText,
-        editor.draft,
-        currentGroup,
-      );
+      const parsed = parseAdminGroupRawEditDocument(jsonText, editor.draft);
 
       if (!parsed.ok) {
         setRawEditError(parsed.error);
@@ -222,7 +218,7 @@ function AdminToeicCurrentStepDetail({
 
       setIsRawEditOpen(false);
     },
-    [currentGroup, editor],
+    [editor],
   );
 
   const executeNavigation = useCallback(

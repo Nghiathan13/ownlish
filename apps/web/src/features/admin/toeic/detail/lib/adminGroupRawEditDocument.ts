@@ -2,7 +2,6 @@ import type {
   AdminToeicAnswerKey,
   AdminToeicGroupFields,
   AdminToeicQuestionFields,
-  AdminToeicTestRawGroup,
 } from "@/features/admin/toeic/api/types";
 import {
   cloneEditorState,
@@ -10,23 +9,21 @@ import {
   type AdminGroupEditorState,
 } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
 
-export type AdminGroupRawEditQuestionDocument = {
-  id: number;
-  questionNumber: number;
-} & AdminToeicQuestionFields;
+export type AdminGroupRawEditQuestionDocument = AdminToeicQuestionFields;
 
-export type AdminGroupRawEditDocument = {
-  groupId: number;
-  questionStart: number;
-  questionEnd: number;
-} & AdminToeicGroupFields & {
-    questions: AdminGroupRawEditQuestionDocument[];
-  };
+export type AdminGroupRawEditDocument = AdminToeicGroupFields & {
+  questions: AdminGroupRawEditQuestionDocument[];
+};
 
-const DOCUMENT_TOP_LEVEL_KEYS = new Set([
+const READ_ONLY_TOP_LEVEL_KEYS = new Set([
   "groupId",
   "questionStart",
   "questionEnd",
+]);
+
+const READ_ONLY_QUESTION_KEYS = new Set(["id", "questionNumber"]);
+
+const DOCUMENT_TOP_LEVEL_KEYS = new Set([
   "groupType",
   "accent",
   "content",
@@ -57,8 +54,6 @@ const QUESTION_STRING_FIELD_KEYS = [
 ] as const satisfies ReadonlyArray<keyof AdminToeicQuestionFields>;
 
 const QUESTION_TOP_LEVEL_KEYS = new Set<string>([
-  "id",
-  "questionNumber",
   ...QUESTION_STRING_FIELD_KEYS,
   "answerKey",
 ]);
@@ -103,23 +98,25 @@ function isParseError<T>(value: T | ParseError): value is ParseError {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
+function findReadOnlyTopLevelKeys(parsed: Record<string, unknown>) {
+  return Object.keys(parsed).filter((key) => READ_ONLY_TOP_LEVEL_KEYS.has(key));
+}
+
+function findReadOnlyQuestionKeys(rawQuestion: Record<string, unknown>) {
+  return Object.keys(rawQuestion).filter((key) =>
+    READ_ONLY_QUESTION_KEYS.has(key),
+  );
+}
+
 export function serializeAdminGroupRawEditDocument(
   state: AdminGroupEditorState,
-  group: Pick<AdminToeicTestRawGroup, "questionStart" | "questionEnd">,
 ): string {
   const doc: AdminGroupRawEditDocument = {
-    groupId: state.groupId,
-    questionStart: group.questionStart,
-    questionEnd: group.questionEnd,
     groupType: state.draftGroup.groupType,
     accent: state.draftGroup.accent,
     content: state.draftGroup.content,
     contentVi: state.draftGroup.contentVi,
-    questions: state.questions.map((question) => ({
-      id: question.id,
-      questionNumber: question.questionNumber,
-      ...question.draft,
-    })),
+    questions: state.questions.map((question) => ({ ...question.draft })),
   };
 
   return JSON.stringify(doc, null, 2);
@@ -132,7 +129,6 @@ export type ParseAdminGroupRawEditDocumentResult =
 export function parseAdminGroupRawEditDocument(
   text: string,
   currentState: AdminGroupEditorState,
-  group: Pick<AdminToeicTestRawGroup, "questionStart" | "questionEnd">,
 ): ParseAdminGroupRawEditDocumentResult {
   let parsed: unknown;
 
@@ -146,6 +142,14 @@ export function parseAdminGroupRawEditDocument(
     return { ok: false, error: "Root value must be a JSON object." };
   }
 
+  const readOnlyTopLevelKeys = findReadOnlyTopLevelKeys(parsed);
+  if (readOnlyTopLevelKeys.length > 0) {
+    return {
+      ok: false,
+      error: `Read-only fields must not be included: ${readOnlyTopLevelKeys.join(", ")}`,
+    };
+  }
+
   const unknownTopLevelKeys = Object.keys(parsed).filter(
     (key) => !DOCUMENT_TOP_LEVEL_KEYS.has(key),
   );
@@ -154,27 +158,6 @@ export function parseAdminGroupRawEditDocument(
     return {
       ok: false,
       error: `Unknown top-level keys: ${unknownTopLevelKeys.join(", ")}`,
-    };
-  }
-
-  if (parsed.groupId !== currentState.groupId) {
-    return {
-      ok: false,
-      error: `groupId must be ${currentState.groupId}.`,
-    };
-  }
-
-  if (parsed.questionStart !== group.questionStart) {
-    return {
-      ok: false,
-      error: `questionStart must be ${group.questionStart}.`,
-    };
-  }
-
-  if (parsed.questionEnd !== group.questionEnd) {
-    return {
-      ok: false,
-      error: `questionEnd must be ${group.questionEnd}.`,
     };
   }
 
@@ -190,9 +173,6 @@ export function parseAdminGroupRawEditDocument(
   }
 
   const nextState = cloneEditorState(currentState);
-  const questionsById = new Map(
-    currentState.questions.map((question) => [question.id, question]),
-  );
 
   for (const key of GROUP_FIELD_KEYS) {
     if (!(key in parsed)) {
@@ -215,6 +195,14 @@ export function parseAdminGroupRawEditDocument(
       return { ok: false, error: `${path} must be an object.` };
     }
 
+    const readOnlyQuestionKeys = findReadOnlyQuestionKeys(rawQuestion);
+    if (readOnlyQuestionKeys.length > 0) {
+      return {
+        ok: false,
+        error: `Read-only fields must not be included in ${path}: ${readOnlyQuestionKeys.join(", ")}`,
+      };
+    }
+
     const unknownQuestionKeys = Object.keys(rawQuestion).filter(
       (key) => !QUESTION_TOP_LEVEL_KEYS.has(key),
     );
@@ -226,31 +214,9 @@ export function parseAdminGroupRawEditDocument(
       };
     }
 
-    if (typeof rawQuestion.id !== "number") {
-      return { ok: false, error: `${path}.id must be a number.` };
-    }
-
-    const existingQuestion = questionsById.get(rawQuestion.id);
-    if (!existingQuestion) {
-      return {
-        ok: false,
-        error: `${path}.id ${rawQuestion.id} is not in this group.`,
-      };
-    }
-
-    if (rawQuestion.questionNumber !== existingQuestion.questionNumber) {
-      return {
-        ok: false,
-        error: `${path}.questionNumber must be ${existingQuestion.questionNumber}.`,
-      };
-    }
-
-    const questionEntry = nextState.questions.find(
-      (question) => question.id === existingQuestion.id,
-    );
-
+    const questionEntry = nextState.questions[index];
     if (!questionEntry) {
-      return { ok: false, error: `${path}.id ${rawQuestion.id} is not in this group.` };
+      return { ok: false, error: `${path} is out of range.` };
     }
 
     for (const key of QUESTION_STRING_FIELD_KEYS) {
