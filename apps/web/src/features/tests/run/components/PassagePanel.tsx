@@ -1,5 +1,6 @@
 "use client";
 
+import { BilingualTranslationText } from "@/features/tests/run/components/BilingualTranslationText";
 import { ContextEvidenceText } from "@/features/tests/run/components/ContextEvidenceText";
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
 import { useEvidenceHighlightPreference } from "@/features/tests/run/hooks/useEvidenceHighlightPreference";
@@ -69,37 +70,33 @@ export function PassagePanel({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <PracticeTranslationCard
+      headerAction={
+        canToggleEvidence ? (
+          <EvidenceHighlightSwitch
+            checked={isEvidenceHighlighted}
+            onCheckedChange={setIsEvidenceHighlighted}
+          />
+        ) : undefined
+      }
+      title={title}
+    >
       {hasContent ? (
-        <PracticeTranslationCard
-          headerAction={
-            canToggleEvidence ? (
-              <EvidenceHighlightSwitch
-                checked={isEvidenceHighlighted}
-                onCheckedChange={setIsEvidenceHighlighted}
-              />
-            ) : undefined
-          }
-          title={title}
-        >
-          <div className="whitespace-pre-wrap text-base">
-            {shouldHighlightEvidence ? (
-              <ContextEvidenceText content={content!} />
-            ) : canToggleEvidence ? (
-              stripContextEvidenceMarkup(content!)
-            ) : (
-              content
-            )}
-          </div>
-        </PracticeTranslationCard>
+        <div className="whitespace-pre-wrap text-base">
+          {shouldHighlightEvidence ? (
+            <ContextEvidenceText content={content!} />
+          ) : canToggleEvidence ? (
+            stripContextEvidenceMarkup(content!)
+          ) : (
+            content
+          )}
+        </div>
       ) : null}
       {hasTranslation ? (
-        <PracticeTranslationCard title={hasContent ? "Translation" : title}>
-          <div className="whitespace-pre-wrap text-muted-foreground">
-            {contentVi}
-          </div>
-        </PracticeTranslationCard>
+        <BilingualTranslationText variant="question">
+          {contentVi}
+        </BilingualTranslationText>
       ) : null}
-    </div>
+    </PracticeTranslationCard>
   );
 }

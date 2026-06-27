@@ -81,19 +81,10 @@ export function PracticeLeftPanel({
       {partConfig.leftPanel === "listening-group" && showContext ? (
         <PassagePanel
           content={group.content}
-          contentVi={null}
-          showEvidenceToggle
-          showTranslation={false}
-          title="Transcript"
-        />
-      ) : null}
-
-      {partConfig.leftPanel === "listening-group" && showContextTranslation ? (
-        <PassagePanel
-          content={null}
           contentVi={group.contentVi}
-          showTranslation={Boolean(group.contentVi?.trim())}
-          title="Transcript translation"
+          showEvidenceToggle
+          showTranslation={showContextTranslation}
+          title="Transcript"
         />
       ) : null}
 

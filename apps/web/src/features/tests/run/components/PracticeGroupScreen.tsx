@@ -3,13 +3,13 @@
 import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftPanel";
 import { PracticeQuestionBlock } from "@/features/tests/run/components/PracticeQuestionBlock";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
-import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
 import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
 import { useDeferredGroupAnswerFlow } from "@/features/tests/run/hooks/useDeferredGroupAnswerFlow";
 import { useSignedMedia } from "@/features/tests/run/hooks/useSignedMedia";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { getPracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import { showsGroupContentTranslation } from "@/features/tests/shared/lib/partTranslationVisibility";
 import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
 
 type PracticeGroupScreenProps = {
@@ -46,6 +46,11 @@ export function PracticeGroupScreen({
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : answerFlow.showGroupReveal;
 
+  const showGroupContentTranslation =
+    answerFlow.showGroupReveal &&
+    Boolean(practiceGroup.group.contentVi?.trim()) &&
+    showsGroupContentTranslation(partConfig);
+
   const leftPanel = (
     <PracticeLeftPanel
       audioUrl={signedMedia.audioUrl}
@@ -59,7 +64,7 @@ export function PracticeGroupScreen({
       questionNumber={practiceGroup.group.questionStart}
       questionText={null}
       showContext={showPassageOnLeft}
-      showContextTranslation={false}
+      showContextTranslation={showGroupContentTranslation}
     />
   );
 
@@ -89,21 +94,9 @@ export function PracticeGroupScreen({
     );
   });
 
-  const showGroupPassageTranslation =
-    answerFlow.showGroupReveal &&
-    practiceGroup.group.contentVi?.trim() &&
-    (partConfig.leftPanel === "passage" ||
-      partConfig.translationVariant === "content-options" ||
-      partConfig.translationVariant === "content-question-options");
-
   const rightPanel = (
     <>
       {questionBlocks}
-      {showGroupPassageTranslation ? (
-        <PracticeTranslationCard>
-          <p className="whitespace-pre-wrap">{practiceGroup.group.contentVi}</p>
-        </PracticeTranslationCard>
-      ) : null}
       {practice.hasSyncFailures ? (
         <p className="text-base text-red-600">
           Some answers could not be saved. Please retry before leaving this group.

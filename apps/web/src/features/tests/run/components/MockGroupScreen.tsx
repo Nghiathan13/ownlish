@@ -4,12 +4,12 @@ import { MockLeftPanel } from "@/features/tests/run/components/MockLeftPanel";
 import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftPanel";
 import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
-import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
 import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
 import {
+  showsGroupContentTranslation,
   showsOptionTranslation,
   showsQuestionTranslation,
 } from "@/features/tests/shared/lib/partTranslationVisibility";
@@ -37,6 +37,11 @@ export function MockGroupScreen({
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : isFinished;
 
+  const showGroupContentTranslation =
+    isFinished &&
+    Boolean(group.contentVi?.trim()) &&
+    showsGroupContentTranslation(partConfig);
+
   const leftPanel = isFinished ? (
     <PracticeLeftPanel
       audioUrl={group.audioUrl}
@@ -50,7 +55,7 @@ export function MockGroupScreen({
       questionNumber={group.questionStart}
       questionText={null}
       showContext={showPassageOnLeft}
-      showContextTranslation={false}
+      showContextTranslation={showGroupContentTranslation}
     />
   ) : (
     <MockLeftPanel
@@ -61,13 +66,6 @@ export function MockGroupScreen({
       partNumber={partNumber}
     />
   );
-
-  const showGroupPassageTranslation =
-    isFinished &&
-    group.contentVi?.trim() &&
-    (partConfig.leftPanel === "passage" ||
-      partConfig.translationVariant === "content-options" ||
-      partConfig.translationVariant === "content-question-options");
 
   const rightPanel = (
     <div className="flex flex-col gap-5">
@@ -115,11 +113,6 @@ export function MockGroupScreen({
           </section>
         );
       })}
-      {showGroupPassageTranslation ? (
-        <PracticeTranslationCard>
-          <p className="whitespace-pre-wrap">{group.contentVi}</p>
-        </PracticeTranslationCard>
-      ) : null}
     </div>
   );
 
