@@ -27,6 +27,7 @@ const groupMediaUploadSelect = {
       partNumber: true,
       test: {
         select: {
+          year: true,
           testNumber: true,
         },
       },
