@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminToeicActiveStepPanel } from "@/features/admin/toeic/detail/components/AdminToeicActiveStepPanel";
 import { AdminConfirmDialog } from "@/features/admin/toeic/detail/components/editor/AdminConfirmDialog";
+import { useAdminGroupEditor } from "@/features/admin/toeic/detail/hooks/useAdminGroupEditor";
 import { useAdminToeicTestDetailQuery } from "@/features/admin/toeic/detail/hooks/useAdminToeicTestDetailQuery";
 import { buildAdminToeicGridSections } from "@/features/admin/toeic/detail/lib/adminToeicQuestionGrid";
 import {
@@ -14,14 +15,22 @@ import {
   findAdminStepIndexForQuestionId,
   getAdminStepGroup,
   getAdminStepQuestionPosition,
+  type AdminToeicRunStep,
 } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
 import { mergeAdminToeicGroupPatchIntoDetailCache } from "@/features/admin/toeic/detail/lib/adminToeicGroupPatchCache";
-import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
-import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
-import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
+import { resolveAdminGroupSaveConfirm } from "@/features/admin/toeic/detail/lib/adminToeicGroupSaveConfirm";
+import type {
+  AdminToeicTestRawGroup,
+  AdminToeicTestRawResponse,
+} from "@/features/admin/toeic/api/types";
 import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
 import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
-import { secondaryTextButtonClassName } from "@/shared/ui/button";
+import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
+import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
+import {
+  primaryTextButtonClassName,
+  secondaryTextButtonClassName,
+} from "@/shared/ui/button";
 
 type AdminToeicTestDetailPageProps = {
   testId: number;
@@ -31,153 +40,18 @@ type PendingNavigation =
   | { type: "back" }
   | { type: "step"; stepIndex: number };
 
-export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPageProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
+type ConfirmKind = "discard-edit" | "save";
+
+export function AdminToeicTestDetailPage({
+  testId,
+}: AdminToeicTestDetailPageProps) {
   const { data, isLoading, error } = useAdminToeicTestDetailQuery({
     enabled: true,
     testId,
   });
-  const [stepIndex, setStepIndex] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
-  const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
-  const [pendingNavigation, setPendingNavigation] =
-    useState<PendingNavigation | null>(null);
-
   const steps = useMemo(
     () => (data ? buildAdminToeicRunSteps(data.parts) : []),
     [data],
-  );
-  const activeStepIndex =
-    steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
-  const currentStep = steps[activeStepIndex] ?? null;
-  const currentGroup = currentStep ? getAdminStepGroup(currentStep) : null;
-  const totalQuestions = countAdminToeicQuestions(steps);
-  const currentQuestionPosition = getAdminStepQuestionPosition(
-    steps,
-    activeStepIndex,
-  );
-
-  const questionGridSections = useMemo(
-    () => buildAdminToeicGridSections(steps, currentStep),
-    [currentStep, steps],
-  );
-
-  const executeNavigation = useCallback((navigation: PendingNavigation) => {
-    if (navigation.type === "back") {
-      router.push("/admin/toeic");
-      return;
-    }
-
-    setStepIndex(navigation.stepIndex);
-    setIsQuestionGridOpen(false);
-  }, [router]);
-
-  const requestNavigation = useCallback(
-    (navigation: PendingNavigation) => {
-      if (isEditing && isDirty) {
-        setPendingNavigation(navigation);
-        return;
-      }
-
-      if (isEditing) {
-        setIsEditing(false);
-        setIsDirty(false);
-      }
-
-      executeNavigation(navigation);
-    },
-    [executeNavigation, isDirty, isEditing],
-  );
-
-  const goToStepIndex = useCallback(
-    (nextIndex: number) => {
-      if (nextIndex === activeStepIndex) {
-        return;
-      }
-
-      requestNavigation({ type: "step", stepIndex: nextIndex });
-    },
-    [activeStepIndex, requestNavigation],
-  );
-
-  const handleConfirmDiscardNavigation = useCallback(() => {
-    if (pendingNavigation == null) {
-      return;
-    }
-
-    const navigation = pendingNavigation;
-    setPendingNavigation(null);
-    setIsEditing(false);
-    setIsDirty(false);
-    executeNavigation(navigation);
-  }, [executeNavigation, pendingNavigation]);
-
-  const handleGroupPatched = useCallback(
-    (updatedGroup: AdminToeicTestRawGroup) => {
-      mergeAdminToeicGroupPatchIntoDetailCache(
-        queryClient,
-        testId,
-        updatedGroup,
-      );
-    },
-    [queryClient, testId],
-  );
-
-  const handleToolbarExit = useCallback(() => {
-    if (isEditing && isDirty) {
-      setPendingNavigation({ type: "back" });
-      return false;
-    }
-
-    if (isEditing) {
-      setIsEditing(false);
-      setIsDirty(false);
-    }
-  }, [isDirty, isEditing]);
-
-  useRegisterImmersiveExit(
-    data ? handleToolbarExit : null,
-    data ? `Test ${data.test.testNumber} · ${data.test.year}` : null,
-    "/admin/toeic",
-  );
-
-  useRegisterImmersiveQuestionNav({
-    currentQuestionNumber: currentQuestionPosition,
-    enabled: data != null && steps.length > 0,
-    totalQuestions,
-  });
-
-  const isLastStep = activeStepIndex >= steps.length - 1;
-  const navigationBar = (
-    <PracticeNavigationButtons
-      isQuestionGridOpen={isQuestionGridOpen}
-      nextAriaLabel="Next"
-      nextDisabled={isLastStep}
-      onNext={() => {
-        goToStepIndex(activeStepIndex + 1);
-      }}
-      onPrevious={() => {
-        goToStepIndex(activeStepIndex - 1);
-      }}
-      onQuestionGridOpenChange={(open) => {
-        if (!open) {
-          setIsQuestionGridOpen(false);
-          return;
-        }
-
-        setIsQuestionGridOpen(true);
-      }}
-      onQuestionGridSelect={(questionId) => {
-        const nextStepIndex = findAdminStepIndexForQuestionId(steps, questionId);
-        if (nextStepIndex >= 0) {
-          goToStepIndex(nextStepIndex);
-        }
-      }}
-      previousDisabled={activeStepIndex === 0}
-      questionGridSections={questionGridSections}
-    />
   );
 
   if (isLoading) {
@@ -204,7 +78,7 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
     );
   }
 
-  if (steps.length === 0 || currentStep == null || currentGroup == null) {
+  if (steps.length === 0) {
     return (
       <div className="px-4 py-6">
         <Link className={secondaryTextButtonClassName()} href="/admin/toeic">
@@ -216,19 +90,249 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
   }
 
   return (
+    <AdminToeicLoadedTestDetail data={data} steps={steps} testId={testId} />
+  );
+}
+
+function AdminToeicLoadedTestDetail({
+  data,
+  steps,
+  testId,
+}: {
+  data: AdminToeicTestRawResponse;
+  steps: AdminToeicRunStep[];
+  testId: number;
+}) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const activeStepIndex = Math.min(stepIndex, steps.length - 1);
+  const currentStep = steps[activeStepIndex]!;
+  const currentGroup = getAdminStepGroup(currentStep);
+
+  return (
+    <AdminToeicCurrentStepDetail
+      activeStepIndex={activeStepIndex}
+      currentGroup={currentGroup}
+      currentStep={currentStep}
+      data={data}
+      key={currentGroup.id}
+      setStepIndex={setStepIndex}
+      steps={steps}
+      testId={testId}
+    />
+  );
+}
+
+function AdminToeicCurrentStepDetail({
+  activeStepIndex,
+  currentGroup,
+  currentStep,
+  data,
+  setStepIndex,
+  steps,
+  testId,
+}: {
+  activeStepIndex: number;
+  currentGroup: AdminToeicTestRawGroup;
+  currentStep: AdminToeicRunStep;
+  data: AdminToeicTestRawResponse;
+  setStepIndex: (stepIndex: number) => void;
+  steps: AdminToeicRunStep[];
+  testId: number;
+}) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
+  const [pendingNavigation, setPendingNavigation] =
+    useState<PendingNavigation | null>(null);
+  const [confirmKind, setConfirmKind] = useState<ConfirmKind | null>(null);
+  const totalQuestions = countAdminToeicQuestions(steps);
+  const currentQuestionPosition = getAdminStepQuestionPosition(
+    steps,
+    activeStepIndex,
+  );
+  const questionGridSections = useMemo(
+    () => buildAdminToeicGridSections(steps, currentStep),
+    [currentStep, steps],
+  );
+
+  const handleGroupPatched = useCallback(
+    (updatedGroup: AdminToeicTestRawGroup) => {
+      mergeAdminToeicGroupPatchIntoDetailCache(
+        queryClient,
+        testId,
+        updatedGroup,
+      );
+    },
+    [queryClient, testId],
+  );
+
+  const editor = useAdminGroupEditor({
+    group: currentGroup,
+    onGroupPatched: handleGroupPatched,
+  });
+
+  const executeNavigation = useCallback(
+    (navigation: PendingNavigation) => {
+      if (navigation.type === "back") {
+        router.push("/admin/toeic");
+        return;
+      }
+
+      setStepIndex(navigation.stepIndex);
+      setIsQuestionGridOpen(false);
+    },
+    [router, setStepIndex],
+  );
+
+  const requestNavigation = useCallback(
+    (navigation: PendingNavigation) => {
+      if (isEditing && editor.isDirty) {
+        setPendingNavigation(navigation);
+        return;
+      }
+
+      executeNavigation(navigation);
+    },
+    [editor.isDirty, executeNavigation, isEditing],
+  );
+
+  const goToStepIndex = useCallback(
+    (nextIndex: number) => {
+      if (nextIndex === activeStepIndex) {
+        return;
+      }
+
+      requestNavigation({ type: "step", stepIndex: nextIndex });
+    },
+    [activeStepIndex, requestNavigation],
+  );
+
+  const exitEdit = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleToolbarExit = useCallback(() => {
+    if (isEditing && editor.isDirty) {
+      setPendingNavigation({ type: "back" });
+      return false;
+    }
+
+    return undefined;
+  }, [editor.isDirty, isEditing]);
+
+  const handleCancelEdit = useCallback(() => {
+    if (editor.isDirty) {
+      setConfirmKind("discard-edit");
+      return;
+    }
+
+    exitEdit();
+  }, [editor.isDirty, exitEdit]);
+
+  const handleConfirmEditAction = useCallback(async () => {
+    if (confirmKind === "discard-edit") {
+      setConfirmKind(null);
+      exitEdit();
+      return;
+    }
+
+    if (confirmKind === "save") {
+      await resolveAdminGroupSaveConfirm({
+        closeConfirm: () => setConfirmKind(null),
+        onExitEdit: exitEdit,
+        save: editor.save,
+      });
+    }
+  }, [confirmKind, editor.save, exitEdit]);
+
+  const handleConfirmDiscardNavigation = useCallback(() => {
+    if (pendingNavigation == null) {
+      return;
+    }
+
+    const navigation = pendingNavigation;
+    setPendingNavigation(null);
+    exitEdit();
+    executeNavigation(navigation);
+  }, [executeNavigation, exitEdit, pendingNavigation]);
+
+  useRegisterImmersiveExit(
+    handleToolbarExit,
+    `Test ${data.test.testNumber} · ${data.test.year}`,
+    "/admin/toeic",
+  );
+
+  useRegisterImmersiveQuestionNav({
+    currentQuestionNumber: currentQuestionPosition,
+    enabled: steps.length > 0,
+    totalQuestions,
+  });
+
+  const isLastStep = activeStepIndex >= steps.length - 1;
+  const navigationBar = (
+    <PracticeNavigationButtons
+      isQuestionGridOpen={isQuestionGridOpen}
+      leftSlot={
+        isEditing ? (
+          <div className="flex items-center gap-2">
+            <button
+              className={secondaryTextButtonClassName()}
+              disabled={editor.isSaving}
+              onClick={handleCancelEdit}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className={primaryTextButtonClassName()}
+              disabled={!editor.isDirty || editor.isSaving}
+              onClick={() => setConfirmKind("save")}
+              type="button"
+            >
+              {editor.isSaving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        ) : (
+          <button
+            className={secondaryTextButtonClassName()}
+            onClick={() => setIsEditing(true)}
+            type="button"
+          >
+            Edit
+          </button>
+        )
+      }
+      nextAriaLabel="Next"
+      nextDisabled={isLastStep}
+      onNext={() => {
+        goToStepIndex(activeStepIndex + 1);
+      }}
+      onPrevious={() => {
+        goToStepIndex(activeStepIndex - 1);
+      }}
+      onQuestionGridOpenChange={(open) => {
+        setIsQuestionGridOpen(open);
+      }}
+      onQuestionGridSelect={(questionId) => {
+        const nextStepIndex = findAdminStepIndexForQuestionId(steps, questionId);
+        if (nextStepIndex >= 0) {
+          goToStepIndex(nextStepIndex);
+        }
+      }}
+      previousDisabled={activeStepIndex === 0}
+      questionGridSections={questionGridSections}
+    />
+  );
+
+  return (
     <>
       <PracticeContinuousShell navigation={navigationBar}>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AdminToeicActiveStepPanel
+            editor={editor}
             group={currentGroup}
             isEditing={isEditing}
-            onDirtyChange={setIsDirty}
-            onExitEdit={() => {
-              setIsEditing(false);
-              setIsDirty(false);
-            }}
-            onRequestEdit={() => setIsEditing(true)}
-            onGroupPatched={handleGroupPatched}
             step={currentStep}
           />
         </div>
@@ -241,6 +345,27 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
           onClose={() => setPendingNavigation(null)}
           onConfirm={handleConfirmDiscardNavigation}
           title="Discard changes?"
+        />
+      ) : null}
+
+      {confirmKind === "discard-edit" ? (
+        <AdminConfirmDialog
+          confirmLabel="Discard"
+          description="Unsaved changes in this group will be lost."
+          onClose={() => setConfirmKind(null)}
+          onConfirm={handleConfirmEditAction}
+          title="Discard changes?"
+        />
+      ) : null}
+
+      {confirmKind === "save" ? (
+        <AdminConfirmDialog
+          confirmLabel={editor.isSaving ? "Saving…" : "Save"}
+          description="Save the updated group content and questions?"
+          isConfirming={editor.isSaving}
+          onClose={() => setConfirmKind(null)}
+          onConfirm={handleConfirmEditAction}
+          title="Save changes?"
         />
       ) : null}
     </>
