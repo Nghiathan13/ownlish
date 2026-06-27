@@ -150,10 +150,15 @@ function findReadOnlyQuestionKeys(rawQuestion: Record<string, unknown>) {
 function serializeQuestionDraft(
   draft: AdminToeicQuestionFields,
   partNumber: number,
-) {
+): AdminGroupRawEditQuestionDocument {
   const question: AdminGroupRawEditQuestionDocument = {};
 
   for (const field of getVisibleAdminToeicQuestionEditorFields(partNumber)) {
+    if (field === "answerKey") {
+      question.answerKey = draft.answerKey;
+      continue;
+    }
+
     question[field] = draft[field];
   }
 
