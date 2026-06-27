@@ -11,12 +11,16 @@ describe('AdminToeicGroupService', () => {
   const repositoryMock = {
     findGroupById: jest.fn(),
     findGroupMediaById: jest.fn(),
+    findGroupImageUploadById: jest.fn(),
     updateGroupFields: jest.fn(),
     clearGroupImagePath: jest.fn(),
+    setGroupImagePath: jest.fn(),
   };
 
   const storageServiceMock = {
     removeObject: jest.fn(),
+    uploadObject: jest.fn(),
+    createSignedUrl: jest.fn(),
   };
 
   let service: AdminToeicGroupService;
@@ -173,5 +177,83 @@ describe('AdminToeicGroupService', () => {
     await expect(service.deleteGroupImage(999)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('uploads a png image to the normalized storage path', async () => {
+    repositoryMock.findGroupImageUploadById.mockResolvedValue({
+      id: 101,
+      imageStoragePath: null,
+      questionStart: 1,
+      questionEnd: 1,
+      testPart: {
+        partNumber: 1,
+        test: { testNumber: 1 },
+      },
+    });
+    storageServiceMock.uploadObject.mockResolvedValue(undefined);
+    storageServiceMock.createSignedUrl.mockResolvedValue({
+      url: 'https://signed.example/ets26_t01_01.png',
+      expiresAt: '2026-06-26T12:00:00.000Z',
+    });
+    repositoryMock.setGroupImagePath.mockResolvedValue({
+      id: 101,
+      imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
+    });
+
+    const file = {
+      buffer: Buffer.from('png'),
+      mimetype: 'image/png',
+      originalname: 'photo.PNG',
+    };
+
+    const result = await service.uploadGroupImage(101, file);
+
+    expect(storageServiceMock.uploadObject).toHaveBeenCalledWith(
+      'toeic/2026/image/ets26_t01/ets26_t01_01.png',
+      file.buffer,
+      'image/png',
+    );
+    expect(repositoryMock.setGroupImagePath).toHaveBeenCalledWith(
+      101,
+      'toeic/2026/image/ets26_t01/ets26_t01_01.png',
+    );
+    expect(result).toEqual({
+      group: {
+        id: 101,
+        imageUrl: 'https://signed.example/ets26_t01_01.png',
+        imageUrlExpiresAt: '2026-06-26T12:00:00.000Z',
+      },
+    });
+  });
+
+  it('rejects non-png uploads', async () => {
+    await expect(
+      service.uploadGroupImage(101, {
+        buffer: Buffer.from('jpg'),
+        mimetype: 'image/jpeg',
+        originalname: 'photo.jpg',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects uploads for groups that do not support images', async () => {
+    repositoryMock.findGroupImageUploadById.mockResolvedValue({
+      id: 101,
+      imageStoragePath: null,
+      questionStart: 32,
+      questionEnd: 34,
+      testPart: {
+        partNumber: 3,
+        test: { testNumber: 1 },
+      },
+    });
+
+    await expect(
+      service.uploadGroupImage(101, {
+        buffer: Buffer.from('png'),
+        mimetype: 'image/png',
+        originalname: 'photo.png',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

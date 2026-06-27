@@ -6,8 +6,12 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminGuard } from '../auth/admin.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminToeicGroupService } from './admin-toeic-group.service';
@@ -41,6 +45,26 @@ export class AdminTestsController {
   @Delete('groups/:groupId/image')
   deleteGroupImage(@Param('groupId', ParseIntPipe) groupId: number) {
     return this.adminToeicGroupService.deleteGroupImage(groupId);
+  }
+
+  @Post('groups/:groupId/image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  uploadGroupImage(
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @UploadedFile()
+    file:
+      | {
+          buffer: Buffer;
+          mimetype: string;
+          originalname: string;
+        }
+      | undefined,
+  ) {
+    return this.adminToeicGroupService.uploadGroupImage(groupId, file);
   }
 
   @Patch('questions/:questionId')

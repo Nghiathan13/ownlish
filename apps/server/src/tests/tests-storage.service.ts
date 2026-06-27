@@ -63,6 +63,38 @@ export class TestsStorageService {
     };
   }
 
+  async uploadObject(
+    storagePath: string,
+    body: Buffer,
+    contentType: string,
+  ): Promise<void> {
+    if (!storagePath) {
+      return;
+    }
+
+    const client = this.getClient();
+    if (!client) {
+      this.logger.warn(
+        'Supabase Storage is not configured; skipping object upload.',
+      );
+      throw new Error('Supabase Storage is not configured');
+    }
+
+    const { error } = await client.storage
+      .from(env.toeicStorageBucket)
+      .upload(storagePath, body, {
+        contentType,
+        upsert: true,
+      });
+
+    if (error) {
+      this.logger.warn(
+        `Failed to upload media object ${storagePath}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
   async removeObject(storagePath: string): Promise<void> {
     if (!storagePath) {
       return;

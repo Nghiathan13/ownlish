@@ -14,6 +14,7 @@ describe('AdminTestsController', () => {
   const groupServiceMock = {
     patchGroup: jest.fn(),
     deleteGroupImage: jest.fn(),
+    uploadGroupImage: jest.fn(),
   };
 
   const questionServiceMock = {
@@ -101,6 +102,46 @@ describe('AdminTestsController', () => {
       group: { id: 101, imageUrl: null, imageUrlExpiresAt: null },
     });
     expect(groupServiceMock.deleteGroupImage).toHaveBeenCalledWith(101);
+  });
+
+  it('delegates uploadGroupImage to AdminToeicGroupService when admin', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AdminTestsController],
+      providers: [
+        { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicQuestionService, useValue: questionServiceMock },
+        { provide: AdminToeicTestService, useValue: testServiceMock },
+        AdminGuard,
+        { provide: UsersService, useValue: usersServiceMock },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+
+    const file = {
+      buffer: Buffer.from('png'),
+      mimetype: 'image/png',
+      originalname: 'photo.png',
+    };
+
+    groupServiceMock.uploadGroupImage.mockResolvedValue({
+      group: {
+        id: 101,
+        imageUrl: 'https://signed.example/ets26_t01_01.png',
+        imageUrlExpiresAt: '2026-06-26T12:00:00.000Z',
+      },
+    });
+
+    const controller = module.get(AdminTestsController);
+    await expect(controller.uploadGroupImage(101, file)).resolves.toEqual({
+      group: {
+        id: 101,
+        imageUrl: 'https://signed.example/ets26_t01_01.png',
+        imageUrlExpiresAt: '2026-06-26T12:00:00.000Z',
+      },
+    });
+    expect(groupServiceMock.uploadGroupImage).toHaveBeenCalledWith(101, file);
   });
 
   it('delegates patchQuestion to AdminToeicQuestionService when admin', async () => {
