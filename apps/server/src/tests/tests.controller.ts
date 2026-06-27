@@ -36,6 +36,11 @@ export class TestsController {
     private readonly partPracticeService: PartPracticeService,
   ) {}
 
+  @Get('years')
+  listYears() {
+    return this.testsService.listAvailableYears();
+  }
+
   @Get()
   list(@Req() request: AuthRequest, @Query() query: ListTestsDto) {
     return this.testsService.listTests(request.user.id, query.year);

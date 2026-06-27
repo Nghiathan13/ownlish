@@ -11,6 +11,17 @@ export class TestsService {
     private readonly storageService: TestsStorageService,
   ) {}
 
+  async listAvailableYears() {
+    const rows = await this.prisma.toeicTest.groupBy({
+      by: ['year'],
+      orderBy: { year: 'desc' },
+    });
+
+    return {
+      years: rows.map((row) => row.year),
+    };
+  }
+
   async listTests(userId: string, year: number) {
     const tests = await this.prisma.toeicTest.findMany({
       where: { year },

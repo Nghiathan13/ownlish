@@ -9,6 +9,7 @@ describe('TestsService', () => {
   const prismaMock = {
     toeicTest: {
       findMany: jest.fn(),
+      groupBy: jest.fn(),
     },
     toeicTestPart: {
       findUnique: jest.fn(),
@@ -85,6 +86,17 @@ describe('TestsService', () => {
           ],
         },
       ],
+    });
+  });
+
+  it('lists available test years in descending order', async () => {
+    prismaMock.toeicTest.groupBy.mockResolvedValue([
+      { year: 2026 },
+      { year: 2025 },
+    ]);
+
+    await expect(service.listAvailableYears()).resolves.toEqual({
+      years: [2026, 2025],
     });
   });
 });
