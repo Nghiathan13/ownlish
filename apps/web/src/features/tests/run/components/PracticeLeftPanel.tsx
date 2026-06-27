@@ -43,14 +43,14 @@ export function PracticeLeftPanel({
     (partConfig.leftPanel === "audio-image" ||
       partConfig.leftPanel === "listening-group");
 
-  const stickyMediaSection =
+  const mediaSection =
     instruction ||
     showAudio ||
     (showImage && (imageUrl || partConfig.leftPanel === "audio-image"));
 
   const content = (
     <>
-      {stickyMediaSection ? (
+      {mediaSection ? (
         <div className="flex shrink-0 flex-col gap-4 bg-background">
           {instruction ? (
             <p className="text-base font-bold text-foreground select-text">
