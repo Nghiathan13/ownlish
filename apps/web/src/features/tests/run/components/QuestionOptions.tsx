@@ -17,6 +17,7 @@ type QuestionOptionsProps = {
   isLocked?: boolean;
   showEnglishTextBeforeAnswer?: boolean;
   showBilingual?: boolean;
+  plainTranslation?: boolean;
   showResult?: boolean;
   onSelect: (key: "A" | "B" | "C" | "D") => void;
 };
@@ -43,6 +44,7 @@ type OptionLabelProps = {
   vietnameseText: string | null;
   showEnglishText: boolean;
   showBilingual: boolean;
+  plainTranslation: boolean;
 };
 
 function OptionLabel({
@@ -51,6 +53,7 @@ function OptionLabel({
   vietnameseText,
   showEnglishText,
   showBilingual,
+  plainTranslation,
 }: OptionLabelProps) {
   return (
     <span className="flex min-w-0 flex-1 flex-col gap-1 text-base font-normal leading-snug tracking-normal">
@@ -61,7 +64,7 @@ function OptionLabel({
         ) : null}
       </span>
       {showBilingual && vietnameseText ? (
-        <BilingualTranslationText variant="option">
+        <BilingualTranslationText plain={plainTranslation} variant="option">
           {vietnameseText}
         </BilingualTranslationText>
       ) : null}
@@ -128,6 +131,7 @@ export function QuestionOptions({
   isLocked = false,
   showEnglishTextBeforeAnswer = false,
   showBilingual = false,
+  plainTranslation = false,
   showResult = true,
   onSelect,
 }: QuestionOptionsProps) {
@@ -185,6 +189,7 @@ export function QuestionOptions({
             <OptionLabel
               englishText={englishText}
               optionKey={key}
+              plainTranslation={plainTranslation}
               showBilingual={showBilingual}
               showEnglishText={showEnglishText}
               vietnameseText={vietnameseText}

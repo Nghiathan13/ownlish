@@ -1,12 +1,15 @@
 import type { AdminToeicTestRawQuestion } from "@/features/admin/toeic/api/types";
 import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
-import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
 import {
   getAdminRawQuestionOptionCount,
   mapAdminRawQuestionToOptions,
 } from "@/features/admin/toeic/detail/lib/mapAdminRawQuestion";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import {
+  showsOptionTranslation,
+  showsQuestionTranslation,
+} from "@/features/tests/shared/lib/partTranslationVisibility";
 
 type AdminToeicPracticeQuestionPanelProps = {
   partNumber: number;
@@ -26,14 +29,21 @@ function AdminToeicPracticeQuestionBlock({
   const answerKey = question.answerKey;
   const questionEnVisible =
     partConfig.showQuestionInRightPanel && Boolean(question.question?.trim());
+  const showQuestionBilingual =
+    showsQuestionTranslation(partConfig.translationVariant) &&
+    Boolean(question.questionVi?.trim());
+  const showOptionBilingual = showsOptionTranslation(
+    partConfig.translationVariant,
+  );
 
   return (
     <div className="flex flex-col gap-4">
       <PracticeQuestionPrompt
+        plainTranslation
         questionNumber={question.questionNumber}
         questionText={questionEnVisible ? question.question : null}
         questionVi={question.questionVi}
-        showBilingual={false}
+        showBilingual={showQuestionBilingual}
       />
       <QuestionOptions
         answerKey={answerKey}
@@ -41,21 +51,14 @@ function AdminToeicPracticeQuestionBlock({
         onSelect={() => undefined}
         optionCount={optionCount}
         options={options}
+        plainTranslation
         selectedKey={answerKey}
-        showBilingual={false}
+        showBilingual={showOptionBilingual}
         showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
         showResult
       />
-      <QuestionTranslationPanel
-        answerKey={answerKey}
-        optionCount={optionCount}
-        options={options}
-        questionVi={question.questionVi}
-        variant={partConfig.translationVariant}
-        visible
-      />
       {question.explanationVi?.trim() ? (
-        <p className="whitespace-pre-wrap text-base text-foreground select-text">
+        <p className="whitespace-pre-wrap text-base text-muted-foreground select-text">
           {question.explanationVi}
         </p>
       ) : null}

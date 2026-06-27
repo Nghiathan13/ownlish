@@ -4,6 +4,7 @@ type PracticeQuestionPromptProps = {
   questionNumber: number;
   questionText?: string | null;
   questionVi?: string | null;
+  plainTranslation?: boolean;
   showBilingual?: boolean;
 };
 
@@ -11,6 +12,7 @@ export function PracticeQuestionPrompt({
   questionNumber,
   questionText,
   questionVi,
+  plainTranslation = false,
   showBilingual = false,
 }: PracticeQuestionPromptProps) {
   const text = questionText?.trim();
@@ -23,7 +25,9 @@ export function PracticeQuestionPrompt({
         {text ? ` ${text}` : null}
       </p>
       {showBilingual && viText ? (
-        <BilingualTranslationText variant="question">{viText}</BilingualTranslationText>
+        <BilingualTranslationText plain={plainTranslation} variant="question">
+          {viText}
+        </BilingualTranslationText>
       ) : null}
     </div>
   );

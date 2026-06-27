@@ -5,14 +5,30 @@ import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 type BilingualTranslationTextProps = {
   children: ReactNode;
   className?: string;
+  plain?: boolean;
   variant?: "question" | "option";
 };
 
 export function BilingualTranslationText({
   children,
   className,
+  plain = false,
   variant = "option",
 }: BilingualTranslationTextProps) {
+  if (plain) {
+    return (
+      <div
+        className={classNames(
+          "whitespace-pre-wrap text-muted-foreground select-text",
+          variant === "question" ? "text-base font-bold" : "text-base",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div
       className={classNames(
