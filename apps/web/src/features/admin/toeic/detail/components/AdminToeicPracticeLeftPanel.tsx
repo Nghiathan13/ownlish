@@ -41,14 +41,18 @@ export function AdminToeicPracticeLeftPanel({
     <>
       {mediaSection ? (
         <div className="flex shrink-0 flex-col gap-4 bg-background">
-          {metadataLines.map((line) => (
-            <p
-              className="text-base font-bold text-foreground select-text"
-              key={line}
-            >
-              {line}
-            </p>
-          ))}
+          {metadataLines.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {metadataLines.map((line) => (
+                <p
+                  className="text-base font-bold text-foreground select-text"
+                  key={line}
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
+          ) : null}
 
           {showAudio ? (
             group.audioUrl ? (
@@ -84,6 +88,7 @@ export function AdminToeicPracticeLeftPanel({
           content={group.content}
           contentVi={group.contentVi}
           showEvidenceToggle
+          showRawContentWhenEvidenceOff
           showTranslation={Boolean(group.contentVi?.trim())}
           title="Transcript"
         />

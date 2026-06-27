@@ -9,6 +9,7 @@ import { classNames } from "@/shared/lib/classNames";
 type PassagePanelProps = {
   content: string | null;
   contentVi?: string | null;
+  showRawContentWhenEvidenceOff?: boolean;
   showTranslation: boolean;
   title?: string;
   showEvidenceToggle?: boolean;
@@ -50,6 +51,7 @@ function EvidenceHighlightSwitch({
 export function PassagePanel({
   content,
   contentVi,
+  showRawContentWhenEvidenceOff = false,
   showTranslation,
   title = "Passage",
   showEvidenceToggle = false,
@@ -86,7 +88,9 @@ export function PassagePanel({
             {shouldHighlightEvidence ? (
               <ContextEvidenceText content={content!} />
             ) : canToggleEvidence ? (
-              stripContextEvidenceMarkup(content!)
+              showRawContentWhenEvidenceOff
+                ? content
+                : stripContextEvidenceMarkup(content!)
             ) : (
               content
             )}
