@@ -155,6 +155,7 @@ export class AdminToeicGroupService {
     }
 
     const audioStoragePath = buildAudioStoragePath(
+      test.year,
       test.testNumber,
       questionStart,
       questionEnd,
@@ -224,6 +225,7 @@ export class AdminToeicGroupService {
     }
 
     const imageStoragePath = buildImageStoragePath(
+      test.year,
       test.testNumber,
       questionStart,
       questionEnd,

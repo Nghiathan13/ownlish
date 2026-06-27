@@ -197,7 +197,7 @@ describe('AdminToeicGroupService', () => {
       questionEnd: 1,
       testPart: {
         partNumber: 1,
-        test: { testNumber: 1 },
+        test: { year: 2026, testNumber: 1 },
       },
     });
     storageServiceMock.uploadObject.mockResolvedValue(undefined);
@@ -256,7 +256,7 @@ describe('AdminToeicGroupService', () => {
       questionEnd: 34,
       testPart: {
         partNumber: 3,
-        test: { testNumber: 1 },
+        test: { year: 2026, testNumber: 1 },
       },
     });
 
@@ -305,7 +305,7 @@ describe('AdminToeicGroupService', () => {
       questionEnd: 1,
       testPart: {
         partNumber: 1,
-        test: { testNumber: 1 },
+        test: { year: 2026, testNumber: 1 },
       },
     });
     storageServiceMock.uploadObject.mockResolvedValue(undefined);
@@ -364,7 +364,7 @@ describe('AdminToeicGroupService', () => {
       questionEnd: 101,
       testPart: {
         partNumber: 5,
-        test: { testNumber: 1 },
+        test: { year: 2026, testNumber: 1 },
       },
     });
 

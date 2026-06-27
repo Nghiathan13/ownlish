@@ -2,12 +2,25 @@ function pad2(value: number) {
   return String(value).padStart(2, '0');
 }
 
+export function buildToeicEditionPrefix(year: number) {
+  if (year === 2025) {
+    return 'ybm25';
+  }
+
+  return `ets${String(year).slice(-2)}`;
+}
+
+export function buildToeicTestFolderPrefix(year: number, testNumber: number) {
+  return `${buildToeicEditionPrefix(year)}_t${pad2(testNumber)}`;
+}
+
 export function buildToeicFileBaseName(
+  year: number,
   testNumber: number,
   questionStart: number,
   questionEnd: number,
 ) {
-  const prefix = `ets26_t${pad2(testNumber)}`;
+  const prefix = buildToeicTestFolderPrefix(year, testNumber);
 
   if (questionStart === questionEnd) {
     return `${prefix}_${pad2(questionStart)}`;
@@ -17,23 +30,25 @@ export function buildToeicFileBaseName(
 }
 
 export function buildAudioStoragePath(
+  year: number,
   testNumber: number,
   questionStart: number,
   questionEnd: number,
 ) {
-  const prefix = `ets26_t${pad2(testNumber)}`;
-  const fileName = `${buildToeicFileBaseName(testNumber, questionStart, questionEnd)}.mp3`;
-  return `toeic/2026/audio/${prefix}/${fileName}`;
+  const folderPrefix = buildToeicTestFolderPrefix(year, testNumber);
+  const fileName = `${buildToeicFileBaseName(year, testNumber, questionStart, questionEnd)}.mp3`;
+  return `toeic/${year}/audio/${folderPrefix}/${fileName}`;
 }
 
 export function buildImageStoragePath(
+  year: number,
   testNumber: number,
   questionStart: number,
   questionEnd: number,
 ) {
-  const prefix = `ets26_t${pad2(testNumber)}`;
-  const fileName = `${buildToeicFileBaseName(testNumber, questionStart, questionEnd)}.png`;
-  return `toeic/2026/image/${prefix}/${fileName}`;
+  const folderPrefix = buildToeicTestFolderPrefix(year, testNumber);
+  const fileName = `${buildToeicFileBaseName(year, testNumber, questionStart, questionEnd)}.png`;
+  return `toeic/${year}/image/${folderPrefix}/${fileName}`;
 }
 
 export function partHasPerQuestionAudio(partNumber: number) {
@@ -72,6 +87,7 @@ export function partMayHaveImage(
 }
 
 export function resolveGroupStoragePaths(
+  year: number,
   testNumber: number,
   partNumber: number,
   questionStart: number,
@@ -83,6 +99,7 @@ export function resolveGroupStoragePaths(
   if (partNumber >= 1 && partNumber <= 4) {
     if (partMayHaveAudio(partNumber)) {
       audioStoragePath = buildAudioStoragePath(
+        year,
         testNumber,
         questionStart,
         questionEnd,
@@ -92,6 +109,7 @@ export function resolveGroupStoragePaths(
 
   if (partMayHaveImage(partNumber, questionStart, questionEnd)) {
     imageStoragePath = buildImageStoragePath(
+      year,
       testNumber,
       questionStart,
       questionEnd,
