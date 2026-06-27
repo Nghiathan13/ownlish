@@ -3,6 +3,10 @@ import type {
   AdminGroupEditorState,
   AdminQuestionEditorEntry,
 } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
+import {
+  isAdminToeicGroupEditorFieldVisible,
+  isAdminToeicQuestionEditorFieldVisible,
+} from "@/features/admin/toeic/detail/lib/adminToeicEditorVisibility";
 
 function FieldLabel({ children }: { children: string }) {
   return (
@@ -64,11 +68,13 @@ const ANSWER_KEY_OPTIONS: Array<{ value: AdminToeicAnswerKey; label: string }> =
 type AdminToeicGroupFieldsSectionProps = {
   draft: AdminGroupEditorState;
   onChange: (draft: AdminGroupEditorState) => void;
+  partNumber: number;
 };
 
 export function AdminToeicGroupFieldsSection({
   draft,
   onChange,
+  partNumber,
 }: AdminToeicGroupFieldsSectionProps) {
   const updateGroup = (
     patch: Partial<AdminGroupEditorState["draftGroup"]>,
@@ -81,41 +87,65 @@ export function AdminToeicGroupFieldsSection({
       },
     });
   };
+  const showGroupType = isAdminToeicGroupEditorFieldVisible(
+    partNumber,
+    "groupType",
+  );
+  const showAccent = isAdminToeicGroupEditorFieldVisible(partNumber, "accent");
+  const showContent = isAdminToeicGroupEditorFieldVisible(partNumber, "content");
+  const showContentVi = isAdminToeicGroupEditorFieldVisible(
+    partNumber,
+    "contentVi",
+  );
+
+  if (!showGroupType && !showAccent && !showContent && !showContentVi) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      {showGroupType || showAccent ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {showGroupType ? (
+            <div>
+              <FieldLabel>Group type</FieldLabel>
+              <TextInput
+                onChange={(value) => updateGroup({ groupType: value })}
+                value={draft.draftGroup.groupType}
+              />
+            </div>
+          ) : null}
+          {showAccent ? (
+            <div>
+              <FieldLabel>Accent</FieldLabel>
+              <TextInput
+                onChange={(value) => updateGroup({ accent: value })}
+                value={draft.draftGroup.accent}
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {showContent ? (
         <div>
-          <FieldLabel>Group type</FieldLabel>
-          <TextInput
-            onChange={(value) => updateGroup({ groupType: value })}
-            value={draft.draftGroup.groupType}
+          <FieldLabel>Content</FieldLabel>
+          <TextArea
+            onChange={(value) => updateGroup({ content: value })}
+            rows={4}
+            value={draft.draftGroup.content}
           />
         </div>
+      ) : null}
+      {showContentVi ? (
         <div>
-          <FieldLabel>Accent</FieldLabel>
-          <TextInput
-            onChange={(value) => updateGroup({ accent: value })}
-            value={draft.draftGroup.accent}
+          <FieldLabel>Content (VI)</FieldLabel>
+          <TextArea
+            onChange={(value) => updateGroup({ contentVi: value })}
+            rows={4}
+            value={draft.draftGroup.contentVi}
           />
         </div>
-      </div>
-      <div>
-        <FieldLabel>Content</FieldLabel>
-        <TextArea
-          onChange={(value) => updateGroup({ content: value })}
-          rows={4}
-          value={draft.draftGroup.content}
-        />
-      </div>
-      <div>
-        <FieldLabel>Content (VI)</FieldLabel>
-        <TextArea
-          onChange={(value) => updateGroup({ contentVi: value })}
-          rows={4}
-          value={draft.draftGroup.contentVi}
-        />
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -123,12 +153,14 @@ export function AdminToeicGroupFieldsSection({
 type AdminToeicQuestionFieldsSectionProps = {
   draft: AdminGroupEditorState;
   onChange: (draft: AdminGroupEditorState) => void;
+  partNumber: number;
   questions: AdminQuestionEditorEntry[];
 };
 
 export function AdminToeicQuestionFieldsSection({
   draft,
   onChange,
+  partNumber,
   questions,
 }: AdminToeicQuestionFieldsSectionProps) {
   const updateQuestion = (
@@ -159,33 +191,42 @@ export function AdminToeicQuestionFieldsSection({
             Question {question.questionNumber}
           </p>
           <div className="grid gap-4">
-            <div>
-              <FieldLabel>Question type</FieldLabel>
-              <TextInput
-                onChange={(value) =>
-                  updateQuestion(question.id, { questionType: value })
-                }
-                value={question.draft.questionType}
-              />
-            </div>
-            <div>
-              <FieldLabel>Question</FieldLabel>
-              <TextArea
-                onChange={(value) =>
-                  updateQuestion(question.id, { question: value })
-                }
-                value={question.draft.question}
-              />
-            </div>
-            <div>
-              <FieldLabel>Question (VI)</FieldLabel>
-              <TextArea
-                onChange={(value) =>
-                  updateQuestion(question.id, { questionVi: value })
-                }
-                value={question.draft.questionVi}
-              />
-            </div>
+            {isAdminToeicQuestionEditorFieldVisible(
+              partNumber,
+              "questionType",
+            ) ? (
+              <div>
+                <FieldLabel>Question type</FieldLabel>
+                <TextInput
+                  onChange={(value) =>
+                    updateQuestion(question.id, { questionType: value })
+                  }
+                  value={question.draft.questionType}
+                />
+              </div>
+            ) : null}
+            {isAdminToeicQuestionEditorFieldVisible(partNumber, "question") ? (
+              <div>
+                <FieldLabel>Question</FieldLabel>
+                <TextArea
+                  onChange={(value) =>
+                    updateQuestion(question.id, { question: value })
+                  }
+                  value={question.draft.question}
+                />
+              </div>
+            ) : null}
+            {isAdminToeicQuestionEditorFieldVisible(partNumber, "questionVi") ? (
+              <div>
+                <FieldLabel>Question (VI)</FieldLabel>
+                <TextArea
+                  onChange={(value) =>
+                    updateQuestion(question.id, { questionVi: value })
+                  }
+                  value={question.draft.questionVi}
+                />
+              </div>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               {(["A", "B", "C", "D"] as const).map((optionKey) => (
                 <div key={optionKey}>
@@ -236,15 +277,20 @@ export function AdminToeicQuestionFieldsSection({
                 ))}
               </select>
             </div>
-            <div>
-              <FieldLabel>Explanation (VI)</FieldLabel>
-              <TextArea
-                onChange={(value) =>
-                  updateQuestion(question.id, { explanationVi: value })
-                }
-                value={question.draft.explanationVi}
-              />
-            </div>
+            {isAdminToeicQuestionEditorFieldVisible(
+              partNumber,
+              "explanationVi",
+            ) ? (
+              <div>
+                <FieldLabel>Explanation (VI)</FieldLabel>
+                <TextArea
+                  onChange={(value) =>
+                    updateQuestion(question.id, { explanationVi: value })
+                  }
+                  value={question.draft.explanationVi}
+                />
+              </div>
+            ) : null}
           </div>
         </section>
       ))}

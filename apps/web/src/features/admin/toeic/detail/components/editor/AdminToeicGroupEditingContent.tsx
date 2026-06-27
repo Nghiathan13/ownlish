@@ -43,6 +43,7 @@ export function AdminToeicGroupEditingContent({
             <AdminToeicGroupFieldsSection
               draft={editor.draft}
               onChange={editor.setDraft}
+              partNumber={step.partNumber}
             />
           </>
         }
@@ -50,6 +51,7 @@ export function AdminToeicGroupEditingContent({
           <AdminToeicQuestionFieldsSection
             draft={editor.draft}
             onChange={editor.setDraft}
+            partNumber={step.partNumber}
             questions={visibleQuestions}
           />
         }
