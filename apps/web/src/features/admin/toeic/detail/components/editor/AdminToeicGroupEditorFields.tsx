@@ -25,7 +25,7 @@ function TextInput({
 }) {
   return (
     <input
-      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base"
       onChange={(event) => {
         onChange(event.target.value);
       }}
@@ -46,7 +46,7 @@ function TextArea({
 }) {
   return (
     <textarea
-      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base"
       onChange={(event) => {
         onChange(event.target.value);
       }}
@@ -187,10 +187,10 @@ export function AdminToeicQuestionFieldsSection({
     <div className="flex flex-col gap-6">
       {questions.map((question) => (
         <section className="flex flex-col gap-4" key={question.id}>
-          <p className="text-sm font-semibold text-foreground">
-            Question {question.questionNumber}
+          <p className="text-base font-bold text-foreground tabular-nums">
+            {question.questionNumber}
           </p>
-          <div className="grid gap-4">
+          <div className="flex flex-col gap-4">
             {isAdminToeicQuestionEditorFieldVisible(
               partNumber,
               "questionType",
@@ -208,7 +208,7 @@ export function AdminToeicQuestionFieldsSection({
             {isAdminToeicQuestionEditorFieldVisible(partNumber, "question") ? (
               <div>
                 <FieldLabel>Question</FieldLabel>
-                <TextArea
+                <TextInput
                   onChange={(value) =>
                     updateQuestion(question.id, { question: value })
                   }
@@ -219,7 +219,7 @@ export function AdminToeicQuestionFieldsSection({
             {isAdminToeicQuestionEditorFieldVisible(partNumber, "questionVi") ? (
               <div>
                 <FieldLabel>Question (VI)</FieldLabel>
-                <TextArea
+                <TextInput
                   onChange={(value) =>
                     updateQuestion(question.id, { questionVi: value })
                   }
@@ -227,40 +227,42 @@ export function AdminToeicQuestionFieldsSection({
                 />
               </div>
             ) : null}
-            <div className="grid gap-4 sm:grid-cols-2">
-              {(["A", "B", "C", "D"] as const).map((optionKey) => (
-                <div key={optionKey}>
-                  <FieldLabel>{`Option ${optionKey}`}</FieldLabel>
-                  <TextInput
-                    onChange={(value) =>
-                      updateQuestion(question.id, {
-                        [`option${optionKey}`]: value,
-                      } as Partial<AdminQuestionEditorEntry["draft"]>)
-                    }
-                    value={question.draft[`option${optionKey}`]}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {(["A", "B", "C", "D"] as const).map((optionKey) => (
-                <div key={`${optionKey}-vi`}>
-                  <FieldLabel>{`Option ${optionKey} (VI)`}</FieldLabel>
-                  <TextInput
-                    onChange={(value) =>
-                      updateQuestion(question.id, {
-                        [`option${optionKey}Vi`]: value,
-                      } as Partial<AdminQuestionEditorEntry["draft"]>)
-                    }
-                    value={question.draft[`option${optionKey}Vi`]}
-                  />
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4">
+                {(["A", "B", "C", "D"] as const).map((optionKey) => (
+                  <div key={optionKey}>
+                    <FieldLabel>{`Option ${optionKey}`}</FieldLabel>
+                    <TextInput
+                      onChange={(value) =>
+                        updateQuestion(question.id, {
+                          [`option${optionKey}`]: value,
+                        } as Partial<AdminQuestionEditorEntry["draft"]>)
+                      }
+                      value={question.draft[`option${optionKey}`]}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-4">
+                {(["A", "B", "C", "D"] as const).map((optionKey) => (
+                  <div key={`${optionKey}-vi`}>
+                    <FieldLabel>{`Option ${optionKey} (VI)`}</FieldLabel>
+                    <TextInput
+                      onChange={(value) =>
+                        updateQuestion(question.id, {
+                          [`option${optionKey}Vi`]: value,
+                        } as Partial<AdminQuestionEditorEntry["draft"]>)
+                      }
+                      value={question.draft[`option${optionKey}Vi`]}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
               <FieldLabel>Answer key</FieldLabel>
               <select
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base"
                 onChange={(event) => {
                   const value = event.target.value;
                   updateQuestion(question.id, {
