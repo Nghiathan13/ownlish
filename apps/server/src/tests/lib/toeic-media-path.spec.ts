@@ -1,6 +1,7 @@
 import {
   buildAudioStoragePath,
   buildImageStoragePath,
+  partMayHaveAudio,
   partMayHaveImage,
   resolveGroupStoragePaths,
 } from './toeic-media-path';
@@ -27,6 +28,12 @@ describe('toeic-media-path', () => {
   it('detects optional part 3 images', () => {
     expect(partMayHaveImage(3, 62, 64)).toBe(true);
     expect(partMayHaveImage(3, 32, 34)).toBe(false);
+  });
+
+  it('detects listening parts that may have audio', () => {
+    expect(partMayHaveAudio(1)).toBe(true);
+    expect(partMayHaveAudio(4)).toBe(true);
+    expect(partMayHaveAudio(5)).toBe(false);
   });
 
   it('resolves group storage paths', () => {

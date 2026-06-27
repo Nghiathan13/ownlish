@@ -12,11 +12,13 @@ const groupEditableSelect = {
 
 const groupMediaSelect = {
   id: true,
+  audioStoragePath: true,
   imageStoragePath: true,
 } satisfies Prisma.ToeicQuestionGroupSelect;
 
-const groupImageUploadSelect = {
+const groupMediaUploadSelect = {
   id: true,
+  audioStoragePath: true,
   imageStoragePath: true,
   questionStart: true,
   questionEnd: true,
@@ -58,10 +60,12 @@ export type AdminToeicGroupMediaRecord = Prisma.ToeicQuestionGroupGetPayload<{
   select: typeof groupMediaSelect;
 }>;
 
-export type AdminToeicGroupImageUploadRecord =
+export type AdminToeicGroupMediaUploadRecord =
   Prisma.ToeicQuestionGroupGetPayload<{
-    select: typeof groupImageUploadSelect;
+    select: typeof groupMediaUploadSelect;
   }>;
+
+export type AdminToeicGroupImageUploadRecord = AdminToeicGroupMediaUploadRecord;
 
 export type AdminToeicQuestionEditableRecord = Prisma.ToeicQuestionGetPayload<{
   select: typeof questionEditableSelect;
@@ -89,13 +93,20 @@ export class AdminToeicRepository {
     });
   }
 
+  findGroupMediaUploadById(
+    groupId: number,
+  ): Promise<AdminToeicGroupMediaUploadRecord | null> {
+    return this.prisma.toeicQuestionGroup.findUnique({
+      where: { id: groupId },
+      select: groupMediaUploadSelect,
+    });
+  }
+
+  /** @deprecated Use findGroupMediaUploadById */
   findGroupImageUploadById(
     groupId: number,
   ): Promise<AdminToeicGroupImageUploadRecord | null> {
-    return this.prisma.toeicQuestionGroup.findUnique({
-      where: { id: groupId },
-      select: groupImageUploadSelect,
-    });
+    return this.findGroupMediaUploadById(groupId);
   }
 
   updateGroupFields(
@@ -109,10 +120,29 @@ export class AdminToeicRepository {
     });
   }
 
+  clearGroupAudioPath(groupId: number): Promise<AdminToeicGroupMediaRecord> {
+    return this.prisma.toeicQuestionGroup.update({
+      where: { id: groupId },
+      data: { audioStoragePath: null },
+      select: groupMediaSelect,
+    });
+  }
+
   clearGroupImagePath(groupId: number): Promise<AdminToeicGroupMediaRecord> {
     return this.prisma.toeicQuestionGroup.update({
       where: { id: groupId },
       data: { imageStoragePath: null },
+      select: groupMediaSelect,
+    });
+  }
+
+  setGroupAudioPath(
+    groupId: number,
+    audioStoragePath: string,
+  ): Promise<AdminToeicGroupMediaRecord> {
+    return this.prisma.toeicQuestionGroup.update({
+      where: { id: groupId },
+      data: { audioStoragePath },
       select: groupMediaSelect,
     });
   }

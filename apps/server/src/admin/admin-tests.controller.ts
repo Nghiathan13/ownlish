@@ -42,6 +42,31 @@ export class AdminTestsController {
     return this.adminToeicGroupService.patchGroup(groupId, dto);
   }
 
+  @Delete('groups/:groupId/audio')
+  deleteGroupAudio(@Param('groupId', ParseIntPipe) groupId: number) {
+    return this.adminToeicGroupService.deleteGroupAudio(groupId);
+  }
+
+  @Post('groups/:groupId/audio')
+  @UseInterceptors(
+    FileInterceptor('audio', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  uploadGroupAudio(
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @UploadedFile()
+    file:
+      | {
+          buffer: Buffer;
+          mimetype: string;
+          originalname: string;
+        }
+      | undefined,
+  ) {
+    return this.adminToeicGroupService.uploadGroupAudio(groupId, file);
+  }
+
   @Delete('groups/:groupId/image')
   deleteGroupImage(@Param('groupId', ParseIntPipe) groupId: number) {
     return this.adminToeicGroupService.deleteGroupImage(groupId);

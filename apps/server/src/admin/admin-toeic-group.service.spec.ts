@@ -11,9 +11,11 @@ describe('AdminToeicGroupService', () => {
   const repositoryMock = {
     findGroupById: jest.fn(),
     findGroupMediaById: jest.fn(),
-    findGroupImageUploadById: jest.fn(),
+    findGroupMediaUploadById: jest.fn(),
     updateGroupFields: jest.fn(),
+    clearGroupAudioPath: jest.fn(),
     clearGroupImagePath: jest.fn(),
+    setGroupAudioPath: jest.fn(),
     setGroupImagePath: jest.fn(),
   };
 
@@ -35,6 +37,8 @@ describe('AdminToeicGroupService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    storageServiceMock.removeObject.mockResolvedValue(undefined);
+    storageServiceMock.uploadObject.mockResolvedValue(undefined);
     service = new AdminToeicGroupService(
       repositoryMock as unknown as AdminToeicRepository,
       storageServiceMock as unknown as TestsStorageService,
@@ -119,10 +123,12 @@ describe('AdminToeicGroupService', () => {
   it('deletes group image from storage and clears the DB path', async () => {
     repositoryMock.findGroupMediaById.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
     });
     repositoryMock.clearGroupImagePath.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: null,
     });
 
@@ -144,10 +150,12 @@ describe('AdminToeicGroupService', () => {
   it('clears DB path when group has no image', async () => {
     repositoryMock.findGroupMediaById.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: null,
     });
     repositoryMock.clearGroupImagePath.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: null,
     });
 
@@ -161,6 +169,7 @@ describe('AdminToeicGroupService', () => {
   it('throws when storage deletion fails', async () => {
     repositoryMock.findGroupMediaById.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
     });
     storageServiceMock.removeObject.mockRejectedValue(new Error('storage error'));
@@ -180,8 +189,9 @@ describe('AdminToeicGroupService', () => {
   });
 
   it('uploads a png image to the normalized storage path', async () => {
-    repositoryMock.findGroupImageUploadById.mockResolvedValue({
+    repositoryMock.findGroupMediaUploadById.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: null,
       questionStart: 1,
       questionEnd: 1,
@@ -197,6 +207,7 @@ describe('AdminToeicGroupService', () => {
     });
     repositoryMock.setGroupImagePath.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
     });
 
@@ -237,8 +248,9 @@ describe('AdminToeicGroupService', () => {
   });
 
   it('rejects uploads for groups that do not support images', async () => {
-    repositoryMock.findGroupImageUploadById.mockResolvedValue({
+    repositoryMock.findGroupMediaUploadById.mockResolvedValue({
       id: 101,
+      audioStoragePath: null,
       imageStoragePath: null,
       questionStart: 32,
       questionEnd: 34,
@@ -253,6 +265,114 @@ describe('AdminToeicGroupService', () => {
         buffer: Buffer.from('png'),
         mimetype: 'image/png',
         originalname: 'photo.png',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('deletes group audio from storage and clears the DB path', async () => {
+    repositoryMock.findGroupMediaById.mockResolvedValue({
+      id: 101,
+      audioStoragePath: 'toeic/2026/audio/ets26_t01/ets26_t01_01.mp3',
+      imageStoragePath: null,
+    });
+    repositoryMock.clearGroupAudioPath.mockResolvedValue({
+      id: 101,
+      audioStoragePath: null,
+      imageStoragePath: null,
+    });
+
+    const result = await service.deleteGroupAudio(101);
+
+    expect(storageServiceMock.removeObject).toHaveBeenCalledWith(
+      'toeic/2026/audio/ets26_t01/ets26_t01_01.mp3',
+    );
+    expect(repositoryMock.clearGroupAudioPath).toHaveBeenCalledWith(101);
+    expect(result).toEqual({
+      group: {
+        id: 101,
+        audioUrl: null,
+        audioUrlExpiresAt: null,
+      },
+    });
+  });
+
+  it('uploads an mp3 audio file to the normalized storage path', async () => {
+    repositoryMock.findGroupMediaUploadById.mockResolvedValue({
+      id: 101,
+      audioStoragePath: null,
+      imageStoragePath: null,
+      questionStart: 1,
+      questionEnd: 1,
+      testPart: {
+        partNumber: 1,
+        test: { testNumber: 1 },
+      },
+    });
+    storageServiceMock.uploadObject.mockResolvedValue(undefined);
+    storageServiceMock.createSignedUrl.mockResolvedValue({
+      url: 'https://signed.example/ets26_t01_01.mp3',
+      expiresAt: '2026-06-26T12:00:00.000Z',
+    });
+    repositoryMock.setGroupAudioPath.mockResolvedValue({
+      id: 101,
+      audioStoragePath: 'toeic/2026/audio/ets26_t01/ets26_t01_01.mp3',
+      imageStoragePath: null,
+    });
+
+    const file = {
+      buffer: Buffer.from('mp3'),
+      mimetype: 'audio/mpeg',
+      originalname: 'clip.MP3',
+    };
+
+    const result = await service.uploadGroupAudio(101, file);
+
+    expect(storageServiceMock.uploadObject).toHaveBeenCalledWith(
+      'toeic/2026/audio/ets26_t01/ets26_t01_01.mp3',
+      file.buffer,
+      'audio/mpeg',
+    );
+    expect(repositoryMock.setGroupAudioPath).toHaveBeenCalledWith(
+      101,
+      'toeic/2026/audio/ets26_t01/ets26_t01_01.mp3',
+    );
+    expect(result).toEqual({
+      group: {
+        id: 101,
+        audioUrl: 'https://signed.example/ets26_t01_01.mp3',
+        audioUrlExpiresAt: '2026-06-26T12:00:00.000Z',
+      },
+    });
+  });
+
+  it('rejects non-mp3 uploads', async () => {
+    await expect(
+      service.uploadGroupAudio(101, {
+        buffer: Buffer.from('wav'),
+        mimetype: 'audio/wav',
+        originalname: 'clip.wav',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects audio uploads for groups that do not support audio', async () => {
+    repositoryMock.findGroupMediaUploadById.mockResolvedValue({
+      id: 101,
+      audioStoragePath: null,
+      imageStoragePath: null,
+      questionStart: 101,
+      questionEnd: 101,
+      testPart: {
+        partNumber: 5,
+        test: { testNumber: 1 },
+      },
+    });
+
+    await expect(
+      service.uploadGroupAudio(101, {
+        buffer: Buffer.from('mp3'),
+        mimetype: 'audio/mpeg',
+        originalname: 'clip.mp3',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });

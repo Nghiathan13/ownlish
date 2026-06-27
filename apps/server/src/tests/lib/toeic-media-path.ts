@@ -40,6 +40,10 @@ export function partHasPerQuestionAudio(partNumber: number) {
   return partNumber === 1 || partNumber === 2;
 }
 
+export function partMayHaveAudio(partNumber: number) {
+  return partNumber >= 1 && partNumber <= 4;
+}
+
 export function partMayHaveImage(
   partNumber: number,
   questionStart: number,
@@ -77,13 +81,7 @@ export function resolveGroupStoragePaths(
   let imageStoragePath: string | null = null;
 
   if (partNumber >= 1 && partNumber <= 4) {
-    if (partHasPerQuestionAudio(partNumber)) {
-      audioStoragePath = buildAudioStoragePath(
-        testNumber,
-        questionStart,
-        questionEnd,
-      );
-    } else {
+    if (partMayHaveAudio(partNumber)) {
       audioStoragePath = buildAudioStoragePath(
         testNumber,
         questionStart,

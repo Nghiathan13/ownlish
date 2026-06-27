@@ -5,7 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  buildAudioStoragePath,
   buildImageStoragePath,
+  partMayHaveAudio,
   partMayHaveImage,
 } from '../tests/lib/toeic-media-path';
 import { TestsStorageService } from '../tests/tests-storage.service';
@@ -13,23 +15,33 @@ import type { PatchToeicGroupDto } from './dto/patch-toeic-group.dto';
 import { buildGroupPatchData } from './lib/admin-toeic-patch';
 import { AdminToeicRepository } from './lib/admin-toeic.repository';
 import type {
+  AdminToeicGroupAudioDeleteResponse,
+  AdminToeicGroupAudioUploadResponse,
   AdminToeicGroupImageDeleteResponse,
   AdminToeicGroupImageUploadResponse,
   AdminToeicGroupPatchResponse,
 } from './lib/admin-toeic.types';
 
 const PNG_MIME_TYPE = 'image/png';
+const MP3_MIME_TYPE = 'audio/mpeg';
 
-type UploadedImageFile = {
+type UploadedMediaFile = {
   buffer: Buffer;
   mimetype: string;
   originalname: string;
 };
 
-function isPngUpload(file: UploadedImageFile) {
+function isPngUpload(file: UploadedMediaFile) {
   return (
     file.mimetype === PNG_MIME_TYPE &&
     file.originalname.toLowerCase().endsWith('.png')
+  );
+}
+
+function isMp3Upload(file: UploadedMediaFile) {
+  return (
+    file.mimetype === MP3_MIME_TYPE &&
+    file.originalname.toLowerCase().endsWith('.mp3')
   );
 }
 
@@ -61,6 +73,34 @@ export class AdminToeicGroupService {
     return { group };
   }
 
+  async deleteGroupAudio(
+    groupId: number,
+  ): Promise<AdminToeicGroupAudioDeleteResponse> {
+    const existing = await this.repository.findGroupMediaById(groupId);
+
+    if (!existing) {
+      throw new NotFoundException('TOEIC question group not found');
+    }
+
+    if (existing.audioStoragePath) {
+      try {
+        await this.storageService.removeObject(existing.audioStoragePath);
+      } catch {
+        throw new InternalServerErrorException('Failed to delete group audio');
+      }
+    }
+
+    await this.repository.clearGroupAudioPath(groupId);
+
+    return {
+      group: {
+        id: groupId,
+        audioUrl: null,
+        audioUrlExpiresAt: null,
+      },
+    };
+  }
+
   async deleteGroupImage(
     groupId: number,
   ): Promise<AdminToeicGroupImageDeleteResponse> {
@@ -89,9 +129,78 @@ export class AdminToeicGroupService {
     };
   }
 
+  async uploadGroupAudio(
+    groupId: number,
+    file: UploadedMediaFile | undefined,
+  ): Promise<AdminToeicGroupAudioUploadResponse> {
+    if (!file) {
+      throw new BadRequestException('Audio file is required');
+    }
+
+    if (!isMp3Upload(file)) {
+      throw new BadRequestException('Audio file must be a .mp3 file');
+    }
+
+    const existing = await this.repository.findGroupMediaUploadById(groupId);
+
+    if (!existing) {
+      throw new NotFoundException('TOEIC question group not found');
+    }
+
+    const { partNumber, test } = existing.testPart;
+    const { questionStart, questionEnd } = existing;
+
+    if (!partMayHaveAudio(partNumber)) {
+      throw new BadRequestException('This group does not support audio');
+    }
+
+    const audioStoragePath = buildAudioStoragePath(
+      test.testNumber,
+      questionStart,
+      questionEnd,
+    );
+
+    if (
+      existing.audioStoragePath &&
+      existing.audioStoragePath !== audioStoragePath
+    ) {
+      try {
+        await this.storageService.removeObject(existing.audioStoragePath);
+      } catch {
+        throw new InternalServerErrorException('Failed to replace group audio');
+      }
+    }
+
+    try {
+      await this.storageService.uploadObject(
+        audioStoragePath,
+        file.buffer,
+        MP3_MIME_TYPE,
+      );
+    } catch {
+      throw new InternalServerErrorException('Failed to upload group audio');
+    }
+
+    await this.repository.setGroupAudioPath(groupId, audioStoragePath);
+
+    const signed = await this.storageService.createSignedUrl(audioStoragePath);
+
+    if (!signed) {
+      throw new InternalServerErrorException('Failed to sign uploaded audio');
+    }
+
+    return {
+      group: {
+        id: groupId,
+        audioUrl: signed.url,
+        audioUrlExpiresAt: signed.expiresAt,
+      },
+    };
+  }
+
   async uploadGroupImage(
     groupId: number,
-    file: UploadedImageFile | undefined,
+    file: UploadedMediaFile | undefined,
   ): Promise<AdminToeicGroupImageUploadResponse> {
     if (!file) {
       throw new BadRequestException('Image file is required');
@@ -101,7 +210,7 @@ export class AdminToeicGroupService {
       throw new BadRequestException('Image file must be a .png file');
     }
 
-    const existing = await this.repository.findGroupImageUploadById(groupId);
+    const existing = await this.repository.findGroupMediaUploadById(groupId);
 
     if (!existing) {
       throw new NotFoundException('TOEIC question group not found');
