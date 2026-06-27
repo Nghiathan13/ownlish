@@ -51,6 +51,16 @@ export const APP_NAV_LINKS: AppNavLink[] = [
   },
 ];
 
+export const ADMIN_NAV_LINKS: AppNavLink[] = [
+  {
+    href: "/admin/toeic",
+    label: "Tests",
+    activeMatch: "/admin/toeic",
+    icon: TestsNavIcon,
+    activeIcon: TestsNavFillIcon,
+  },
+];
+
 export function getAppNavLinksForUser(): AppNavLink[] {
   return APP_NAV_LINKS;
 }

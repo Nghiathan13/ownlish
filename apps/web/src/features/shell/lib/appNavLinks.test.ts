@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { APP_NAV_LINKS, getAppNavLinksForUser } from "@/features/shell/lib/appNavLinks";
+import {
+  ADMIN_NAV_LINKS,
+  APP_NAV_LINKS,
+  getAppNavLinksForUser,
+} from "@/features/shell/lib/appNavLinks";
 
 describe("getAppNavLinksForUser", () => {
   it("returns only learning nav links", () => {
@@ -11,6 +15,16 @@ describe("getAppNavLinksForUser", () => {
 
     expect(links.some((link) => link.href === "/admin")).toBe(false);
     expect(links.some((link) => link.label === "Admin")).toBe(false);
+    expect(links.some((link) => link.href.startsWith("/admin/"))).toBe(false);
+  });
+
+  it("defines admin Tests as a separate admin nav item", () => {
+    expect(ADMIN_NAV_LINKS).toEqual([
+      expect.objectContaining({
+        href: "/admin/toeic",
+        label: "Tests",
+      }),
+    ]);
   });
 
   it("links Tests nav to canonical mock overview URL", () => {

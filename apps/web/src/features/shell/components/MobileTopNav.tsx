@@ -9,6 +9,7 @@ import {
 } from "@/features/auth/hooks/useAuthSession";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import {
+  ADMIN_NAV_LINKS,
   APP_NAV_LINKS,
   getAppNavLinkClass,
 } from "@/features/shell/lib/appNavLinks";
@@ -26,6 +27,7 @@ export function MobileTopNav() {
   const { logout, status, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
   const isLoading = isLoadingStatus(status);
+  const isAdmin = isAdminUser(user);
 
   return (
     <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-background/80 backdrop-blur-md">
@@ -54,6 +56,20 @@ export function MobileTopNav() {
                 {link.label}
               </Link>
             ))}
+            {isAdmin ? (
+              <span className="h-5 border-l border-border" aria-hidden />
+            ) : null}
+            {isAdmin
+              ? ADMIN_NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={getAppNavLinkClass(pathname, link)}
+                  >
+                    Admin {link.label}
+                  </Link>
+                ))
+              : null}
           </div>
         ) : null}
 
@@ -65,11 +81,6 @@ export function MobileTopNav() {
               <span className="hidden text-xs text-muted-foreground sm:inline">
                 {user?.email}
               </span>
-              {isAdminUser(user) ? (
-                <Link href="/admin" className={secondaryTextButtonClassName()}>
-                  Admin
-                </Link>
-              ) : null}
               <button
                 type="button"
                 onClick={() => {

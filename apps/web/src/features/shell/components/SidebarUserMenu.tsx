@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "@/entities/auth/types";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import { classNames } from "@/shared/lib/classNames";
 import { AccountIcon } from "@/shared/ui/icons/AccountIcon";
-import { AdminNavIcon } from "@/shared/ui/icons/AdminNavIcon";
 import { LogoutIcon } from "@/shared/ui/icons/LogoutIcon";
 
 type SidebarUserMenuProps = {
@@ -111,20 +109,6 @@ export function SidebarUserMenu({
               </p>
             </div>
           </div>
-
-          {isAdmin ? (
-            <Link
-              href="/admin"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false);
-              }}
-              className="flex w-full items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-muted"
-            >
-              <AdminNavIcon className="size-6 shrink-0" />
-              Admin
-            </Link>
-          ) : null}
 
           <button
             type="button"
