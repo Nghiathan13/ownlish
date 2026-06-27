@@ -3,8 +3,8 @@ import {
   getAdminStepGroup,
   getAdminStepQuestions,
 } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
-import { AdminToeicGroupRawPanel } from "@/features/admin/toeic/detail/components/AdminToeicGroupRawPanel";
-import { AdminToeicQuestionRawPanel } from "@/features/admin/toeic/detail/components/AdminToeicQuestionRawPanel";
+import { AdminToeicPracticeLeftPanel } from "@/features/admin/toeic/detail/components/AdminToeicPracticeLeftPanel";
+import { AdminToeicPracticeQuestionPanel } from "@/features/admin/toeic/detail/components/AdminToeicPracticeQuestionPanel";
 import { AdminToeicSplitLayout } from "@/features/admin/toeic/detail/components/AdminToeicSplitLayout";
 
 type AdminToeicStepViewProps = {
@@ -14,11 +14,24 @@ type AdminToeicStepViewProps = {
 export function AdminToeicStepView({ step }: AdminToeicStepViewProps) {
   const group = getAdminStepGroup(step);
   const questions = getAdminStepQuestions(step);
+  const questionNumber =
+    questions[0]?.questionNumber ?? group.questionStart;
 
   return (
     <AdminToeicSplitLayout
-      left={<AdminToeicGroupRawPanel group={group} />}
-      right={<AdminToeicQuestionRawPanel questions={questions} />}
+      left={
+        <AdminToeicPracticeLeftPanel
+          group={group}
+          partNumber={step.partNumber}
+          questionNumber={questionNumber}
+        />
+      }
+      right={
+        <AdminToeicPracticeQuestionPanel
+          partNumber={step.partNumber}
+          questions={questions}
+        />
+      }
     />
   );
 }

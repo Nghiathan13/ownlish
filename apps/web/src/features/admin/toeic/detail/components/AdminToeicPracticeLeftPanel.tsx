@@ -1,0 +1,101 @@
+import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
+import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
+import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import { getAdminRawMetadataLines } from "@/features/admin/toeic/detail/lib/adminRawMetadata";
+
+type AdminToeicPracticeLeftPanelProps = {
+  group: AdminToeicTestRawGroup;
+  partNumber: number;
+  questionNumber: number;
+};
+
+export function AdminToeicPracticeLeftPanel({
+  group,
+  partNumber,
+  questionNumber,
+}: AdminToeicPracticeLeftPanelProps) {
+  const partConfig = getPartPracticeConfig(partNumber);
+  const metadataLines = getAdminRawMetadataLines(group, partNumber);
+  const showAudio =
+    partConfig.leftPanel !== "none" &&
+    (partConfig.leftPanel === "audio-image" ||
+      partConfig.leftPanel === "audio" ||
+      partConfig.leftPanel === "listening-group");
+  const showImage =
+    partConfig.leftPanel !== "none" &&
+    (partConfig.leftPanel === "audio-image" ||
+      partConfig.leftPanel === "listening-group");
+  const mediaSection =
+    metadataLines.length > 0 ||
+    showAudio ||
+    (showImage && (group.imageUrl || partConfig.leftPanel === "audio-image"));
+
+  if (
+    partConfig.leftPanel === "none" &&
+    metadataLines.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <>
+      {mediaSection ? (
+        <div className="flex shrink-0 flex-col gap-4 bg-background">
+          {metadataLines.map((line) => (
+            <p
+              className="text-base font-bold text-foreground select-text"
+              key={line}
+            >
+              {line}
+            </p>
+          ))}
+
+          {showAudio ? (
+            group.audioUrl ? (
+              <audio
+                controls
+                className="w-full"
+                key={group.audioUrl}
+                src={group.audioUrl}
+              />
+            ) : (
+              <p className="text-base text-muted-foreground">No audio available.</p>
+            )
+          ) : null}
+
+          {showImage ? (
+            group.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
+              <img
+                alt={`Question ${questionNumber}`}
+                className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
+                key={group.imageUrl}
+                src={group.imageUrl}
+              />
+            ) : partConfig.leftPanel === "audio-image" ? (
+              <p className="text-base text-muted-foreground">No image available.</p>
+            ) : null
+          ) : null}
+        </div>
+      ) : null}
+
+      {partConfig.leftPanel === "listening-group" ? (
+        <PassagePanel
+          content={group.content}
+          contentVi={group.contentVi}
+          showEvidenceToggle
+          showTranslation={Boolean(group.contentVi?.trim())}
+          title="Transcript"
+        />
+      ) : null}
+
+      {partConfig.leftPanel === "passage" ? (
+        <PassagePanel
+          content={group.content}
+          contentVi={group.contentVi}
+          showTranslation={Boolean(group.contentVi?.trim())}
+        />
+      ) : null}
+    </>
+  );
+}
