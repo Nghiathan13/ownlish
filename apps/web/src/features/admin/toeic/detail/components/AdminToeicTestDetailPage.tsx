@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminToeicActiveStepPanel } from "@/features/admin/toeic/detail/components/AdminToeicActiveStepPanel";
 import { AdminConfirmDialog } from "@/features/admin/toeic/detail/components/editor/AdminConfirmDialog";
-import {
-  getAdminToeicTestDetailQueryKey,
-  useAdminToeicTestDetailQuery,
-} from "@/features/admin/toeic/detail/hooks/useAdminToeicTestDetailQuery";
+import { useAdminToeicTestDetailQuery } from "@/features/admin/toeic/detail/hooks/useAdminToeicTestDetailQuery";
 import { buildAdminToeicGridSections } from "@/features/admin/toeic/detail/lib/adminToeicQuestionGrid";
 import {
   buildAdminToeicRunSteps,
@@ -18,11 +15,8 @@ import {
   getAdminStepGroup,
   getAdminStepQuestionPosition,
 } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
-import { replaceGroupInTestDetail } from "@/features/admin/toeic/detail/lib/applyAdminEditsToCache";
-import type {
-  AdminToeicTestRawGroup,
-  AdminToeicTestRawResponse,
-} from "@/features/admin/toeic/api/types";
+import { mergeAdminToeicGroupPatchIntoDetailCache } from "@/features/admin/toeic/detail/lib/adminToeicGroupPatchCache";
+import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
@@ -118,15 +112,13 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
     executeNavigation(navigation);
   }, [executeNavigation, pendingNavigation]);
 
-  const handleSaved = useCallback(
+  const handleGroupPatched = useCallback(
     (updatedGroup: AdminToeicTestRawGroup) => {
-      queryClient.setQueryData<AdminToeicTestRawResponse>(
-        getAdminToeicTestDetailQueryKey(testId),
-        (current) =>
-          current ? replaceGroupInTestDetail(current, updatedGroup) : current,
+      mergeAdminToeicGroupPatchIntoDetailCache(
+        queryClient,
+        testId,
+        updatedGroup,
       );
-      setIsDirty(false);
-      setIsEditing(false);
     },
     [queryClient, testId],
   );
@@ -212,8 +204,8 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
   return (
     <>
       <PracticeContinuousShell navigation={navigationBar}>
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
-          <div className="mb-4 flex flex-col gap-2">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4">
+          <div className="mb-4 flex shrink-0 flex-col gap-2">
             <Link
               className={secondaryTextButtonClassName()}
               href="/admin/toeic"
@@ -245,7 +237,7 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
               setIsDirty(false);
             }}
             onRequestEdit={() => setIsEditing(true)}
-            onSaved={handleSaved}
+            onGroupPatched={handleGroupPatched}
             step={currentStep}
           />
         </div>

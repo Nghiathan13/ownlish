@@ -21,22 +21,16 @@ import {
   isEditorDirty,
   type AdminGroupEditorState,
 } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
+import {
+  processAdminGroupEditorSaveResults,
+  type AdminGroupEditorSaveTask,
+} from "@/features/admin/toeic/detail/lib/adminGroupEditorSave";
 import { applyAdminEditsToCache } from "@/features/admin/toeic/detail/lib/applyAdminEditsToCache";
 import { ApiError } from "@/shared/api/http";
 
 type UseAdminGroupEditorParams = {
   group: AdminToeicTestRawGroup;
-  onSaved: (updatedGroup: AdminToeicTestRawGroup) => void;
-};
-
-type SaveTask = {
-  errorLabel: string;
-  run: () => Promise<
-    AdminToeicGroupPatchResponse | AdminToeicQuestionPatchResponse
-  >;
-  onSuccess: (
-    response: AdminToeicGroupPatchResponse | AdminToeicQuestionPatchResponse,
-  ) => void;
+  onGroupPatched: (updatedGroup: AdminToeicTestRawGroup) => void;
 };
 
 function getSaveErrorMessage(error: unknown) {
@@ -45,7 +39,7 @@ function getSaveErrorMessage(error: unknown) {
 
 export function useAdminGroupEditor({
   group,
-  onSaved,
+  onGroupPatched,
 }: UseAdminGroupEditorParams) {
   const baselineState = useMemo(
     () => createEditorStateFromGroup(group),
@@ -82,7 +76,7 @@ export function useAdminGroupEditor({
 
     let nextState = cloneEditorState(state);
     let updatedGroup = group;
-    const tasks: SaveTask[] = [];
+    const tasks: AdminGroupEditorSaveTask[] = [];
 
     if (groupPlan) {
       tasks.push({
@@ -129,35 +123,22 @@ export function useAdminGroupEditor({
 
     try {
       const results = await Promise.allSettled(tasks.map((task) => task.run()));
-      const errorMessages: string[] = [];
-      let anySuccess = false;
+      const outcome = processAdminGroupEditorSaveResults(
+        results,
+        tasks,
+        getSaveErrorMessage,
+      );
 
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          anySuccess = true;
-          tasks[index]?.onSuccess(result.value);
-          return;
-        }
-
-        const task = tasks[index];
-        const detail = getSaveErrorMessage(result.reason);
-        errorMessages.push(
-          detail
-            ? `Failed to save ${task?.errorLabel}: ${detail}`
-            : `Failed to save ${task?.errorLabel}`,
-        );
-      });
-
-      if (anySuccess) {
+      if (outcome.anySuccess) {
         setState(nextState);
-        onSaved(updatedGroup);
+        onGroupPatched(updatedGroup);
       }
 
-      if (errorMessages.length > 0) {
-        setError(errorMessages.join("; "));
+      if (outcome.error) {
+        setError(outcome.error);
       }
 
-      return errorMessages.length === 0;
+      return outcome.didSave;
     } catch (saveError) {
       setError(
         saveError instanceof ApiError
@@ -168,7 +149,7 @@ export function useAdminGroupEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [group, onSaved, state]);
+  }, [group, onGroupPatched, state]);
 
   return {
     draft: state,

@@ -1,19 +1,24 @@
 import type { AdminToeicRunStep } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
-import { AdminToeicGroupView } from "@/features/admin/toeic/detail/components/AdminToeicGroupView";
+import {
+  getAdminStepGroup,
+  getAdminStepQuestions,
+} from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
+import { AdminToeicGroupRawPanel } from "@/features/admin/toeic/detail/components/AdminToeicGroupRawPanel";
+import { AdminToeicQuestionRawPanel } from "@/features/admin/toeic/detail/components/AdminToeicQuestionRawPanel";
+import { AdminToeicSplitLayout } from "@/features/admin/toeic/detail/components/AdminToeicSplitLayout";
 
 type AdminToeicStepViewProps = {
   step: AdminToeicRunStep;
 };
 
 export function AdminToeicStepView({ step }: AdminToeicStepViewProps) {
-  if (step.kind === "question") {
-    return (
-      <AdminToeicGroupView
-        activeQuestionId={step.question.id}
-        group={step.group}
-      />
-    );
-  }
+  const group = getAdminStepGroup(step);
+  const questions = getAdminStepQuestions(step);
 
-  return <AdminToeicGroupView group={step.group} />;
+  return (
+    <AdminToeicSplitLayout
+      left={<AdminToeicGroupRawPanel group={group} />}
+      right={<AdminToeicQuestionRawPanel questions={questions} />}
+    />
+  );
 }

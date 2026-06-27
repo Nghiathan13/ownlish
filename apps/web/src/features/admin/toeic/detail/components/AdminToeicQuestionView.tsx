@@ -40,7 +40,7 @@ function getOptionViValue(
 
 export function AdminToeicQuestionView({ question }: AdminToeicQuestionViewProps) {
   return (
-    <div className="rounded-lg border border-border p-4">
+    <section className="flex flex-col gap-3">
       <p className="text-sm font-semibold text-foreground">
         Q{question.questionNumber}
         {question.questionType ? ` · ${question.questionType}` : ""}
@@ -89,10 +89,10 @@ export function AdminToeicQuestionView({ question }: AdminToeicQuestionViewProps
         <span className="font-semibold">{question.answerKey ?? "—"}</span>
       </p>
       {question.explanationVi ? (
-        <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
           {question.explanationVi}
         </p>
       ) : null}
-    </div>
+    </section>
   );
 }

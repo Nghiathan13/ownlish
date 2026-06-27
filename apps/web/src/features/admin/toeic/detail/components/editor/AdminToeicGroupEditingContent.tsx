@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
+import { AdminToeicSplitLayout } from "@/features/admin/toeic/detail/components/AdminToeicSplitLayout";
 import { AdminConfirmDialog } from "@/features/admin/toeic/detail/components/editor/AdminConfirmDialog";
-import { AdminToeicGroupEditorFields } from "@/features/admin/toeic/detail/components/editor/AdminToeicGroupEditorFields";
+import {
+  AdminToeicGroupFieldsSection,
+  AdminToeicQuestionFieldsSection,
+} from "@/features/admin/toeic/detail/components/editor/AdminToeicGroupEditorFields";
 import { AdminToeicMediaPreview } from "@/features/admin/toeic/detail/components/AdminToeicMediaPreview";
 import { useAdminGroupEditor } from "@/features/admin/toeic/detail/hooks/useAdminGroupEditor";
+import type { AdminToeicRunStep } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
+import { getAdminStepQuestions } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
+import { resolveAdminGroupSaveConfirm } from "@/features/admin/toeic/detail/lib/adminToeicGroupSaveConfirm";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -17,23 +24,29 @@ type AdminToeicGroupEditingContentProps = {
   group: AdminToeicTestRawGroup;
   onDirtyChange: (isDirty: boolean) => void;
   onExitEdit: () => void;
-  onSaved: (updatedGroup: AdminToeicTestRawGroup) => void;
+  onGroupPatched: (updatedGroup: AdminToeicTestRawGroup) => void;
+  step: AdminToeicRunStep;
 };
 
 export function AdminToeicGroupEditingContent({
   group,
   onDirtyChange,
   onExitEdit,
-  onSaved,
+  onGroupPatched,
+  step,
 }: AdminToeicGroupEditingContentProps) {
   const editor = useAdminGroupEditor({
     group,
-    onSaved: (updatedGroup) => {
-      onSaved(updatedGroup);
-      onExitEdit();
-    },
+    onGroupPatched,
   });
   const [confirmKind, setConfirmKind] = useState<ConfirmKind | null>(null);
+  const visibleQuestionIds = useMemo(
+    () => new Set(getAdminStepQuestions(step).map((question) => question.id)),
+    [step],
+  );
+  const visibleQuestions = editor.draft.questions.filter((question) =>
+    visibleQuestionIds.has(question.id),
+  );
 
   useEffect(() => {
     onDirtyChange(editor.isDirty);
@@ -65,15 +78,16 @@ export function AdminToeicGroupEditingContent({
     }
 
     if (confirmKind === "save") {
-      const didSave = await editor.save();
-      if (didSave) {
-        setConfirmKind(null);
-      }
+      await resolveAdminGroupSaveConfirm({
+        closeConfirm: () => setConfirmKind(null),
+        onExitEdit,
+        save: editor.save,
+      });
     }
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <button
           className={secondaryTextButtonClassName()}
@@ -93,14 +107,28 @@ export function AdminToeicGroupEditingContent({
         </button>
       </div>
 
-      <AdminToeicMediaPreview
-        audioUrl={group.audioUrl}
-        imageUrl={group.imageUrl}
+      <AdminToeicSplitLayout
+        left={
+          <>
+            <AdminToeicMediaPreview
+              audioUrl={group.audioUrl}
+              imageUrl={group.imageUrl}
+            />
+            <AdminToeicGroupFieldsSection
+              draft={editor.draft}
+              onChange={editor.setDraft}
+            />
+          </>
+        }
+        right={
+          <AdminToeicQuestionFieldsSection
+            draft={editor.draft}
+            onChange={editor.setDraft}
+            questions={visibleQuestions}
+          />
+        }
       />
-      <AdminToeicGroupEditorFields
-        draft={editor.draft}
-        onChange={editor.setDraft}
-      />
+
       {editor.error ? (
         <p className="text-sm text-muted-foreground">{editor.error}</p>
       ) : null}

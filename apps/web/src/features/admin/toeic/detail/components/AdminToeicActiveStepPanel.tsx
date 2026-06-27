@@ -13,7 +13,7 @@ type AdminToeicActiveStepPanelProps = {
   onDirtyChange: (isDirty: boolean) => void;
   onExitEdit: () => void;
   onRequestEdit: () => void;
-  onSaved: (updatedGroup: AdminToeicTestRawGroup) => void;
+  onGroupPatched: (updatedGroup: AdminToeicTestRawGroup) => void;
   step: AdminToeicRunStep;
 };
 
@@ -23,14 +23,14 @@ export function AdminToeicActiveStepPanel({
   onDirtyChange,
   onExitEdit,
   onRequestEdit,
-  onSaved,
+  onGroupPatched,
   step,
 }: AdminToeicActiveStepPanelProps) {
   const stepGroup = getAdminStepGroup(step);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">
             Part {step.partNumber}
@@ -67,7 +67,8 @@ export function AdminToeicActiveStepPanel({
           key={group.id}
           onDirtyChange={onDirtyChange}
           onExitEdit={onExitEdit}
-          onSaved={onSaved}
+          onGroupPatched={onGroupPatched}
+          step={step}
         />
       ) : (
         <AdminToeicStepView step={step} />
