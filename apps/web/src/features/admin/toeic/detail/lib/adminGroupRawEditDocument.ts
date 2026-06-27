@@ -8,6 +8,7 @@ import {
   normalizeEditorNullableString,
   type AdminGroupEditorState,
 } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
+import type { AdminGroupRawEditParseResult } from "@/features/admin/toeic/detail/lib/adminGroupRawEditTypes";
 import {
   getVisibleAdminToeicGroupEditorFields,
   getVisibleAdminToeicQuestionEditorFields,
@@ -186,15 +187,13 @@ export function serializeAdminGroupRawEditDocument(
   return JSON.stringify(doc, null, 2);
 }
 
-export type ParseAdminGroupRawEditDocumentResult =
-  | { ok: true; state: AdminGroupEditorState }
-  | { ok: false; error: string };
+export type { AdminGroupRawEditParseResult } from "@/features/admin/toeic/detail/lib/adminGroupRawEditTypes";
 
 export function parseAdminGroupRawEditDocument(
   text: string,
   currentState: AdminGroupEditorState,
   partNumber: number,
-): ParseAdminGroupRawEditDocumentResult {
+): AdminGroupRawEditParseResult {
   let parsed: unknown;
 
   try {

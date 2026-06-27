@@ -21,9 +21,10 @@ import {
 import { mergeAdminToeicGroupPatchIntoDetailCache } from "@/features/admin/toeic/detail/lib/adminToeicGroupPatchCache";
 import { resolveAdminGroupSaveConfirm } from "@/features/admin/toeic/detail/lib/adminToeicGroupSaveConfirm";
 import {
-  parseAdminGroupRawEditDocument,
-  serializeAdminGroupRawEditDocument,
-} from "@/features/admin/toeic/detail/lib/adminGroupRawEditDocument";
+  parseAdminGroupRawEdit,
+  serializeAdminGroupRawEdit,
+} from "@/features/admin/toeic/detail/lib/adminGroupRawEdit";
+import type { AdminGroupRawEditMode } from "@/features/admin/toeic/detail/lib/adminGroupRawEditTypes";
 import type {
   AdminToeicTestRawGroup,
   AdminToeicTestRawResponse,
@@ -180,7 +181,12 @@ function AdminToeicCurrentStepDetail({
   });
 
   const rawEditInitialJson = useMemo(
-    () => serializeAdminGroupRawEditDocument(editor.draft, currentStep.partNumber),
+    () => serializeAdminGroupRawEdit(editor.draft, currentStep.partNumber, "json"),
+    [currentStep.partNumber, editor.draft],
+  );
+
+  const rawEditInitialTxt = useMemo(
+    () => serializeAdminGroupRawEdit(editor.draft, currentStep.partNumber, "txt"),
     [currentStep.partNumber, editor.draft],
   );
 
@@ -199,13 +205,14 @@ function AdminToeicCurrentStepDetail({
   }, [editor.isSaving]);
 
   const handleRawEditSave = useCallback(
-    async (jsonText: string) => {
+    async (rawText: string, mode: AdminGroupRawEditMode) => {
       setRawEditError(null);
 
-      const parsed = parseAdminGroupRawEditDocument(
-        jsonText,
+      const parsed = parseAdminGroupRawEdit(
+        rawText,
         editor.draft,
         currentStep.partNumber,
+        mode,
       );
 
       if (!parsed.ok) {
@@ -433,11 +440,15 @@ function AdminToeicCurrentStepDetail({
 
       {isRawEditOpen ? (
         <AdminGroupRawEditModal
+          draft={editor.draft}
           error={rawEditError}
           initialJson={rawEditInitialJson}
+          initialTxt={rawEditInitialTxt}
           isSaving={editor.isSaving}
           onClose={handleCloseRawEdit}
+          onErrorChange={setRawEditError}
           onSave={handleRawEditSave}
+          partNumber={currentStep.partNumber}
         />
       ) : null}
     </>
