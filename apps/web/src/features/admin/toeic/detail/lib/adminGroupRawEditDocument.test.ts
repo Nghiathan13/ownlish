@@ -103,9 +103,16 @@ const part5Group: AdminToeicTestRawGroup = {
 describe("adminGroupRawEditDocument", () => {
   it("omits read-only and part-hidden fields from serialized JSON for part 3", () => {
     const state = createEditorStateFromGroup(part3Group);
-    const document = JSON.parse(
-      serializeAdminGroupRawEditDocument(state, 3),
-    ) as Record<string, unknown>;
+    const json = serializeAdminGroupRawEditDocument(state, 3);
+    const document = JSON.parse(json) as Record<string, unknown>;
+
+    expect(Object.keys(document)).toEqual([
+      "groupType",
+      "accent",
+      "content",
+      "contentVi",
+      "questions",
+    ]);
 
     expect(document).not.toHaveProperty("groupId");
     expect(document).not.toHaveProperty("questionStart");

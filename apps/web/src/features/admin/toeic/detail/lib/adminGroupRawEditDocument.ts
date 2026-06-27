@@ -169,15 +169,19 @@ export function serializeAdminGroupRawEditDocument(
   state: AdminGroupEditorState,
   partNumber: number,
 ): string {
-  const doc: AdminGroupRawEditDocument = {
-    questions: state.questions.map((question) =>
-      serializeQuestionDraft(question.draft, partNumber),
-    ),
-  };
+  const doc: Record<string, unknown> = {};
 
-  for (const field of getVisibleAdminToeicGroupEditorFields(partNumber)) {
+  for (const field of GROUP_FIELD_KEYS) {
+    if (!isAdminToeicGroupEditorFieldVisible(partNumber, field)) {
+      continue;
+    }
+
     doc[field] = state.draftGroup[field];
   }
+
+  doc.questions = state.questions.map((question) =>
+    serializeQuestionDraft(question.draft, partNumber),
+  );
 
   return JSON.stringify(doc, null, 2);
 }
