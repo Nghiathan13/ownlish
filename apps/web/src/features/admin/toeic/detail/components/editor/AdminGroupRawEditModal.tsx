@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { AdminGroupEditorState } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
 import {
   parseAdminGroupRawEdit,
@@ -42,6 +42,30 @@ export function AdminGroupRawEditModal({
   const titleId = useId();
   const [mode, setMode] = useState<AdminGroupRawEditMode>("txt");
   const [text, setText] = useState(() => getInitialText("txt", initialJson, initialTxt));
+  const [didCopy, setDidCopy] = useState(false);
+  const copyResetTimeoutRef = useRef<number | null>(null);
+
+  const clearCopyResetTimeout = () => {
+    if (copyResetTimeoutRef.current != null) {
+      window.clearTimeout(copyResetTimeoutRef.current);
+      copyResetTimeoutRef.current = null;
+    }
+  };
+
+  const resetCopyState = () => {
+    clearCopyResetTimeout();
+    setDidCopy(false);
+  };
+
+  const scheduleCopyReset = () => {
+    clearCopyResetTimeout();
+    copyResetTimeoutRef.current = window.setTimeout(() => {
+      setDidCopy(false);
+      copyResetTimeoutRef.current = null;
+    }, 2000);
+  };
+
+  useEffect(() => () => clearCopyResetTimeout(), []);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -67,8 +91,27 @@ export function AdminGroupRawEditModal({
 
     setMode(nextMode);
     setText(serializeAdminGroupRawEdit(parsed.state, partNumber, nextMode));
+    resetCopyState();
     onErrorChange(null);
   };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setDidCopy(true);
+      scheduleCopyReset();
+    } catch {
+      resetCopyState();
+    }
+  };
+
+  const copyLabel = didCopy
+    ? mode === "txt"
+      ? "Copied TXT"
+      : "Copied JSON"
+    : mode === "txt"
+      ? "Copy TXT"
+      : "Copy JSON";
 
   return (
     <div
@@ -123,6 +166,7 @@ export function AdminGroupRawEditModal({
           disabled={isSaving}
           onChange={(event) => {
             setText(event.target.value);
+            resetCopyState();
             if (error) {
               onErrorChange(null);
             }
@@ -135,23 +179,33 @@ export function AdminGroupRawEditModal({
           <p className="text-sm text-destructive">{error}</p>
         ) : null}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex items-center justify-between gap-2">
           <button
             className={secondaryTextButtonClassName()}
             disabled={isSaving}
-            onClick={onClose}
+            onClick={handleCopy}
             type="button"
           >
-            Cancel
+            {copyLabel}
           </button>
-          <button
-            className={primaryTextButtonClassName()}
-            disabled={isSaving}
-            onClick={() => onSave(text, mode)}
-            type="button"
-          >
-            {isSaving ? "Saving…" : "Save"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              className={secondaryTextButtonClassName()}
+              disabled={isSaving}
+              onClick={onClose}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className={primaryTextButtonClassName()}
+              disabled={isSaving}
+              onClick={() => onSave(text, mode)}
+              type="button"
+            >
+              {isSaving ? "Saving…" : "Save"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
