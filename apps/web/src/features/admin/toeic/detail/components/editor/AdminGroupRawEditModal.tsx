@@ -40,8 +40,8 @@ export function AdminGroupRawEditModal({
   onSave,
 }: AdminGroupRawEditModalProps) {
   const titleId = useId();
-  const [mode, setMode] = useState<AdminGroupRawEditMode>("json");
-  const [text, setText] = useState(() => getInitialText("json", initialJson, initialTxt));
+  const [mode, setMode] = useState<AdminGroupRawEditMode>("txt");
+  const [text, setText] = useState(() => getInitialText("txt", initialJson, initialTxt));
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
