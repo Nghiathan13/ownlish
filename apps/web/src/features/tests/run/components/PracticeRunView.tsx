@@ -31,8 +31,8 @@ import {
   getSessionQuestionNumber,
 } from "@/features/tests/run/lib/sessionQuestionPosition";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
-import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
-import { useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
+import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPathFromYearValue,
@@ -154,10 +154,11 @@ export function PracticeRunView({
     [activeStepIndex, steps.length, storageKey],
   );
 
-  useRegisterPracticeExit(
+  useRegisterImmersiveExit(
     practice.sessionId ? () => undefined : null,
     testId ? `Test ${testId}` : null,
     testsListPath,
+    { showBilingualAction: true },
   );
 
   const activeQuestionIds = useMemo(
@@ -197,7 +198,7 @@ export function PracticeRunView({
     currentStepQuestionId,
   );
 
-  useRegisterPracticeQuestionNav({
+  useRegisterImmersiveQuestionNav({
     currentQuestionNumber,
     enabled: practice.sessionId != null && steps.length > 0,
     totalQuestions,

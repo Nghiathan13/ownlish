@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePracticeQuestionNav } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useImmersiveQuestionNav } from "@/features/shell/providers/ImmersiveToolbarProvider";
 
-type UseRegisterPracticeQuestionNavParams = {
+type UseRegisterImmersiveQuestionNavParams = {
   enabled: boolean;
   currentQuestionNumber: number;
   totalQuestions: number;
 };
 
-export function useRegisterPracticeQuestionNav({
+export function useRegisterImmersiveQuestionNav({
   enabled,
   currentQuestionNumber,
   totalQuestions,
-}: UseRegisterPracticeQuestionNavParams) {
-  const context = usePracticeQuestionNav();
+}: UseRegisterImmersiveQuestionNavParams) {
+  const context = useImmersiveQuestionNav();
   const registerQuestionNav = context?.registerQuestionNav;
 
   useEffect(() => {

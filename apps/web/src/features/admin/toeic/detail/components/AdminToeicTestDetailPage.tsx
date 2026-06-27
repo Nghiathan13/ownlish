@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +19,8 @@ import { mergeAdminToeicGroupPatchIntoDetailCache } from "@/features/admin/toeic
 import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
+import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
+import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type AdminToeicTestDetailPageProps = {
@@ -123,17 +125,29 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
     [queryClient, testId],
   );
 
-  const handleBackClick = useCallback(
-    (event: MouseEvent<HTMLAnchorElement>) => {
-      if (!isEditing || !isDirty) {
-        return;
-      }
+  const handleToolbarExit = useCallback(() => {
+    if (isEditing && isDirty) {
+      setPendingNavigation({ type: "back" });
+      return false;
+    }
 
-      event.preventDefault();
-      requestNavigation({ type: "back" });
-    },
-    [isDirty, isEditing, requestNavigation],
+    if (isEditing) {
+      setIsEditing(false);
+      setIsDirty(false);
+    }
+  }, [isDirty, isEditing]);
+
+  useRegisterImmersiveExit(
+    data ? handleToolbarExit : null,
+    data ? `Test ${data.test.testNumber} · ${data.test.year}` : null,
+    "/admin/toeic",
   );
+
+  useRegisterImmersiveQuestionNav({
+    currentQuestionNumber: currentQuestionPosition,
+    enabled: data != null && steps.length > 0,
+    totalQuestions,
+  });
 
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
@@ -205,29 +219,6 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
     <>
       <PracticeContinuousShell navigation={navigationBar}>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4">
-          <div className="mb-4 flex shrink-0 flex-col gap-2">
-            <Link
-              className={secondaryTextButtonClassName()}
-              href="/admin/toeic"
-              onClick={handleBackClick}
-            >
-              Back to TOEIC Content
-            </Link>
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-bold leading-tight">
-                  Test {data.test.testNumber} · {data.test.year}
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Test ID {data.test.id}
-                </p>
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                Question {currentQuestionPosition} / {totalQuestions}
-              </p>
-            </div>
-          </div>
-
           <AdminToeicActiveStepPanel
             group={currentGroup}
             isEditing={isEditing}

@@ -7,7 +7,7 @@ import { PracticeSplitPlainLayout } from "@/features/tests/run/components/Practi
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
-import { usePracticeBilingual } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
 import {
   showsOptionTranslation,
@@ -32,7 +32,7 @@ export function MockGroupScreen({
   partNumber,
 }: MockGroupScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
-  const practiceBilingual = usePracticeBilingual();
+  const practiceBilingual = useImmersiveBilingual();
   const isBilingual = practiceBilingual?.isBilingual ?? false;
   const showPassageOnLeft =
     partConfig.leftPanel === "passage" ? true : isFinished;

@@ -10,7 +10,7 @@ import { useSignedMedia } from "@/features/tests/run/hooks/useSignedMedia";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { getPracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
-import { usePracticeBilingual } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
 
 type PracticeGroupScreenProps = {
   testId: number;
@@ -26,7 +26,7 @@ export function PracticeGroupScreen({
   practice,
 }: PracticeGroupScreenProps) {
   const partConfig = getPartPracticeConfig(partNumber);
-  const practiceBilingual = usePracticeBilingual();
+  const practiceBilingual = useImmersiveBilingual();
   const isBilingual = practiceBilingual?.isBilingual ?? false;
   const usesDeferredGroupGrading = partConfig.hideContextUntilGroupComplete;
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";

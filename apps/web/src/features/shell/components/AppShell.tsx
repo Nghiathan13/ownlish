@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { TestSessionToolbar } from "@/features/tests/run/components/TestSessionToolbar";
+import { ImmersiveToolbar } from "@/features/shell/components/ImmersiveToolbar";
 import { AppSidebar } from "@/features/shell/components/AppSidebar";
 import { MobileTopNav } from "@/features/shell/components/MobileTopNav";
 import { getShellLayoutMode } from "@/features/shell/lib/shellRoutes";
@@ -19,10 +19,10 @@ export function AppShell({ children }: AppShellProps) {
     return <>{children}</>;
   }
 
-  if (layoutMode === "immersive-test") {
+  if (layoutMode === "immersive") {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        <TestSessionToolbar />
+        <ImmersiveToolbar />
         {children}
       </div>
     );

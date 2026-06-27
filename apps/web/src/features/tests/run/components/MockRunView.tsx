@@ -6,8 +6,11 @@ import { MockGroupScreen } from "@/features/tests/run/components/MockGroupScreen
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { useMockTestRun } from "@/features/tests/run/hooks/useMockTestRun";
-import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
-import { useRegisterPracticeFinish, useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
+import {
+  useRegisterImmersiveExit,
+  useRegisterImmersiveFinish,
+} from "@/features/shell/providers/ImmersiveToolbarProvider";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import {
   DEFAULT_TOEIC_YEAR,
@@ -310,15 +313,16 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
 
   const testLabel = mock.testId ? `Test ${mock.testId}` : null;
 
-  useRegisterPracticeFinish(
+  useRegisterImmersiveFinish(
     mock.isFinished ? null : handleFinish,
     mock.isFinished ? null : testLabel,
   );
 
-  useRegisterPracticeExit(
+  useRegisterImmersiveExit(
     mock.isFinished ? () => undefined : null,
     mock.isFinished ? testLabel : null,
     testsListPath,
+    { showBilingualAction: true },
   );
 
   const questionGridSections = useMemo(
@@ -331,7 +335,7 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
     activeGroup?.questions[0]?.id,
   );
 
-  useRegisterPracticeQuestionNav({
+  useRegisterImmersiveQuestionNav({
     currentQuestionNumber,
     enabled: groups.length > 0,
     totalQuestions,

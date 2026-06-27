@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthQueryReset } from "@/features/auth/components/AuthQueryReset";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import { AppShell } from "@/features/shell";
-import { PracticeExitProvider } from "@/features/tests/run/providers/PracticeExitProvider";
+import { ImmersiveToolbarProvider } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { QueryProvider } from "@/shared/providers/QueryProvider";
 import "./globals.css";
 
@@ -35,10 +35,10 @@ export default function RootLayout({
       <body className="flex h-dvh min-h-0 flex-col overflow-hidden">
         <AuthProvider>
           <QueryProvider>
-            <PracticeExitProvider>
+            <ImmersiveToolbarProvider>
               <AuthQueryReset />
               <AppShell>{children}</AppShell>
-            </PracticeExitProvider>
+            </ImmersiveToolbarProvider>
           </QueryProvider>
         </AuthProvider>
       </body>

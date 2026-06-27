@@ -28,8 +28,8 @@ import {
   getAggregateQuestionGridDisplayNumber,
 } from "@/features/tests/run/lib/practiceQuestionGrid";
 import { getSessionQuestionNumber } from "@/features/tests/run/lib/sessionQuestionPosition";
-import { useRegisterPracticeQuestionNav } from "@/features/tests/run/hooks/useRegisterPracticeQuestionNav";
-import { useRegisterPracticeExit } from "@/features/tests/run/providers/PracticeExitProvider";
+import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
+import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePaths";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -134,10 +134,11 @@ export function PartPracticeRunView({
     [activeStepIndex, steps.length, storageKey],
   );
 
-  useRegisterPracticeExit(
+  useRegisterImmersiveExit(
     practice.sessionId ? () => undefined : null,
     partNumber > 0 ? `Part ${partNumber}` : null,
     practiceOverviewPath,
+    { showBilingualAction: true },
   );
 
   const activeQuestionIds = useMemo(
@@ -180,7 +181,7 @@ export function PartPracticeRunView({
     currentStepQuestionId,
   );
 
-  useRegisterPracticeQuestionNav({
+  useRegisterImmersiveQuestionNav({
     currentQuestionNumber,
     enabled: practice.sessionId != null && steps.length > 0,
     totalQuestions,
