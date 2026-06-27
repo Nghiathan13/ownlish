@@ -141,6 +141,44 @@ export function AdminToeicGroupEditingContent({
     }
   };
 
+  const uploadImageSlot = canUploadImage ? (
+    <div className="flex justify-end">
+      <button
+        className={uploadImageButtonClassName()}
+        disabled={editor.isUploadingImage}
+        onClick={() => fileInputRef.current?.click()}
+        type="button"
+      >
+        Upload image
+      </button>
+      <input
+        accept=".png,image/png"
+        className="hidden"
+        onChange={(event) => {
+          handleImageFileSelected(event.target.files?.[0]);
+        }}
+        ref={fileInputRef}
+        type="file"
+      />
+    </div>
+  ) : null;
+
+  const mediaPreview = (
+    <AdminToeicMediaPreview
+      afterAudioSlot={groupMayHaveImage ? uploadImageSlot : undefined}
+      audioUrl={group.audioUrl}
+      imageUrl={group.imageUrl}
+      onRequestDeleteImage={
+        canDeleteImage ? () => setIsDeleteImageConfirmOpen(true) : undefined
+      }
+      previewImageUrl={pendingImagePreviewUrl}
+      questionNumber={questionNumber}
+      showAudio={showAudio}
+      showImage={showImage}
+      showImagePlaceholder={partConfig.leftPanel === "audio-image"}
+    />
+  );
+
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -149,42 +187,7 @@ export function AdminToeicGroupEditingContent({
             <>
               {groupMayHaveImage ? (
                 <div className="flex flex-col gap-3">
-                  {canUploadImage ? (
-                    <div className="flex justify-end">
-                      <button
-                        className={uploadImageButtonClassName()}
-                        disabled={editor.isUploadingImage}
-                        onClick={() => fileInputRef.current?.click()}
-                        type="button"
-                      >
-                        Upload image
-                      </button>
-                      <input
-                        accept=".png,image/png"
-                        className="hidden"
-                        onChange={(event) => {
-                          handleImageFileSelected(event.target.files?.[0]);
-                        }}
-                        ref={fileInputRef}
-                        type="file"
-                      />
-                    </div>
-                  ) : null}
-
-                  <AdminToeicMediaPreview
-                    audioUrl={group.audioUrl}
-                    imageUrl={group.imageUrl}
-                    onRequestDeleteImage={
-                      canDeleteImage
-                        ? () => setIsDeleteImageConfirmOpen(true)
-                        : undefined
-                    }
-                    previewImageUrl={pendingImagePreviewUrl}
-                    questionNumber={questionNumber}
-                    showAudio={showAudio}
-                    showImage={showImage}
-                    showImagePlaceholder={partConfig.leftPanel === "audio-image"}
-                  />
+                  {mediaPreview}
 
                   {hasPendingImageUpload ? (
                     <div className="flex justify-end gap-2">
@@ -214,14 +217,7 @@ export function AdminToeicGroupEditingContent({
                   ) : null}
                 </div>
               ) : (
-                <AdminToeicMediaPreview
-                  audioUrl={group.audioUrl}
-                  imageUrl={group.imageUrl}
-                  questionNumber={questionNumber}
-                  showAudio={showAudio}
-                  showImage={showImage}
-                  showImagePlaceholder={partConfig.leftPanel === "audio-image"}
-                />
+                mediaPreview
               )}
               <AdminToeicGroupFieldsSection
                 draft={editor.draft}

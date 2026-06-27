@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
@@ -12,6 +13,7 @@ type AdminToeicMediaPreviewProps = {
   showAudio?: boolean;
   showImage?: boolean;
   showImagePlaceholder?: boolean;
+  afterAudioSlot?: ReactNode;
   onRequestDeleteImage?: () => void;
 };
 
@@ -23,6 +25,7 @@ export function AdminToeicMediaPreview({
   showAudio = true,
   showImage = true,
   showImagePlaceholder = false,
+  afterAudioSlot,
   onRequestDeleteImage,
 }: AdminToeicMediaPreviewProps) {
   const displayImageUrl = previewImageUrl ?? imageUrl;
@@ -31,7 +34,13 @@ export function AdminToeicMediaPreview({
   const showMissingImage =
     showImage && showImagePlaceholder && !displayImageUrl;
 
-  if (!hasAudio && !hasImage && !showMissingImage && !(showAudio && !audioUrl)) {
+  if (
+    !hasAudio &&
+    !hasImage &&
+    !showMissingImage &&
+    !(showAudio && !audioUrl) &&
+    afterAudioSlot == null
+  ) {
     return null;
   }
 
@@ -44,6 +53,7 @@ export function AdminToeicMediaPreview({
           <p className="text-base text-muted-foreground">No audio available.</p>
         )
       ) : null}
+      {afterAudioSlot}
       {hasImage ? (
         <div className="relative">
           {onRequestDeleteImage && previewImageUrl == null ? (
