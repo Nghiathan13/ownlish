@@ -4,9 +4,18 @@ import { AdminToeicQuestionView } from "@/features/admin/toeic/detail/components
 
 type AdminToeicGroupViewProps = {
   group: AdminToeicTestRawGroup;
+  activeQuestionId?: number;
 };
 
-export function AdminToeicGroupView({ group }: AdminToeicGroupViewProps) {
+export function AdminToeicGroupView({
+  group,
+  activeQuestionId,
+}: AdminToeicGroupViewProps) {
+  const questions =
+    activeQuestionId == null
+      ? group.questions
+      : group.questions.filter((question) => question.id === activeQuestionId);
+
   return (
     <>
       {group.content ? (
@@ -26,7 +35,7 @@ export function AdminToeicGroupView({ group }: AdminToeicGroupViewProps) {
       />
 
       <div className="mt-4 space-y-3">
-        {group.questions.map((question) => (
+        {questions.map((question) => (
           <AdminToeicQuestionView key={question.id} question={question} />
         ))}
       </div>

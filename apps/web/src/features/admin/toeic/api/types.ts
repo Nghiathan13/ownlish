@@ -1,6 +1,6 @@
 export type AdminToeicAnswerKey = "A" | "B" | "C" | "D" | null;
 
-export type AdminToeicGroupRawQuestion = {
+export type AdminToeicTestRawQuestion = {
   id: number;
   questionNumber: number;
   question: string | null;
@@ -18,48 +18,43 @@ export type AdminToeicGroupRawQuestion = {
   explanationVi: string | null;
 };
 
-export type AdminToeicGroupRaw = {
-  id: number;
-  testId: number;
-  partNumber: number;
-  questionStart: number;
-  questionEnd: number;
+export type AdminToeicGroupFields = {
   groupType: string | null;
   accent: string | null;
   content: string | null;
   contentVi: string | null;
-  audioStoragePath: string | null;
-  imageStoragePath: string | null;
-  questions: AdminToeicGroupRawQuestion[];
 };
 
-export type AdminToeicGroupRawPayload = {
-  group: AdminToeicGroupRaw;
+export type AdminToeicQuestionFields = {
+  question: string | null;
+  questionVi: string | null;
+  questionType: string | null;
+  optionA: string | null;
+  optionB: string | null;
+  optionC: string | null;
+  optionD: string | null;
+  optionAVi: string | null;
+  optionBVi: string | null;
+  optionCVi: string | null;
+  optionDVi: string | null;
+  answerKey: AdminToeicAnswerKey;
+  explanationVi: string | null;
 };
 
-export type AdminToeicGroupRawPatchInput = {
+export type AdminToeicGroupPatchInput = Partial<AdminToeicGroupFields>;
+
+export type AdminToeicQuestionPatchInput = Partial<AdminToeicQuestionFields>;
+
+export type AdminToeicGroupPatchResponse = {
   group: {
-    groupType: string | null;
-    accent: string | null;
-    content: string | null;
-    contentVi: string | null;
-  };
-  questions: Array<{
     id: number;
-    question: string | null;
-    questionVi: string | null;
-    questionType: string | null;
-    optionA: string | null;
-    optionB: string | null;
-    optionC: string | null;
-    optionD: string | null;
-    optionAVi: string | null;
-    optionBVi: string | null;
-    optionCVi: string | null;
-    optionDVi: string | null;
-    answerKey: AdminToeicAnswerKey;
-    explanationVi: string | null;
-  }>;
+  } & AdminToeicGroupPatchInput;
+};
+
+export type AdminToeicQuestionPatchResponse = {
+  question: {
+    id: number;
+  } & AdminToeicQuestionPatchInput;
 };
 
 export type AdminToeicTestPartSummary = {
@@ -78,8 +73,6 @@ export type AdminToeicTestListItem = {
 export type AdminToeicTestListResponse = {
   items: AdminToeicTestListItem[];
 };
-
-export type AdminToeicTestRawQuestion = AdminToeicGroupRawQuestion;
 
 export type AdminToeicTestRawGroup = {
   id: number;

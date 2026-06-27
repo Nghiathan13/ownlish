@@ -1,9 +1,9 @@
 import type { AdminToeicAnswerKey } from "@/features/admin/toeic/api/types";
-import type { AdminToeicGroupDraft } from "@/features/admin/toeic/detail/lib/adminGroupDraft";
+import type { AdminGroupEditorState } from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
 
 type AdminToeicGroupEditorFieldsProps = {
-  draft: AdminToeicGroupDraft;
-  onChange: (draft: AdminToeicGroupDraft) => void;
+  draft: AdminGroupEditorState;
+  onChange: (draft: AdminGroupEditorState) => void;
 };
 
 const ANSWER_KEY_OPTIONS: Array<{ value: AdminToeicAnswerKey; label: string }> =
@@ -67,18 +67,34 @@ export function AdminToeicGroupEditorFields({
   draft,
   onChange,
 }: AdminToeicGroupEditorFieldsProps) {
-  const updateGroup = (patch: Partial<AdminToeicGroupDraft>) => {
-    onChange({ ...draft, ...patch });
+  const updateGroup = (
+    patch: Partial<AdminGroupEditorState["draftGroup"]>,
+  ) => {
+    onChange({
+      ...draft,
+      draftGroup: {
+        ...draft.draftGroup,
+        ...patch,
+      },
+    });
   };
 
   const updateQuestion = (
     questionId: number,
-    patch: Partial<AdminToeicGroupDraft["questions"][number]>,
+    patch: Partial<AdminGroupEditorState["questions"][number]["draft"]>,
   ) => {
     onChange({
       ...draft,
       questions: draft.questions.map((question) =>
-        question.id === questionId ? { ...question, ...patch } : question,
+        question.id === questionId
+          ? {
+              ...question,
+              draft: {
+                ...question.draft,
+                ...patch,
+              },
+            }
+          : question,
       ),
     });
   };
@@ -92,14 +108,14 @@ export function AdminToeicGroupEditorFields({
             <FieldLabel>Group type</FieldLabel>
             <TextInput
               onChange={(value) => updateGroup({ groupType: value })}
-              value={draft.groupType}
+              value={draft.draftGroup.groupType}
             />
           </div>
           <div>
             <FieldLabel>Accent</FieldLabel>
             <TextInput
               onChange={(value) => updateGroup({ accent: value })}
-              value={draft.accent}
+              value={draft.draftGroup.accent}
             />
           </div>
         </div>
@@ -108,7 +124,7 @@ export function AdminToeicGroupEditorFields({
           <TextArea
             onChange={(value) => updateGroup({ content: value })}
             rows={4}
-            value={draft.content}
+            value={draft.draftGroup.content}
           />
         </div>
         <div>
@@ -116,7 +132,7 @@ export function AdminToeicGroupEditorFields({
           <TextArea
             onChange={(value) => updateGroup({ contentVi: value })}
             rows={4}
-            value={draft.contentVi}
+            value={draft.draftGroup.contentVi}
           />
         </div>
       </section>
@@ -138,7 +154,7 @@ export function AdminToeicGroupEditorFields({
                   onChange={(value) =>
                     updateQuestion(question.id, { questionType: value })
                   }
-                  value={question.questionType}
+                  value={question.draft.questionType}
                 />
               </div>
               <div>
@@ -147,7 +163,7 @@ export function AdminToeicGroupEditorFields({
                   onChange={(value) =>
                     updateQuestion(question.id, { question: value })
                   }
-                  value={question.question}
+                  value={question.draft.question}
                 />
               </div>
               <div>
@@ -156,7 +172,7 @@ export function AdminToeicGroupEditorFields({
                   onChange={(value) =>
                     updateQuestion(question.id, { questionVi: value })
                   }
-                  value={question.questionVi}
+                  value={question.draft.questionVi}
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -167,9 +183,11 @@ export function AdminToeicGroupEditorFields({
                       onChange={(value) =>
                         updateQuestion(question.id, {
                           [`option${optionKey}`]: value,
-                        } as Partial<AdminToeicGroupDraft["questions"][number]>)
+                        } as Partial<
+                          AdminGroupEditorState["questions"][number]["draft"]
+                        >)
                       }
-                      value={question[`option${optionKey}`]}
+                      value={question.draft[`option${optionKey}`]}
                     />
                   </div>
                 ))}
@@ -182,9 +200,11 @@ export function AdminToeicGroupEditorFields({
                       onChange={(value) =>
                         updateQuestion(question.id, {
                           [`option${optionKey}Vi`]: value,
-                        } as Partial<AdminToeicGroupDraft["questions"][number]>)
+                        } as Partial<
+                          AdminGroupEditorState["questions"][number]["draft"]
+                        >)
                       }
-                      value={question[`option${optionKey}Vi`]}
+                      value={question.draft[`option${optionKey}Vi`]}
                     />
                   </div>
                 ))}
@@ -200,7 +220,7 @@ export function AdminToeicGroupEditorFields({
                         value === "" ? null : (value as AdminToeicAnswerKey),
                     });
                   }}
-                  value={question.answerKey ?? ""}
+                  value={question.draft.answerKey ?? ""}
                 >
                   {ANSWER_KEY_OPTIONS.map((option) => (
                     <option key={option.label} value={option.value ?? ""}>
@@ -215,7 +235,7 @@ export function AdminToeicGroupEditorFields({
                   onChange={(value) =>
                     updateQuestion(question.id, { explanationVi: value })
                   }
-                  value={question.explanationVi}
+                  value={question.draft.explanationVi}
                 />
               </div>
             </div>

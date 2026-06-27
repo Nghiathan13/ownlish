@@ -1,21 +1,21 @@
 import { apiRequest } from "@/shared/api/http";
-import { parseAdminToeicGroupRawPayload } from "@/features/admin/toeic/lib/parseAdminToeicGroupRaw";
+import { parseAdminToeicGroupPatchResponse } from "@/features/admin/toeic/lib/parseAdminToeicPatchResponse";
 import type {
-  AdminToeicGroupRawPatchInput,
-  AdminToeicGroupRawPayload,
+  AdminToeicGroupPatchInput,
+  AdminToeicGroupPatchResponse,
 } from "./types";
 
-export function patchAdminToeicGroupRaw(
+export function patchAdminToeicGroup(
   token: string,
   groupId: number,
-  input: AdminToeicGroupRawPatchInput,
-): Promise<AdminToeicGroupRawPayload> {
-  return apiRequest(`/admin/tests/groups/${groupId}/raw`, {
+  input: AdminToeicGroupPatchInput,
+): Promise<AdminToeicGroupPatchResponse> {
+  return apiRequest(`/admin/tests/groups/${groupId}`, {
     token,
     method: "PATCH",
     body: JSON.stringify(input),
     headers: {
       "Content-Type": "application/json",
     },
-  }).then(parseAdminToeicGroupRawPayload);
+  }).then(parseAdminToeicGroupPatchResponse);
 }

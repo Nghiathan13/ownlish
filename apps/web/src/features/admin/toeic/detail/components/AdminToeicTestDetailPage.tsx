@@ -1,77 +1,122 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { AdminToeicPartSection } from "@/features/admin/toeic/detail/components/AdminToeicPartSection";
+import { AdminToeicActiveStepPanel } from "@/features/admin/toeic/detail/components/AdminToeicActiveStepPanel";
 import { AdminConfirmDialog } from "@/features/admin/toeic/detail/components/editor/AdminConfirmDialog";
 import {
   getAdminToeicTestDetailQueryKey,
   useAdminToeicTestDetailQuery,
 } from "@/features/admin/toeic/detail/hooks/useAdminToeicTestDetailQuery";
-import { replaceGroupInTestDetail } from "@/features/admin/toeic/detail/lib/mergeGroupIntoDetailCache";
+import { buildAdminToeicGridSections } from "@/features/admin/toeic/detail/lib/adminToeicQuestionGrid";
+import {
+  buildAdminToeicRunSteps,
+  countAdminToeicQuestions,
+  findAdminStepIndexForQuestionId,
+  getAdminStepGroup,
+  getAdminStepQuestionPosition,
+} from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
+import { replaceGroupInTestDetail } from "@/features/admin/toeic/detail/lib/applyAdminEditsToCache";
 import type {
   AdminToeicTestRawGroup,
   AdminToeicTestRawResponse,
 } from "@/features/admin/toeic/api/types";
+import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
+import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
-import { PageShell } from "@/shared/ui/PageShell";
-import { Panel } from "@/shared/ui/Panel";
 
 type AdminToeicTestDetailPageProps = {
   testId: number;
 };
 
+type PendingNavigation =
+  | { type: "back" }
+  | { type: "step"; stepIndex: number };
+
 export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPageProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useAdminToeicTestDetailQuery({
     enabled: true,
     testId,
   });
-  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-  const [dirtyGroupId, setDirtyGroupId] = useState<number | null>(null);
-  const [pendingEditGroupId, setPendingEditGroupId] = useState<number | null>(
-    null,
+  const [stepIndex, setStepIndex] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
+  const [pendingNavigation, setPendingNavigation] =
+    useState<PendingNavigation | null>(null);
+
+  const steps = useMemo(
+    () => (data ? buildAdminToeicRunSteps(data.parts) : []),
+    [data],
+  );
+  const activeStepIndex =
+    steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
+  const currentStep = steps[activeStepIndex] ?? null;
+  const currentGroup = currentStep ? getAdminStepGroup(currentStep) : null;
+  const totalQuestions = countAdminToeicQuestions(steps);
+  const currentQuestionPosition = getAdminStepQuestionPosition(
+    steps,
+    activeStepIndex,
   );
 
-  const handleRequestEdit = useCallback(
-    (groupId: number) => {
-      if (editingGroupId === groupId) {
+  const questionGridSections = useMemo(
+    () => buildAdminToeicGridSections(steps, currentStep),
+    [currentStep, steps],
+  );
+
+  const executeNavigation = useCallback((navigation: PendingNavigation) => {
+    if (navigation.type === "back") {
+      router.push("/admin/toeic");
+      return;
+    }
+
+    setStepIndex(navigation.stepIndex);
+    setIsQuestionGridOpen(false);
+  }, [router]);
+
+  const requestNavigation = useCallback(
+    (navigation: PendingNavigation) => {
+      if (isEditing && isDirty) {
+        setPendingNavigation(navigation);
         return;
       }
 
-      if (
-        editingGroupId != null &&
-        dirtyGroupId === editingGroupId &&
-        editingGroupId !== groupId
-      ) {
-        setPendingEditGroupId(groupId);
-        return;
+      if (isEditing) {
+        setIsEditing(false);
+        setIsDirty(false);
       }
 
-      setEditingGroupId(groupId);
+      executeNavigation(navigation);
     },
-    [dirtyGroupId, editingGroupId],
+    [executeNavigation, isDirty, isEditing],
   );
 
-  const handleExitEdit = useCallback(() => {
-    setEditingGroupId(null);
-    setDirtyGroupId(null);
-  }, []);
-
-  const handleDirtyChange = useCallback(
-    (groupId: number, isDirty: boolean) => {
-      if (!isDirty && dirtyGroupId === groupId) {
-        setDirtyGroupId(null);
+  const goToStepIndex = useCallback(
+    (nextIndex: number) => {
+      if (nextIndex === activeStepIndex) {
         return;
       }
 
-      if (isDirty) {
-        setDirtyGroupId(groupId);
-      }
+      requestNavigation({ type: "step", stepIndex: nextIndex });
     },
-    [dirtyGroupId],
+    [activeStepIndex, requestNavigation],
   );
+
+  const handleConfirmDiscardNavigation = useCallback(() => {
+    if (pendingNavigation == null) {
+      return;
+    }
+
+    const navigation = pendingNavigation;
+    setPendingNavigation(null);
+    setIsEditing(false);
+    setIsDirty(false);
+    executeNavigation(navigation);
+  }, [executeNavigation, pendingNavigation]);
 
   const handleSaved = useCallback(
     (updatedGroup: AdminToeicTestRawGroup) => {
@@ -80,81 +125,141 @@ export function AdminToeicTestDetailPage({ testId }: AdminToeicTestDetailPagePro
         (current) =>
           current ? replaceGroupInTestDetail(current, updatedGroup) : current,
       );
-      setDirtyGroupId(null);
+      setIsDirty(false);
+      setIsEditing(false);
     },
     [queryClient, testId],
   );
 
-  const handleConfirmSwitch = useCallback(() => {
-    if (pendingEditGroupId == null) {
-      return;
-    }
+  const handleBackClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>) => {
+      if (!isEditing || !isDirty) {
+        return;
+      }
 
-    setEditingGroupId(pendingEditGroupId);
-    setDirtyGroupId(null);
-    setPendingEditGroupId(null);
-  }, [pendingEditGroupId]);
+      event.preventDefault();
+      requestNavigation({ type: "back" });
+    },
+    [isDirty, isEditing, requestNavigation],
+  );
+
+  const isLastStep = activeStepIndex >= steps.length - 1;
+  const navigationBar = (
+    <PracticeNavigationButtons
+      isQuestionGridOpen={isQuestionGridOpen}
+      nextAriaLabel="Next"
+      nextDisabled={isLastStep}
+      onNext={() => {
+        goToStepIndex(activeStepIndex + 1);
+      }}
+      onPrevious={() => {
+        goToStepIndex(activeStepIndex - 1);
+      }}
+      onQuestionGridOpenChange={(open) => {
+        if (!open) {
+          setIsQuestionGridOpen(false);
+          return;
+        }
+
+        setIsQuestionGridOpen(true);
+      }}
+      onQuestionGridSelect={(questionId) => {
+        const nextStepIndex = findAdminStepIndexForQuestionId(steps, questionId);
+        if (nextStepIndex >= 0) {
+          goToStepIndex(nextStepIndex);
+        }
+      }}
+      previousDisabled={activeStepIndex === 0}
+      questionGridSections={questionGridSections}
+    />
+  );
+
+  if (isLoading) {
+    return (
+      <div className="px-4 py-6">
+        <p className="text-muted-foreground">Loading test content…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="px-4 py-6">
+        <p className="text-muted-foreground">Cannot load this test.</p>
+      </div>
+    );
+  }
+
+  if (data == null) {
+    return (
+      <div className="px-4 py-6">
+        <p className="text-muted-foreground">Test not found.</p>
+      </div>
+    );
+  }
+
+  if (steps.length === 0 || currentStep == null || currentGroup == null) {
+    return (
+      <div className="px-4 py-6">
+        <Link className={secondaryTextButtonClassName()} href="/admin/toeic">
+          Back to TOEIC Content
+        </Link>
+        <p className="mt-4 text-muted-foreground">This test has no content.</p>
+      </div>
+    );
+  }
 
   return (
-    <PageShell>
-      <Panel>
-        <div className="flex flex-col gap-6">
-          <div>
+    <>
+      <PracticeContinuousShell navigation={navigationBar}>
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
+          <div className="mb-4 flex flex-col gap-2">
             <Link
               className={secondaryTextButtonClassName()}
               href="/admin/toeic"
+              onClick={handleBackClick}
             >
               Back to TOEIC Content
             </Link>
-            {data ? (
-              <>
-                <h1 className="mt-4 text-3xl font-bold leading-tight">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-bold leading-tight">
                   Test {data.test.testNumber} · {data.test.year}
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Test ID {data.test.id}
                 </p>
-              </>
-            ) : (
-              <h1 className="mt-4 text-3xl font-bold leading-tight">
-                TOEIC Test
-              </h1>
-            )}
+              </div>
+              <p className="text-sm font-medium text-foreground">
+                Question {currentQuestionPosition} / {totalQuestions}
+              </p>
+            </div>
           </div>
 
-          {isLoading ? (
-            <p className="text-muted-foreground">Loading test content…</p>
-          ) : error ? (
-            <p className="text-muted-foreground">Cannot load this test.</p>
-          ) : data == null ? (
-            <p className="text-muted-foreground">Test not found.</p>
-          ) : (
-            <div className="flex flex-col gap-8">
-              {data.parts.map((part) => (
-                <AdminToeicPartSection
-                  editingGroupId={editingGroupId}
-                  key={part.partNumber}
-                  onDirtyChange={handleDirtyChange}
-                  onExitEdit={handleExitEdit}
-                  onRequestEdit={handleRequestEdit}
-                  onSaved={handleSaved}
-                  part={part}
-                />
-              ))}
-            </div>
-          )}
+          <AdminToeicActiveStepPanel
+            group={currentGroup}
+            isEditing={isEditing}
+            onDirtyChange={setIsDirty}
+            onExitEdit={() => {
+              setIsEditing(false);
+              setIsDirty(false);
+            }}
+            onRequestEdit={() => setIsEditing(true)}
+            onSaved={handleSaved}
+            step={currentStep}
+          />
         </div>
-      </Panel>
+      </PracticeContinuousShell>
 
-      {pendingEditGroupId != null ? (
+      {pendingNavigation != null ? (
         <AdminConfirmDialog
           confirmLabel="Discard and continue"
-          description="The current group has unsaved changes. Discard them and edit another group?"
-          onClose={() => setPendingEditGroupId(null)}
-          onConfirm={handleConfirmSwitch}
+          description="The current group has unsaved changes. Discard them and continue?"
+          onClose={() => setPendingNavigation(null)}
+          onConfirm={handleConfirmDiscardNavigation}
           title="Discard changes?"
         />
       ) : null}
-    </PageShell>
+    </>
   );
 }

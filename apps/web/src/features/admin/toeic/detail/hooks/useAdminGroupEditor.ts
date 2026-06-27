@@ -2,16 +2,26 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { patchAdminToeicGroupRaw } from "@/features/admin/toeic/api/adminToeicGroup";
-import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
+import { patchAdminToeicGroup } from "@/features/admin/toeic/api/adminToeicGroup";
+import { patchAdminToeicQuestion } from "@/features/admin/toeic/api/adminToeicQuestion";
+import type {
+  AdminToeicGroupPatchResponse,
+  AdminToeicQuestionPatchResponse,
+  AdminToeicTestRawGroup,
+} from "@/features/admin/toeic/api/types";
 import {
-  cloneAdminToeicGroupDraft,
-  createDraftFromTestRawGroup,
-  isAdminToeicGroupDraftDirty,
-  toAdminToeicGroupPatchInput,
-  type AdminToeicGroupDraft,
-} from "@/features/admin/toeic/detail/lib/adminGroupDraft";
-import { mergeGroupIntoDetailCache } from "@/features/admin/toeic/detail/lib/mergeGroupIntoDetailCache";
+  applySuccessfulGroupSave,
+  applySuccessfulQuestionSave,
+  buildGroupPatch,
+  buildQuestionPatches,
+  cloneEditorState,
+  createEditorStateFromGroup,
+  formatGroupSaveErrorLabel,
+  formatQuestionSaveErrorLabel,
+  isEditorDirty,
+  type AdminGroupEditorState,
+} from "@/features/admin/toeic/detail/lib/adminGroupEditorState";
+import { applyAdminEditsToCache } from "@/features/admin/toeic/detail/lib/applyAdminEditsToCache";
 import { ApiError } from "@/shared/api/http";
 
 type UseAdminGroupEditorParams = {
@@ -19,43 +29,135 @@ type UseAdminGroupEditorParams = {
   onSaved: (updatedGroup: AdminToeicTestRawGroup) => void;
 };
 
+type SaveTask = {
+  errorLabel: string;
+  run: () => Promise<
+    AdminToeicGroupPatchResponse | AdminToeicQuestionPatchResponse
+  >;
+  onSuccess: (
+    response: AdminToeicGroupPatchResponse | AdminToeicQuestionPatchResponse,
+  ) => void;
+};
+
+function getSaveErrorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : null;
+}
+
 export function useAdminGroupEditor({
   group,
   onSaved,
 }: UseAdminGroupEditorParams) {
-  const baseline = useMemo(
-    () => createDraftFromTestRawGroup(group),
+  const baselineState = useMemo(
+    () => createEditorStateFromGroup(group),
     [group],
   );
-  const [draft, setDraft] = useState<AdminToeicGroupDraft>(() =>
-    cloneAdminToeicGroupDraft(baseline),
+  const [state, setState] = useState<AdminGroupEditorState>(() =>
+    cloneEditorState(baselineState),
   );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isDirty = isAdminToeicGroupDraftDirty(baseline, draft);
+  const isDirty = isEditorDirty(state);
+
+  const setDraft = useCallback((nextState: AdminGroupEditorState) => {
+    setState(cloneEditorState(nextState));
+  }, []);
 
   const resetDraft = useCallback(() => {
-    setDraft(cloneAdminToeicGroupDraft(baseline));
+    setState(cloneEditorState(baselineState));
     setError(null);
-  }, [baseline]);
+  }, [baselineState]);
 
   const save = useCallback(async () => {
     setIsSaving(true);
     setError(null);
 
-    try {
-      const payload = await runAuthenticatedRequest({
-        request: (token) =>
-          patchAdminToeicGroupRaw(
-            token,
-            group.id,
-            toAdminToeicGroupPatchInput(draft),
-          ),
+    const groupPlan = buildGroupPatch(state);
+    const questionPlans = buildQuestionPatches(state);
+
+    if (!groupPlan && questionPlans.length === 0) {
+      setIsSaving(false);
+      return false;
+    }
+
+    let nextState = cloneEditorState(state);
+    let updatedGroup = group;
+    const tasks: SaveTask[] = [];
+
+    if (groupPlan) {
+      tasks.push({
+        errorLabel: formatGroupSaveErrorLabel(groupPlan.changedFields),
+        run: () =>
+          runAuthenticatedRequest({
+            request: (token) =>
+              patchAdminToeicGroup(token, group.id, groupPlan.patch),
+          }),
+        onSuccess: (response) => {
+          const groupResponse = response as AdminToeicGroupPatchResponse;
+          updatedGroup = applyAdminEditsToCache(updatedGroup, {
+            group: groupResponse.group,
+          });
+          nextState = applySuccessfulGroupSave(nextState, groupResponse.group);
+        },
       });
-      const updatedGroup = mergeGroupIntoDetailCache(group, payload.group);
-      onSaved(updatedGroup);
-      return true;
+    }
+
+    for (const questionPlan of questionPlans) {
+      tasks.push({
+        errorLabel: formatQuestionSaveErrorLabel(questionPlan.questionNumber),
+        run: () =>
+          runAuthenticatedRequest({
+            request: (token) =>
+              patchAdminToeicQuestion(
+                token,
+                questionPlan.questionId,
+                questionPlan.patch,
+              ),
+          }),
+        onSuccess: (response) => {
+          const questionResponse = response as AdminToeicQuestionPatchResponse;
+          updatedGroup = applyAdminEditsToCache(updatedGroup, {
+            questions: [questionResponse.question],
+          });
+          nextState = applySuccessfulQuestionSave(
+            nextState,
+            questionResponse.question,
+          );
+        },
+      });
+    }
+
+    try {
+      const results = await Promise.allSettled(tasks.map((task) => task.run()));
+      const errorMessages: string[] = [];
+      let anySuccess = false;
+
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          anySuccess = true;
+          tasks[index]?.onSuccess(result.value);
+          return;
+        }
+
+        const task = tasks[index];
+        const detail = getSaveErrorMessage(result.reason);
+        errorMessages.push(
+          detail
+            ? `Failed to save ${task?.errorLabel}: ${detail}`
+            : `Failed to save ${task?.errorLabel}`,
+        );
+      });
+
+      if (anySuccess) {
+        setState(nextState);
+        onSaved(updatedGroup);
+      }
+
+      if (errorMessages.length > 0) {
+        setError(errorMessages.join("; "));
+      }
+
+      return errorMessages.length === 0;
     } catch (saveError) {
       setError(
         saveError instanceof ApiError
@@ -66,10 +168,10 @@ export function useAdminGroupEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [draft, group, onSaved]);
+  }, [group, onSaved, state]);
 
   return {
-    draft,
+    draft: state,
     setDraft,
     isDirty,
     isSaving,
