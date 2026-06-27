@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -35,6 +36,11 @@ export class AdminTestsController {
     @Body() dto: PatchToeicGroupDto,
   ) {
     return this.adminToeicGroupService.patchGroup(groupId, dto);
+  }
+
+  @Delete('groups/:groupId/image')
+  deleteGroupImage(@Param('groupId', ParseIntPipe) groupId: number) {
+    return this.adminToeicGroupService.deleteGroupImage(groupId);
   }
 
   @Patch('questions/:questionId')

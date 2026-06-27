@@ -63,6 +63,31 @@ export class TestsStorageService {
     };
   }
 
+  async removeObject(storagePath: string): Promise<void> {
+    if (!storagePath) {
+      return;
+    }
+
+    const client = this.getClient();
+    if (!client) {
+      this.logger.warn(
+        'Supabase Storage is not configured; skipping object removal.',
+      );
+      return;
+    }
+
+    const { error } = await client.storage
+      .from(env.toeicStorageBucket)
+      .remove([storagePath]);
+
+    if (error) {
+      this.logger.warn(
+        `Failed to remove media object ${storagePath}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
   async createSignedUrls(storagePaths: Array<string | null | undefined>) {
     const uniquePaths = [
       ...new Set(storagePaths.filter((path): path is string => Boolean(path))),

@@ -1,12 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { TestsStorageService } from '../tests/tests-storage.service';
 import type { PatchToeicGroupDto } from './dto/patch-toeic-group.dto';
 import { buildGroupPatchData } from './lib/admin-toeic-patch';
 import { AdminToeicRepository } from './lib/admin-toeic.repository';
-import type { AdminToeicGroupPatchResponse } from './lib/admin-toeic.types';
+import type {
+  AdminToeicGroupImageDeleteResponse,
+  AdminToeicGroupPatchResponse,
+} from './lib/admin-toeic.types';
 
 @Injectable()
 export class AdminToeicGroupService {
-  constructor(private readonly repository: AdminToeicRepository) {}
+  constructor(
+    private readonly repository: AdminToeicRepository,
+    private readonly storageService: TestsStorageService,
+  ) {}
 
   async patchGroup(
     groupId: number,
@@ -27,5 +38,33 @@ export class AdminToeicGroupService {
     }
 
     return { group };
+  }
+
+  async deleteGroupImage(
+    groupId: number,
+  ): Promise<AdminToeicGroupImageDeleteResponse> {
+    const existing = await this.repository.findGroupMediaById(groupId);
+
+    if (!existing) {
+      throw new NotFoundException('TOEIC question group not found');
+    }
+
+    if (existing.imageStoragePath) {
+      try {
+        await this.storageService.removeObject(existing.imageStoragePath);
+      } catch {
+        throw new InternalServerErrorException('Failed to delete group image');
+      }
+    }
+
+    await this.repository.clearGroupImagePath(groupId);
+
+    return {
+      group: {
+        id: groupId,
+        imageUrl: null,
+        imageUrlExpiresAt: null,
+      },
+    };
   }
 }

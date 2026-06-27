@@ -1,11 +1,22 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AdminToeicGroupService } from './admin-toeic-group.service';
 import { AdminToeicRepository } from './lib/admin-toeic.repository';
+import type { TestsStorageService } from '../tests/tests-storage.service';
 
 describe('AdminToeicGroupService', () => {
   const repositoryMock = {
     findGroupById: jest.fn(),
+    findGroupMediaById: jest.fn(),
     updateGroupFields: jest.fn(),
+    clearGroupImagePath: jest.fn(),
+  };
+
+  const storageServiceMock = {
+    removeObject: jest.fn(),
   };
 
   let service: AdminToeicGroupService;
@@ -22,6 +33,7 @@ describe('AdminToeicGroupService', () => {
     jest.clearAllMocks();
     service = new AdminToeicGroupService(
       repositoryMock as unknown as AdminToeicRepository,
+      storageServiceMock as unknown as TestsStorageService,
     );
   });
 
@@ -98,5 +110,68 @@ describe('AdminToeicGroupService', () => {
     await expect(
       service.patchGroup(999, { content: 'Updated' }),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('deletes group image from storage and clears the DB path', async () => {
+    repositoryMock.findGroupMediaById.mockResolvedValue({
+      id: 101,
+      imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
+    });
+    repositoryMock.clearGroupImagePath.mockResolvedValue({
+      id: 101,
+      imageStoragePath: null,
+    });
+
+    const result = await service.deleteGroupImage(101);
+
+    expect(storageServiceMock.removeObject).toHaveBeenCalledWith(
+      'toeic/2026/image/ets26_t01/ets26_t01_01.png',
+    );
+    expect(repositoryMock.clearGroupImagePath).toHaveBeenCalledWith(101);
+    expect(result).toEqual({
+      group: {
+        id: 101,
+        imageUrl: null,
+        imageUrlExpiresAt: null,
+      },
+    });
+  });
+
+  it('clears DB path when group has no image', async () => {
+    repositoryMock.findGroupMediaById.mockResolvedValue({
+      id: 101,
+      imageStoragePath: null,
+    });
+    repositoryMock.clearGroupImagePath.mockResolvedValue({
+      id: 101,
+      imageStoragePath: null,
+    });
+
+    const result = await service.deleteGroupImage(101);
+
+    expect(storageServiceMock.removeObject).not.toHaveBeenCalled();
+    expect(repositoryMock.clearGroupImagePath).toHaveBeenCalledWith(101);
+    expect(result.group.imageUrl).toBeNull();
+  });
+
+  it('throws when storage deletion fails', async () => {
+    repositoryMock.findGroupMediaById.mockResolvedValue({
+      id: 101,
+      imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
+    });
+    storageServiceMock.removeObject.mockRejectedValue(new Error('storage error'));
+
+    await expect(service.deleteGroupImage(101)).rejects.toBeInstanceOf(
+      InternalServerErrorException,
+    );
+    expect(repositoryMock.clearGroupImagePath).not.toHaveBeenCalled();
+  });
+
+  it('throws not found when deleting image for missing group', async () => {
+    repositoryMock.findGroupMediaById.mockResolvedValue(null);
+
+    await expect(service.deleteGroupImage(999)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

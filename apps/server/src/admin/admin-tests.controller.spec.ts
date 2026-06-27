@@ -13,6 +13,7 @@ import { AdminToeicTestService } from './admin-toeic-test.service';
 describe('AdminTestsController', () => {
   const groupServiceMock = {
     patchGroup: jest.fn(),
+    deleteGroupImage: jest.fn(),
   };
 
   const questionServiceMock = {
@@ -74,6 +75,32 @@ describe('AdminTestsController', () => {
     expect(groupServiceMock.patchGroup).toHaveBeenCalledWith(101, {
       content: 'Updated',
     });
+  });
+
+  it('delegates deleteGroupImage to AdminToeicGroupService when admin', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AdminTestsController],
+      providers: [
+        { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicQuestionService, useValue: questionServiceMock },
+        { provide: AdminToeicTestService, useValue: testServiceMock },
+        AdminGuard,
+        { provide: UsersService, useValue: usersServiceMock },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+
+    groupServiceMock.deleteGroupImage.mockResolvedValue({
+      group: { id: 101, imageUrl: null, imageUrlExpiresAt: null },
+    });
+
+    const controller = module.get(AdminTestsController);
+    await expect(controller.deleteGroupImage(101)).resolves.toEqual({
+      group: { id: 101, imageUrl: null, imageUrlExpiresAt: null },
+    });
+    expect(groupServiceMock.deleteGroupImage).toHaveBeenCalledWith(101);
   });
 
   it('delegates patchQuestion to AdminToeicQuestionService when admin', async () => {

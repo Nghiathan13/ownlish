@@ -8,6 +8,14 @@ export type AdminToeicGroupPatchResponse = {
   };
 };
 
+export type AdminToeicGroupImageDeleteResponse = {
+  group: {
+    id: number;
+    imageUrl: null;
+    imageUrlExpiresAt: null;
+  };
+};
+
 export type AdminToeicQuestionPatchResponse = {
   question: {
     id: number;

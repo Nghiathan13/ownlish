@@ -10,6 +10,11 @@ const groupEditableSelect = {
   contentVi: true,
 } satisfies Prisma.ToeicQuestionGroupSelect;
 
+const groupMediaSelect = {
+  id: true,
+  imageStoragePath: true,
+} satisfies Prisma.ToeicQuestionGroupSelect;
+
 const questionEditableSelect = {
   id: true,
   question: true,
@@ -32,6 +37,10 @@ export type AdminToeicGroupEditableRecord =
     select: typeof groupEditableSelect;
   }>;
 
+export type AdminToeicGroupMediaRecord = Prisma.ToeicQuestionGroupGetPayload<{
+  select: typeof groupMediaSelect;
+}>;
+
 export type AdminToeicQuestionEditableRecord = Prisma.ToeicQuestionGetPayload<{
   select: typeof questionEditableSelect;
 }>;
@@ -49,6 +58,15 @@ export class AdminToeicRepository {
     });
   }
 
+  findGroupMediaById(
+    groupId: number,
+  ): Promise<AdminToeicGroupMediaRecord | null> {
+    return this.prisma.toeicQuestionGroup.findUnique({
+      where: { id: groupId },
+      select: groupMediaSelect,
+    });
+  }
+
   updateGroupFields(
     groupId: number,
     data: Prisma.ToeicQuestionGroupUpdateInput,
@@ -57,6 +75,14 @@ export class AdminToeicRepository {
       where: { id: groupId },
       data,
       select: groupEditableSelect,
+    });
+  }
+
+  clearGroupImagePath(groupId: number): Promise<AdminToeicGroupMediaRecord> {
+    return this.prisma.toeicQuestionGroup.update({
+      where: { id: groupId },
+      data: { imageStoragePath: null },
+      select: groupMediaSelect,
     });
   }
 
