@@ -13,7 +13,7 @@ export function PracticeSplitPlainLayout({
 }: PracticeSplitPlainLayoutProps) {
   return (
     <>
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border">
+      <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:divide-x lg:divide-border">
         <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
           {left}
         </div>

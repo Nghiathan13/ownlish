@@ -43,39 +43,50 @@ export function PracticeLeftPanel({
     (partConfig.leftPanel === "audio-image" ||
       partConfig.leftPanel === "listening-group");
 
+  const stickyMediaSection =
+    instruction ||
+    showAudio ||
+    (showImage && (imageUrl || partConfig.leftPanel === "audio-image"));
+
   const content = (
     <>
-      {instruction ? (
-        <p className="text-base font-bold text-foreground select-text">{instruction}</p>
-      ) : null}
+      {stickyMediaSection ? (
+        <div className="sticky top-0 z-10 flex shrink-0 flex-col gap-4 bg-background pb-4">
+          {instruction ? (
+            <p className="text-base font-bold text-foreground select-text">
+              {instruction}
+            </p>
+          ) : null}
 
-      {showAudio ? (
-        audioUrl ? (
-          <audio
-            controls
-            className="w-full"
-            key={audioUrl}
-            onError={onMediaError}
-            src={audioUrl}
-          />
-        ) : (
-          <p className="text-base text-muted-foreground">No audio available.</p>
-        )
-      ) : null}
+          {showAudio ? (
+            audioUrl ? (
+              <audio
+                controls
+                className="w-full"
+                key={audioUrl}
+                onError={onMediaError}
+                src={audioUrl}
+              />
+            ) : (
+              <p className="text-base text-muted-foreground">No audio available.</p>
+            )
+          ) : null}
 
-      {showImage ? (
-        imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
-          <img
-            alt={`Question ${questionNumber}`}
-            className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-            key={imageUrl}
-            onError={onMediaError}
-            src={imageUrl}
-          />
-        ) : partConfig.leftPanel === "audio-image" ? (
-          <p className="text-base text-muted-foreground">No image available.</p>
-        ) : null
+          {showImage ? (
+            imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
+              <img
+                alt={`Question ${questionNumber}`}
+                className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
+                key={imageUrl}
+                onError={onMediaError}
+                src={imageUrl}
+              />
+            ) : partConfig.leftPanel === "audio-image" ? (
+              <p className="text-base text-muted-foreground">No image available.</p>
+            ) : null
+          ) : null}
+        </div>
       ) : null}
 
       {partConfig.leftPanel === "listening-group" && showContext ? (

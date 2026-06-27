@@ -95,7 +95,7 @@ export function PassagePanel({
       ) : null}
       {hasTranslation ? (
         <PracticeTranslationCard title={hasContent ? "Translation" : title}>
-          <div className="whitespace-pre-wrap text-muted-foreground">
+          <div className="whitespace-pre-wrap text-base">
             {contentVi}
           </div>
         </PracticeTranslationCard>
