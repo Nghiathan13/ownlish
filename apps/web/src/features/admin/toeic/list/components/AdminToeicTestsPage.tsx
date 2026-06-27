@@ -8,10 +8,7 @@ import {
   getAdminToeicTestYears,
   resolveAdminToeicSelectedYear,
 } from "@/features/admin/toeic/list/lib/adminToeicTestYears";
-import {
-  getToeicYearButtonLabel,
-  isToeicYear,
-} from "@/features/tests/shared/constants/toeicYears";
+import { getToeicYearButtonLabel } from "@/features/tests/shared/constants/toeicYears";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -19,19 +16,15 @@ import {
 import { PageShell } from "@/shared/ui/PageShell";
 import { SkeletonCardGrid } from "@/shared/skeletons/SkeletonCardGrid";
 
-function getAdminYearButtonLabel(year: number) {
-  return isToeicYear(year) ? getToeicYearButtonLabel(year) : String(year);
-}
-
 export function AdminToeicTestsPage() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const { tests, isLoading, error } = useAdminToeicTestsQuery({
     enabled: true,
   });
-  const availableYears = useMemo(() => getAdminToeicTestYears(tests), [tests]);
+  const catalogYears = useMemo(() => getAdminToeicTestYears(), []);
   const effectiveYear = useMemo(
-    () => resolveAdminToeicSelectedYear(availableYears, selectedYear),
-    [availableYears, selectedYear],
+    () => resolveAdminToeicSelectedYear(catalogYears, selectedYear),
+    [catalogYears, selectedYear],
   );
   const visibleTests = useMemo(
     () => filterAdminToeicTestsByYear(tests, effectiveYear),
@@ -40,38 +33,38 @@ export function AdminToeicTestsPage() {
 
   return (
     <PageShell>
-      {availableYears.length > 0 ? (
-        <div className="mb-4 flex flex-col items-start gap-2 px-4">
-          <button className={primaryTextButtonClassName()} type="button">
-            TOEIC
-          </button>
-          <div className="flex flex-wrap gap-2">
-            {availableYears.map((year) => (
-              <button
-                aria-current={effectiveYear === year ? "true" : undefined}
-                className={
-                  effectiveYear === year
-                    ? primaryTextButtonClassName()
-                    : secondaryTextButtonClassName()
-                }
-                key={year}
-                onClick={() => setSelectedYear(year)}
-                type="button"
-              >
-                {getAdminYearButtonLabel(year)}
-              </button>
-            ))}
-          </div>
+      <div className="mb-4 flex flex-col items-start gap-2 px-4">
+        <button className={primaryTextButtonClassName()} type="button">
+          TOEIC
+        </button>
+        <div className="flex flex-wrap gap-2">
+          {catalogYears.map((year) => (
+            <button
+              aria-current={effectiveYear === year ? "true" : undefined}
+              className={
+                effectiveYear === year
+                  ? primaryTextButtonClassName()
+                  : secondaryTextButtonClassName()
+              }
+              key={year}
+              onClick={() => setSelectedYear(year)}
+              type="button"
+            >
+              {getToeicYearButtonLabel(year)}
+            </button>
+          ))}
         </div>
-      ) : null}
+      </div>
 
       <div className="mb-4 flex flex-col gap-4 px-4">
         {isLoading ? (
           <SkeletonCardGrid className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" />
         ) : error ? (
           <p className="text-muted-foreground">Cannot load TOEIC tests.</p>
-        ) : tests.length === 0 ? (
-          <p className="text-muted-foreground">No TOEIC tests found.</p>
+        ) : visibleTests.length === 0 ? (
+          <p className="text-muted-foreground">
+            No tests available for this year yet.
+          </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {visibleTests.map((test) => (

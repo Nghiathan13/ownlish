@@ -7,6 +7,10 @@ export function getToeicTestsQueryKey(userId: string | null, year: ToeicYear) {
   return ["tests", { userId, year }] as const;
 }
 
+export function getToeicTestYearsQueryKey(userId: string | null) {
+  return ["tests", "years", { userId }] as const;
+}
+
 export function getPracticeSessionQueryKey(
   sessionId: string,
   partNumberOrParts: number | number[],

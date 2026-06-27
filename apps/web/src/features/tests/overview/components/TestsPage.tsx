@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MockTestsTab } from "@/features/tests/overview/components/MockTestsTab";
 import { PracticeTab } from "@/features/tests/overview/components/PracticeTab";
@@ -9,8 +9,11 @@ import {
   TestsOverviewTabs,
   parseTestsOverviewTab,
 } from "@/features/tests/overview/components/TestsOverviewTabs";
+import { useAvailableToeicYears } from "@/features/tests/overview/hooks/useAvailableToeicYears";
+import { resolveToeicSelectedYear } from "@/features/tests/overview/lib/toeicTestYears";
 import {
   DEFAULT_TOEIC_YEAR,
+  getTestsListPath,
   parseToeicYearParam,
   type ToeicYear,
 } from "@/features/tests/shared/constants/toeicYears";
@@ -18,19 +21,58 @@ import {
   getTestsOverviewRedirectTarget,
   parsePracticeOverviewPartParam,
 } from "@/features/tests/shared/lib/partPracticePaths";
+import {
+  isAuthenticatedStatus,
+  useAuthSession,
+} from "@/features/auth/hooks/useAuthSession";
 import { PageShell } from "@/shared/ui/PageShell";
 
 export function TestsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { status, user } = useAuthSession();
+  const isAuthenticated = isAuthenticatedStatus(status);
   const yearParam = searchParams.get("year");
-  const selectedYear: ToeicYear =
+  const requestedYear: ToeicYear =
     parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;
   const selectedTab = parseTestsOverviewTab(searchParams.get("tab"));
   const selectedPartNumber = parsePracticeOverviewPartParam(
     searchParams.get("part"),
   );
   const redirectTarget = getTestsOverviewRedirectTarget(searchParams);
+  const { availableYears, isLoadingYears } = useAvailableToeicYears({
+    isAuthenticated,
+    userId: user?.id ?? null,
+  });
+  const selectedYear = useMemo(() => {
+    if (selectedTab !== "mock_tests" || isLoadingYears) {
+      return requestedYear;
+    }
+
+    return (
+      resolveToeicSelectedYear(availableYears, requestedYear) ?? requestedYear
+    );
+  }, [availableYears, isLoadingYears, requestedYear, selectedTab]);
+  const yearRedirectTarget = useMemo(() => {
+    if (
+      selectedTab !== "mock_tests" ||
+      isLoadingYears ||
+      availableYears.length === 0
+    ) {
+      return null;
+    }
+
+    const resolvedYear = resolveToeicSelectedYear(
+      availableYears,
+      requestedYear,
+    );
+
+    if (resolvedYear == null || resolvedYear === requestedYear) {
+      return null;
+    }
+
+    return getTestsListPath(resolvedYear);
+  }, [availableYears, isLoadingYears, requestedYear, selectedTab]);
   const mockYearForLinks = selectedYear;
   const partForLinks = selectedPartNumber ?? 1;
 
@@ -40,7 +82,22 @@ export function TestsPage() {
     }
   }, [redirectTarget, router]);
 
-  if (redirectTarget) {
+  useEffect(() => {
+    if (yearRedirectTarget) {
+      router.replace(yearRedirectTarget, { scroll: false });
+    }
+  }, [router, yearRedirectTarget]);
+
+  if (redirectTarget || yearRedirectTarget) {
+    return (
+      <TestsOverviewPageSkeleton
+        selectedTab={selectedTab}
+        selectedYear={selectedYear}
+      />
+    );
+  }
+
+  if (selectedTab === "mock_tests" && isLoadingYears) {
     return (
       <TestsOverviewPageSkeleton
         selectedTab={selectedTab}
@@ -59,7 +116,10 @@ export function TestsPage() {
       {selectedTab === "part_practice" ? (
         <PracticeTab />
       ) : (
-        <MockTestsTab selectedYear={selectedYear} />
+        <MockTestsTab
+          availableYears={availableYears}
+          selectedYear={selectedYear}
+        />
       )}
     </PageShell>
   );

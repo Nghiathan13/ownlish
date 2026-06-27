@@ -106,6 +106,24 @@ export function listToeicTests(
   });
 }
 
+export function listToeicTestYears(
+  token: string,
+  options: { signal?: AbortSignal } = {},
+) {
+  return apiRequest("/tests/years", {
+    signal: options.signal,
+    token,
+  }).then((body) => {
+    if (!isRecord(body) || !Array.isArray(body.years)) {
+      invalidApiResponse();
+    }
+
+    return body.years.filter(
+      (year): year is number => isNumber(year) && Number.isInteger(year),
+    );
+  });
+}
+
 export function createToeicRun(token: string, input: CreateToeicRunInput) {
   return apiRequest("/tests/runs", {
     method: "POST",

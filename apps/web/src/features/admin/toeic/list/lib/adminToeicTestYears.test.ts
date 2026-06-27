@@ -13,32 +13,26 @@ const tests: AdminToeicTestListItem[] = [
 ];
 
 describe("getAdminToeicTestYears", () => {
-  it("returns unique years sorted descending", () => {
-    expect(getAdminToeicTestYears(tests)).toEqual([2026, 2025]);
-  });
-
-  it("returns an empty list when there are no tests", () => {
-    expect(getAdminToeicTestYears([])).toEqual([]);
+  it("returns the full TOEIC catalog in descending order", () => {
+    expect(getAdminToeicTestYears()).toEqual([
+      2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019,
+    ]);
   });
 });
 
 describe("resolveAdminToeicSelectedYear", () => {
-  const availableYears = [2026, 2025];
+  const catalogYears = getAdminToeicTestYears();
 
-  it("defaults to the latest year", () => {
-    expect(resolveAdminToeicSelectedYear(availableYears, null)).toBe(2026);
+  it("defaults to the latest catalog year", () => {
+    expect(resolveAdminToeicSelectedYear(catalogYears, null)).toBe(2026);
   });
 
   it("keeps a valid selected year", () => {
-    expect(resolveAdminToeicSelectedYear(availableYears, 2025)).toBe(2025);
+    expect(resolveAdminToeicSelectedYear(catalogYears, 2025)).toBe(2025);
   });
 
-  it("falls back to the latest year when the selection disappears", () => {
-    expect(resolveAdminToeicSelectedYear([2026], 2025)).toBe(2026);
-  });
-
-  it("returns null when no years are available", () => {
-    expect(resolveAdminToeicSelectedYear([], 2026)).toBeNull();
+  it("falls back to the latest catalog year when the selection is unknown", () => {
+    expect(resolveAdminToeicSelectedYear(catalogYears, 1999)).toBe(2026);
   });
 });
 
@@ -48,6 +42,10 @@ describe("filterAdminToeicTestsByYear", () => {
       tests[0],
       tests[2],
     ]);
+  });
+
+  it("returns an empty list when the year has no tests", () => {
+    expect(filterAdminToeicTestsByYear(tests, 2024)).toEqual([]);
   });
 
   it("returns an empty list when year is null", () => {

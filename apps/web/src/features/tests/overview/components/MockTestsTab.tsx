@@ -10,16 +10,23 @@ import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTab
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type MockTestsTabProps = {
+  availableYears: ToeicYear[];
   selectedYear: ToeicYear;
 };
 
-export function MockTestsTab({ selectedYear }: MockTestsTabProps) {
+export function MockTestsTab({
+  availableYears,
+  selectedYear,
+}: MockTestsTabProps) {
   const overview = useTestsOverview(selectedYear);
   const selectedTest = overview.selectedTest;
 
   return (
     <>
-      <ToeicYearTabs selectedYear={selectedYear} />
+      <ToeicYearTabs
+        availableYears={availableYears}
+        selectedYear={selectedYear}
+      />
 
       <div className="mb-4 flex flex-col gap-4 px-4">
         {overview.isLoadingTests ? (

@@ -1,35 +1,30 @@
 import type { AdminToeicTestListItem } from "@/features/admin/toeic/api/types";
+import {
+  TOEIC_YEARS,
+  type ToeicYear,
+} from "@/features/tests/shared/constants/toeicYears";
 
-export function getAdminToeicTestYears(
-  tests: AdminToeicTestListItem[],
-): number[] {
-  const years = new Set<number>();
-
-  for (const test of tests) {
-    years.add(test.year);
-  }
-
-  return [...years].sort((left, right) => right - left);
+export function getAdminToeicTestYears(): ToeicYear[] {
+  return [...TOEIC_YEARS];
 }
 
 export function resolveAdminToeicSelectedYear(
-  availableYears: number[],
+  catalogYears: ToeicYear[],
   selectedYear: number | null,
-): number | null {
-  if (availableYears.length === 0) {
-    return null;
+): ToeicYear {
+  if (
+    selectedYear != null &&
+    catalogYears.includes(selectedYear as ToeicYear)
+  ) {
+    return selectedYear as ToeicYear;
   }
 
-  if (selectedYear != null && availableYears.includes(selectedYear)) {
-    return selectedYear;
-  }
-
-  return availableYears[0] ?? null;
+  return catalogYears[0] ?? TOEIC_YEARS[0];
 }
 
 export function filterAdminToeicTestsByYear(
   tests: AdminToeicTestListItem[],
-  year: number | null,
+  year: ToeicYear | null,
 ): AdminToeicTestListItem[] {
   if (year == null) {
     return [];
