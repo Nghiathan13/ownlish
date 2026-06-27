@@ -18,19 +18,20 @@ export function AdminToeicTestCard({ test }: AdminToeicTestCardProps) {
     <article className="flex flex-col gap-4 rounded-xl border border-border p-4">
       <div>
         <h2 className="text-lg font-semibold">Test {test.testNumber}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Year {test.year}</p>
         <p className="mt-2 text-sm text-muted-foreground">
           {partsCount} parts · {questionsCount} questions
         </p>
       </div>
-      <Link
-        className={iconTextButtonClassName(
-          "w-full border-foreground bg-foreground text-background",
-        )}
-        href={`/admin/toeic/${test.id}`}
-      >
-        View
-      </Link>
+      <div className="flex w-full gap-2">
+        <Link
+          className={iconTextButtonClassName(
+            "flex-1 border-foreground bg-foreground text-background",
+          )}
+          href={`/admin/toeic/${test.id}`}
+        >
+          View
+        </Link>
+      </div>
     </article>
   );
 }
