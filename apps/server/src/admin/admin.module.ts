@@ -5,8 +5,9 @@ import { TestsModule } from '../tests/tests.module';
 import { UsersModule } from '../users/users.module';
 import { AdminTestsController } from './admin-tests.controller';
 import { AdminToeicGroupService } from './admin-toeic-group.service';
+import { AdminToeicQuestionService } from './admin-toeic-question.service';
 import { AdminToeicTestService } from './admin-toeic-test.service';
-import { ToeicGroupRawRepository } from './lib/toeic-group-raw.repository';
+import { AdminToeicRepository } from './lib/admin-toeic.repository';
 import { ToeicTestRawRepository } from './lib/toeic-test-raw.repository';
 
 @Module({
@@ -14,8 +15,9 @@ import { ToeicTestRawRepository } from './lib/toeic-test-raw.repository';
   controllers: [AdminTestsController],
   providers: [
     AdminToeicGroupService,
+    AdminToeicQuestionService,
     AdminToeicTestService,
-    ToeicGroupRawRepository,
+    AdminToeicRepository,
     ToeicTestRawRepository,
   ],
 })

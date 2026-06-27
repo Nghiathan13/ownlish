@@ -7,12 +7,16 @@ import type { AuthRequest } from '../auth/types/auth.types';
 import { UsersService } from '../users/users.service';
 import { AdminTestsController } from './admin-tests.controller';
 import { AdminToeicGroupService } from './admin-toeic-group.service';
+import { AdminToeicQuestionService } from './admin-toeic-question.service';
 import { AdminToeicTestService } from './admin-toeic-test.service';
 
 describe('AdminTestsController', () => {
   const groupServiceMock = {
-    getRawGroup: jest.fn(),
-    patchRawGroup: jest.fn(),
+    patchGroup: jest.fn(),
+  };
+
+  const questionServiceMock = {
+    patchQuestion: jest.fn(),
   };
 
   const testServiceMock = {
@@ -28,11 +32,12 @@ describe('AdminTestsController', () => {
     jest.clearAllMocks();
   });
 
-  it('delegates GET to AdminToeicGroupService when admin', async () => {
+  it('delegates patchGroup to AdminToeicGroupService when admin', async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminTestsController],
       providers: [
         { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicQuestionService, useValue: questionServiceMock },
         { provide: AdminToeicTestService, useValue: testServiceMock },
         AdminGuard,
         { provide: UsersService, useValue: usersServiceMock },
@@ -56,13 +61,49 @@ describe('AdminTestsController', () => {
       id: 'admin-id',
       role: UserRole.ADMIN,
     });
-    groupServiceMock.getRawGroup.mockResolvedValue({ group: { id: 101 } });
+    groupServiceMock.patchGroup.mockResolvedValue({
+      group: { id: 101, content: 'Updated' },
+    });
 
     const controller = module.get(AdminTestsController);
-    await expect(controller.getGroupRaw(101)).resolves.toEqual({
-      group: { id: 101 },
+    await expect(
+      controller.patchGroup(101, { content: 'Updated' }),
+    ).resolves.toEqual({
+      group: { id: 101, content: 'Updated' },
     });
-    expect(groupServiceMock.getRawGroup).toHaveBeenCalledWith(101);
+    expect(groupServiceMock.patchGroup).toHaveBeenCalledWith(101, {
+      content: 'Updated',
+    });
+  });
+
+  it('delegates patchQuestion to AdminToeicQuestionService when admin', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AdminTestsController],
+      providers: [
+        { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicQuestionService, useValue: questionServiceMock },
+        { provide: AdminToeicTestService, useValue: testServiceMock },
+        AdminGuard,
+        { provide: UsersService, useValue: usersServiceMock },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+
+    questionServiceMock.patchQuestion.mockResolvedValue({
+      question: { id: 1001, answerKey: 'B' },
+    });
+
+    const controller = module.get(AdminTestsController);
+    await expect(
+      controller.patchQuestion(1001, { answerKey: 'B' }),
+    ).resolves.toEqual({
+      question: { id: 1001, answerKey: 'B' },
+    });
+    expect(questionServiceMock.patchQuestion).toHaveBeenCalledWith(1001, {
+      answerKey: 'B',
+    });
   });
 
   it('delegates listTests to AdminToeicTestService when admin', async () => {
@@ -70,6 +111,7 @@ describe('AdminTestsController', () => {
       controllers: [AdminTestsController],
       providers: [
         { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicQuestionService, useValue: questionServiceMock },
         { provide: AdminToeicTestService, useValue: testServiceMock },
         AdminGuard,
         { provide: UsersService, useValue: usersServiceMock },
@@ -91,6 +133,7 @@ describe('AdminTestsController', () => {
       controllers: [AdminTestsController],
       providers: [
         { provide: AdminToeicGroupService, useValue: groupServiceMock },
+        { provide: AdminToeicQuestionService, useValue: questionServiceMock },
         { provide: AdminToeicTestService, useValue: testServiceMock },
         AdminGuard,
         { provide: UsersService, useValue: usersServiceMock },
@@ -136,6 +179,6 @@ describe('AdminTestsController', () => {
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
-    expect(groupServiceMock.getRawGroup).not.toHaveBeenCalled();
+    expect(groupServiceMock.patchGroup).not.toHaveBeenCalled();
   });
 });
