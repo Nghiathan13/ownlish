@@ -1,8 +1,10 @@
-import { apiRequest } from "@/shared/api/http";
+import { apiFormRequest, apiRequest } from "@/shared/api/http";
 import { parseAdminToeicGroupPatchResponse } from "@/features/admin/toeic/lib/parseAdminToeicPatchResponse";
 import { parseAdminToeicGroupImageDeleteResponse } from "@/features/admin/toeic/lib/parseAdminToeicGroupImageDeleteResponse";
+import { parseAdminToeicGroupImageUploadResponse } from "@/features/admin/toeic/lib/parseAdminToeicGroupImageUploadResponse";
 import type {
   AdminToeicGroupImageDeleteResponse,
+  AdminToeicGroupImageUploadResponse,
   AdminToeicGroupPatchInput,
   AdminToeicGroupPatchResponse,
 } from "./types";
@@ -30,4 +32,19 @@ export function deleteAdminToeicGroupImage(
     token,
     method: "DELETE",
   }).then(parseAdminToeicGroupImageDeleteResponse);
+}
+
+export function uploadAdminToeicGroupImage(
+  token: string,
+  groupId: number,
+  file: File,
+): Promise<AdminToeicGroupImageUploadResponse> {
+  const body = new FormData();
+  body.append("image", file);
+
+  return apiFormRequest(`/admin/tests/groups/${groupId}/image`, {
+    token,
+    method: "POST",
+    body,
+  }).then(parseAdminToeicGroupImageUploadResponse);
 }

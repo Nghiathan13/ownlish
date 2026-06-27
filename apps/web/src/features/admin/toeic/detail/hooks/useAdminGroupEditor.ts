@@ -5,9 +5,11 @@ import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedR
 import {
   deleteAdminToeicGroupImage,
   patchAdminToeicGroup,
+  uploadAdminToeicGroupImage,
 } from "@/features/admin/toeic/api/adminToeicGroup";
 import { patchAdminToeicQuestion } from "@/features/admin/toeic/api/adminToeicQuestion";
 import type {
+  AdminToeicGroupImageUploadResponse,
   AdminToeicGroupPatchResponse,
   AdminToeicQuestionPatchResponse,
   AdminToeicTestRawGroup,
@@ -58,6 +60,7 @@ export function useAdminGroupEditor({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingImage, setIsDeletingImage] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isDirty = isEditorDirty(state);
@@ -198,15 +201,48 @@ export function useAdminGroupEditor({
     }
   }, [group, onGroupPatched]);
 
+  const uploadImage = useCallback(async (
+    file: File,
+  ): Promise<{ error: string | null }> => {
+    setIsUploadingImage(true);
+    setError(null);
+
+    try {
+      const response = await runAuthenticatedRequest({
+        request: (token) => uploadAdminToeicGroupImage(token, group.id, file),
+      });
+      const uploadResponse = response as AdminToeicGroupImageUploadResponse;
+
+      onGroupPatched({
+        ...group,
+        imageUrl: uploadResponse.group.imageUrl,
+        imageUrlExpiresAt: uploadResponse.group.imageUrlExpiresAt,
+      });
+
+      return { error: null };
+    } catch (uploadError) {
+      const message =
+        uploadError instanceof ApiError
+          ? uploadError.message
+          : "Failed to upload group image.";
+      setError(message);
+      return { error: message };
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }, [group, onGroupPatched]);
+
   return {
     draft: state,
     setDraft,
     isDirty,
     isSaving,
     isDeletingImage,
+    isUploadingImage,
     error,
     resetDraft,
     save,
     deleteImage,
+    uploadImage,
   };
 }

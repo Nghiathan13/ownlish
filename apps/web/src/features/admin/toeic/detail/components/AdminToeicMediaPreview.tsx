@@ -7,6 +7,7 @@ import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 type AdminToeicMediaPreviewProps = {
   audioUrl: string | null;
   imageUrl: string | null;
+  previewImageUrl?: string | null;
   questionNumber?: number;
   showAudio?: boolean;
   showImage?: boolean;
@@ -17,15 +18,18 @@ type AdminToeicMediaPreviewProps = {
 export function AdminToeicMediaPreview({
   audioUrl,
   imageUrl,
+  previewImageUrl = null,
   questionNumber,
   showAudio = true,
   showImage = true,
   showImagePlaceholder = false,
   onRequestDeleteImage,
 }: AdminToeicMediaPreviewProps) {
+  const displayImageUrl = previewImageUrl ?? imageUrl;
   const hasAudio = showAudio && audioUrl;
-  const hasImage = showImage && imageUrl;
-  const showMissingImage = showImage && showImagePlaceholder && !imageUrl;
+  const hasImage = showImage && displayImageUrl;
+  const showMissingImage =
+    showImage && showImagePlaceholder && !displayImageUrl;
 
   if (!hasAudio && !hasImage && !showMissingImage && !(showAudio && !audioUrl)) {
     return null;
@@ -42,7 +46,7 @@ export function AdminToeicMediaPreview({
       ) : null}
       {hasImage ? (
         <div className="relative">
-          {onRequestDeleteImage ? (
+          {onRequestDeleteImage && previewImageUrl == null ? (
             <button
               aria-label="Delete image"
               className={iconOnlyButtonClassName(
@@ -64,8 +68,8 @@ export function AdminToeicMediaPreview({
                 : "Group visual"
             }
             className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-            key={imageUrl}
-            src={imageUrl}
+            key={displayImageUrl}
+            src={displayImageUrl}
           />
         </div>
       ) : null}

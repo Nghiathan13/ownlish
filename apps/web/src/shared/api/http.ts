@@ -6,6 +6,10 @@ type ApiRequestOptions = RequestInit & {
   token?: string | null;
 };
 
+type ApiFormRequestOptions = Omit<ApiRequestOptions, "body"> & {
+  body: FormData;
+};
+
 type ApiErrorBody = {
   error?: unknown;
   message?: unknown;
@@ -89,4 +93,37 @@ export async function apiRequest(
   }
 
   return body;
+}
+
+export async function apiFormRequest(
+  path: string,
+  { token, headers, sameOrigin = false, body, ...options }: ApiFormRequestOptions,
+): Promise<unknown> {
+  let response: Response;
+
+  try {
+    response = await fetch(sameOrigin ? path : `${API_BASE_URL}${path}`, {
+      ...options,
+      body,
+      credentials: "include",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
+
+    throw new ApiError("Cannot connect to server.", 0);
+  }
+
+  const responseBody = await readJsonBody(response);
+
+  if (!response.ok) {
+    throw new ApiError(getApiErrorMessage(responseBody), response.status);
+  }
+
+  return responseBody;
 }

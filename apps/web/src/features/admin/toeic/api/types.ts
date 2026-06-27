@@ -59,6 +59,14 @@ export type AdminToeicGroupImageDeleteResponse = {
   };
 };
 
+export type AdminToeicGroupImageUploadResponse = {
+  group: {
+    id: number;
+    imageUrl: string;
+    imageUrlExpiresAt: string;
+  };
+};
+
 export type AdminToeicQuestionPatchResponse = {
   question: {
     id: number;
