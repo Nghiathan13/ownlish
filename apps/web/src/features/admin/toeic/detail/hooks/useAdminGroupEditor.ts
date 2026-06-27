@@ -2,7 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { patchAdminToeicGroup } from "@/features/admin/toeic/api/adminToeicGroup";
+import {
+  deleteAdminToeicGroupImage,
+  patchAdminToeicGroup,
+} from "@/features/admin/toeic/api/adminToeicGroup";
 import { patchAdminToeicQuestion } from "@/features/admin/toeic/api/adminToeicQuestion";
 import type {
   AdminToeicGroupPatchResponse,
@@ -54,6 +57,7 @@ export function useAdminGroupEditor({
     cloneEditorState(baselineState),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isDirty = isEditorDirty(state);
@@ -162,13 +166,47 @@ export function useAdminGroupEditor({
     }
   }, [group, onGroupPatched, state]);
 
+  const deleteImage = useCallback(async (): Promise<{ error: string | null }> => {
+    if (!group.imageUrl) {
+      return { error: null };
+    }
+
+    setIsDeletingImage(true);
+    setError(null);
+
+    try {
+      await runAuthenticatedRequest({
+        request: (token) => deleteAdminToeicGroupImage(token, group.id),
+      });
+
+      onGroupPatched({
+        ...group,
+        imageUrl: null,
+        imageUrlExpiresAt: null,
+      });
+
+      return { error: null };
+    } catch (deleteError) {
+      const message =
+        deleteError instanceof ApiError
+          ? deleteError.message
+          : "Failed to delete group image.";
+      setError(message);
+      return { error: message };
+    } finally {
+      setIsDeletingImage(false);
+    }
+  }, [group, onGroupPatched]);
+
   return {
     draft: state,
     setDraft,
     isDirty,
     isSaving,
+    isDeletingImage,
     error,
     resetDraft,
     save,
+    deleteImage,
   };
 }

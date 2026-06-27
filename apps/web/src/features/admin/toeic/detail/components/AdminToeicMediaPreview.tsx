@@ -1,3 +1,9 @@
+"use client";
+
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
+import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
+import { statusColorClasses } from "@/shared/ui/theme/statusColors";
+
 type AdminToeicMediaPreviewProps = {
   audioUrl: string | null;
   imageUrl: string | null;
@@ -5,6 +11,7 @@ type AdminToeicMediaPreviewProps = {
   showAudio?: boolean;
   showImage?: boolean;
   showImagePlaceholder?: boolean;
+  onRequestDeleteImage?: () => void;
 };
 
 export function AdminToeicMediaPreview({
@@ -14,6 +21,7 @@ export function AdminToeicMediaPreview({
   showAudio = true,
   showImage = true,
   showImagePlaceholder = false,
+  onRequestDeleteImage,
 }: AdminToeicMediaPreviewProps) {
   const hasAudio = showAudio && audioUrl;
   const hasImage = showImage && imageUrl;
@@ -33,17 +41,33 @@ export function AdminToeicMediaPreview({
         )
       ) : null}
       {hasImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
-        <img
-          alt={
-            questionNumber != null
-              ? `Question ${questionNumber}`
-              : "Group visual"
-          }
-          className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-          key={imageUrl}
-          src={imageUrl}
-        />
+        <div className="relative">
+          {onRequestDeleteImage ? (
+            <button
+              aria-label="Delete image"
+              className={iconOnlyButtonClassName(
+                "absolute top-2 right-2 z-10 border border-border bg-background/90",
+                statusColorClasses.danger.text,
+                statusColorClasses.danger.backgroundHover,
+              )}
+              onClick={onRequestDeleteImage}
+              type="button"
+            >
+              <DeleteIcon />
+            </button>
+          ) : null}
+          {/* eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic */}
+          <img
+            alt={
+              questionNumber != null
+                ? `Question ${questionNumber}`
+                : "Group visual"
+            }
+            className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
+            key={imageUrl}
+            src={imageUrl}
+          />
+        </div>
       ) : null}
       {showMissingImage ? (
         <p className="text-base text-muted-foreground">No image available.</p>
