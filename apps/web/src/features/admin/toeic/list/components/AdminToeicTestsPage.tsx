@@ -34,16 +34,6 @@ export function AdminToeicTestsPage() {
     <PageShell>
       <Panel>
         <div className="flex flex-col gap-6">
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Admin
-            </p>
-            <h1 className="text-3xl font-bold leading-tight">TOEIC Content</h1>
-            <p className="mt-2 text-muted-foreground">
-              Browse imported TOEIC tests across all years.
-            </p>
-          </div>
-
           {availableYears.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {availableYears.map((year) => (

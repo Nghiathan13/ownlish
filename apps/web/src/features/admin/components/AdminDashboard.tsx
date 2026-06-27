@@ -43,16 +43,6 @@ export function AdminDashboard() {
     <PageShell>
       <Panel>
         <div className="flex flex-col gap-6">
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Admin
-            </p>
-            <h1 className="text-3xl font-bold leading-tight">Admin</h1>
-            <p className="mt-2 text-muted-foreground">
-              Platform administration tools will live here.
-            </p>
-          </div>
-
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <AdminPlaceholderCard title="Users" />
             <AdminPlaceholderCard title="Vocabulary Content" />
