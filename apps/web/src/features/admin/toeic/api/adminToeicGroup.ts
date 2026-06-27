@@ -1,8 +1,12 @@
 import { apiFormRequest, apiRequest } from "@/shared/api/http";
 import { parseAdminToeicGroupPatchResponse } from "@/features/admin/toeic/lib/parseAdminToeicPatchResponse";
+import { parseAdminToeicGroupAudioDeleteResponse } from "@/features/admin/toeic/lib/parseAdminToeicGroupAudioDeleteResponse";
+import { parseAdminToeicGroupAudioUploadResponse } from "@/features/admin/toeic/lib/parseAdminToeicGroupAudioUploadResponse";
 import { parseAdminToeicGroupImageDeleteResponse } from "@/features/admin/toeic/lib/parseAdminToeicGroupImageDeleteResponse";
 import { parseAdminToeicGroupImageUploadResponse } from "@/features/admin/toeic/lib/parseAdminToeicGroupImageUploadResponse";
 import type {
+  AdminToeicGroupAudioDeleteResponse,
+  AdminToeicGroupAudioUploadResponse,
   AdminToeicGroupImageDeleteResponse,
   AdminToeicGroupImageUploadResponse,
   AdminToeicGroupPatchInput,
@@ -22,6 +26,31 @@ export function patchAdminToeicGroup(
       "Content-Type": "application/json",
     },
   }).then(parseAdminToeicGroupPatchResponse);
+}
+
+export function deleteAdminToeicGroupAudio(
+  token: string,
+  groupId: number,
+): Promise<AdminToeicGroupAudioDeleteResponse> {
+  return apiRequest(`/admin/tests/groups/${groupId}/audio`, {
+    token,
+    method: "DELETE",
+  }).then(parseAdminToeicGroupAudioDeleteResponse);
+}
+
+export function uploadAdminToeicGroupAudio(
+  token: string,
+  groupId: number,
+  file: File,
+): Promise<AdminToeicGroupAudioUploadResponse> {
+  const body = new FormData();
+  body.append("audio", file);
+
+  return apiFormRequest(`/admin/tests/groups/${groupId}/audio`, {
+    token,
+    method: "POST",
+    body,
+  }).then(parseAdminToeicGroupAudioUploadResponse);
 }
 
 export function deleteAdminToeicGroupImage(

@@ -67,6 +67,22 @@ export type AdminToeicGroupImageUploadResponse = {
   };
 };
 
+export type AdminToeicGroupAudioDeleteResponse = {
+  group: {
+    id: number;
+    audioUrl: null;
+    audioUrlExpiresAt: null;
+  };
+};
+
+export type AdminToeicGroupAudioUploadResponse = {
+  group: {
+    id: number;
+    audioUrl: string;
+    audioUrlExpiresAt: string;
+  };
+};
+
 export type AdminToeicQuestionPatchResponse = {
   question: {
     id: number;

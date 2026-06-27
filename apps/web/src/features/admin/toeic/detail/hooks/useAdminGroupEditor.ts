@@ -3,12 +3,15 @@
 import { useCallback, useMemo, useState } from "react";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import {
+  deleteAdminToeicGroupAudio,
   deleteAdminToeicGroupImage,
   patchAdminToeicGroup,
+  uploadAdminToeicGroupAudio,
   uploadAdminToeicGroupImage,
 } from "@/features/admin/toeic/api/adminToeicGroup";
 import { patchAdminToeicQuestion } from "@/features/admin/toeic/api/adminToeicQuestion";
 import type {
+  AdminToeicGroupAudioUploadResponse,
   AdminToeicGroupImageUploadResponse,
   AdminToeicGroupPatchResponse,
   AdminToeicQuestionPatchResponse,
@@ -61,6 +64,8 @@ export function useAdminGroupEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDeletingAudio, setIsDeletingAudio] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isDirty = isEditorDirty(state);
@@ -169,6 +174,69 @@ export function useAdminGroupEditor({
     }
   }, [group, onGroupPatched, state]);
 
+  const deleteAudio = useCallback(async (): Promise<{ error: string | null }> => {
+    if (!group.audioUrl) {
+      return { error: null };
+    }
+
+    setIsDeletingAudio(true);
+    setError(null);
+
+    try {
+      await runAuthenticatedRequest({
+        request: (token) => deleteAdminToeicGroupAudio(token, group.id),
+      });
+
+      onGroupPatched({
+        ...group,
+        audioUrl: null,
+        audioUrlExpiresAt: null,
+      });
+
+      return { error: null };
+    } catch (deleteError) {
+      const message =
+        deleteError instanceof ApiError
+          ? deleteError.message
+          : "Failed to delete group audio.";
+      setError(message);
+      return { error: message };
+    } finally {
+      setIsDeletingAudio(false);
+    }
+  }, [group, onGroupPatched]);
+
+  const uploadAudio = useCallback(async (
+    file: File,
+  ): Promise<{ error: string | null }> => {
+    setIsUploadingAudio(true);
+    setError(null);
+
+    try {
+      const response = await runAuthenticatedRequest({
+        request: (token) => uploadAdminToeicGroupAudio(token, group.id, file),
+      });
+      const uploadResponse = response as AdminToeicGroupAudioUploadResponse;
+
+      onGroupPatched({
+        ...group,
+        audioUrl: uploadResponse.group.audioUrl,
+        audioUrlExpiresAt: uploadResponse.group.audioUrlExpiresAt,
+      });
+
+      return { error: null };
+    } catch (uploadError) {
+      const message =
+        uploadError instanceof ApiError
+          ? uploadError.message
+          : "Failed to upload group audio.";
+      setError(message);
+      return { error: message };
+    } finally {
+      setIsUploadingAudio(false);
+    }
+  }, [group, onGroupPatched]);
+
   const deleteImage = useCallback(async (): Promise<{ error: string | null }> => {
     if (!group.imageUrl) {
       return { error: null };
@@ -239,9 +307,13 @@ export function useAdminGroupEditor({
     isSaving,
     isDeletingImage,
     isUploadingImage,
+    isDeletingAudio,
+    isUploadingAudio,
     error,
     resetDraft,
     save,
+    deleteAudio,
+    uploadAudio,
     deleteImage,
     uploadImage,
   };
