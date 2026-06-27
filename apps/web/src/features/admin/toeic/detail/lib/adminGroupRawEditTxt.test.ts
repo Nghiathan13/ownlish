@@ -187,4 +187,61 @@ describe("adminGroupRawEditTxt", () => {
       },
     ]);
   });
+
+  it("sets contentVi to null when # contentVi section is missing", () => {
+    const state = createEditorStateFromGroup(part3Group);
+    const txt = serializeAdminGroupRawEditTxt(state, 3);
+    const withoutContentVi = txt.replace(
+      /\n# contentVi\n<<<\nChào\n>>>/,
+      "",
+    );
+
+    const parsed = parseAdminGroupRawEditTxt(withoutContentVi, state, 3);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) {
+      return;
+    }
+
+    expect(parsed.state.draftGroup.contentVi).toBeNull();
+  });
+
+  it("sets questionVi fields to null when # questionVi section is missing", () => {
+    const state = createEditorStateFromGroup(part3Group);
+    const txt = serializeAdminGroupRawEditTxt(state, 3);
+    const withoutQuestionVi = txt.replace(
+      /\n# questionVi[\s\S]*?(?=\n# answer)/,
+      "",
+    );
+
+    const parsed = parseAdminGroupRawEditTxt(withoutQuestionVi, state, 3);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) {
+      return;
+    }
+
+    expect(parsed.state.questions[0]?.draft.questionVi).toBeNull();
+    expect(parsed.state.questions[0]?.draft.optionAVi).toBeNull();
+    expect(parsed.state.questions[0]?.draft.optionBVi).toBeNull();
+    expect(parsed.state.questions[0]?.draft.optionCVi).toBeNull();
+    expect(parsed.state.questions[0]?.draft.optionDVi).toBeNull();
+  });
+
+  it("omits empty contentVi and questionVi sections when serializing", () => {
+    const state = createEditorStateFromGroup({
+      ...part3Group,
+      contentVi: null,
+      questions: part3Group.questions.map((question) => ({
+        ...question,
+        questionVi: null,
+        optionAVi: null,
+        optionBVi: null,
+        optionCVi: null,
+        optionDVi: null,
+      })),
+    });
+    const txt = serializeAdminGroupRawEditTxt(state, 3);
+
+    expect(txt).not.toContain("# contentVi");
+    expect(txt).not.toContain("# questionVi");
+  });
 });

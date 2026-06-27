@@ -237,6 +237,39 @@ function applyBilingualBlock(
   }
 }
 
+function clearQuestionViFields(
+  draft: AdminToeicQuestionFields,
+  partNumber: number,
+) {
+  if (isAdminToeicQuestionEditorFieldVisible(partNumber, "questionVi")) {
+    draft.questionVi = null;
+  }
+
+  for (const field of VI_OPTION_FIELDS) {
+    if (isAdminToeicQuestionEditorFieldVisible(partNumber, field)) {
+      draft[field] = null;
+    }
+  }
+}
+
+function hasQuestionViContent(
+  draft: AdminToeicQuestionFields,
+  partNumber: number,
+) {
+  if (
+    isAdminToeicQuestionEditorFieldVisible(partNumber, "questionVi") &&
+    draft.questionVi != null
+  ) {
+    return true;
+  }
+
+  return VI_OPTION_FIELDS.some(
+    (field) =>
+      isAdminToeicQuestionEditorFieldVisible(partNumber, field) &&
+      draft[field] != null,
+  );
+}
+
 function parseHeredoc(
   lines: string[],
   startIndex: number,
@@ -289,6 +322,10 @@ export function serializeAdminGroupRawEditTxt(
       continue;
     }
 
+    if (field === "contentVi" && state.draftGroup.contentVi == null) {
+      continue;
+    }
+
     if (output.length > 0) {
       output.push("");
     }
@@ -307,7 +344,7 @@ export function serializeAdminGroupRawEditTxt(
       output.push(...serializeBilingualBlock(question.draft, partNumber, "en"));
     }
 
-    if (shouldIncludeQuestionViBlock(partNumber)) {
+    if (shouldIncludeQuestionViBlock(partNumber) && hasQuestionViContent(question.draft, partNumber)) {
       output.push("");
       output.push(...serializeBilingualBlock(question.draft, partNumber, "vi"));
     }
@@ -538,7 +575,7 @@ export function parseAdminGroupRawEditTxt(
       }
 
       if (shouldIncludeQuestionViBlock(partNumber) && !seenSubsections.has("questionVi")) {
-        return { ok: false, error: `${questionPath}: missing # questionVi` };
+        clearQuestionViFields(questionEntry.draft, partNumber);
       }
 
       if (!seenSubsections.has("answer")) {
@@ -557,8 +594,18 @@ export function parseAdminGroupRawEditTxt(
       if (!parsedGroupScalars.has(field)) {
         return { ok: false, error: `Missing # group field: ${field}` };
       }
-    } else if (!parsedGroupHeredocs.has(field)) {
-      return { ok: false, error: `Missing # ${field} section` };
+      continue;
+    }
+
+    if (field === "content") {
+      if (!parsedGroupHeredocs.has(field)) {
+        return { ok: false, error: `Missing # ${field} section` };
+      }
+      continue;
+    }
+
+    if (field === "contentVi" && !parsedGroupHeredocs.has(field)) {
+      nextState.draftGroup.contentVi = null;
     }
   }
 
