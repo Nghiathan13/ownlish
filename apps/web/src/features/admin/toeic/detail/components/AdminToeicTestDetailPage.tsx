@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AdminToeicActiveStepPanel } from "@/features/admin/toeic/detail/components/AdminToeicActiveStepPanel";
 import { AdminConfirmDialog } from "@/features/admin/toeic/detail/components/editor/AdminConfirmDialog";
+import { AdminGroupRawEditModal } from "@/features/admin/toeic/detail/components/editor/AdminGroupRawEditModal";
 import { useAdminGroupEditor } from "@/features/admin/toeic/detail/hooks/useAdminGroupEditor";
 import { useAdminToeicTestDetailQuery } from "@/features/admin/toeic/detail/hooks/useAdminToeicTestDetailQuery";
 import { buildAdminToeicGridSections } from "@/features/admin/toeic/detail/lib/adminToeicQuestionGrid";
@@ -19,6 +20,10 @@ import {
 } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
 import { mergeAdminToeicGroupPatchIntoDetailCache } from "@/features/admin/toeic/detail/lib/adminToeicGroupPatchCache";
 import { resolveAdminGroupSaveConfirm } from "@/features/admin/toeic/detail/lib/adminToeicGroupSaveConfirm";
+import {
+  parseAdminGroupRawEditDocument,
+  serializeAdminGroupRawEditDocument,
+} from "@/features/admin/toeic/detail/lib/adminGroupRawEditDocument";
 import type {
   AdminToeicTestRawGroup,
   AdminToeicTestRawResponse,
@@ -142,6 +147,8 @@ function AdminToeicCurrentStepDetail({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [isRawEditOpen, setIsRawEditOpen] = useState(false);
+  const [rawEditError, setRawEditError] = useState<string | null>(null);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const [pendingNavigation, setPendingNavigation] =
     useState<PendingNavigation | null>(null);
@@ -171,6 +178,52 @@ function AdminToeicCurrentStepDetail({
     group: currentGroup,
     onGroupPatched: handleGroupPatched,
   });
+
+  const rawEditInitialJson = useMemo(
+    () => serializeAdminGroupRawEditDocument(editor.draft, currentGroup),
+    [currentGroup, editor.draft],
+  );
+
+  const handleOpenRawEdit = useCallback(() => {
+    setRawEditError(null);
+    setIsRawEditOpen(true);
+  }, []);
+
+  const handleCloseRawEdit = useCallback(() => {
+    if (editor.isSaving) {
+      return;
+    }
+
+    setRawEditError(null);
+    setIsRawEditOpen(false);
+  }, [editor.isSaving]);
+
+  const handleRawEditSave = useCallback(
+    async (jsonText: string) => {
+      setRawEditError(null);
+
+      const parsed = parseAdminGroupRawEditDocument(
+        jsonText,
+        editor.draft,
+        currentGroup,
+      );
+
+      if (!parsed.ok) {
+        setRawEditError(parsed.error);
+        return;
+      }
+
+      const { error: saveError } = await editor.save(parsed.state);
+
+      if (saveError) {
+        setRawEditError(saveError);
+        return;
+      }
+
+      setIsRawEditOpen(false);
+    },
+    [currentGroup, editor],
+  );
 
   const executeNavigation = useCallback(
     (navigation: PendingNavigation) => {
@@ -294,13 +347,22 @@ function AdminToeicCurrentStepDetail({
             </button>
           </div>
         ) : (
-          <button
-            className={secondaryTextButtonClassName()}
-            onClick={() => setIsEditing(true)}
-            type="button"
-          >
-            Edit
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className={secondaryTextButtonClassName()}
+              onClick={handleOpenRawEdit}
+              type="button"
+            >
+              Raw edit
+            </button>
+            <button
+              className={secondaryTextButtonClassName()}
+              onClick={() => setIsEditing(true)}
+              type="button"
+            >
+              Edit
+            </button>
+          </div>
         )
       }
       nextAriaLabel="Next"
@@ -366,6 +428,16 @@ function AdminToeicCurrentStepDetail({
           onClose={() => setConfirmKind(null)}
           onConfirm={handleConfirmEditAction}
           title="Save changes?"
+        />
+      ) : null}
+
+      {isRawEditOpen ? (
+        <AdminGroupRawEditModal
+          error={rawEditError}
+          initialJson={rawEditInitialJson}
+          isSaving={editor.isSaving}
+          onClose={handleCloseRawEdit}
+          onSave={handleRawEditSave}
         />
       ) : null}
     </>

@@ -33,6 +33,11 @@ type UseAdminGroupEditorParams = {
   onGroupPatched: (updatedGroup: AdminToeicTestRawGroup) => void;
 };
 
+type AdminGroupEditorSaveResult = {
+  didSave: boolean;
+  error: string | null;
+};
+
 function getSaveErrorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : null;
 }
@@ -62,19 +67,22 @@ export function useAdminGroupEditor({
     setError(null);
   }, [baselineState]);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (
+    stateOverride?: AdminGroupEditorState,
+  ): Promise<AdminGroupEditorSaveResult> => {
     setIsSaving(true);
     setError(null);
 
-    const groupPlan = buildGroupPatch(state);
-    const questionPlans = buildQuestionPatches(state);
+    const stateToSave = stateOverride ?? state;
+    const groupPlan = buildGroupPatch(stateToSave);
+    const questionPlans = buildQuestionPatches(stateToSave);
 
     if (!groupPlan && questionPlans.length === 0) {
       setIsSaving(false);
-      return false;
+      return { didSave: false, error: null };
     }
 
-    let nextState = cloneEditorState(state);
+    let nextState = cloneEditorState(stateToSave);
     let updatedGroup = group;
     const tasks: AdminGroupEditorSaveTask[] = [];
 
@@ -138,14 +146,17 @@ export function useAdminGroupEditor({
         setError(outcome.error);
       }
 
-      return outcome.didSave;
+      return {
+        didSave: outcome.didSave,
+        error: outcome.error,
+      };
     } catch (saveError) {
-      setError(
+      const message =
         saveError instanceof ApiError
           ? saveError.message
-          : "Failed to save group data.",
-      );
-      return false;
+          : "Failed to save group data.";
+      setError(message);
+      return { didSave: false, error: message };
     } finally {
       setIsSaving(false);
     }

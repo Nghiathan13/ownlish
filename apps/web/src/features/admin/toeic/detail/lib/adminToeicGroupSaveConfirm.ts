@@ -1,9 +1,9 @@
 export async function resolveAdminGroupSaveConfirm(params: {
   closeConfirm: () => void;
   onExitEdit: () => void;
-  save: () => Promise<boolean>;
+  save: () => Promise<{ didSave: boolean; error: string | null }>;
 }) {
-  const didSave = await params.save();
+  const { didSave } = await params.save();
   params.closeConfirm();
 
   if (didSave) {

@@ -3,7 +3,7 @@ import { resolveAdminGroupSaveConfirm } from "@/features/admin/toeic/detail/lib/
 
 describe("resolveAdminGroupSaveConfirm", () => {
   it("closes the confirm dialog without exiting edit mode on partial save", async () => {
-    const save = vi.fn(async () => false);
+    const save = vi.fn(async () => ({ didSave: false, error: null }));
     const closeConfirm = vi.fn();
     const onExitEdit = vi.fn();
 
@@ -20,7 +20,7 @@ describe("resolveAdminGroupSaveConfirm", () => {
   });
 
   it("closes the confirm dialog and exits edit mode on full save", async () => {
-    const save = vi.fn(async () => true);
+    const save = vi.fn(async () => ({ didSave: true, error: null }));
     const closeConfirm = vi.fn();
     const onExitEdit = vi.fn();
 
