@@ -51,7 +51,7 @@ export function PracticeLeftPanel({
   const content = (
     <>
       {stickyMediaSection ? (
-        <div className="sticky top-0 z-10 flex shrink-0 flex-col gap-4 bg-background pb-4">
+        <div className="flex shrink-0 flex-col gap-4 bg-background">
           {instruction ? (
             <p className="text-base font-bold text-foreground select-text">
               {instruction}
