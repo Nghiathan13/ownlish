@@ -79,6 +79,12 @@ export function useAdminGroupEditor({
     setError(null);
   }, [baselineState]);
 
+  const replaceFromGroup = useCallback((nextGroup: AdminToeicTestRawGroup) => {
+    const nextState = createEditorStateFromGroup(nextGroup);
+    setState(cloneEditorState(nextState));
+    setError(null);
+  }, []);
+
   const save = useCallback(async (
     stateOverride?: AdminGroupEditorState,
   ): Promise<AdminGroupEditorSaveResult> => {
@@ -311,6 +317,7 @@ export function useAdminGroupEditor({
     isUploadingAudio,
     error,
     resetDraft,
+    replaceFromGroup,
     save,
     deleteAudio,
     uploadAudio,

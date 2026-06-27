@@ -18,13 +18,17 @@ import {
   getAdminStepQuestionPosition,
   type AdminToeicRunStep,
 } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
+import {
+  buildAdminToeicGroupCatalog,
+  findAdminGroupIndexByGroupId,
+  getAdminToeicGroupCatalogEntry,
+} from "@/features/admin/toeic/detail/lib/adminToeicGroupCatalog";
+import { bulkSaveAdminGroupEditorStates } from "@/features/admin/toeic/detail/lib/adminGroupEditorBulkSave";
 import { mergeAdminToeicGroupPatchIntoDetailCache } from "@/features/admin/toeic/detail/lib/adminToeicGroupPatchCache";
 import { resolveAdminGroupSaveConfirm } from "@/features/admin/toeic/detail/lib/adminToeicGroupSaveConfirm";
-import {
-  parseAdminGroupRawEdit,
-  serializeAdminGroupRawEdit,
-} from "@/features/admin/toeic/detail/lib/adminGroupRawEdit";
+import { parseAdminGroupRawEditRange } from "@/features/admin/toeic/detail/lib/adminGroupRawEditMulti";
 import type { AdminGroupRawEditMode } from "@/features/admin/toeic/detail/lib/adminGroupRawEditTypes";
+import type { AdminGroupRange } from "@/features/admin/toeic/detail/lib/adminGroupRawEditRange";
 import type {
   AdminToeicTestRawGroup,
   AdminToeicTestRawResponse,
@@ -150,6 +154,7 @@ function AdminToeicCurrentStepDetail({
   const [isEditing, setIsEditing] = useState(false);
   const [isRawEditOpen, setIsRawEditOpen] = useState(false);
   const [rawEditError, setRawEditError] = useState<string | null>(null);
+  const [isRawEditSaving, setIsRawEditSaving] = useState(false);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const [pendingNavigation, setPendingNavigation] =
     useState<PendingNavigation | null>(null);
@@ -175,20 +180,19 @@ function AdminToeicCurrentStepDetail({
     [queryClient, testId],
   );
 
+  const groupCatalog = useMemo(
+    () => buildAdminToeicGroupCatalog(data.parts),
+    [data.parts],
+  );
+  const currentGroupIndex = useMemo(
+    () => findAdminGroupIndexByGroupId(groupCatalog, currentGroup.id) ?? 1,
+    [currentGroup.id, groupCatalog],
+  );
+
   const editor = useAdminGroupEditor({
     group: currentGroup,
     onGroupPatched: handleGroupPatched,
   });
-
-  const rawEditInitialJson = useMemo(
-    () => serializeAdminGroupRawEdit(editor.draft, currentStep.partNumber, "json"),
-    [currentStep.partNumber, editor.draft],
-  );
-
-  const rawEditInitialTxt = useMemo(
-    () => serializeAdminGroupRawEdit(editor.draft, currentStep.partNumber, "txt"),
-    [currentStep.partNumber, editor.draft],
-  );
 
   const handleOpenRawEdit = useCallback(() => {
     setRawEditError(null);
@@ -196,22 +200,22 @@ function AdminToeicCurrentStepDetail({
   }, []);
 
   const handleCloseRawEdit = useCallback(() => {
-    if (editor.isSaving) {
+    if (isRawEditSaving) {
       return;
     }
 
     setRawEditError(null);
     setIsRawEditOpen(false);
-  }, [editor.isSaving]);
+  }, [isRawEditSaving]);
 
   const handleRawEditSave = useCallback(
-    async (rawText: string, mode: AdminGroupRawEditMode) => {
+    async (rawText: string, mode: AdminGroupRawEditMode, range: AdminGroupRange) => {
       setRawEditError(null);
 
-      const parsed = parseAdminGroupRawEdit(
+      const parsed = parseAdminGroupRawEditRange(
         rawText,
-        editor.draft,
-        currentStep.partNumber,
+        groupCatalog,
+        range,
         mode,
       );
 
@@ -220,16 +224,46 @@ function AdminToeicCurrentStepDetail({
         return;
       }
 
-      const { error: saveError } = await editor.save(parsed.state);
+      setIsRawEditSaving(true);
 
-      if (saveError) {
-        setRawEditError(saveError);
-        return;
+      try {
+        const result = await bulkSaveAdminGroupEditorStates(
+          parsed.items.map((item) => {
+            const entry = getAdminToeicGroupCatalogEntry(groupCatalog, item.groupIndex);
+
+            if (!entry) {
+              throw new Error(`groupIndex=${item.groupIndex} is not available in this test.`);
+            }
+
+            return {
+              groupIndex: item.groupIndex,
+              state: item.state,
+              group: entry.group,
+            };
+          }),
+          handleGroupPatched,
+        );
+
+        const savedCurrentGroup = result.savedGroups.find(
+          (group) => group.id === currentGroup.id,
+        );
+
+        if (savedCurrentGroup) {
+          editor.replaceFromGroup(savedCurrentGroup);
+        }
+
+        if (result.error) {
+          setRawEditError(result.error);
+        }
+
+        if (result.didSave) {
+          setIsRawEditOpen(false);
+        }
+      } finally {
+        setIsRawEditSaving(false);
       }
-
-      setIsRawEditOpen(false);
     },
-    [currentStep.partNumber, editor],
+    [currentGroup.id, editor, groupCatalog, handleGroupPatched],
   );
 
   const executeNavigation = useCallback(
@@ -440,15 +474,14 @@ function AdminToeicCurrentStepDetail({
 
       {isRawEditOpen ? (
         <AdminGroupRawEditModal
-          draft={editor.draft}
+          catalog={groupCatalog}
+          currentGroupDraft={editor.draft}
           error={rawEditError}
-          initialJson={rawEditInitialJson}
-          initialTxt={rawEditInitialTxt}
-          isSaving={editor.isSaving}
+          initialGroupIndex={currentGroupIndex}
+          isSaving={isRawEditSaving}
           onClose={handleCloseRawEdit}
           onErrorChange={setRawEditError}
           onSave={handleRawEditSave}
-          partNumber={currentStep.partNumber}
         />
       ) : null}
     </>
