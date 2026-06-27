@@ -1,3 +1,6 @@
+"use client";
+
+import { useLayoutEffect, useRef } from "react";
 import type { AdminToeicAnswerKey } from "@/features/admin/toeic/api/types";
 import type {
   AdminGroupEditorState,
@@ -35,22 +38,45 @@ function TextInput({
   );
 }
 
+function getInitialTextAreaRows(value: string | null, minRows: number) {
+  const lineCount = (value ?? "").split("\n").length;
+  return Math.max(minRows, lineCount || minRows);
+}
+
+function fitTextAreaToInitialContent(textarea: HTMLTextAreaElement) {
+  textarea.style.height = "auto";
+  textarea.style.height = `${textarea.scrollHeight}px`;
+}
+
 function TextArea({
   value,
   onChange,
-  rows = 3,
+  minRows = 2,
 }: {
   value: string | null;
   onChange: (value: string | null) => void;
-  rows?: number;
+  minRows?: number;
 }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const initialRows = getInitialTextAreaRows(value, minRows);
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    fitTextAreaToInitialContent(textarea);
+  }, []);
+
   return (
     <textarea
-      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base"
+      className="w-full resize-y overflow-auto rounded-lg border border-border bg-background px-3 py-2 text-base"
       onChange={(event) => {
         onChange(event.target.value);
       }}
-      rows={rows}
+      ref={textareaRef}
+      rows={initialRows}
       value={value ?? ""}
     />
   );
@@ -130,8 +156,8 @@ export function AdminToeicGroupFieldsSection({
         <div>
           <FieldLabel>Content</FieldLabel>
           <TextArea
+            minRows={2}
             onChange={(value) => updateGroup({ content: value })}
-            rows={4}
             value={draft.draftGroup.content}
           />
         </div>
@@ -140,8 +166,8 @@ export function AdminToeicGroupFieldsSection({
         <div>
           <FieldLabel>Content (VI)</FieldLabel>
           <TextArea
+            minRows={2}
             onChange={(value) => updateGroup({ contentVi: value })}
-            rows={4}
             value={draft.draftGroup.contentVi}
           />
         </div>
@@ -286,6 +312,7 @@ export function AdminToeicQuestionFieldsSection({
               <div>
                 <FieldLabel>Explanation (VI)</FieldLabel>
                 <TextArea
+                  minRows={2}
                   onChange={(value) =>
                     updateQuestion(question.id, { explanationVi: value })
                   }
