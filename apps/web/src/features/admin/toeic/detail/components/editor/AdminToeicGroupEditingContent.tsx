@@ -11,6 +11,7 @@ import { AdminToeicMediaPreview } from "@/features/admin/toeic/detail/components
 import { useAdminGroupEditor } from "@/features/admin/toeic/detail/hooks/useAdminGroupEditor";
 import type { AdminToeicRunStep } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
 import { getAdminStepQuestions } from "@/features/admin/toeic/detail/lib/adminToeicRunSteps";
+import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
 
 type AdminToeicGroupEditingContentProps = {
   editor: ReturnType<typeof useAdminGroupEditor>;
@@ -30,6 +31,16 @@ export function AdminToeicGroupEditingContent({
   const visibleQuestions = editor.draft.questions.filter((question) =>
     visibleQuestionIds.has(question.id),
   );
+  const partConfig = getPartPracticeConfig(step.partNumber);
+  const questionNumber =
+    getAdminStepQuestions(step)[0]?.questionNumber ?? group.questionStart;
+  const showAudio =
+    partConfig.leftPanel === "audio-image" ||
+    partConfig.leftPanel === "audio" ||
+    partConfig.leftPanel === "listening-group";
+  const showImage =
+    partConfig.leftPanel === "audio-image" ||
+    partConfig.leftPanel === "listening-group";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -39,6 +50,10 @@ export function AdminToeicGroupEditingContent({
             <AdminToeicMediaPreview
               audioUrl={group.audioUrl}
               imageUrl={group.imageUrl}
+              questionNumber={questionNumber}
+              showAudio={showAudio}
+              showImage={showImage}
+              showImagePlaceholder={partConfig.leftPanel === "audio-image"}
             />
             <AdminToeicGroupFieldsSection
               draft={editor.draft}
