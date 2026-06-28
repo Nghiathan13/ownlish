@@ -39,7 +39,7 @@ export function MockLeftPanel({
         <img
           alt={`Question ${group.questionStart}`}
           className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-          key={imageUrl}
+          key={`image-${group.id}`}
           src={imageUrl}
         />
       ) : null}

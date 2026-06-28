@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { refreshToeicPartMedia } from "@/entities/toeic/api/toeic";
 import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -43,6 +43,42 @@ function getMediaFromGroup(group: ToeicQuestionGroup | null): SignedMediaState {
   };
 }
 
+function getEarliestExpiryMs(state: SignedMediaState): number | null {
+  const expiryTimes = [state.audioUrlExpiresAt, state.imageUrlExpiresAt]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => Date.parse(value));
+
+  if (expiryTimes.length === 0) {
+    return null;
+  }
+
+  return Math.min(...expiryTimes);
+}
+
+export function isSignedMediaStillValid(
+  state: SignedMediaState,
+  now = Date.now(),
+): boolean {
+  const expiryMs = getEarliestExpiryMs(state);
+  return expiryMs != null && expiryMs > now + REFRESH_BUFFER_MS;
+}
+
+export function mergeSignedMediaState(
+  preferred: SignedMediaState | undefined,
+  incoming: SignedMediaState,
+  now = Date.now(),
+): SignedMediaState {
+  if (!preferred) {
+    return incoming;
+  }
+
+  if (isSignedMediaStillValid(preferred, now)) {
+    return preferred;
+  }
+
+  return incoming;
+}
+
 export function useSignedMedia({
   testId,
   partNumber,
@@ -54,63 +90,74 @@ export function useSignedMedia({
     {},
   );
   const [mediaError, setMediaError] = useState<string | null>(null);
+  const refreshingRef = useRef(false);
 
   const media = useMemo(() => {
     if (!group) {
       return getEmptyMedia();
     }
 
-    return overrides[group.id] ?? getMediaFromGroup(group);
+    const fromGroup = getMediaFromGroup(group);
+    const override = overrides[group.id];
+
+    return mergeSignedMediaState(override, fromGroup);
   }, [group, overrides]);
 
-  const refresh = useCallback(async () => {
-    if (!group || !isAuthenticated) {
+  const refresh = useCallback(async (options?: { force?: boolean }) => {
+    if (!group || !isAuthenticated || refreshingRef.current) {
       return;
     }
 
-    const refreshed = await runAuthenticatedRequest({
-      request: (token) =>
-        refreshToeicPartMedia(token, testId, partNumber, [group.id]),
-    });
-    const next = refreshed.find((item) => item.id === group.id);
-    if (!next) {
-      setMediaError("Cannot refresh media.");
+    if (!options?.force && isSignedMediaStillValid(media)) {
       return;
     }
 
-    setOverrides((current) => ({
-      ...current,
-      [group.id]: {
+    refreshingRef.current = true;
+
+    try {
+      const refreshed = await runAuthenticatedRequest({
+        request: (token) =>
+          refreshToeicPartMedia(token, testId, partNumber, [group.id]),
+      });
+      const next = refreshed.find((item) => item.id === group.id);
+      if (!next) {
+        setMediaError("Cannot refresh media.");
+        return;
+      }
+
+      const nextMedia: SignedMediaState = {
         audioUrl: next.audioUrl,
         audioUrlExpiresAt: next.audioUrlExpiresAt,
         imageUrl: next.imageUrl,
         imageUrlExpiresAt: next.imageUrlExpiresAt,
-      },
-    }));
-    setMediaError(null);
-  }, [group, isAuthenticated, partNumber, testId]);
+      };
+
+      setOverrides((current) => ({
+        ...current,
+        [group.id]: options?.force
+          ? nextMedia
+          : mergeSignedMediaState(current[group.id], nextMedia),
+      }));
+      setMediaError(null);
+    } finally {
+      refreshingRef.current = false;
+    }
+  }, [group, isAuthenticated, media, partNumber, testId]);
 
   useEffect(() => {
     if (!group) {
       return;
     }
 
-    const expiryTimes = [media.audioUrlExpiresAt, media.imageUrlExpiresAt]
-      .filter((value): value is string => Boolean(value))
-      .map((value) => Date.parse(value));
-
-    if (expiryTimes.length === 0) {
+    const expiryMs = getEarliestExpiryMs(media);
+    if (expiryMs == null) {
       return;
     }
 
-    const nextExpiry = Math.min(...expiryTimes);
-    const delay = nextExpiry - Date.now() - REFRESH_BUFFER_MS;
-
+    const delay = expiryMs - Date.now() - REFRESH_BUFFER_MS;
     if (delay <= 0) {
-      const timer = window.setTimeout(() => {
-        void refresh();
-      }, 0);
-      return () => window.clearTimeout(timer);
+      void refresh();
+      return;
     }
 
     const timer = window.setTimeout(() => {
@@ -118,15 +165,10 @@ export function useSignedMedia({
     }, delay);
 
     return () => window.clearTimeout(timer);
-  }, [
-    group,
-    media.audioUrlExpiresAt,
-    media.imageUrlExpiresAt,
-    refresh,
-  ]);
+  }, [group, media, refresh]);
 
   const handleMediaError = useCallback(() => {
-    void refresh().catch(() => {
+    void refresh({ force: true }).catch(() => {
       setMediaError("Cannot load media. Please try again.");
     });
   }, [refresh]);

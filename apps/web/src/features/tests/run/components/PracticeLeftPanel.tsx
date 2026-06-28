@@ -65,7 +65,7 @@ export function PracticeLeftPanel({
               <audio
                 controls
                 className="w-full"
-                key={audioUrl}
+                key={`audio-${group.id}`}
                 onError={onMediaError}
                 src={audioUrl}
               />
@@ -80,7 +80,7 @@ export function PracticeLeftPanel({
               <img
                 alt={`Question ${questionNumber}`}
                 className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
-                key={imageUrl}
+                key={`image-${group.id}`}
                 onError={onMediaError}
                 src={imageUrl}
               />

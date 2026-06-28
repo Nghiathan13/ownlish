@@ -35,6 +35,7 @@ type MockRunViewProps = {
 type HiddenMockAudioProps = {
   audioUrl: string | null;
   enabled: boolean;
+  groupId: number;
   onAutoplayBlocked: () => void;
   onEnded: () => void;
   onError: () => void;
@@ -139,6 +140,7 @@ function buildMockGridSections(
 function HiddenMockAudio({
   audioUrl,
   enabled,
+  groupId,
   onAutoplayBlocked,
   onEnded,
   onError,
@@ -175,7 +177,7 @@ function HiddenMockAudio({
   return (
     <audio
       hidden
-      key={audioUrl}
+      key={`mock-audio-${groupId}`}
       onEnded={() => callbacksRef.current.onEnded()}
       onError={() => callbacksRef.current.onError()}
       preload="auto"
@@ -397,6 +399,7 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
       <HiddenMockAudio
         audioUrl={activeGroup.audioUrl}
         enabled={shouldPlayListeningAudio && Boolean(activeGroup.audioUrl)}
+        groupId={activeGroup.id}
         onAutoplayBlocked={() => setMediaError("Audio autoplay was blocked.")}
         onEnded={advanceAfterAudio}
         onError={() => setMediaError("Audio could not be loaded.")}
