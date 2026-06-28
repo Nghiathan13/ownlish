@@ -28,7 +28,8 @@ function AdminToeicPracticeQuestionBlock({
   const optionCount = getAdminRawQuestionOptionCount(question);
   const answerKey = question.answerKey;
   const questionEnVisible =
-    partConfig.showQuestionInRightPanel && Boolean(question.question?.trim());
+    Boolean(question.question?.trim()) &&
+    (partConfig.showQuestionInRightPanel || partNumber === 2);
   const showQuestionBilingual =
     showsQuestionTranslation(partConfig.translationVariant) &&
     Boolean(question.questionVi?.trim());
