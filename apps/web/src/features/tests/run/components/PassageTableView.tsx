@@ -29,7 +29,7 @@ export function PassageTableView({
       className={classNames(
         "block space-y-3",
         shrinkToContent ? "w-auto max-w-full" : widthPercent == null && "w-full",
-        bold && "font-semibold",
+        bold && "font-bold",
       )}
       style={
         widthPercent != null
@@ -47,7 +47,7 @@ export function PassageTableView({
             "flex flex-wrap",
             shrinkToContent ? "w-auto max-w-full" : "w-full",
             rowCentered && "text-center",
-            rowBold && "font-semibold",
+            rowBold && "font-bold",
           )}
           key={`row-${rowIndex}`}
         >

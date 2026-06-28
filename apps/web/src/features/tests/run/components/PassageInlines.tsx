@@ -4,6 +4,7 @@ import type { PassageInline } from "@/features/tests/run/lib/passageContent.type
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type PassageInlinesProps = {
+  bold?: boolean;
   className?: string;
   highlightEvidence: boolean;
   inlines: PassageInline[];
@@ -22,13 +23,14 @@ const evidenceHighlightClassName = classNames(
 );
 
 export function PassageInlines({
+  bold = false,
   className,
   highlightEvidence,
   inlines,
   stripEvidence,
 }: PassageInlinesProps) {
   return (
-    <span className={className}>
+    <span className={classNames(className, bold && "font-bold")}>
       {inlines.map((inline, index) => {
         if (inline.type === "text") {
           return <span key={`text-${index}`}>{inline.value}</span>;
@@ -36,13 +38,13 @@ export function PassageInlines({
 
         if (inline.type === "bold") {
           return (
-            <strong key={`bold-${index}`}>
-              <PassageInlines
-                highlightEvidence={highlightEvidence}
-                inlines={inline.inlines}
-                stripEvidence={stripEvidence}
-              />
-            </strong>
+            <PassageInlines
+              bold
+              highlightEvidence={highlightEvidence}
+              inlines={inline.inlines}
+              key={`bold-${index}`}
+              stripEvidence={stripEvidence}
+            />
           );
         }
 
