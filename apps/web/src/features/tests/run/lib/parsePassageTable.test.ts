@@ -66,8 +66,8 @@ describe("parsePassageTable", () => {
     const input = `[row center]
 [col]7:00 A.M.[/col]
 [col]--[/col]
-[col center]2:00 P.M.[/col center]
-[/row center]`;
+[col center]2:00 P.M.[/col]
+[/row]`;
 
     expect(parsePassageTable(input)).toEqual({
       rows: [
@@ -99,7 +99,7 @@ describe("parsePassageTable", () => {
   it("parses row center and bold modifiers in order", () => {
     const input = `[row center bold]
 [col]Header[/col]
-[/row center bold]`;
+[/row]`;
 
     expect(parsePassageTable(input)).toEqual({
       rows: [
@@ -121,7 +121,7 @@ describe("parsePassageTable", () => {
   it("parses row bold without center", () => {
     const input = `[row bold]
 [col]Total[/col]
-[/row bold]`;
+[/row]`;
 
     expect(parsePassageTable(input)?.rows[0]?.bold).toBe(true);
     expect(parsePassageTable(input)?.rows[0]?.center).toBe(false);
@@ -152,14 +152,20 @@ describe("parsePassageTable", () => {
     expect(parsePassageTable("[row][col]A[/col]")).toBeNull();
     expect(parsePassageTable("[row][col w=abc%]A[/col][/row]")).toBeNull();
     expect(
-      parsePassageTable("[row center][col]A[/col][/row]"),
+      parsePassageTable("[row bold center][col]A[/col][/row]"),
     ).toBeNull();
     expect(
-      parsePassageTable("[row][col center]A[/col][/row]"),
+      parsePassageTable("[row center][col]A[/col][/row center]"),
     ).toBeNull();
     expect(
-      parsePassageTable("[row bold center][col]A[/col][/row bold center]"),
+      parsePassageTable("[row][col center]A[/col center][/row]"),
     ).toBeNull();
+  });
+
+  it("parses row center with plain close tag", () => {
+    expect(
+      parsePassageTable("[row center][col]A[/col][/row]")?.rows[0]?.center,
+    ).toBe(true);
   });
 });
 

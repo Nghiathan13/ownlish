@@ -234,7 +234,7 @@ ${sampleTable}
 [row]
 [col]Memo[/col]
 [/row]
-[/table bold]`;
+[/table]`;
 
     expect(parsePassageContent(input)).toEqual({
       kind: "parsed",
@@ -252,12 +252,12 @@ ${sampleTable}
     });
   });
 
-  it("falls back to raw when table wrapper close tag mismatches", () => {
+  it("falls back to raw when table wrapper close tag has modifiers", () => {
     const input = `[table bold]
 [row]
 [col]Memo[/col]
 [/row]
-[/table]`;
+[/table center]`;
 
     expect(parsePassageContent(input)).toEqual({
       kind: "raw",
@@ -270,7 +270,7 @@ ${sampleTable}
 [row]
 [col]A[/col]
 [/row]
-[/table center w=30%]`;
+[/table]`;
 
     expect(parsePassageContent(input)).toEqual({
       kind: "parsed",

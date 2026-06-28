@@ -60,8 +60,8 @@ function parseTableWrapperInner(inner: string): TableWrapperAttrs | null {
   return { bold, center, widthPercent };
 }
 
-function parseTableTag(content: string, index: number, isClose: boolean) {
-  const prefix = isClose ? "[/table" : "[table";
+function parseTableOpenTagInner(content: string, index: number) {
+  const prefix = "[table";
   if (!content.startsWith(prefix, index)) {
     return null;
   }
@@ -93,49 +93,34 @@ export function findTableOpenIndex(content: string, fromIndex = 0) {
 }
 
 export function findTableCloseIndex(content: string, fromIndex = 0) {
-  return content.indexOf("[/table", fromIndex);
+  return content.indexOf("[/table]", fromIndex);
 }
 
 export function parseTableOpenTag(content: string, index: number) {
-  const parsed = parseTableTag(content, index, false);
-  if (!parsed) {
-    return null;
-  }
-
-  return {
-    length: parsed.length,
-    attrs: parsed.attrs,
-  };
+  return parseTableOpenTagInner(content, index);
 }
 
 export function parseTableCloseTagAttrs(content: string, index: number) {
-  const parsed = parseTableTag(content, index, true);
-  if (!parsed) {
-    return null;
-  }
-
-  return {
-    length: parsed.length,
-    attrs: parsed.attrs,
-  };
+  return parseTableCloseTag(content, index);
 }
 
-export function parseTableCloseTag(
-  content: string,
-  index: number,
-  expected: TableWrapperAttrs,
-) {
-  const parsed = parseTableTag(content, index, true);
-  if (!parsed) {
+export function parseTableCloseTag(content: string, index: number) {
+  if (!content.startsWith("[/table", index)) {
     return null;
   }
 
-  if (!tableWrapperAttrsEqual(parsed.attrs, expected)) {
+  const closeBracket = content.indexOf("]", index);
+  if (closeBracket === -1) {
+    return null;
+  }
+
+  const tag = content.slice(index, closeBracket + 1);
+  if (tag !== "[/table]") {
     return null;
   }
 
   return {
-    length: parsed.length,
+    length: tag.length,
   };
 }
 

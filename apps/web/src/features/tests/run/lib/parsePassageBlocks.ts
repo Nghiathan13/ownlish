@@ -2,11 +2,10 @@ import type { PassageBlock } from "@/features/tests/run/lib/passageContent.types
 import {
   findTableCloseIndex,
   findTableOpenIndex,
+  getEmptyTableWrapperAttrs,
   hasTableWrapperMarkers,
   parseTableCloseTag,
-  parseTableCloseTagAttrs,
   parseTableOpenTag,
-  tableWrapperAttrsEqual,
   type TableWrapperAttrs,
 } from "@/features/tests/run/lib/parsePassageTableWrapper";
 
@@ -62,13 +61,13 @@ function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | 
   }
 
   if (tableClose >= 0) {
-    const parsedClose = parseTableCloseTagAttrs(content, tableClose);
+    const parsedClose = parseTableCloseTag(content, tableClose);
     if (parsedClose && (!next || tableClose < next.index)) {
       next = {
         index: tableClose,
         kind: "table",
         isClose: true,
-        tableAttrs: parsedClose.attrs,
+        tableAttrs: getEmptyTableWrapperAttrs(),
         length: parsedClose.length,
       };
     }
@@ -79,11 +78,7 @@ function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | 
 
 type MarkupFrame =
   | { kind: "center" }
-  | { kind: "table"; attrs: TableWrapperAttrs };
-
-function tableAttrsEqual(left: TableWrapperAttrs, right: TableWrapperAttrs) {
-  return tableWrapperAttrsEqual(left, right);
-}
+  | { kind: "table" };
 
 export function hasPassageFormatMarkers(content: string | null | undefined) {
   if (!content) {
@@ -126,17 +121,13 @@ export function isValidPassageBlockMarkup(content: string) {
 
     if (marker.isClose) {
       const frame = stack.pop();
-      if (
-        !frame ||
-        frame.kind !== "table" ||
-        !tableAttrsEqual(frame.attrs, marker.tableAttrs)
-      ) {
+      if (!frame || frame.kind !== "table") {
         return false;
       }
     } else if (stack.length > 0 && stack[stack.length - 1]?.kind !== "center") {
       return false;
     } else {
-      stack.push({ kind: "table", attrs: marker.tableAttrs });
+      stack.push({ kind: "table" });
     }
 
     index = marker.index + marker.length;
@@ -224,7 +215,7 @@ function parseRawPassageBlocks(
       return null;
     }
 
-    const closeTag = parseTableCloseTag(content, closeIndex, marker.tableAttrs);
+    const closeTag = parseTableCloseTag(content, closeIndex);
     if (!closeTag) {
       return null;
     }

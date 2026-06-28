@@ -3,7 +3,10 @@ import {
   isValidPassageBlockMarkup,
   parsePassageBlocks,
 } from "@/features/tests/run/lib/parsePassageBlocks";
-import { parseTableOpenTag } from "@/features/tests/run/lib/parsePassageTableWrapper";
+import {
+  parseTableCloseTag,
+  parseTableOpenTag,
+} from "@/features/tests/run/lib/parsePassageTableWrapper";
 
 describe("parsePassageTableWrapper", () => {
   it("parses modifiers in center, w, bold order", () => {
@@ -38,6 +41,14 @@ describe("parsePassageTableWrapper", () => {
   it("rejects width above 100 percent", () => {
     expect(parseTableOpenTag("[table w=101%]", 0)).toBeNull();
   });
+
+  it("accepts plain close tag only", () => {
+    expect(parseTableCloseTag("[/table]", 0)).toEqual({
+      length: "[/table]".length,
+    });
+    expect(parseTableCloseTag("[/table center]", 0)).toBeNull();
+    expect(parseTableCloseTag("[/table w=30%]", 0)).toBeNull();
+  });
 });
 
 describe("parsePassageBlocks table wrapper", () => {
@@ -47,7 +58,7 @@ describe("parsePassageBlocks table wrapper", () => {
 [row]
 [col]A[/col]
 [/row]
-[/table center]`),
+[/table]`),
     ).toEqual([
       {
         type: "table",
@@ -59,13 +70,13 @@ describe("parsePassageBlocks table wrapper", () => {
     ]);
   });
 
-  it("parses table wrapper width with matching close tag", () => {
+  it("parses table wrapper width with plain close tag", () => {
     expect(
       parsePassageBlocks(`[table center w=30%]
 [row]
 [col]A[/col]
 [/row]
-[/table center w=30%]`),
+[/table]`),
     ).toEqual([
       {
         type: "table",
@@ -77,13 +88,13 @@ describe("parsePassageBlocks table wrapper", () => {
     ]);
   });
 
-  it("parses full modifier order on close tag", () => {
+  it("parses full modifier order on open tag only", () => {
     expect(
       parsePassageBlocks(`[table center w=30% bold]
 [row]
 [col]A[/col]
 [/row]
-[/table center w=30% bold]`),
+[/table]`),
     ).toEqual([
       {
         type: "table",
@@ -95,15 +106,17 @@ describe("parsePassageBlocks table wrapper", () => {
     ]);
   });
 
-  it("rejects mismatched table wrapper close tags", () => {
+  it("accepts plain close tag regardless of open modifiers", () => {
     expect(
       isValidPassageBlockMarkup(`[table bold]
 [row]
 [col]A[/col]
 [/row]
 [/table]`),
-    ).toBe(false);
+    ).toBe(true);
+  });
 
+  it("rejects styled close tags", () => {
     expect(
       isValidPassageBlockMarkup(`[table center w=30%]
 [row]

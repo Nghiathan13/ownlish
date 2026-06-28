@@ -130,17 +130,9 @@ function parseRowOpenTag(
   return { length: tag.length, ...attrs };
 }
 
-function rowAttrsEqual(
-  left: { center: boolean; bold: boolean },
-  right: { center: boolean; bold: boolean },
-) {
-  return left.center === right.center && left.bold === right.bold;
-}
-
 function parseRowCloseTag(
   content: string,
   index: number,
-  expected: { center: boolean; bold: boolean },
 ): { length: number } | null {
   if (!content.startsWith(ROW_CLOSE_PREFIX, index)) {
     return null;
@@ -152,12 +144,7 @@ function parseRowCloseTag(
   }
 
   const tag = content.slice(index, closeBracket + 1);
-  const inner = tag.slice("[/row".length, -1);
-  const attrs = inner.length === 0
-    ? { center: false, bold: false }
-    : parseRowWrapperInner(inner);
-
-  if (!attrs || !rowAttrsEqual(attrs, expected)) {
+  if (tag !== "[/row]") {
     return null;
   }
 
@@ -198,7 +185,6 @@ function parseColOpenTag(
 function parseColCloseTag(
   content: string,
   index: number,
-  expectCenter: boolean,
 ): { length: number } | null {
   if (!content.startsWith(COL_CLOSE_PREFIX, index)) {
     return null;
@@ -210,11 +196,7 @@ function parseColCloseTag(
   }
 
   const tag = content.slice(index, closeBracket + 1);
-  if (expectCenter) {
-    if (tag !== "[/col center]") {
-      return null;
-    }
-  } else if (tag !== "[/col]") {
+  if (tag !== "[/col]") {
     return null;
   }
 
@@ -238,10 +220,7 @@ function parseTableRow(
   while (index < content.length) {
     index = skipWhitespace(content, index);
 
-    const rowClose = parseRowCloseTag(content, index, {
-      center: rowOpen.center,
-      bold: rowOpen.bold,
-    });
+    const rowClose = parseRowCloseTag(content, index);
     if (rowClose) {
       index += rowClose.length;
       closedRow = true;
@@ -255,13 +234,12 @@ function parseTableRow(
 
     index += colOpen.length;
 
-    const colCloseTag = colOpen.center ? "[/col center]" : "[/col]";
-    const colCloseIndex = content.indexOf(colCloseTag, index);
+    const colCloseIndex = content.indexOf("[/col]", index);
     if (colCloseIndex === -1) {
       return null;
     }
 
-    const colClose = parseColCloseTag(content, colCloseIndex, colOpen.center);
+    const colClose = parseColCloseTag(content, colCloseIndex);
     if (!colClose) {
       return null;
     }
