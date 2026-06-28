@@ -34,6 +34,18 @@ export function PassageInlines({
           return <span key={`text-${index}`}>{inline.value}</span>;
         }
 
+        if (inline.type === "bold") {
+          return (
+            <strong key={`bold-${index}`}>
+              <PassageInlines
+                highlightEvidence={highlightEvidence}
+                inlines={inline.inlines}
+                stripEvidence={stripEvidence}
+              />
+            </strong>
+          );
+        }
+
         if (stripEvidence || !highlightEvidence) {
           return <span key={`evidence-${index}`}>{inline.value}</span>;
         }

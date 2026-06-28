@@ -85,4 +85,60 @@ describe("parsePassageContent", () => {
     ).toBe(true);
     expect(passageContentHasEvidence("[center]plain[/center]")).toBe(false);
   });
+
+  it("parses bold inline text", () => {
+    const input = "Please read the [bold]updated policy[/bold] carefully.";
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "plain",
+          inlines: [
+            { type: "text", value: "Please read the " },
+            {
+              type: "bold",
+              inlines: [{ type: "text", value: "updated policy" }],
+            },
+            { type: "text", value: " carefully." },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("parses bold with evidence inside center blocks", () => {
+    const input =
+      "[center][bold]{{q91}}Important deadline{{/q91}}[/bold][/center]";
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "center",
+          inlines: [
+            {
+              type: "bold",
+              inlines: [
+                {
+                  type: "evidence",
+                  questionNumbers: [91],
+                  value: "Important deadline",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("falls back to raw content for malformed bold markup", () => {
+    const input = "Please read the [bold]updated policy carefully.";
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "raw",
+      content: input,
+    });
+  });
 });

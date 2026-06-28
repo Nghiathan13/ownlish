@@ -1,6 +1,7 @@
 export type PassageInline =
   | { type: "text"; value: string }
-  | { type: "evidence"; questionNumbers: number[]; value: string };
+  | { type: "evidence"; questionNumbers: number[]; value: string }
+  | { type: "bold"; inlines: PassageInline[] };
 
 export type PassageBlock =
   | { type: "plain"; inlines: PassageInline[] }
