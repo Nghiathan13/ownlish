@@ -37,6 +37,7 @@ function PassageBlockView({
         highlightEvidence={highlightEvidence}
         rows={block.rows}
         stripEvidence={stripEvidence}
+        widthPercent={block.widthPercent}
       />
     );
   }

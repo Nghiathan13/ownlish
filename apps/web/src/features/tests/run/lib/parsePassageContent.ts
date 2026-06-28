@@ -29,8 +29,9 @@ function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
 
     return {
       type: "table",
-      bold: block.tableModifier === "bold",
-      center: block.tableModifier === "center",
+      bold: block.tableAttrs.bold,
+      center: block.tableAttrs.center,
+      widthPercent: block.tableAttrs.widthPercent,
       rows: table.rows,
     };
   }

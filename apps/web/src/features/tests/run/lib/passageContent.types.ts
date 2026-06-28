@@ -14,8 +14,6 @@ export type PassageTableRow = {
   cols: PassageTableCell[];
 };
 
-export type PassageTableModifier = "bold" | "center";
-
 export type PassageBlock =
   | { type: "plain"; inlines: PassageInline[] }
   | { type: "center"; inlines: PassageInline[] }
@@ -23,6 +21,7 @@ export type PassageBlock =
       type: "table";
       bold: boolean;
       center: boolean;
+      widthPercent: number | null;
       rows: PassageTableRow[];
     };
 

@@ -9,6 +9,7 @@ type PassageTableViewProps = {
   highlightEvidence: boolean;
   rows: PassageTableRow[];
   stripEvidence: boolean;
+  widthPercent: number | null;
 };
 
 export function PassageTableView({
@@ -17,13 +18,20 @@ export function PassageTableView({
   highlightEvidence,
   rows,
   stripEvidence,
+  widthPercent,
 }: PassageTableViewProps) {
   return (
     <div
       className={classNames(
-        "block w-full space-y-3",
+        "block space-y-3",
+        widthPercent == null && "w-full",
         bold && "font-semibold",
       )}
+      style={
+        widthPercent != null
+          ? { maxWidth: "100%", width: `${widthPercent}%` }
+          : undefined
+      }
     >
       {rows.map((row, rowIndex) => {
         const rowCentered = center || row.center;

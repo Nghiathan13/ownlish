@@ -4,14 +4,16 @@ import {
   findTableOpenIndex,
   hasTableWrapperMarkers,
   parseTableCloseTag,
+  parseTableCloseTagAttrs,
   parseTableOpenTag,
-  type TableWrapperModifier,
+  tableWrapperAttrsEqual,
+  type TableWrapperAttrs,
 } from "@/features/tests/run/lib/parsePassageTableWrapper";
 
 export type RawPassageBlock =
   | { type: "plain"; raw: string }
   | { type: "center"; raw: string }
-  | { type: "table"; raw: string; tableModifier: TableWrapperModifier };
+  | { type: "table"; raw: string; tableAttrs: TableWrapperAttrs };
 
 const CENTER_OPEN = "[center]";
 const CENTER_CLOSE = "[/center]";
@@ -22,7 +24,7 @@ type BlockMarker =
       index: number;
       kind: "table";
       isClose: boolean;
-      tableModifier: TableWrapperModifier;
+      tableAttrs: TableWrapperAttrs;
       length: number;
     };
 
@@ -44,39 +46,25 @@ function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | 
 
   if (tableOpen >= 0) {
     const parsedOpen = parseTableOpenTag(content, tableOpen);
-    if (
-      parsedOpen &&
-      (!next || tableOpen < next.index)
-    ) {
+    if (parsedOpen && (!next || tableOpen < next.index)) {
       next = {
         index: tableOpen,
         kind: "table",
         isClose: false,
-        tableModifier: parsedOpen.modifier,
+        tableAttrs: parsedOpen.attrs,
         length: parsedOpen.length,
       };
     }
   }
 
   if (tableClose >= 0) {
-    const parsedClose =
-      parseTableCloseTag(content, tableClose, null) ??
-      parseTableCloseTag(content, tableClose, "bold") ??
-      parseTableCloseTag(content, tableClose, "center");
-
-    if (
-      parsedClose &&
-      (!next || tableClose < next.index)
-    ) {
-      const modifierMatch = content
-        .slice(tableClose)
-        .match(/^\[\/table(?:\s+(bold|center))?\]/);
+    const parsedClose = parseTableCloseTagAttrs(content, tableClose);
+    if (parsedClose && (!next || tableClose < next.index)) {
       next = {
         index: tableClose,
         kind: "table",
         isClose: true,
-        tableModifier:
-          (modifierMatch?.[1] as TableWrapperModifier | undefined) ?? null,
+        tableAttrs: parsedClose.attrs,
         length: parsedClose.length,
       };
     }
@@ -87,7 +75,11 @@ function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | 
 
 type MarkupFrame =
   | { kind: "center" }
-  | { kind: "table"; modifier: TableWrapperModifier };
+  | { kind: "table"; attrs: TableWrapperAttrs };
+
+function tableAttrsEqual(left: TableWrapperAttrs, right: TableWrapperAttrs) {
+  return tableWrapperAttrsEqual(left, right);
+}
 
 export function hasPassageFormatMarkers(content: string | null | undefined) {
   if (!content) {
@@ -133,14 +125,14 @@ export function isValidPassageBlockMarkup(content: string) {
       if (
         !frame ||
         frame.kind !== "table" ||
-        frame.modifier !== marker.tableModifier
+        !tableAttrsEqual(frame.attrs, marker.tableAttrs)
       ) {
         return false;
       }
     } else if (stack.length > 0) {
       return false;
     } else {
-      stack.push({ kind: "table", modifier: marker.tableModifier });
+      stack.push({ kind: "table", attrs: marker.tableAttrs });
     }
 
     index = marker.index + marker.length;
@@ -217,11 +209,7 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
       return null;
     }
 
-    const closeTag = parseTableCloseTag(
-      content,
-      closeIndex,
-      marker.tableModifier,
-    );
+    const closeTag = parseTableCloseTag(content, closeIndex, marker.tableAttrs);
     if (!closeTag) {
       return null;
     }
@@ -229,7 +217,7 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
     blocks.push({
       type: "table",
       raw: trimBlockContent(content.slice(marker.index + marker.length, closeIndex)),
-      tableModifier: marker.tableModifier,
+      tableAttrs: marker.tableAttrs,
     });
 
     index = closeIndex + closeTag.length;
@@ -246,5 +234,4 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
   return trimBoundaryNewlines(blocks);
 }
 
-// Keep Pick type for backward references
 export type { PassageBlock };

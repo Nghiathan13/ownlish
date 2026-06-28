@@ -173,6 +173,7 @@ ${sampleTable}
           type: "table",
           bold: false,
           center: false,
+          widthPercent: null,
           rows: parsePassageTable(sampleTable)!.rows,
         },
       ],
@@ -193,6 +194,7 @@ ${sampleTable}
           type: "table",
           bold: true,
           center: false,
+          widthPercent: null,
           rows: parsePassageTable(`[row]
 [col]Memo[/col]
 [/row]`)!.rows,
@@ -211,6 +213,29 @@ ${sampleTable}
     expect(parsePassageContent(input)).toEqual({
       kind: "raw",
       content: input,
+    });
+  });
+
+  it("parses table wrapper width", () => {
+    const input = `[table center w=30%]
+[row]
+[col]A[/col]
+[/row]
+[/table center w=30%]`;
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "table",
+          bold: false,
+          center: true,
+          widthPercent: 30,
+          rows: parsePassageTable(`[row]
+[col]A[/col]
+[/row]`)!.rows,
+        },
+      ],
     });
   });
 
