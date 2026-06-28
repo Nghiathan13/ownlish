@@ -1,9 +1,9 @@
 "use client";
 
-import { ContextEvidenceText } from "@/features/tests/run/components/ContextEvidenceText";
+import { PassageContent } from "@/features/tests/run/components/PassageContent";
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
 import { useEvidenceHighlightPreference } from "@/features/tests/run/hooks/useEvidenceHighlightPreference";
-import { hasContextEvidenceMarkers, stripContextEvidenceMarkup } from "@/features/tests/run/lib/parseContextEvidence";
+import { passageContentHasEvidence } from "@/features/tests/run/lib/parsePassageContent";
 import { classNames } from "@/shared/lib/classNames";
 
 type PassagePanelProps = {
@@ -49,6 +49,26 @@ function EvidenceHighlightSwitch({
   );
 }
 
+type PassageBodyProps = {
+  content: string;
+  highlightEvidence: boolean;
+  showRawEvidenceWhenOff: boolean;
+};
+
+function PassageBody({
+  content,
+  highlightEvidence,
+  showRawEvidenceWhenOff,
+}: PassageBodyProps) {
+  return (
+    <PassageContent
+      content={content}
+      highlightEvidence={highlightEvidence}
+      showRawEvidenceWhenOff={showRawEvidenceWhenOff}
+    />
+  );
+}
+
 export function PassagePanel({
   content,
   contentVi,
@@ -60,13 +80,19 @@ export function PassagePanel({
 }: PassagePanelProps) {
   const hasContent = Boolean(content?.trim());
   const hasTranslation = Boolean(showTranslation && contentVi?.trim());
-  const canToggleEvidence =
-    showEvidenceToggle && hasContent && hasContextEvidenceMarkers(content);
+  const contentHasEvidence = hasContent && passageContentHasEvidence(content!);
+  const translationHasEvidence =
+    hasTranslation && passageContentHasEvidence(contentVi!);
+  const canToggleContentEvidence =
+    showEvidenceToggle && contentHasEvidence;
+  const canToggleTranslationEvidence = translationHasEvidence;
   const { enabled: isEvidenceHighlighted, setEnabled: setIsEvidenceHighlighted } =
     useEvidenceHighlightPreference();
 
-  const shouldHighlightEvidence =
-    canToggleEvidence && isEvidenceHighlighted;
+  const shouldHighlightContentEvidence =
+    contentHasEvidence && isEvidenceHighlighted;
+  const shouldHighlightTranslationEvidence =
+    translationHasEvidence && isEvidenceHighlighted;
 
   if (!hasContent && !hasTranslation) {
     return null;
@@ -77,7 +103,7 @@ export function PassagePanel({
       {hasContent ? (
         <PracticeTranslationCard
           headerAction={
-            canToggleEvidence ? (
+            canToggleContentEvidence ? (
               <EvidenceHighlightSwitch
                 checked={isEvidenceHighlighted}
                 onCheckedChange={setIsEvidenceHighlighted}
@@ -87,24 +113,30 @@ export function PassagePanel({
           showHeader={showTitle}
           title={title}
         >
-          <div className="whitespace-pre-wrap text-base">
-            {shouldHighlightEvidence ? (
-              <ContextEvidenceText content={content!} />
-            ) : canToggleEvidence ? (
-              showRawContentWhenEvidenceOff
-                ? content
-                : stripContextEvidenceMarkup(content!)
-            ) : (
-              content
-            )}
-          </div>
+          <PassageBody
+            content={content!}
+            highlightEvidence={shouldHighlightContentEvidence}
+            showRawEvidenceWhenOff={showRawContentWhenEvidenceOff}
+          />
         </PracticeTranslationCard>
       ) : null}
       {hasTranslation ? (
-        <PracticeTranslationCard title={hasContent ? "Translation" : title}>
-          <div className="whitespace-pre-wrap text-base">
-            {contentVi}
-          </div>
+        <PracticeTranslationCard
+          headerAction={
+            canToggleTranslationEvidence ? (
+              <EvidenceHighlightSwitch
+                checked={isEvidenceHighlighted}
+                onCheckedChange={setIsEvidenceHighlighted}
+              />
+            ) : undefined
+          }
+          title={hasContent ? "Translation" : title}
+        >
+          <PassageBody
+            content={contentVi!}
+            highlightEvidence={shouldHighlightTranslationEvidence}
+            showRawEvidenceWhenOff={showRawContentWhenEvidenceOff}
+          />
         </PracticeTranslationCard>
       ) : null}
     </div>
