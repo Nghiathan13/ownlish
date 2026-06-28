@@ -1,5 +1,6 @@
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
+import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
 
@@ -27,9 +28,10 @@ export function MockLeftPanel({
   return (
     <div className="space-y-4">
       {instruction ? (
-        <p className="text-base font-bold text-foreground select-text">
-          {instruction}
-        </p>
+        <PartInstructionText
+          instruction={instruction}
+          partNumber={partNumber}
+        />
       ) : null}
 
       {showImage && imageUrl ? (

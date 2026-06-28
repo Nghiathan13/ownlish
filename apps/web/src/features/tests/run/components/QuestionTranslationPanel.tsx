@@ -67,7 +67,7 @@ export function QuestionTranslationPanel({
                     )}
                   />
                 ) : null}
-                {key}. {label}
+                ({key}) {label}
               </p>
             );
           })

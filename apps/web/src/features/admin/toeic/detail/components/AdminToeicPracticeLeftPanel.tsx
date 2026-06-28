@@ -1,6 +1,8 @@
 import type { AdminToeicTestRawGroup } from "@/features/admin/toeic/api/types";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
+import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
 import { getAdminRawMetadataLines } from "@/features/admin/toeic/detail/lib/adminRawMetadata";
 
 type AdminToeicPracticeLeftPanelProps = {
@@ -15,6 +17,7 @@ export function AdminToeicPracticeLeftPanel({
   questionNumber,
 }: AdminToeicPracticeLeftPanelProps) {
   const partConfig = getPartPracticeConfig(partNumber);
+  const instruction = getPartInstruction(partNumber, group);
   const metadataLines = getAdminRawMetadataLines(group, partNumber);
   const showAudio =
     partConfig.leftPanel !== "none" &&
@@ -26,13 +29,15 @@ export function AdminToeicPracticeLeftPanel({
     (partConfig.leftPanel === "audio-image" ||
       partConfig.leftPanel === "listening-group");
   const mediaSection =
+    Boolean(instruction) ||
     metadataLines.length > 0 ||
     showAudio ||
     (showImage && (group.imageUrl || partConfig.leftPanel === "audio-image"));
 
   if (
     partConfig.leftPanel === "none" &&
-    metadataLines.length === 0
+    metadataLines.length === 0 &&
+    !instruction
   ) {
     return null;
   }
@@ -41,6 +46,13 @@ export function AdminToeicPracticeLeftPanel({
     <>
       {mediaSection ? (
         <div className="flex shrink-0 flex-col gap-4 bg-background">
+          {instruction ? (
+            <PartInstructionText
+              instruction={instruction}
+              partNumber={partNumber}
+            />
+          ) : null}
+
           {metadataLines.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
               {metadataLines.map((line) => (

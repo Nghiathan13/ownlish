@@ -45,6 +45,7 @@ type OptionLabelProps = {
   showEnglishText: boolean;
   showBilingual: boolean;
   plainTranslation: boolean;
+  showParenthesisLabel: boolean;
 };
 
 function OptionLabel({
@@ -54,14 +55,26 @@ function OptionLabel({
   showEnglishText,
   showBilingual,
   plainTranslation,
+  showParenthesisLabel,
 }: OptionLabelProps) {
   return (
     <span className="flex min-w-0 flex-1 flex-col gap-1 text-base font-normal leading-snug tracking-normal">
       <span>
-        {optionKey}
-        {englishText ? (
-          <span className={showEnglishText ? "" : "invisible"}>. {englishText}</span>
-        ) : null}
+        {showParenthesisLabel ? (
+          <>
+            ({optionKey})
+            {englishText && showEnglishText ? ` ${englishText}` : null}
+          </>
+        ) : (
+          <>
+            {optionKey}
+            {englishText ? (
+              <span className={showEnglishText ? "" : "invisible"}>
+                . {englishText}
+              </span>
+            ) : null}
+          </>
+        )}
       </span>
       {showBilingual && vietnameseText ? (
         <BilingualTranslationText plain={plainTranslation} variant="option">
@@ -192,6 +205,7 @@ export function QuestionOptions({
               plainTranslation={plainTranslation}
               showBilingual={showBilingual}
               showEnglishText={showEnglishText}
+              showParenthesisLabel={showGrading}
               vietnameseText={vietnameseText}
             />
           </>
