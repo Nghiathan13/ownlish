@@ -7,6 +7,10 @@ const PASSAGE_BLOCK_TAGS = {
     open: "[center]",
     close: "[/center]",
   },
+  table: {
+    open: "[table]",
+    close: "[/table]",
+  },
 } as const;
 
 type BlockTagName = keyof typeof PASSAGE_BLOCK_TAGS;

@@ -8,6 +8,25 @@ import {
   parsePassageContent,
   passageContentHasEvidence,
 } from "@/features/tests/run/lib/parsePassageContent";
+import { parsePassageTable } from "@/features/tests/run/lib/parsePassageTable";
+
+const sampleTable = `[row]
+[col w=30%]
+To
+hello
+[/col]
+[col]
+Camile
+[/col]
+[/row]
+[row]
+[col]
+From
+[/col]
+[col]
+Masae
+[/col]
+[/row]`;
 
 describe("parsePassageBlocks", () => {
   it("detects center format markers", () => {
@@ -135,6 +154,39 @@ describe("parsePassageContent", () => {
 
   it("falls back to raw content for malformed bold markup", () => {
     const input = "Please read the [bold]updated policy carefully.";
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "raw",
+      content: input,
+    });
+  });
+
+  it("parses table blocks with row-level column widths", () => {
+    const input = `[table]
+${sampleTable}
+[/table]`;
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "table",
+          rows: parsePassageTable(sampleTable)!.rows,
+        },
+      ],
+    });
+  });
+
+  it("falls back to raw content when table rows are uneven", () => {
+    const input = `[table]
+[row]
+[col]A[/col]
+[col]B[/col]
+[/row]
+[row]
+[col]C[/col]
+[/row]
+[/table]`;
 
     expect(parsePassageContent(input)).toEqual({
       kind: "raw",

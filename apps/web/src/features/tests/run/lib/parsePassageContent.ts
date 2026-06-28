@@ -5,6 +5,7 @@ import type {
   ParsePassageContentResult,
   PassageBlock,
   PassageInline,
+  PassageTableRow,
 } from "@/features/tests/run/lib/passageContent.types";
 import {
   hasPassageFormatMarkers,
@@ -16,10 +17,26 @@ import {
   isValidPassageInlineMarkup,
   parsePassageInlines,
 } from "@/features/tests/run/lib/parsePassageInlines";
+import { parsePassageTable } from "@/features/tests/run/lib/parsePassageTable";
 
-function toPassageBlock(
-  block: { type: PassageBlock["type"]; raw: string },
-): PassageBlock | null {
+type RawPassageBlock = {
+  type: PassageBlock["type"];
+  raw: string;
+};
+
+function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
+  if (block.type === "table") {
+    const table = parsePassageTable(block.raw);
+    if (!table) {
+      return null;
+    }
+
+    return {
+      type: "table",
+      rows: table.rows,
+    };
+  }
+
   const inlines = parsePassageInlines(block.raw);
   if (!inlines) {
     return null;
@@ -28,7 +45,7 @@ function toPassageBlock(
   return {
     type: block.type,
     inlines,
-  };
+  } as PassageBlock;
 }
 
 function inlineHasEvidence(inline: PassageInline): boolean {
@@ -41,6 +58,18 @@ function inlineHasEvidence(inline: PassageInline): boolean {
   }
 
   return false;
+}
+
+function tableRowHasEvidence(row: PassageTableRow) {
+  return row.cols.some((col) => col.inlines.some(inlineHasEvidence));
+}
+
+function blockHasEvidence(block: PassageBlock) {
+  if (block.type === "table") {
+    return block.rows.some(tableRowHasEvidence);
+  }
+
+  return block.inlines.some(inlineHasEvidence);
 }
 
 export function parsePassageContent(content: string): ParsePassageContentResult {
@@ -94,7 +123,5 @@ export function passageContentHasEvidence(content: string) {
     return hasContextEvidenceMarkers(content);
   }
 
-  return parsed.blocks.some((block) =>
-    block.inlines.some(inlineHasEvidence),
-  );
+  return parsed.blocks.some(blockHasEvidence);
 }

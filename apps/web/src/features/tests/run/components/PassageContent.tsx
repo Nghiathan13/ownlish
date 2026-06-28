@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { classNames } from "@/shared/lib/classNames";
 import { PassageInlines } from "@/features/tests/run/components/PassageInlines";
+import { PassageTableView } from "@/features/tests/run/components/PassageTableView";
 import type { PassageBlock } from "@/features/tests/run/lib/passageContent.types";
 import {
   parsePassageContent,
@@ -13,7 +14,9 @@ type PassageContentProps = {
   showRawEvidenceWhenOff?: boolean;
 };
 
-const formattedBlockClassNames: Partial<Record<PassageBlock["type"], string>> = {
+const formattedBlockClassNames: Partial<
+  Record<Exclude<PassageBlock["type"], "plain" | "table">, string>
+> = {
   center: "block w-full text-center",
 };
 
@@ -26,6 +29,16 @@ function PassageBlockView({
   highlightEvidence: boolean;
   stripEvidence: boolean;
 }) {
+  if (block.type === "table") {
+    return (
+      <PassageTableView
+        highlightEvidence={highlightEvidence}
+        rows={block.rows}
+        stripEvidence={stripEvidence}
+      />
+    );
+  }
+
   const inlines = (
     <PassageInlines
       highlightEvidence={highlightEvidence}
