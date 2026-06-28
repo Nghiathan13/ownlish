@@ -22,13 +22,15 @@ export function PassageTableView({
     <div
       className={classNames(
         "block w-full space-y-3",
-        center && "mx-auto w-fit max-w-full",
         bold && "font-semibold",
       )}
     >
-      {rows.map((row, rowIndex) => (
+      {rows.map((row, rowIndex) => {
+        const rowCentered = center || row.center;
+
+        return (
         <div
-          className={classNames("flex w-full flex-wrap", row.center && "text-center")}
+          className={classNames("flex w-full flex-wrap", rowCentered && "text-center")}
           key={`row-${rowIndex}`}
         >
           {row.cols.map((col, colIndex) => {
@@ -38,7 +40,7 @@ export function PassageTableView({
               <div
                 className={classNames(
                   "min-w-0 max-w-full shrink whitespace-pre-wrap break-words",
-                  col.center && "text-center",
+                  (rowCentered || col.center) && "text-center",
                 )}
                 key={`col-${rowIndex}-${colIndex}`}
                 style={{
@@ -56,7 +58,8 @@ export function PassageTableView({
             );
           })}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
