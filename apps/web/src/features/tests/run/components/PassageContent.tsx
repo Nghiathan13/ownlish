@@ -17,18 +17,18 @@ type PassageContentProps = {
 function PassageBlockView({
   block,
   highlightEvidence,
-  inCenter = false,
+  inCenterBlock = false,
   stripEvidence,
 }: {
   block: PassageBlock;
   highlightEvidence: boolean;
-  inCenter?: boolean;
+  inCenterBlock?: boolean;
   stripEvidence: boolean;
 }) {
   if (block.type === "table") {
     return (
       <PassageTableView
-        blockCenter={inCenter}
+        blockCenter={inCenterBlock}
         bold={block.bold}
         center={block.center}
         highlightEvidence={highlightEvidence}
@@ -41,12 +41,12 @@ function PassageBlockView({
 
   if (block.type === "center") {
     return (
-      <div className="flex w-full flex-col items-center">
+      <div className="w-full text-center">
         {block.blocks.map((child, childIndex) => (
           <PassageBlockView
             block={child}
             highlightEvidence={highlightEvidence}
-            inCenter
+            inCenterBlock
             key={`center-child-${childIndex}`}
             stripEvidence={stripEvidence}
           />
@@ -55,19 +55,13 @@ function PassageBlockView({
     );
   }
 
-  const inlines = (
+  return (
     <PassageInlines
       highlightEvidence={highlightEvidence}
       inlines={block.inlines}
       stripEvidence={stripEvidence}
     />
   );
-
-  if (block.type === "plain" && inCenter) {
-    return <div className="w-full text-center">{inlines}</div>;
-  }
-
-  return inlines;
 }
 
 export function PassageContent({

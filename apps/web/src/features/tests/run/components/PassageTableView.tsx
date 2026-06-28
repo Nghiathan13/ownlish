@@ -28,6 +28,7 @@ export function PassageTableView({
     <div
       className={classNames(
         "block space-y-3",
+        blockCenter && "mx-auto",
         shrinkToContent ? "w-auto max-w-full" : widthPercent == null && "w-full",
         bold && "font-bold",
       )}
