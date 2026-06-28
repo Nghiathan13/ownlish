@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { classNames } from "@/shared/lib/classNames";
 import { PassageInlines } from "@/features/tests/run/components/PassageInlines";
 import type { PassageBlock } from "@/features/tests/run/lib/passageContent.types";
@@ -12,9 +13,8 @@ type PassageContentProps = {
   showRawEvidenceWhenOff?: boolean;
 };
 
-const blockClassNames: Record<PassageBlock["type"], string> = {
-  plain: "whitespace-pre-wrap",
-  center: "w-full whitespace-pre-wrap text-center",
+const formattedBlockClassNames: Partial<Record<PassageBlock["type"], string>> = {
+  center: "block w-full text-center",
 };
 
 function PassageBlockView({
@@ -26,13 +26,21 @@ function PassageBlockView({
   highlightEvidence: boolean;
   stripEvidence: boolean;
 }) {
+  const inlines = (
+    <PassageInlines
+      highlightEvidence={highlightEvidence}
+      inlines={block.inlines}
+      stripEvidence={stripEvidence}
+    />
+  );
+
+  if (block.type === "plain") {
+    return inlines;
+  }
+
   return (
-    <div className={blockClassNames[block.type]}>
-      <PassageInlines
-        highlightEvidence={highlightEvidence}
-        inlines={block.inlines}
-        stripEvidence={stripEvidence}
-      />
+    <div className={formattedBlockClassNames[block.type]}>
+      {inlines}
     </div>
   );
 }
@@ -57,14 +65,15 @@ export function PassageContent({
   const stripEvidence = hasEvidence && !highlightEvidence;
 
   return (
-    <div className={classNames("text-base")}>
+    <div className={classNames("whitespace-pre-wrap text-base")}>
       {parsed.blocks.map((block, index) => (
-        <PassageBlockView
-          block={block}
-          highlightEvidence={highlightEvidence}
-          key={`${block.type}-${index}`}
-          stripEvidence={stripEvidence}
-        />
+        <Fragment key={`${block.type}-${index}`}>
+          <PassageBlockView
+            block={block}
+            highlightEvidence={highlightEvidence}
+            stripEvidence={stripEvidence}
+          />
+        </Fragment>
       ))}
     </div>
   );

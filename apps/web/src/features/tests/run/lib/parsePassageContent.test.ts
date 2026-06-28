@@ -21,7 +21,7 @@ describe("parsePassageBlocks", () => {
     expect(parsePassageBlocks(input)).toEqual([
       { type: "plain", raw: "Dear Team,\n\n" },
       { type: "center", raw: "MEMORANDUM" },
-      { type: "plain", raw: "\n\nPlease review." },
+      { type: "plain", raw: "\nPlease review." },
     ]);
   });
 

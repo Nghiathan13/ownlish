@@ -86,6 +86,24 @@ export function isValidPassageBlockMarkup(content: string) {
   return Object.values(depth).every((value) => value === 0);
 }
 
+function trimBoundaryNewlines(blocks: RawPassageBlock[]): RawPassageBlock[] {
+  return blocks.map((block, index) => {
+    if (block.type !== "plain" || index === 0) {
+      return block;
+    }
+
+    const previousBlock = blocks[index - 1];
+    if (previousBlock?.type === "plain" || !block.raw.startsWith("\n")) {
+      return block;
+    }
+
+    return {
+      ...block,
+      raw: block.raw.slice(1),
+    };
+  });
+}
+
 export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
   if (!isValidPassageBlockMarkup(content)) {
     return null;
@@ -131,5 +149,5 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
     });
   }
 
-  return blocks;
+  return trimBoundaryNewlines(blocks);
 }
