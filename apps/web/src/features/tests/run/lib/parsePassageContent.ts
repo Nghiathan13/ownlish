@@ -11,6 +11,7 @@ import {
   hasPassageFormatMarkers,
   isValidPassageBlockMarkup,
   parsePassageBlocks,
+  type RawPassageBlock,
 } from "@/features/tests/run/lib/parsePassageBlocks";
 import {
   hasPassageInlineFormatMarkers,
@@ -18,11 +19,6 @@ import {
   parsePassageInlines,
 } from "@/features/tests/run/lib/parsePassageInlines";
 import { parsePassageTable } from "@/features/tests/run/lib/parsePassageTable";
-
-type RawPassageBlock = {
-  type: PassageBlock["type"];
-  raw: string;
-};
 
 function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
   if (block.type === "table") {
@@ -33,6 +29,8 @@ function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
 
     return {
       type: "table",
+      bold: block.tableModifier === "bold",
+      center: block.tableModifier === "center",
       rows: table.rows,
     };
   }

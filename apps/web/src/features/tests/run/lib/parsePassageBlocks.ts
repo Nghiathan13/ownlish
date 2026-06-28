@@ -1,93 +1,152 @@
 import type { PassageBlock } from "@/features/tests/run/lib/passageContent.types";
+import {
+  findTableCloseIndex,
+  findTableOpenIndex,
+  hasTableWrapperMarkers,
+  parseTableCloseTag,
+  parseTableOpenTag,
+  type TableWrapperModifier,
+} from "@/features/tests/run/lib/parsePassageTableWrapper";
 
-type RawPassageBlock = Pick<PassageBlock, "type"> & { raw: string };
+export type RawPassageBlock =
+  | { type: "plain"; raw: string }
+  | { type: "center"; raw: string }
+  | { type: "table"; raw: string; tableModifier: TableWrapperModifier };
 
-const PASSAGE_BLOCK_TAGS = {
-  center: {
-    open: "[center]",
-    close: "[/center]",
-  },
-  table: {
-    open: "[table]",
-    close: "[/table]",
-  },
-} as const;
+const CENTER_OPEN = "[center]";
+const CENTER_CLOSE = "[/center]";
 
-type BlockTagName = keyof typeof PASSAGE_BLOCK_TAGS;
+type BlockMarker =
+  | { index: number; kind: "center"; isClose: boolean }
+  | {
+      index: number;
+      kind: "table";
+      isClose: boolean;
+      tableModifier: TableWrapperModifier;
+      length: number;
+    };
 
-function findNextTag(
-  content: string,
-  fromIndex: number,
-): { index: number; tag: BlockTagName; isClose: boolean } | null {
-  let next: { index: number; tag: BlockTagName; isClose: boolean } | null = null;
+function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | null {
+  const centerOpen = content.indexOf(CENTER_OPEN, fromIndex);
+  const centerClose = content.indexOf(CENTER_CLOSE, fromIndex);
+  const tableOpen = findTableOpenIndex(content, fromIndex);
+  const tableClose = findTableCloseIndex(content, fromIndex);
 
-  for (const tag of Object.keys(PASSAGE_BLOCK_TAGS) as BlockTagName[]) {
-    const open = content.indexOf(PASSAGE_BLOCK_TAGS[tag].open, fromIndex);
-    const close = content.indexOf(PASSAGE_BLOCK_TAGS[tag].close, fromIndex);
+  let next: BlockMarker | null = null;
 
-    for (const candidate of [
-      open >= 0 ? { index: open, tag, isClose: false as const } : null,
-      close >= 0 ? { index: close, tag, isClose: true as const } : null,
-    ]) {
-      if (!candidate) {
-        continue;
-      }
+  if (centerOpen >= 0) {
+    next = { index: centerOpen, kind: "center", isClose: false };
+  }
 
-      if (!next || candidate.index < next.index) {
-        next = candidate;
-      }
+  if (centerClose >= 0 && (!next || centerClose < next.index)) {
+    next = { index: centerClose, kind: "center", isClose: true };
+  }
+
+  if (tableOpen >= 0) {
+    const parsedOpen = parseTableOpenTag(content, tableOpen);
+    if (
+      parsedOpen &&
+      (!next || tableOpen < next.index)
+    ) {
+      next = {
+        index: tableOpen,
+        kind: "table",
+        isClose: false,
+        tableModifier: parsedOpen.modifier,
+        length: parsedOpen.length,
+      };
+    }
+  }
+
+  if (tableClose >= 0) {
+    const parsedClose =
+      parseTableCloseTag(content, tableClose, null) ??
+      parseTableCloseTag(content, tableClose, "bold") ??
+      parseTableCloseTag(content, tableClose, "center");
+
+    if (
+      parsedClose &&
+      (!next || tableClose < next.index)
+    ) {
+      const modifierMatch = content
+        .slice(tableClose)
+        .match(/^\[\/table(?:\s+(bold|center))?\]/);
+      next = {
+        index: tableClose,
+        kind: "table",
+        isClose: true,
+        tableModifier:
+          (modifierMatch?.[1] as TableWrapperModifier | undefined) ?? null,
+        length: parsedClose.length,
+      };
     }
   }
 
   return next;
 }
 
+type MarkupFrame =
+  | { kind: "center" }
+  | { kind: "table"; modifier: TableWrapperModifier };
+
 export function hasPassageFormatMarkers(content: string | null | undefined) {
   if (!content) {
     return false;
   }
 
-  return Object.values(PASSAGE_BLOCK_TAGS).some(
-    ({ open, close }) => content.includes(open) || content.includes(close),
+  return (
+    content.includes(CENTER_OPEN) ||
+    content.includes(CENTER_CLOSE) ||
+    hasTableWrapperMarkers(content)
   );
 }
 
 export function isValidPassageBlockMarkup(content: string) {
-  const depth: Partial<Record<BlockTagName, number>> = {};
-
-  for (const tag of Object.keys(PASSAGE_BLOCK_TAGS) as BlockTagName[]) {
-    depth[tag] = 0;
-  }
-
+  const stack: MarkupFrame[] = [];
   let index = 0;
 
   while (index < content.length) {
-    const nextTag = findNextTag(content, index);
-    if (!nextTag) {
+    const marker = findNextBlockMarker(content, index);
+    if (!marker) {
       break;
     }
 
-    const { open, close } = PASSAGE_BLOCK_TAGS[nextTag.tag];
-
-    if (nextTag.isClose) {
-      if ((depth[nextTag.tag] ?? 0) === 0) {
+    if (marker.kind === "center") {
+      if (marker.isClose) {
+        const frame = stack.pop();
+        if (!frame || frame.kind !== "center") {
+          return false;
+        }
+      } else if (stack.length > 0) {
         return false;
+      } else {
+        stack.push({ kind: "center" });
       }
 
-      depth[nextTag.tag] = (depth[nextTag.tag] ?? 0) - 1;
-      index = nextTag.index + close.length;
+      index =
+        marker.index + (marker.isClose ? CENTER_CLOSE.length : CENTER_OPEN.length);
       continue;
     }
 
-    if ((depth[nextTag.tag] ?? 0) > 0) {
+    if (marker.isClose) {
+      const frame = stack.pop();
+      if (
+        !frame ||
+        frame.kind !== "table" ||
+        frame.modifier !== marker.tableModifier
+      ) {
+        return false;
+      }
+    } else if (stack.length > 0) {
       return false;
+    } else {
+      stack.push({ kind: "table", modifier: marker.tableModifier });
     }
 
-    depth[nextTag.tag] = (depth[nextTag.tag] ?? 0) + 1;
-    index = nextTag.index + open.length;
+    index = marker.index + marker.length;
   }
 
-  return Object.values(depth).every((value) => value === 0);
+  return stack.length === 0;
 }
 
 function trimBoundaryNewlines(blocks: RawPassageBlock[]): RawPassageBlock[] {
@@ -108,6 +167,10 @@ function trimBoundaryNewlines(blocks: RawPassageBlock[]): RawPassageBlock[] {
   });
 }
 
+function trimBlockContent(raw: string) {
+  return raw.replace(/^\s+/, "").replace(/\s+$/, "");
+}
+
 export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
   if (!isValidPassageBlockMarkup(content)) {
     return null;
@@ -118,31 +181,58 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
   let index = 0;
 
   while (index < content.length) {
-    const nextTag = findNextTag(content, index);
-    if (!nextTag || nextTag.isClose) {
+    const marker = findNextBlockMarker(content, index);
+    if (!marker || marker.isClose) {
       break;
     }
 
-    const { open, close } = PASSAGE_BLOCK_TAGS[nextTag.tag];
-
-    if (nextTag.index > plainStart) {
+    if (marker.index > plainStart) {
       blocks.push({
         type: "plain",
-        raw: content.slice(plainStart, nextTag.index),
+        raw: content.slice(plainStart, marker.index),
       });
     }
 
-    const closeIndex = content.indexOf(close, nextTag.index + open.length);
+    if (marker.kind === "center") {
+      const closeIndex = content.indexOf(CENTER_CLOSE, marker.index + CENTER_OPEN.length);
+      if (closeIndex === -1) {
+        return null;
+      }
+
+      blocks.push({
+        type: "center",
+        raw: trimBlockContent(content.slice(marker.index + CENTER_OPEN.length, closeIndex)),
+      });
+
+      index = closeIndex + CENTER_CLOSE.length;
+      plainStart = index;
+      continue;
+    }
+
+    const closeIndex = findTableCloseIndex(
+      content,
+      marker.index + marker.length,
+    );
     if (closeIndex === -1) {
       return null;
     }
 
+    const closeTag = parseTableCloseTag(
+      content,
+      closeIndex,
+      marker.tableModifier,
+    );
+    if (!closeTag) {
+      return null;
+    }
+
     blocks.push({
-      type: nextTag.tag,
-      raw: content.slice(nextTag.index + open.length, closeIndex),
+      type: "table",
+      raw: trimBlockContent(content.slice(marker.index + marker.length, closeIndex)),
+      tableModifier: marker.tableModifier,
     });
 
-    index = closeIndex + close.length;
+    index = closeIndex + closeTag.length;
     plainStart = index;
   }
 
@@ -155,3 +245,6 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
 
   return trimBoundaryNewlines(blocks);
 }
+
+// Keep Pick type for backward references
+export type { PassageBlock };

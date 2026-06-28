@@ -3,11 +3,12 @@ import type {
   PassageTableRow,
 } from "@/features/tests/run/lib/passageContent.types";
 import { parsePassageInlines } from "@/features/tests/run/lib/parsePassageInlines";
+import { hasTableWrapperMarkers } from "@/features/tests/run/lib/parsePassageTableWrapper";
 
-const ROW_OPEN = "[row]";
-const ROW_CLOSE = "[/row]";
-const COL_CLOSE = "[/col]";
-const COL_OPEN_PATTERN = /^\[col(?:\s+w=(\d+)%)?\]$/;
+const ROW_OPEN_PREFIX = "[row";
+const ROW_CLOSE_PREFIX = "[/row";
+const COL_OPEN_PREFIX = "[col";
+const COL_CLOSE_PREFIX = "[/col";
 
 export function hasPassageTableMarkers(content: string | null | undefined) {
   if (!content) {
@@ -15,46 +16,12 @@ export function hasPassageTableMarkers(content: string | null | undefined) {
   }
 
   return (
-    content.includes("[table]") ||
-    content.includes("[/table]") ||
-    content.includes(ROW_OPEN) ||
-    content.includes(ROW_CLOSE) ||
-    content.includes("[col") ||
-    content.includes(COL_CLOSE)
+    hasTableWrapperMarkers(content) ||
+    content.includes(ROW_OPEN_PREFIX) ||
+    content.includes(ROW_CLOSE_PREFIX) ||
+    content.includes(COL_OPEN_PREFIX) ||
+    content.includes(COL_CLOSE_PREFIX)
   );
-}
-
-function parseColOpenTag(
-  content: string,
-  index: number,
-): { length: number; widthPercent: number | null } | null {
-  if (!content.startsWith("[col", index)) {
-    return null;
-  }
-
-  const closeBracket = content.indexOf("]", index);
-  if (closeBracket === -1) {
-    return null;
-  }
-
-  const tag = content.slice(index, closeBracket + 1);
-  const match = COL_OPEN_PATTERN.exec(tag);
-  if (!match) {
-    return null;
-  }
-
-  const widthPercent = match[1] ? Number(match[1]) : null;
-  if (
-    widthPercent !== null &&
-    (!Number.isInteger(widthPercent) || widthPercent <= 0 || widthPercent > 100)
-  ) {
-    return null;
-  }
-
-  return {
-    length: tag.length,
-    widthPercent,
-  };
 }
 
 function skipWhitespace(content: string, index: number) {
@@ -71,25 +38,167 @@ function trimCellContent(raw: string) {
   return raw.replace(/^\s+/, "").replace(/\s+$/, "");
 }
 
+function parseTagBody(inner: string) {
+  const tokens = inner.trim().split(/\s+/).filter(Boolean);
+  let widthPercent: number | null = null;
+  let center = false;
+
+  for (const token of tokens) {
+    const widthMatch = /^w=(\d+)%$/.exec(token);
+    if (widthMatch) {
+      const value = Number(widthMatch[1]);
+      if (!Number.isInteger(value) || value <= 0 || value > 100) {
+        return null;
+      }
+
+      widthPercent = value;
+      continue;
+    }
+
+    if (token === "center") {
+      center = true;
+      continue;
+    }
+
+    return null;
+  }
+
+  return { widthPercent, center };
+}
+
+function parseRowOpenTag(
+  content: string,
+  index: number,
+): { length: number; center: boolean } | null {
+  if (!content.startsWith(ROW_OPEN_PREFIX, index)) {
+    return null;
+  }
+
+  const closeBracket = content.indexOf("]", index);
+  if (closeBracket === -1) {
+    return null;
+  }
+
+  const tag = content.slice(index, closeBracket + 1);
+  if (!tag.startsWith("[row") || !tag.endsWith("]")) {
+    return null;
+  }
+
+  const inner = tag.slice("[row".length, -1);
+  if (inner.length === 0) {
+    return { length: tag.length, center: false };
+  }
+
+  if (inner.trim() !== "center") {
+    return null;
+  }
+
+  return { length: tag.length, center: true };
+}
+
+function parseRowCloseTag(
+  content: string,
+  index: number,
+  expectCenter: boolean,
+): { length: number } | null {
+  if (!content.startsWith(ROW_CLOSE_PREFIX, index)) {
+    return null;
+  }
+
+  const closeBracket = content.indexOf("]", index);
+  if (closeBracket === -1) {
+    return null;
+  }
+
+  const tag = content.slice(index, closeBracket + 1);
+  if (expectCenter) {
+    if (tag !== "[/row center]") {
+      return null;
+    }
+  } else if (tag !== "[/row]") {
+    return null;
+  }
+
+  return { length: tag.length };
+}
+
+function parseColOpenTag(
+  content: string,
+  index: number,
+): { length: number; widthPercent: number | null; center: boolean } | null {
+  if (!content.startsWith(COL_OPEN_PREFIX, index)) {
+    return null;
+  }
+
+  const closeBracket = content.indexOf("]", index);
+  if (closeBracket === -1) {
+    return null;
+  }
+
+  const tag = content.slice(index, closeBracket + 1);
+  if (!tag.startsWith("[col") || !tag.endsWith("]")) {
+    return null;
+  }
+
+  const inner = tag.slice("[col".length, -1);
+  const parsedBody = parseTagBody(inner);
+  if (!parsedBody) {
+    return null;
+  }
+
+  return {
+    length: tag.length,
+    widthPercent: parsedBody.widthPercent,
+    center: parsedBody.center,
+  };
+}
+
+function parseColCloseTag(
+  content: string,
+  index: number,
+  expectCenter: boolean,
+): { length: number } | null {
+  if (!content.startsWith(COL_CLOSE_PREFIX, index)) {
+    return null;
+  }
+
+  const closeBracket = content.indexOf("]", index);
+  if (closeBracket === -1) {
+    return null;
+  }
+
+  const tag = content.slice(index, closeBracket + 1);
+  if (expectCenter) {
+    if (tag !== "[/col center]") {
+      return null;
+    }
+  } else if (tag !== "[/col]") {
+    return null;
+  }
+
+  return { length: tag.length };
+}
+
 function parseTableRow(
   content: string,
   startIndex: number,
 ): { row: PassageTableRow; nextIndex: number } | null {
   let index = skipWhitespace(content, startIndex);
-
-  if (!content.startsWith(ROW_OPEN, index)) {
+  const rowOpen = parseRowOpenTag(content, index);
+  if (!rowOpen) {
     return null;
   }
 
-  index += ROW_OPEN.length;
+  index += rowOpen.length;
   const cols: PassageTableCell[] = [];
   let closedRow = false;
 
   while (index < content.length) {
     index = skipWhitespace(content, index);
 
-    if (content.startsWith(ROW_CLOSE, index)) {
-      index += ROW_CLOSE.length;
+    const rowClose = parseRowCloseTag(content, index, rowOpen.center);
+    if (rowClose) {
+      index += rowClose.length;
       closedRow = true;
       break;
     }
@@ -101,22 +210,29 @@ function parseTableRow(
 
     index += colOpen.length;
 
-    const colCloseIndex = content.indexOf(COL_CLOSE, index);
+    const colCloseTag = colOpen.center ? "[/col center]" : "[/col]";
+    const colCloseIndex = content.indexOf(colCloseTag, index);
     if (colCloseIndex === -1) {
       return null;
     }
 
-    const raw = trimCellContent(content.slice(index, colCloseIndex));
-    const inlines = parsePassageInlines(raw);
+    const colClose = parseColCloseTag(content, colCloseIndex, colOpen.center);
+    if (!colClose) {
+      return null;
+    }
+
+    const cellRaw = trimCellContent(content.slice(index, colCloseIndex));
+    const inlines = parsePassageInlines(cellRaw);
     if (!inlines) {
       return null;
     }
 
     cols.push({
       widthPercent: colOpen.widthPercent,
+      center: colOpen.center,
       inlines,
     });
-    index = colCloseIndex + COL_CLOSE.length;
+    index = colCloseIndex + colClose.length;
   }
 
   if (!closedRow || cols.length === 0) {
@@ -132,7 +248,10 @@ function parseTableRow(
   }
 
   return {
-    row: { cols },
+    row: {
+      center: rowOpen.center,
+      cols,
+    },
     nextIndex: index,
   };
 }

@@ -171,9 +171,46 @@ ${sampleTable}
       blocks: [
         {
           type: "table",
+          bold: false,
+          center: false,
           rows: parsePassageTable(sampleTable)!.rows,
         },
       ],
+    });
+  });
+
+  it("parses table wrapper bold and center modifiers", () => {
+    const input = `[table bold]
+[row]
+[col]Memo[/col]
+[/row]
+[/table bold]`;
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "table",
+          bold: true,
+          center: false,
+          rows: parsePassageTable(`[row]
+[col]Memo[/col]
+[/row]`)!.rows,
+        },
+      ],
+    });
+  });
+
+  it("falls back to raw when table wrapper close tag mismatches", () => {
+    const input = `[table bold]
+[row]
+[col]Memo[/col]
+[/row]
+[/table]`;
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "raw",
+      content: input,
     });
   });
 

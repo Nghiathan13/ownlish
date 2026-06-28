@@ -32,6 +32,8 @@ function PassageBlockView({
   if (block.type === "table") {
     return (
       <PassageTableView
+        bold={block.bold}
+        center={block.center}
         highlightEvidence={highlightEvidence}
         rows={block.rows}
         stripEvidence={stripEvidence}
