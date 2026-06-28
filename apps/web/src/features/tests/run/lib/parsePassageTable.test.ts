@@ -28,14 +28,17 @@ describe("parsePassageTable", () => {
       rows: [
         {
           bold: false,
+          border: false,
           center: false,
           cols: [
             {
+              border: false,
               widthPercent: 30,
               center: false,
               inlines: [{ type: "text", value: "To\nhello" }],
             },
             {
+              border: false,
               widthPercent: null,
               center: false,
               inlines: [{ type: "text", value: "Camile" }],
@@ -44,14 +47,17 @@ describe("parsePassageTable", () => {
         },
         {
           bold: false,
+          border: false,
           center: false,
           cols: [
             {
+              border: false,
               widthPercent: null,
               center: false,
               inlines: [{ type: "text", value: "From" }],
             },
             {
+              border: false,
               widthPercent: null,
               center: false,
               inlines: [{ type: "text", value: "Masae" }],
@@ -73,19 +79,23 @@ describe("parsePassageTable", () => {
       rows: [
         {
           bold: false,
+          border: false,
           center: true,
           cols: [
             {
+              border: false,
               widthPercent: null,
               center: false,
               inlines: [{ type: "text", value: "7:00 A.M." }],
             },
             {
+              border: false,
               widthPercent: null,
               center: false,
               inlines: [{ type: "text", value: "--" }],
             },
             {
+              border: false,
               widthPercent: null,
               center: true,
               inlines: [{ type: "text", value: "2:00 P.M." }],
@@ -105,9 +115,11 @@ describe("parsePassageTable", () => {
       rows: [
         {
           bold: true,
+          border: false,
           center: true,
           cols: [
             {
+              border: false,
               widthPercent: null,
               center: false,
               inlines: [{ type: "text", value: "Header" }],
@@ -125,6 +137,41 @@ describe("parsePassageTable", () => {
 
     expect(parsePassageTable(input)?.rows[0]?.bold).toBe(true);
     expect(parsePassageTable(input)?.rows[0]?.center).toBe(false);
+  });
+
+  it("parses col and row border modifiers", () => {
+    const input = `[row border]
+[col border]A[/col]
+[col]B[/col]
+[/row]`;
+
+    expect(parsePassageTable(input)).toEqual({
+      rows: [
+        {
+          bold: false,
+          border: true,
+          center: false,
+          cols: [
+            {
+              border: true,
+              widthPercent: null,
+              center: false,
+              inlines: [{ type: "text", value: "A" }],
+            },
+            {
+              border: false,
+              widthPercent: null,
+              center: false,
+              inlines: [{ type: "text", value: "B" }],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("rejects row border before bold", () => {
+    expect(parsePassageTable("[row border bold][col]A[/col][/row]")).toBeNull();
   });
 
   it("returns null when rows have different column counts", () => {
@@ -172,8 +219,8 @@ describe("parsePassageTable", () => {
 describe("getTableColumnStyle", () => {
   it("splits remaining width equally when columns have no width", () => {
     const cols = [
-      { widthPercent: null, center: false, inlines: [] },
-      { widthPercent: null, center: false, inlines: [] },
+      { border: false, widthPercent: null, center: false, inlines: [] },
+      { border: false, widthPercent: null, center: false, inlines: [] },
     ];
 
     expect(getTableColumnStyle(cols[0]!, cols)).toEqual({
@@ -184,8 +231,8 @@ describe("getTableColumnStyle", () => {
 
   it("allocates the remaining width to flexible columns", () => {
     const cols = [
-      { widthPercent: 30, center: false, inlines: [] },
-      { widthPercent: null, center: false, inlines: [] },
+      { border: false, widthPercent: 30, center: false, inlines: [] },
+      { border: false, widthPercent: null, center: false, inlines: [] },
     ];
 
     expect(getTableColumnStyle(cols[1]!, cols)).toEqual({

@@ -1,9 +1,11 @@
 export type PassageInline =
   | { type: "text"; value: string }
   | { type: "evidence"; questionNumbers: number[]; value: string }
-  | { type: "bold"; inlines: PassageInline[] };
+  | { type: "bold"; inlines: PassageInline[] }
+  | { type: "border"; inlines: PassageInline[] };
 
 export type PassageTableCell = {
+  border: boolean;
   widthPercent: number | null;
   center: boolean;
   inlines: PassageInline[];
@@ -11,6 +13,7 @@ export type PassageTableCell = {
 
 export type PassageTableRow = {
   bold: boolean;
+  border: boolean;
   center: boolean;
   cols: PassageTableCell[];
 };

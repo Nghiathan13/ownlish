@@ -6,6 +6,10 @@ import {
 } from "@/features/tests/run/lib/parsePassageInlines";
 
 describe("parsePassageInlines", () => {
+  it("detects border inline markers", () => {
+    expect(hasPassageInlineFormatMarkers("[border]Title[/border]")).toBe(true);
+  });
+
   it("detects bold inline markers", () => {
     expect(hasPassageInlineFormatMarkers("[bold]Title[/bold]")).toBe(true);
     expect(hasPassageInlineFormatMarkers("plain text")).toBe(false);
@@ -19,6 +23,17 @@ describe("parsePassageInlines", () => {
         inlines: [{ type: "text", value: "memo" }],
       },
       { type: "text", value: " today." },
+    ]);
+  });
+
+  it("parses border inline segments with surrounding text", () => {
+    expect(parsePassageInlines("Note the [border]boxed[/border] term.")).toEqual([
+      { type: "text", value: "Note the " },
+      {
+        type: "border",
+        inlines: [{ type: "text", value: "boxed" }],
+      },
+      { type: "text", value: " term." },
     ]);
   });
 

@@ -4,14 +4,20 @@ import {
 } from "@/features/tests/run/lib/parseContextEvidence";
 import type { PassageInline } from "@/features/tests/run/lib/passageContent.types";
 
+type FormattedInlineTag = "bold" | "border";
+
 type RawInlineSegment =
   | { type: "text"; raw: string }
-  | { type: "bold"; raw: string };
+  | { type: FormattedInlineTag; raw: string };
 
 const PASSAGE_INLINE_TAGS = {
   bold: {
     open: "[bold]",
     close: "[/bold]",
+  },
+  border: {
+    open: "[border]",
+    close: "[/border]",
   },
 } as const;
 
@@ -92,7 +98,7 @@ export function isValidPassageInlineMarkup(content: string) {
   return Object.values(depth).every((value) => value === 0);
 }
 
-function parseBoldSegments(content: string): RawInlineSegment[] | null {
+function parseInlineSegments(content: string): RawInlineSegment[] | null {
   if (!isValidPassageInlineMarkup(content)) {
     return null;
   }
@@ -164,7 +170,7 @@ function segmentsToPassageInlines(segments: RawInlineSegment[]): PassageInline[]
     }
 
     inlines.push({
-      type: "bold",
+      type: segment.type,
       inlines: evidenceInlines,
     });
   }
@@ -173,7 +179,7 @@ function segmentsToPassageInlines(segments: RawInlineSegment[]): PassageInline[]
 }
 
 export function parsePassageInlines(content: string): PassageInline[] | null {
-  const segments = parseBoldSegments(content);
+  const segments = parseInlineSegments(content);
   if (!segments) {
     return null;
   }

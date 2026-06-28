@@ -46,6 +46,7 @@ export function PassageTableView({
           className={classNames(
             "flex flex-wrap",
             shrinkToContent ? "w-auto max-w-full" : "w-full",
+            row.border && "border border-border",
             rowCentered && "text-center",
             rowBold && "font-bold",
           )}
@@ -58,6 +59,7 @@ export function PassageTableView({
               <div
                 className={classNames(
                   "min-w-0 max-w-full shrink whitespace-pre-wrap break-words",
+                  col.border && "border border-border px-1 py-0.5",
                   (rowCentered || col.center) && "text-center",
                 )}
                 key={`col-${rowIndex}-${colIndex}`}

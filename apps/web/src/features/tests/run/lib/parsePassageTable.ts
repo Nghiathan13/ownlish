@@ -42,6 +42,7 @@ function parseTagBody(inner: string) {
   const tokens = inner.trim().split(/\s+/).filter(Boolean);
   let widthPercent: number | null = null;
   let center = false;
+  let border = false;
 
   for (const token of tokens) {
     const widthMatch = /^w=(\d+)%$/.exec(token);
@@ -60,16 +61,22 @@ function parseTagBody(inner: string) {
       continue;
     }
 
+    if (token === "border") {
+      border = true;
+      continue;
+    }
+
     return null;
   }
 
-  return { widthPercent, center };
+  return { border, widthPercent, center };
 }
 
 function parseRowWrapperInner(inner: string) {
   const tokens = inner.trim().split(/\s+/).filter(Boolean);
   let center = false;
   let bold = false;
+  let border = false;
   let phase = 0;
 
   for (const token of tokens) {
@@ -93,16 +100,26 @@ function parseRowWrapperInner(inner: string) {
       continue;
     }
 
+    if (token === "border") {
+      if (phase > 2 || border) {
+        return null;
+      }
+
+      border = true;
+      phase = 3;
+      continue;
+    }
+
     return null;
   }
 
-  return { center, bold };
+  return { border, center, bold };
 }
 
 function parseRowOpenTag(
   content: string,
   index: number,
-): { length: number; center: boolean; bold: boolean } | null {
+): { length: number; border: boolean; center: boolean; bold: boolean } | null {
   if (!content.startsWith(ROW_OPEN_PREFIX, index)) {
     return null;
   }
@@ -119,7 +136,7 @@ function parseRowOpenTag(
 
   const inner = tag.slice("[row".length, -1);
   if (inner.length === 0) {
-    return { length: tag.length, center: false, bold: false };
+    return { length: tag.length, border: false, center: false, bold: false };
   }
 
   const attrs = parseRowWrapperInner(inner);
@@ -154,7 +171,7 @@ function parseRowCloseTag(
 function parseColOpenTag(
   content: string,
   index: number,
-): { length: number; widthPercent: number | null; center: boolean } | null {
+): { length: number; border: boolean; widthPercent: number | null; center: boolean } | null {
   if (!content.startsWith(COL_OPEN_PREFIX, index)) {
     return null;
   }
@@ -177,6 +194,7 @@ function parseColOpenTag(
 
   return {
     length: tag.length,
+    border: parsedBody.border,
     widthPercent: parsedBody.widthPercent,
     center: parsedBody.center,
   };
@@ -251,6 +269,7 @@ function parseTableRow(
     }
 
     cols.push({
+      border: colOpen.border,
       widthPercent: colOpen.widthPercent,
       center: colOpen.center,
       inlines,
@@ -273,6 +292,7 @@ function parseTableRow(
   return {
     row: {
       bold: rowOpen.bold,
+      border: rowOpen.border,
       center: rowOpen.center,
       cols,
     },

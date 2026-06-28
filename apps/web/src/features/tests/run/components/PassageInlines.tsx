@@ -12,6 +12,7 @@ type PassageInlinesProps = {
 type RenderPassageInlineContext = {
   highlightEvidence: boolean;
   insideBold: boolean;
+  insideBorder: boolean;
   stripEvidence: boolean;
 };
 
@@ -25,6 +26,45 @@ const evidenceHighlightClassName = classNames(
   statusColorClasses.amber.background,
   "box-decoration-clone px-0.5",
 );
+const passageInlineBorderClassName =
+  "border border-border rounded-sm box-decoration-clone px-0.5";
+
+function renderWrappedInline(
+  inline: PassageInline,
+  index: number,
+  context: RenderPassageInlineContext,
+  className: string,
+  keyPrefix: string,
+  insideContext: Pick<RenderPassageInlineContext, "insideBold" | "insideBorder">,
+): ReactNode {
+  if (inline.type !== "bold" && inline.type !== "border") {
+    return null;
+  }
+
+  const singleText =
+    inline.inlines.length === 1 && inline.inlines[0]?.type === "text"
+      ? inline.inlines[0]
+      : null;
+
+  if (singleText) {
+    return (
+      <span className={className} key={`${keyPrefix}-${index}`}>
+        {singleText.value}
+      </span>
+    );
+  }
+
+  return (
+    <span className={className} key={`${keyPrefix}-${index}`}>
+      {inline.inlines.map((child, childIndex) =>
+        renderPassageInline(child, childIndex, {
+          ...context,
+          ...insideContext,
+        }),
+      )}
+    </span>
+  );
+}
 
 function renderPassageInline(
   inline: PassageInline,
@@ -32,7 +72,7 @@ function renderPassageInline(
   context: RenderPassageInlineContext,
 ): ReactNode {
   if (inline.type === "text") {
-    if (context.insideBold) {
+    if (context.insideBold || context.insideBorder) {
       return <Fragment key={`text-${index}`}>{inline.value}</Fragment>;
     }
 
@@ -40,33 +80,29 @@ function renderPassageInline(
   }
 
   if (inline.type === "bold") {
-    const singleText =
-      inline.inlines.length === 1 && inline.inlines[0]?.type === "text"
-        ? inline.inlines[0]
-        : null;
+    return renderWrappedInline(
+      inline,
+      index,
+      context,
+      "font-bold",
+      "bold",
+      { insideBold: true, insideBorder: context.insideBorder },
+    );
+  }
 
-    if (singleText) {
-      return (
-        <span className="font-bold" key={`bold-${index}`}>
-          {singleText.value}
-        </span>
-      );
-    }
-
-    return (
-      <span className="font-bold" key={`bold-${index}`}>
-        {inline.inlines.map((child, childIndex) =>
-          renderPassageInline(child, childIndex, {
-            ...context,
-            insideBold: true,
-          }),
-        )}
-      </span>
+  if (inline.type === "border") {
+    return renderWrappedInline(
+      inline,
+      index,
+      context,
+      passageInlineBorderClassName,
+      "border",
+      { insideBold: context.insideBold, insideBorder: true },
     );
   }
 
   if (context.stripEvidence || !context.highlightEvidence) {
-    if (context.insideBold) {
+    if (context.insideBold || context.insideBorder) {
       return <Fragment key={`evidence-${index}`}>{inline.value}</Fragment>;
     }
 
@@ -95,6 +131,7 @@ export function PassageInlines({
   const context: RenderPassageInlineContext = {
     highlightEvidence,
     insideBold: false,
+    insideBorder: false,
     stripEvidence,
   };
 

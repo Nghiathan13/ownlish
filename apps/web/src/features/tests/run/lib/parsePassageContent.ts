@@ -67,7 +67,7 @@ function inlineHasEvidence(inline: PassageInline): boolean {
     return true;
   }
 
-  if (inline.type === "bold") {
+  if (inline.type === "bold" || inline.type === "border") {
     return inline.inlines.some(inlineHasEvidence);
   }
 
