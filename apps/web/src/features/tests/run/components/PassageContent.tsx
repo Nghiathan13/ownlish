@@ -14,24 +14,21 @@ type PassageContentProps = {
   showRawEvidenceWhenOff?: boolean;
 };
 
-const formattedBlockClassNames: Partial<
-  Record<Exclude<PassageBlock["type"], "plain" | "table">, string>
-> = {
-  center: "block w-full text-center",
-};
-
 function PassageBlockView({
   block,
   highlightEvidence,
+  inCenter = false,
   stripEvidence,
 }: {
   block: PassageBlock;
   highlightEvidence: boolean;
+  inCenter?: boolean;
   stripEvidence: boolean;
 }) {
   if (block.type === "table") {
     return (
       <PassageTableView
+        blockCenter={inCenter}
         bold={block.bold}
         center={block.center}
         highlightEvidence={highlightEvidence}
@@ -39,6 +36,22 @@ function PassageBlockView({
         stripEvidence={stripEvidence}
         widthPercent={block.widthPercent}
       />
+    );
+  }
+
+  if (block.type === "center") {
+    return (
+      <div className="flex w-full flex-col items-center">
+        {block.blocks.map((child, childIndex) => (
+          <PassageBlockView
+            block={child}
+            highlightEvidence={highlightEvidence}
+            inCenter
+            key={`center-child-${childIndex}`}
+            stripEvidence={stripEvidence}
+          />
+        ))}
+      </div>
     );
   }
 
@@ -50,15 +63,11 @@ function PassageBlockView({
     />
   );
 
-  if (block.type === "plain") {
-    return inlines;
+  if (block.type === "plain" && inCenter) {
+    return <div className="w-full text-center">{inlines}</div>;
   }
 
-  return (
-    <div className={formattedBlockClassNames[block.type]}>
-      {inlines}
-    </div>
-  );
+  return inlines;
 }
 
 export function PassageContent({

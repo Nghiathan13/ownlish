@@ -10,13 +10,14 @@ export type PassageTableCell = {
 };
 
 export type PassageTableRow = {
+  bold: boolean;
   center: boolean;
   cols: PassageTableCell[];
 };
 
 export type PassageBlock =
   | { type: "plain"; inlines: PassageInline[] }
-  | { type: "center"; inlines: PassageInline[] }
+  | { type: "center"; blocks: PassageBlock[] }
   | {
       type: "table";
       bold: boolean;

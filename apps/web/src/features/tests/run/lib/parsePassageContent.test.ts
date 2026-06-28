@@ -39,9 +39,48 @@ describe("parsePassageBlocks", () => {
 
     expect(parsePassageBlocks(input)).toEqual([
       { type: "plain", raw: "Dear Team,\n\n" },
-      { type: "center", raw: "MEMORANDUM" },
+      {
+        type: "center",
+        children: [{ type: "plain", raw: "MEMORANDUM" }],
+      },
       { type: "plain", raw: "\nPlease review." },
     ]);
+  });
+
+  it("parses center wrapping a table", () => {
+    const tableInner = `[row]
+[col]A[/col]
+[/row]`;
+
+    expect(
+      parsePassageBlocks(`[center]
+[table]
+${tableInner}
+[/table]
+[/center]`),
+    ).toEqual([
+      {
+        type: "center",
+        children: [
+          {
+            type: "table",
+            raw: tableInner,
+            tableAttrs: { center: false, widthPercent: null, bold: false },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("rejects table left open inside center", () => {
+    expect(
+      isValidPassageBlockMarkup(`[center]
+[table]
+[row]
+[col]A[/col]
+[/row]
+[/center]`),
+    ).toBe(false);
   });
 
   it("returns null for malformed center markup", () => {
@@ -63,11 +102,16 @@ describe("parsePassageContent", () => {
       blocks: [
         {
           type: "center",
-          inlines: [
+          blocks: [
             {
-              type: "evidence",
-              questionNumbers: [91],
-              value: "Important deadline",
+              type: "plain",
+              inlines: [
+                {
+                  type: "evidence",
+                  questionNumbers: [91],
+                  value: "Important deadline",
+                },
+              ],
             },
           ],
         },
@@ -135,14 +179,19 @@ describe("parsePassageContent", () => {
       blocks: [
         {
           type: "center",
-          inlines: [
+          blocks: [
             {
-              type: "bold",
+              type: "plain",
               inlines: [
                 {
-                  type: "evidence",
-                  questionNumbers: [91],
-                  value: "Important deadline",
+                  type: "bold",
+                  inlines: [
+                    {
+                      type: "evidence",
+                      questionNumbers: [91],
+                      value: "Important deadline",
+                    },
+                  ],
                 },
               ],
             },
@@ -234,6 +283,39 @@ ${sampleTable}
           rows: parsePassageTable(`[row]
 [col]A[/col]
 [/row]`)!.rows,
+        },
+      ],
+    });
+  });
+
+  it("parses center wrapping a table block", () => {
+    const tableRows = parsePassageTable(`[row]
+[col]A[/col]
+[col]B[/col]
+[/row]`)!.rows;
+    const input = `[center]
+[table]
+[row]
+[col]A[/col]
+[col]B[/col]
+[/row]
+[/table]
+[/center]`;
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "center",
+          blocks: [
+            {
+              type: "table",
+              bold: false,
+              center: false,
+              widthPercent: null,
+              rows: tableRows,
+            },
+          ],
         },
       ],
     });

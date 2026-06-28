@@ -27,6 +27,7 @@ describe("parsePassageTable", () => {
     expect(parsePassageTable(sampleTable)).toEqual({
       rows: [
         {
+          bold: false,
           center: false,
           cols: [
             {
@@ -42,6 +43,7 @@ describe("parsePassageTable", () => {
           ],
         },
         {
+          bold: false,
           center: false,
           cols: [
             {
@@ -70,6 +72,7 @@ describe("parsePassageTable", () => {
     expect(parsePassageTable(input)).toEqual({
       rows: [
         {
+          bold: false,
           center: true,
           cols: [
             {
@@ -91,6 +94,37 @@ describe("parsePassageTable", () => {
         },
       ],
     });
+  });
+
+  it("parses row center and bold modifiers in order", () => {
+    const input = `[row center bold]
+[col]Header[/col]
+[/row center bold]`;
+
+    expect(parsePassageTable(input)).toEqual({
+      rows: [
+        {
+          bold: true,
+          center: true,
+          cols: [
+            {
+              widthPercent: null,
+              center: false,
+              inlines: [{ type: "text", value: "Header" }],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("parses row bold without center", () => {
+    const input = `[row bold]
+[col]Total[/col]
+[/row bold]`;
+
+    expect(parsePassageTable(input)?.rows[0]?.bold).toBe(true);
+    expect(parsePassageTable(input)?.rows[0]?.center).toBe(false);
   });
 
   it("returns null when rows have different column counts", () => {
@@ -122,6 +156,9 @@ describe("parsePassageTable", () => {
     ).toBeNull();
     expect(
       parsePassageTable("[row][col center]A[/col][/row]"),
+    ).toBeNull();
+    expect(
+      parsePassageTable("[row bold center][col]A[/col][/row bold center]"),
     ).toBeNull();
   });
 });

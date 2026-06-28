@@ -12,8 +12,12 @@ import {
 
 export type RawPassageBlock =
   | { type: "plain"; raw: string }
-  | { type: "center"; raw: string }
+  | { type: "center"; children: RawPassageBlock[] }
   | { type: "table"; raw: string; tableAttrs: TableWrapperAttrs };
+
+type ParseRawBlocksOptions = {
+  allowCenter: boolean;
+};
 
 const CENTER_OPEN = "[center]";
 const CENTER_CLOSE = "[/center]";
@@ -129,7 +133,7 @@ export function isValidPassageBlockMarkup(content: string) {
       ) {
         return false;
       }
-    } else if (stack.length > 0) {
+    } else if (stack.length > 0 && stack[stack.length - 1]?.kind !== "center") {
       return false;
     } else {
       stack.push({ kind: "table", attrs: marker.tableAttrs });
@@ -163,11 +167,10 @@ function trimBlockContent(raw: string) {
   return raw.replace(/^\s+/, "").replace(/\s+$/, "");
 }
 
-export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
-  if (!isValidPassageBlockMarkup(content)) {
-    return null;
-  }
-
+function parseRawPassageBlocks(
+  content: string,
+  options: ParseRawBlocksOptions,
+): RawPassageBlock[] | null {
   const blocks: RawPassageBlock[] = [];
   let plainStart = 0;
   let index = 0;
@@ -175,6 +178,10 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
   while (index < content.length) {
     const marker = findNextBlockMarker(content, index);
     if (!marker || marker.isClose) {
+      break;
+    }
+
+    if (marker.kind === "center" && !options.allowCenter) {
       break;
     }
 
@@ -191,9 +198,17 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
         return null;
       }
 
+      const inner = trimBlockContent(
+        content.slice(marker.index + CENTER_OPEN.length, closeIndex),
+      );
+      const children = parseRawPassageBlocks(inner, { allowCenter: false });
+      if (!children) {
+        return null;
+      }
+
       blocks.push({
         type: "center",
-        raw: trimBlockContent(content.slice(marker.index + CENTER_OPEN.length, closeIndex)),
+        children,
       });
 
       index = closeIndex + CENTER_CLOSE.length;
@@ -232,6 +247,14 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
   }
 
   return trimBoundaryNewlines(blocks);
+}
+
+export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
+  if (!isValidPassageBlockMarkup(content)) {
+    return null;
+  }
+
+  return parseRawPassageBlocks(content, { allowCenter: true });
 }
 
 export type { PassageBlock };

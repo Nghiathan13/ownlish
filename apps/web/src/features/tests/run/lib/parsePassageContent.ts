@@ -21,6 +21,21 @@ import {
 import { parsePassageTable } from "@/features/tests/run/lib/parsePassageTable";
 
 function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
+  if (block.type === "center") {
+    const blocks = block.children
+      .map(toPassageBlock)
+      .filter((child): child is PassageBlock => child !== null);
+
+    if (blocks.length !== block.children.length) {
+      return null;
+    }
+
+    return {
+      type: "center",
+      blocks,
+    };
+  }
+
   if (block.type === "table") {
     const table = parsePassageTable(block.raw);
     if (!table) {
@@ -64,6 +79,10 @@ function tableRowHasEvidence(row: PassageTableRow) {
 }
 
 function blockHasEvidence(block: PassageBlock) {
+  if (block.type === "center") {
+    return block.blocks.some(blockHasEvidence);
+  }
+
   if (block.type === "table") {
     return block.rows.some(tableRowHasEvidence);
   }

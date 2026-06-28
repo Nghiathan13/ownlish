@@ -66,10 +66,43 @@ function parseTagBody(inner: string) {
   return { widthPercent, center };
 }
 
+function parseRowWrapperInner(inner: string) {
+  const tokens = inner.trim().split(/\s+/).filter(Boolean);
+  let center = false;
+  let bold = false;
+  let phase = 0;
+
+  for (const token of tokens) {
+    if (token === "center") {
+      if (phase !== 0) {
+        return null;
+      }
+
+      center = true;
+      phase = 1;
+      continue;
+    }
+
+    if (token === "bold") {
+      if (phase > 1 || bold) {
+        return null;
+      }
+
+      bold = true;
+      phase = 2;
+      continue;
+    }
+
+    return null;
+  }
+
+  return { center, bold };
+}
+
 function parseRowOpenTag(
   content: string,
   index: number,
-): { length: number; center: boolean } | null {
+): { length: number; center: boolean; bold: boolean } | null {
   if (!content.startsWith(ROW_OPEN_PREFIX, index)) {
     return null;
   }
@@ -86,20 +119,28 @@ function parseRowOpenTag(
 
   const inner = tag.slice("[row".length, -1);
   if (inner.length === 0) {
-    return { length: tag.length, center: false };
+    return { length: tag.length, center: false, bold: false };
   }
 
-  if (inner.trim() !== "center") {
+  const attrs = parseRowWrapperInner(inner);
+  if (!attrs) {
     return null;
   }
 
-  return { length: tag.length, center: true };
+  return { length: tag.length, ...attrs };
+}
+
+function rowAttrsEqual(
+  left: { center: boolean; bold: boolean },
+  right: { center: boolean; bold: boolean },
+) {
+  return left.center === right.center && left.bold === right.bold;
 }
 
 function parseRowCloseTag(
   content: string,
   index: number,
-  expectCenter: boolean,
+  expected: { center: boolean; bold: boolean },
 ): { length: number } | null {
   if (!content.startsWith(ROW_CLOSE_PREFIX, index)) {
     return null;
@@ -111,11 +152,12 @@ function parseRowCloseTag(
   }
 
   const tag = content.slice(index, closeBracket + 1);
-  if (expectCenter) {
-    if (tag !== "[/row center]") {
-      return null;
-    }
-  } else if (tag !== "[/row]") {
+  const inner = tag.slice("[/row".length, -1);
+  const attrs = inner.length === 0
+    ? { center: false, bold: false }
+    : parseRowWrapperInner(inner);
+
+  if (!attrs || !rowAttrsEqual(attrs, expected)) {
     return null;
   }
 
@@ -196,7 +238,10 @@ function parseTableRow(
   while (index < content.length) {
     index = skipWhitespace(content, index);
 
-    const rowClose = parseRowCloseTag(content, index, rowOpen.center);
+    const rowClose = parseRowCloseTag(content, index, {
+      center: rowOpen.center,
+      bold: rowOpen.bold,
+    });
     if (rowClose) {
       index += rowClose.length;
       closedRow = true;
@@ -249,6 +294,7 @@ function parseTableRow(
 
   return {
     row: {
+      bold: rowOpen.bold,
       center: rowOpen.center,
       cols,
     },

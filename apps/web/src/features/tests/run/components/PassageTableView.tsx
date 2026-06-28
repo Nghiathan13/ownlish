@@ -4,6 +4,7 @@ import type { PassageTableRow } from "@/features/tests/run/lib/passageContent.ty
 import { getTableColumnStyle } from "@/features/tests/run/lib/parsePassageTable";
 
 type PassageTableViewProps = {
+  blockCenter?: boolean;
   bold: boolean;
   center: boolean;
   highlightEvidence: boolean;
@@ -13,6 +14,7 @@ type PassageTableViewProps = {
 };
 
 export function PassageTableView({
+  blockCenter = false,
   bold,
   center,
   highlightEvidence,
@@ -20,11 +22,13 @@ export function PassageTableView({
   stripEvidence,
   widthPercent,
 }: PassageTableViewProps) {
+  const shrinkToContent = blockCenter && widthPercent == null;
+
   return (
     <div
       className={classNames(
         "block space-y-3",
-        widthPercent == null && "w-full",
+        shrinkToContent ? "w-auto max-w-full" : widthPercent == null && "w-full",
         bold && "font-semibold",
       )}
       style={
@@ -35,10 +39,16 @@ export function PassageTableView({
     >
       {rows.map((row, rowIndex) => {
         const rowCentered = center || row.center;
+        const rowBold = bold || row.bold;
 
         return (
         <div
-          className={classNames("flex w-full flex-wrap", rowCentered && "text-center")}
+          className={classNames(
+            "flex flex-wrap",
+            shrinkToContent ? "w-auto max-w-full" : "w-full",
+            rowCentered && "text-center",
+            rowBold && "font-semibold",
+          )}
           key={`row-${rowIndex}`}
         >
           {row.cols.map((col, colIndex) => {
