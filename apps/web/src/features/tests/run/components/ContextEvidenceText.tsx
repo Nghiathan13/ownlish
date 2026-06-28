@@ -12,7 +12,7 @@ type ContextEvidenceTextProps = {
 };
 
 const evidenceBadgeSlotClassName =
-  "relative -top-[1px] mr-1 inline-grid place-items-center align-middle shrink-0";
+  "relative -top-[1px] mr-1 inline-flex items-center gap-1 align-middle shrink-0";
 const evidenceBadgeClassName = classNames(
   "relative -top-[0.5px] inline-flex h-4 min-w-4 items-center justify-center rounded px-0.5 text-[0.625rem] font-semibold leading-none tabular-nums ring-1 ring-current",
   statusColorClasses.amber.text,
@@ -40,11 +40,16 @@ export function ContextEvidenceText({
         }
 
         return (
-          <Fragment key={`evidence-${segment.questionNumber}-${index}`}>
+          <Fragment key={`evidence-${segment.questionNumbers.join("-")}-${index}`}>
             <span aria-hidden className={evidenceBadgeSlotClassName}>
-              <span className={evidenceBadgeClassName}>
-                {segment.questionNumber}
-              </span>
+              {segment.questionNumbers.map((questionNumber) => (
+                <span
+                  className={evidenceBadgeClassName}
+                  key={questionNumber}
+                >
+                  {questionNumber}
+                </span>
+              ))}
             </span>
             <span className={evidenceHighlightClassName}>{segment.value}</span>
           </Fragment>

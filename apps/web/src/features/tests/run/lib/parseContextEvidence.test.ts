@@ -26,7 +26,7 @@ W: It’s in my computer files. {{q40}}I’ll e-mail it to you.{{/q40}}`;
       { type: "text", value: "W: " },
       {
         type: "evidence",
-        questionNumber: 38,
+        questionNumbers: [38],
         value:
           "Thanks for agreeing to help me organize the library’s annual fund-raising dinner, Klaus.",
       },
@@ -40,7 +40,7 @@ W: `,
       },
       {
         type: "evidence",
-        questionNumber: 39,
+        questionNumbers: [39],
         value: "Well, I could use some help sending out the invitations.",
       },
       {
@@ -51,7 +51,7 @@ M: OK, I can take care of that. `,
       },
       {
         type: "evidence",
-        questionNumber: 40,
+        questionNumbers: [40],
         value: "Is there a list of attendees available?",
       },
       { type: "text", value: `
@@ -59,25 +59,65 @@ M: OK, I can take care of that. `,
 W: It’s in my computer files. ` },
       {
         type: "evidence",
-        questionNumber: 40,
+        questionNumbers: [40],
         value: "I’ll e-mail it to you.",
       },
     ]);
   });
 
-  it("handles nested markers by highlighting only the inner span", () => {
-    const input =
+  it("combines nested markers into one highlight with multiple badges", () => {
+    const outerClosesFirst =
+      "I’m calling about {{q86}}{{q87}}the work my design team’s doing to update your company logo.{{/q86}}{{/q87}}";
+    const innerClosesFirst =
       "I’m calling about {{q86}}{{q87}}the work my design team’s doing to update your company logo.{{/q87}}{{/q86}}";
-
-    expect(parseContextEvidence(input)).toEqual([
+    const expected = [
       { type: "text", value: "I’m calling about " },
       {
         type: "evidence",
-        questionNumber: 87,
+        questionNumbers: [86, 87],
         value:
           "the work my design team’s doing to update your company logo.",
       },
+    ];
+
+    expect(parseContextEvidence(outerClosesFirst)).toEqual(expected);
+    expect(parseContextEvidence(innerClosesFirst)).toEqual(expected);
+  });
+
+  it("keeps separate highlights when the same question appears twice", () => {
+    const input =
+      "{{q87}}first span{{/q87}} between {{q87}}second span{{/q87}}";
+
+    expect(parseContextEvidence(input)).toEqual([
+      { type: "evidence", questionNumbers: [87], value: "first span" },
+      { type: "text", value: " between " },
+      { type: "evidence", questionNumbers: [87], value: "second span" },
     ]);
+  });
+
+  it("parses nested evidence followed by a separate span for the inner question", () => {
+    const outerClosesFirst =
+      "I’m calling about {{q86}}{{q87}}the work my design team’s doing to update your company logo.{{/q86}}{{/q87}} {{q87}}I’ve just e-mailed two versions for you to review.{{/q87}}";
+    const innerClosesFirst =
+      "I’m calling about {{q86}}{{q87}}the work my design team’s doing to update your company logo.{{/q87}}{{/q86}} {{q87}}I’ve just e-mailed two versions for you to review.{{/q87}}";
+    const expected = [
+      { type: "text", value: "I’m calling about " },
+      {
+        type: "evidence",
+        questionNumbers: [86, 87],
+        value:
+          "the work my design team’s doing to update your company logo.",
+      },
+      { type: "text", value: " " },
+      {
+        type: "evidence",
+        questionNumbers: [87],
+        value: "I’ve just e-mailed two versions for you to review.",
+      },
+    ];
+
+    expect(parseContextEvidence(outerClosesFirst)).toEqual(expected);
+    expect(parseContextEvidence(innerClosesFirst)).toEqual(expected);
   });
 
   it("strips evidence markup without highlighting", () => {

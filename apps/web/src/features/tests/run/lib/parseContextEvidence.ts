@@ -1,17 +1,30 @@
 export type ContextEvidenceSegment =
   | { type: "text"; value: string }
-  | { type: "evidence"; questionNumber: number; value: string };
+  | { type: "evidence"; questionNumbers: number[]; value: string };
 
 const CONTEXT_EVIDENCE_MARKER_PATTERN = /\{\{(\/?q)(\d+)\}\}/g;
+
+type StackFrame = {
+  questionNumber: number;
+  parts: string[];
+  pairedQuestionNumbers: number[];
+};
 
 export function hasContextEvidenceMarkers(content: string | null | undefined) {
   return Boolean(content?.includes("{{q"));
 }
 
+function buildEvidenceQuestionNumbers(
+  questionNumber: number,
+  pairedQuestionNumbers: number[],
+) {
+  return [...pairedQuestionNumbers, questionNumber].sort((left, right) => left - right);
+}
+
 export function parseContextEvidence(content: string): ContextEvidenceSegment[] {
   const segments: ContextEvidenceSegment[] = [];
   let plainBuffer = "";
-  const stack: { questionNumber: number; parts: string[] }[] = [];
+  const stack: StackFrame[] = [];
 
   const flushPlain = () => {
     if (!plainBuffer) {
@@ -32,7 +45,9 @@ export function parseContextEvidence(content: string): ContextEvidenceSegment[] 
       return;
     }
 
-    stack[stack.length - 1]!.parts.push(text);
+    for (const frame of stack) {
+      frame.parts.push(text);
+    }
   };
 
   let lastIndex = 0;
@@ -45,17 +60,47 @@ export function parseContextEvidence(content: string): ContextEvidenceSegment[] 
     const questionNumber = Number(match[2]);
 
     if (!isClose) {
-      stack.push({ questionNumber, parts: [] });
+      stack.push({ questionNumber, parts: [], pairedQuestionNumbers: [] });
     } else {
-      const top = stack[stack.length - 1];
+      const frameIndex = stack.findIndex(
+        (frame) => frame.questionNumber === questionNumber,
+      );
 
-      if (top?.questionNumber === questionNumber) {
-        stack.pop();
-        const value = top.parts.join("");
+      if (frameIndex === -1) {
+        lastIndex = match.index + match[0].length;
+        continue;
+      }
 
-        if (value) {
+      const isTopFrame = frameIndex === stack.length - 1;
+
+      if (isTopFrame) {
+        const closed = stack.pop()!;
+        const value = closed.parts.join("");
+        const parent = stack[stack.length - 1];
+
+        if (parent) {
+          parent.pairedQuestionNumbers.push(closed.questionNumber);
+        } else if (value) {
           flushPlain();
-          segments.push({ type: "evidence", questionNumber, value });
+          segments.push({
+            type: "evidence",
+            questionNumbers: buildEvidenceQuestionNumbers(
+              closed.questionNumber,
+              closed.pairedQuestionNumbers,
+            ),
+            value,
+          });
+        }
+      } else {
+        const [closed] = stack.splice(frameIndex, 1);
+
+        if (!closed) {
+          lastIndex = match.index + match[0].length;
+          continue;
+        }
+
+        for (const frame of stack) {
+          frame.pairedQuestionNumbers.push(closed.questionNumber);
         }
       }
     }
