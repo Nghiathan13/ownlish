@@ -9,6 +9,14 @@ import {
   passageContentHasEvidence,
 } from "@/features/tests/run/lib/parsePassageContent";
 import { parsePassageTable } from "@/features/tests/run/lib/parsePassageTable";
+import type { PassageBlock } from "@/features/tests/run/lib/passageContent.types";
+
+function parsedPassage(blocks: PassageBlock[], border = false) {
+  return {
+    kind: "parsed" as const,
+    blocks: [{ type: "passage" as const, border, blocks }],
+  };
+}
 
 const sampleTable = `[row]
 [col w=30%]
@@ -29,6 +37,10 @@ Masae
 [/row]`;
 
 describe("parsePassageBlocks", () => {
+  it("detects passage format markers", () => {
+    expect(hasPassageFormatMarkers("[passage]Title[/passage]")).toBe(true);
+  });
+
   it("detects center format markers", () => {
     expect(hasPassageFormatMarkers("[center]Title[/center]")).toBe(true);
     expect(hasPassageFormatMarkers("plain text")).toBe(false);
@@ -97,9 +109,8 @@ describe("parsePassageContent", () => {
   it("parses centered evidence spans", () => {
     const input = "[center]{{q91}}Important deadline{{/q91}}[/center]";
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "center",
           blocks: [
@@ -115,8 +126,8 @@ describe("parsePassageContent", () => {
             },
           ],
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("falls back to raw content for malformed format tags", () => {
@@ -131,15 +142,14 @@ describe("parsePassageContent", () => {
   it("keeps plain passages as a single block", () => {
     const input = "Line 1\nLine 2";
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "plain",
           inlines: [{ type: "text", value: input }],
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("detects evidence in parsed passage content", () => {
@@ -152,9 +162,8 @@ describe("parsePassageContent", () => {
   it("parses bold inline text", () => {
     const input = "Please read the [bold]updated policy[/bold] carefully.";
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "plain",
           inlines: [
@@ -166,17 +175,16 @@ describe("parsePassageContent", () => {
             { type: "text", value: " carefully." },
           ],
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("parses bold with evidence inside center blocks", () => {
     const input =
       "[center][bold]{{q91}}Important deadline{{/q91}}[/bold][/center]";
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "center",
           blocks: [
@@ -197,8 +205,8 @@ describe("parsePassageContent", () => {
             },
           ],
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("falls back to raw content for malformed bold markup", () => {
@@ -215,9 +223,8 @@ describe("parsePassageContent", () => {
 ${sampleTable}
 [/table]`;
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "table",
           bold: false,
@@ -225,8 +232,8 @@ ${sampleTable}
           widthPercent: null,
           rows: parsePassageTable(sampleTable)!.rows,
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("parses table wrapper bold and center modifiers", () => {
@@ -236,9 +243,8 @@ ${sampleTable}
 [/row]
 [/table]`;
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "table",
           bold: true,
@@ -248,8 +254,8 @@ ${sampleTable}
 [col]Memo[/col]
 [/row]`)!.rows,
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("falls back to raw when table wrapper close tag has modifiers", () => {
@@ -272,9 +278,8 @@ ${sampleTable}
 [/row]
 [/table]`;
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "table",
           bold: false,
@@ -284,8 +289,8 @@ ${sampleTable}
 [col]A[/col]
 [/row]`)!.rows,
         },
-      ],
-    });
+      ]),
+    );
   });
 
   it("parses center wrapping a table block", () => {
@@ -302,9 +307,8 @@ ${sampleTable}
 [/table]
 [/center]`;
 
-    expect(parsePassageContent(input)).toEqual({
-      kind: "parsed",
-      blocks: [
+    expect(parsePassageContent(input)).toEqual(
+      parsedPassage([
         {
           type: "center",
           blocks: [
@@ -314,6 +318,41 @@ ${sampleTable}
               center: false,
               widthPercent: null,
               rows: tableRows,
+            },
+          ],
+        },
+      ]),
+    );
+  });
+
+  it("parses explicit passage blocks without auto-wrap", () => {
+    const input = `[passage]
+Line 1
+[/passage]
+[passage border]
+Line 2
+[/passage]`;
+
+    expect(parsePassageContent(input)).toEqual({
+      kind: "parsed",
+      blocks: [
+        {
+          type: "passage",
+          border: false,
+          blocks: [
+            {
+              type: "plain",
+              inlines: [{ type: "text", value: "Line 1" }],
+            },
+          ],
+        },
+        {
+          type: "passage",
+          border: true,
+          blocks: [
+            {
+              type: "plain",
+              inlines: [{ type: "text", value: "Line 2" }],
             },
           ],
         },

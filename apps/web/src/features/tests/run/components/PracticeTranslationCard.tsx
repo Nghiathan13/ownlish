@@ -32,7 +32,7 @@ export function PracticeTranslationCard({
           <div className="border-t border-border" />
         </>
       ) : null}
-      <div className="flex flex-col gap-2 p-4">{children}</div>
+      <div className="flex flex-col gap-4">{children}</div>
     </div>
   );
 }

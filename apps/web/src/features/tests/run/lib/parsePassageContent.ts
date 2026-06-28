@@ -9,6 +9,7 @@ import type {
 } from "@/features/tests/run/lib/passageContent.types";
 import {
   hasPassageFormatMarkers,
+  hasPassageWrapperMarkers,
   isValidPassageBlockMarkup,
   parsePassageBlocks,
   type RawPassageBlock,
@@ -21,6 +22,22 @@ import {
 import { parsePassageTable } from "@/features/tests/run/lib/parsePassageTable";
 
 function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
+  if (block.type === "passage") {
+    const blocks = block.children
+      .map(toPassageBlock)
+      .filter((child): child is PassageBlock => child !== null);
+
+    if (blocks.length !== block.children.length) {
+      return null;
+    }
+
+    return {
+      type: "passage",
+      border: block.passageAttrs.border,
+      blocks,
+    };
+  }
+
   if (block.type === "center") {
     const blocks = block.children
       .map(toPassageBlock)
@@ -62,6 +79,27 @@ function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
   } as PassageBlock;
 }
 
+function wrapInDefaultPassage(blocks: PassageBlock[]): PassageBlock[] {
+  return [
+    {
+      type: "passage",
+      border: false,
+      blocks,
+    },
+  ];
+}
+
+function normalizeTopLevelBlocks(
+  blocks: PassageBlock[],
+  content: string,
+): PassageBlock[] {
+  if (hasPassageWrapperMarkers(content)) {
+    return blocks;
+  }
+
+  return wrapInDefaultPassage(blocks);
+}
+
 function inlineHasEvidence(inline: PassageInline): boolean {
   if (inline.type === "evidence") {
     return true;
@@ -79,7 +117,7 @@ function tableRowHasEvidence(row: PassageTableRow) {
 }
 
 function blockHasEvidence(block: PassageBlock) {
-  if (block.type === "center") {
+  if (block.type === "passage" || block.type === "center") {
     return block.blocks.some(blockHasEvidence);
   }
 
@@ -115,7 +153,7 @@ export function parsePassageContent(content: string): ParsePassageContentResult 
 
     return {
       kind: "parsed",
-      blocks,
+      blocks: normalizeTopLevelBlocks(blocks, content),
     };
   }
 
@@ -126,12 +164,12 @@ export function parsePassageContent(content: string): ParsePassageContentResult 
 
   return {
     kind: "parsed",
-    blocks: [
+    blocks: wrapInDefaultPassage([
       {
         type: "plain",
         inlines,
       },
-    ],
+    ]),
   };
 }
 

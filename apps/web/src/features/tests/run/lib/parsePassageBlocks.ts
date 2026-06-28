@@ -1,5 +1,14 @@
 import type { PassageBlock } from "@/features/tests/run/lib/passageContent.types";
 import {
+  findPassageCloseIndex,
+  findPassageOpenIndex,
+  getEmptyPassageWrapperAttrs,
+  hasPassageWrapperMarkers,
+  parsePassageCloseTag,
+  parsePassageOpenTag,
+  type PassageWrapperAttrs,
+} from "@/features/tests/run/lib/parsePassageWrapper";
+import {
   findTableCloseIndex,
   findTableOpenIndex,
   getEmptyTableWrapperAttrs,
@@ -12,10 +21,12 @@ import {
 export type RawPassageBlock =
   | { type: "plain"; raw: string }
   | { type: "center"; children: RawPassageBlock[] }
+  | { type: "passage"; children: RawPassageBlock[]; passageAttrs: PassageWrapperAttrs }
   | { type: "table"; raw: string; tableAttrs: TableWrapperAttrs };
 
 type ParseRawBlocksOptions = {
   allowCenter: boolean;
+  allowPassage: boolean;
 };
 
 const CENTER_OPEN = "[center]";
@@ -23,6 +34,13 @@ const CENTER_CLOSE = "[/center]";
 
 type BlockMarker =
   | { index: number; kind: "center"; isClose: boolean }
+  | {
+      index: number;
+      kind: "passage";
+      isClose: boolean;
+      passageAttrs: PassageWrapperAttrs;
+      length: number;
+    }
   | {
       index: number;
       kind: "table";
@@ -34,6 +52,8 @@ type BlockMarker =
 function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | null {
   const centerOpen = content.indexOf(CENTER_OPEN, fromIndex);
   const centerClose = content.indexOf(CENTER_CLOSE, fromIndex);
+  const passageOpen = findPassageOpenIndex(content, fromIndex);
+  const passageClose = findPassageCloseIndex(content, fromIndex);
   const tableOpen = findTableOpenIndex(content, fromIndex);
   const tableClose = findTableCloseIndex(content, fromIndex);
 
@@ -45,6 +65,32 @@ function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | 
 
   if (centerClose >= 0 && (!next || centerClose < next.index)) {
     next = { index: centerClose, kind: "center", isClose: true };
+  }
+
+  if (passageOpen >= 0) {
+    const parsedOpen = parsePassageOpenTag(content, passageOpen);
+    if (parsedOpen && (!next || passageOpen < next.index)) {
+      next = {
+        index: passageOpen,
+        kind: "passage",
+        isClose: false,
+        passageAttrs: parsedOpen.attrs,
+        length: parsedOpen.length,
+      };
+    }
+  }
+
+  if (passageClose >= 0) {
+    const parsedClose = parsePassageCloseTag(content, passageClose);
+    if (parsedClose && (!next || passageClose < next.index)) {
+      next = {
+        index: passageClose,
+        kind: "passage",
+        isClose: true,
+        passageAttrs: getEmptyPassageWrapperAttrs(),
+        length: parsedClose.length,
+      };
+    }
   }
 
   if (tableOpen >= 0) {
@@ -77,8 +123,22 @@ function findNextBlockMarker(content: string, fromIndex: number): BlockMarker | 
 }
 
 type MarkupFrame =
+  | { kind: "passage" }
   | { kind: "center" }
   | { kind: "table" };
+
+function canOpenTable(stack: MarkupFrame[]) {
+  if (stack.length === 0) {
+    return true;
+  }
+
+  const top = stack[stack.length - 1];
+  return top?.kind === "center" || top?.kind === "passage";
+}
+
+function canOpenCenter(stack: MarkupFrame[]) {
+  return stack.length === 0 || stack[stack.length - 1]?.kind === "passage";
+}
 
 export function hasPassageFormatMarkers(content: string | null | undefined) {
   if (!content) {
@@ -88,9 +148,12 @@ export function hasPassageFormatMarkers(content: string | null | undefined) {
   return (
     content.includes(CENTER_OPEN) ||
     content.includes(CENTER_CLOSE) ||
+    hasPassageWrapperMarkers(content) ||
     hasTableWrapperMarkers(content)
   );
 }
+
+export { hasPassageWrapperMarkers };
 
 export function isValidPassageBlockMarkup(content: string) {
   const stack: MarkupFrame[] = [];
@@ -102,13 +165,29 @@ export function isValidPassageBlockMarkup(content: string) {
       break;
     }
 
+    if (marker.kind === "passage") {
+      if (marker.isClose) {
+        const frame = stack.pop();
+        if (!frame || frame.kind !== "passage") {
+          return false;
+        }
+      } else if (stack.length > 0) {
+        return false;
+      } else {
+        stack.push({ kind: "passage" });
+      }
+
+      index = marker.index + marker.length;
+      continue;
+    }
+
     if (marker.kind === "center") {
       if (marker.isClose) {
         const frame = stack.pop();
         if (!frame || frame.kind !== "center") {
           return false;
         }
-      } else if (stack.length > 0) {
+      } else if (!canOpenCenter(stack)) {
         return false;
       } else {
         stack.push({ kind: "center" });
@@ -124,7 +203,7 @@ export function isValidPassageBlockMarkup(content: string) {
       if (!frame || frame.kind !== "table") {
         return false;
       }
-    } else if (stack.length > 0 && stack[stack.length - 1]?.kind !== "center") {
+    } else if (!canOpenTable(stack)) {
       return false;
     } else {
       stack.push({ kind: "table" });
@@ -134,6 +213,12 @@ export function isValidPassageBlockMarkup(content: string) {
   }
 
   return stack.length === 0;
+}
+
+function removeEmptyPlainBlocks(blocks: RawPassageBlock[]): RawPassageBlock[] {
+  return blocks.filter(
+    (block) => block.type !== "plain" || block.raw.trim().length > 0,
+  );
 }
 
 function trimBoundaryNewlines(blocks: RawPassageBlock[]): RawPassageBlock[] {
@@ -176,11 +261,51 @@ function parseRawPassageBlocks(
       break;
     }
 
+    if (marker.kind === "passage" && !options.allowPassage) {
+      break;
+    }
+
     if (marker.index > plainStart) {
       blocks.push({
         type: "plain",
         raw: content.slice(plainStart, marker.index),
       });
+    }
+
+    if (marker.kind === "passage") {
+      const closeIndex = findPassageCloseIndex(
+        content,
+        marker.index + marker.length,
+      );
+      if (closeIndex === -1) {
+        return null;
+      }
+
+      const closeTag = parsePassageCloseTag(content, closeIndex);
+      if (!closeTag) {
+        return null;
+      }
+
+      const inner = trimBlockContent(
+        content.slice(marker.index + marker.length, closeIndex),
+      );
+      const children = parseRawPassageBlocks(inner, {
+        allowCenter: true,
+        allowPassage: false,
+      });
+      if (!children) {
+        return null;
+      }
+
+      blocks.push({
+        type: "passage",
+        children,
+        passageAttrs: marker.passageAttrs,
+      });
+
+      index = closeIndex + closeTag.length;
+      plainStart = index;
+      continue;
     }
 
     if (marker.kind === "center") {
@@ -192,7 +317,10 @@ function parseRawPassageBlocks(
       const inner = trimBlockContent(
         content.slice(marker.index + CENTER_OPEN.length, closeIndex),
       );
-      const children = parseRawPassageBlocks(inner, { allowCenter: false });
+      const children = parseRawPassageBlocks(inner, {
+        allowCenter: false,
+        allowPassage: false,
+      });
       if (!children) {
         return null;
       }
@@ -237,7 +365,7 @@ function parseRawPassageBlocks(
     });
   }
 
-  return trimBoundaryNewlines(blocks);
+  return removeEmptyPlainBlocks(trimBoundaryNewlines(blocks));
 }
 
 export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
@@ -245,7 +373,10 @@ export function parsePassageBlocks(content: string): RawPassageBlock[] | null {
     return null;
   }
 
-  return parseRawPassageBlocks(content, { allowCenter: true });
+  return parseRawPassageBlocks(content, {
+    allowCenter: true,
+    allowPassage: true,
+  });
 }
 
 export type { PassageBlock };

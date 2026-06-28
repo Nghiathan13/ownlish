@@ -14,6 +14,8 @@ type PassageContentProps = {
   showRawEvidenceWhenOff?: boolean;
 };
 
+const passageShellClassName = "p-4 whitespace-pre-wrap text-base";
+
 function PassageBlockView({
   block,
   highlightEvidence,
@@ -25,6 +27,26 @@ function PassageBlockView({
   inCenterBlock?: boolean;
   stripEvidence: boolean;
 }) {
+  if (block.type === "passage") {
+    return (
+      <div
+        className={classNames(
+          passageShellClassName,
+          block.border && "rounded-sm border border-border",
+        )}
+      >
+        {block.blocks.map((child, childIndex) => (
+          <PassageBlockView
+            block={child}
+            highlightEvidence={highlightEvidence}
+            key={`passage-child-${childIndex}`}
+            stripEvidence={stripEvidence}
+          />
+        ))}
+      </div>
+    );
+  }
+
   if (block.type === "table") {
     return (
       <PassageTableView
@@ -64,6 +86,10 @@ function PassageBlockView({
   );
 }
 
+function PassageRawView({ content }: { content: string }) {
+  return <div className={passageShellClassName}>{content}</div>;
+}
+
 export function PassageContent({
   content,
   highlightEvidence,
@@ -72,19 +98,19 @@ export function PassageContent({
   const parsed = parsePassageContent(content);
 
   if (parsed.kind === "raw") {
-    return <div className="whitespace-pre-wrap text-base">{content}</div>;
+    return <PassageRawView content={content} />;
   }
 
   const hasEvidence = passageContentHasEvidence(content);
 
   if (hasEvidence && !highlightEvidence && showRawEvidenceWhenOff) {
-    return <div className="whitespace-pre-wrap text-base">{content}</div>;
+    return <PassageRawView content={content} />;
   }
 
   const stripEvidence = hasEvidence && !highlightEvidence;
 
   return (
-    <div className={classNames("whitespace-pre-wrap text-base")}>
+    <>
       {parsed.blocks.map((block, index) => (
         <Fragment key={`${block.type}-${index}`}>
           <PassageBlockView
@@ -94,6 +120,6 @@ export function PassageContent({
           />
         </Fragment>
       ))}
-    </div>
+    </>
   );
 }

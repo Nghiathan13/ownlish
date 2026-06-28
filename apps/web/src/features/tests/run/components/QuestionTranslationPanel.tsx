@@ -37,11 +37,12 @@ export function QuestionTranslationPanel({
 
   return (
     <PracticeTranslationCard>
-      {showQuestion && questionVi?.trim() ? (
-        <p className="font-semibold whitespace-pre-wrap">{questionVi}</p>
-      ) : null}
-      {showOptions
-        ? OPTION_KEYS.slice(0, optionCount).map((key) => {
+      <div className="p-4">
+        {showQuestion && questionVi?.trim() ? (
+          <p className="font-semibold whitespace-pre-wrap">{questionVi}</p>
+        ) : null}
+        {showOptions
+          ? OPTION_KEYS.slice(0, optionCount).map((key) => {
             const viKey = `${key}_vi` as keyof ToeicQuestionOptions;
             const label = options[viKey];
             if (!label) {
@@ -71,7 +72,8 @@ export function QuestionTranslationPanel({
               </p>
             );
           })
-        : null}
+          : null}
+      </div>
     </PracticeTranslationCard>
   );
 }

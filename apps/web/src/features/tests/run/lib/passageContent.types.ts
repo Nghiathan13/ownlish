@@ -21,6 +21,7 @@ export type PassageTableRow = {
 export type PassageBlock =
   | { type: "plain"; inlines: PassageInline[] }
   | { type: "center"; blocks: PassageBlock[] }
+  | { type: "passage"; border: boolean; blocks: PassageBlock[] }
   | {
       type: "table";
       bold: boolean;
