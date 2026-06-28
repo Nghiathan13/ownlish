@@ -61,6 +61,10 @@ function serializeRangeText(
   );
 }
 
+function buildInitialRange(groupIndex: number): AdminGroupRange {
+  return { from: groupIndex, to: groupIndex };
+}
+
 export function AdminGroupRawEditModal({
   catalog,
   currentGroupDraft,
@@ -72,20 +76,28 @@ export function AdminGroupRawEditModal({
   onSave,
 }: AdminGroupRawEditModalProps) {
   const titleId = useId();
-  const initialRange = useRef<AdminGroupRange>({
-    from: initialGroupIndex,
-    to: initialGroupIndex,
-  });
   const [mode, setMode] = useState<AdminGroupRawEditMode>("txt");
-  const [appliedRange, setAppliedRange] = useState<AdminGroupRange>(
-    initialRange.current,
+  const [appliedRange, setAppliedRange] = useState<AdminGroupRange>(() =>
+    buildInitialRange(initialGroupIndex),
   );
   const [fromInput, setFromInput] = useState(String(initialGroupIndex));
   const [toInput, setToInput] = useState(String(initialGroupIndex));
   const [loadedText, setLoadedText] = useState(() =>
-    serializeRangeText(catalog, initialRange.current, "txt", currentGroupDraft),
+    serializeRangeText(
+      catalog,
+      buildInitialRange(initialGroupIndex),
+      "txt",
+      currentGroupDraft,
+    ),
   );
-  const [text, setText] = useState(loadedText);
+  const [text, setText] = useState(() =>
+    serializeRangeText(
+      catalog,
+      buildInitialRange(initialGroupIndex),
+      "txt",
+      currentGroupDraft,
+    ),
+  );
   const [pendingRange, setPendingRange] = useState<AdminGroupRange | null>(null);
   const [didCopy, setDidCopy] = useState(false);
   const copyResetTimeoutRef = useRef<number | null>(null);
@@ -97,10 +109,10 @@ export function AdminGroupRawEditModal({
     }
   };
 
-  const resetCopyState = () => {
+  const resetCopyState = useCallback(() => {
     clearCopyResetTimeout();
     setDidCopy(false);
-  };
+  }, []);
 
   const scheduleCopyReset = () => {
     clearCopyResetTimeout();
@@ -127,7 +139,7 @@ export function AdminGroupRawEditModal({
       resetCopyState();
       onErrorChange(null);
     },
-    [catalog, currentGroupDraft, mode, onErrorChange],
+    [catalog, currentGroupDraft, mode, onErrorChange, resetCopyState],
   );
 
   const applyRangeInputs = useCallback(() => {

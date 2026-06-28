@@ -244,7 +244,7 @@ export function parseAdminGroupRawEditRange(
   }
 
   const validation = validateParsedGroupIndexes(
-    parsedJson.map((item, index) => {
+    parsedJson.map((item) => {
       if (!isRecord(item) || typeof item.groupIndex !== "number") {
         return Number.NaN;
       }
@@ -292,7 +292,8 @@ export function parseAdminGroupRawEditRange(
       };
     }
 
-    const { groupIndex: _ignored, ...document } = rawItem;
+    const document = { ...rawItem };
+    delete document.groupIndex;
     const currentState = buildEditorStateForCatalogEntry(entry);
     const parsed = prefixGroupParseError(
       groupIndex,
