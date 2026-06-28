@@ -98,6 +98,7 @@ export function AdminToeicPracticeLeftPanel({
         <PassagePanel
           content={group.content}
           contentVi={group.contentVi}
+          showTitle={partNumber !== 6}
           showTranslation={Boolean(group.contentVi?.trim())}
         />
       ) : null}

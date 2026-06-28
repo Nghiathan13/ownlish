@@ -43,7 +43,11 @@ export function MockLeftPanel({
       ) : null}
 
       {showReadingPassage ? (
-        <PassagePanel content={group.content} showTranslation={false} />
+        <PassagePanel
+          content={group.content}
+          showTitle={partNumber !== 6}
+          showTranslation={false}
+        />
       ) : null}
 
       {mediaError ? <p className="text-base text-red-600">{mediaError}</p> : null}

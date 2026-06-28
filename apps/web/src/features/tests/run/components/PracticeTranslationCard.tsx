@@ -5,6 +5,7 @@ type PracticeTranslationCardProps = {
   children: ReactNode;
   className?: string;
   headerAction?: ReactNode;
+  showHeader?: boolean;
   title?: string;
 };
 
@@ -12,6 +13,7 @@ export function PracticeTranslationCard({
   children,
   className,
   headerAction,
+  showHeader = true,
   title = "Translation",
 }: PracticeTranslationCardProps) {
   return (
@@ -21,11 +23,15 @@ export function PracticeTranslationCard({
         className,
       )}
     >
-      <div className="flex items-center gap-4 p-4">
-        <p className="font-semibold">{title}</p>
-        {headerAction}
-      </div>
-      <div className="border-t border-border" />
+      {showHeader ? (
+        <>
+          <div className="flex items-center gap-4 p-4">
+            <p className="font-semibold">{title}</p>
+            {headerAction}
+          </div>
+          <div className="border-t border-border" />
+        </>
+      ) : null}
       <div className="flex flex-col gap-2 p-4">{children}</div>
     </div>
   );

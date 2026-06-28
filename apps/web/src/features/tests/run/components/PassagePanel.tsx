@@ -10,6 +10,7 @@ type PassagePanelProps = {
   content: string | null;
   contentVi?: string | null;
   showRawContentWhenEvidenceOff?: boolean;
+  showTitle?: boolean;
   showTranslation: boolean;
   title?: string;
   showEvidenceToggle?: boolean;
@@ -52,6 +53,7 @@ export function PassagePanel({
   content,
   contentVi,
   showRawContentWhenEvidenceOff = false,
+  showTitle = true,
   showTranslation,
   title = "Passage",
   showEvidenceToggle = false,
@@ -82,6 +84,7 @@ export function PassagePanel({
               />
             ) : undefined
           }
+          showHeader={showTitle}
           title={title}
         >
           <div className="whitespace-pre-wrap text-base">
