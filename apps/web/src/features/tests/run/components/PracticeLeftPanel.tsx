@@ -114,7 +114,7 @@ export function PracticeLeftPanel({
         <PassagePanel
           content={group.content}
           contentVi={group.contentVi}
-          showTitle={partNumber !== 6}
+          showTitle={partNumber !== 6 && partNumber !== 7}
           showTranslation={showContextTranslation}
         />
       ) : null}

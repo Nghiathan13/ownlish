@@ -47,7 +47,7 @@ export function MockLeftPanel({
       {showReadingPassage ? (
         <PassagePanel
           content={group.content}
-          showTitle={partNumber !== 6}
+          showTitle={partNumber !== 6 && partNumber !== 7}
           showTranslation={false}
         />
       ) : null}
