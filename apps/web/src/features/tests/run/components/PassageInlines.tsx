@@ -27,7 +27,38 @@ const evidenceHighlightClassName = classNames(
   "box-decoration-clone px-0.5",
 );
 const passageInlineBorderClassName =
-  "border border-border rounded-sm box-decoration-clone px-0.5";
+  "inline-block rounded-sm border border-border px-0.5";
+
+function renderBorderInline(
+  inline: Extract<PassageInline, { type: "border" }>,
+  index: number,
+  context: RenderPassageInlineContext,
+): ReactNode {
+  const borderChildren = inline.inlines.map((child, childIndex) =>
+    renderPassageInline(child, childIndex, {
+      ...context,
+      insideBold: context.insideBold,
+      insideBorder: true,
+    }),
+  );
+
+  const className = passageInlineBorderClassName;
+  const key = `border-${index}`;
+
+  if (context.insideBold) {
+    return (
+      <span className={className} key={key}>
+        {borderChildren}
+      </span>
+    );
+  }
+
+  return (
+    <div className={className} key={key}>
+      {borderChildren}
+    </div>
+  );
+}
 
 function renderWrappedInline(
   inline: PassageInline,
@@ -37,7 +68,7 @@ function renderWrappedInline(
   keyPrefix: string,
   insideContext: Pick<RenderPassageInlineContext, "insideBold" | "insideBorder">,
 ): ReactNode {
-  if (inline.type !== "bold" && inline.type !== "border") {
+  if (inline.type !== "bold") {
     return null;
   }
 
@@ -72,7 +103,7 @@ function renderPassageInline(
   context: RenderPassageInlineContext,
 ): ReactNode {
   if (inline.type === "text") {
-    if (context.insideBold || context.insideBorder) {
+    if (context.insideBold && !context.insideBorder) {
       return <Fragment key={`text-${index}`}>{inline.value}</Fragment>;
     }
 
@@ -91,18 +122,11 @@ function renderPassageInline(
   }
 
   if (inline.type === "border") {
-    return renderWrappedInline(
-      inline,
-      index,
-      context,
-      passageInlineBorderClassName,
-      "border",
-      { insideBold: context.insideBold, insideBorder: true },
-    );
+    return renderBorderInline(inline, index, context);
   }
 
   if (context.stripEvidence || !context.highlightEvidence) {
-    if (context.insideBold || context.insideBorder) {
+    if (context.insideBold && !context.insideBorder) {
       return <Fragment key={`evidence-${index}`}>{inline.value}</Fragment>;
     }
 
