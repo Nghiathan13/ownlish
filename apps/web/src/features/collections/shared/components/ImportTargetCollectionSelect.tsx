@@ -12,13 +12,19 @@ type ImportTargetCollectionSelectProps = {
   collections: CollectionSummary[];
   onChange: (collectionId: string) => void;
   value: string;
-  variant?: "form" | "toolbar";
+  variant?: "form" | "review" | "toolbar";
 };
 
 const toolbarSelectClassName = classNames(
   textButtonLayoutClassName,
   secondaryTextButtonColorsClassName,
   "w-fit min-w-[10rem] max-w-[14rem] truncate appearance-none cursor-pointer",
+  "[@media(prefers-color-scheme:dark)]:color-scheme-dark",
+);
+
+const reviewSelectClassName = classNames(
+  "h-10 w-full min-w-0 cursor-pointer appearance-none rounded-full border border-border bg-background py-0 pl-4 pr-10 text-sm font-medium text-foreground outline-none",
+  "focus:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
   "[@media(prefers-color-scheme:dark)]:color-scheme-dark",
 );
 
@@ -29,6 +35,31 @@ export function ImportTargetCollectionSelect({
   value,
   variant = "form",
 }: ImportTargetCollectionSelectProps) {
+  if (variant === "review") {
+    return (
+      <div className="relative w-full max-w-72">
+        <select
+          aria-label={ariaLabel}
+          className={reviewSelectClassName}
+          onChange={(event) => onChange(event.target.value)}
+          value={value}
+        >
+          {collections.map((collection) => (
+            <option key={collection.id} value={collection.id}>
+              {collection.isDefault ? "My Vocabulary" : collection.name}
+            </option>
+          ))}
+        </select>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
+        >
+          ▾
+        </span>
+      </div>
+    );
+  }
+
   if (variant === "toolbar") {
     return (
       <select

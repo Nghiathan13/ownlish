@@ -130,7 +130,7 @@ function ReviewPageContent() {
               collections={userCollections}
               onChange={handleCollectionChange}
               value={resolvedCollectionId}
-              variant="toolbar"
+              variant="review"
             />
           ) : isLoadingCollections ? (
             <ReviewCollectionToolbarSkeleton />

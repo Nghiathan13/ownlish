@@ -1,5 +1,4 @@
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
-import { classNames } from "@/shared/lib/classNames";
 import type { ReviewGrade } from "../lib/reviewSchedule";
 
 type ReviewCardProps = {
@@ -53,16 +52,26 @@ export function ReviewCard({
 
         <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
           <div>
-            <h2 className="break-words text-[clamp(3rem,11vw,7rem)] font-black leading-[0.9] tracking-tighter">
-              {word.vocabWord.word}
-            </h2>
+            <div className="flex flex-wrap items-start justify-center gap-x-3 gap-y-2">
+              <h2 className="break-words text-[clamp(2.5rem,8vw,5.5rem)] font-black leading-[0.95] tracking-tighter">
+                {word.vocabWord.word}
+                {word.type ? (
+                  <span className="ml-2 align-middle text-base font-medium tracking-normal text-muted-foreground sm:text-xl">
+                    ({word.type})
+                  </span>
+                ) : null}
+              </h2>
+              {word.band ? (
+                <span className="mt-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground sm:mt-2">
+                  {word.band}
+                </span>
+              ) : null}
+            </div>
 
-            {(ipa || word.type || word.band) ? (
-              <dl className="mx-auto mt-6 flex max-w-xl flex-wrap justify-center gap-2 text-sm">
-                {ipa ? <MetaPill label="IPA" value={ipa} variant="mono" /> : null}
-                {word.type ? <MetaPill label="Type" value={word.type} /> : null}
-                {word.band ? <MetaPill label="Band" value={word.band} /> : null}
-              </dl>
+            {ipa ? (
+              <p className="mt-3 font-mono text-sm text-muted-foreground sm:text-base">
+                /{ipa.replace(/^\/+|\/+$/g, "")}/
+              </p>
             ) : null}
           </div>
 
@@ -143,32 +152,6 @@ function ReviewMeaning({ word }: { word: VocabReviewItem }) {
         </div>
       ) : null}
     </section>
-  );
-}
-
-function MetaPill({
-  label,
-  value,
-  variant = "text",
-}: {
-  label: string;
-  value: string;
-  variant?: "mono" | "text";
-}) {
-  return (
-    <div className="inline-flex items-center overflow-hidden rounded-full border border-border bg-background text-muted-foreground">
-      <dt className="border-r border-border bg-muted px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]">
-        {label}
-      </dt>
-      <dd
-        className={classNames(
-          "px-3 py-1 text-foreground",
-          variant === "mono" && "font-mono",
-        )}
-      >
-        {value}
-      </dd>
-    </div>
   );
 }
 

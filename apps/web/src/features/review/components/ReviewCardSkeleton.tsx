@@ -14,11 +14,10 @@ export function ReviewCardSkeleton() {
 
         <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
           <div>
-            <Skeleton className="mx-auto h-20 w-4/5 max-w-xl rounded-2xl sm:h-28" />
-            <div className="mt-6 flex justify-center gap-2">
-              <Skeleton className="h-8 w-28 rounded-full" />
-              <Skeleton className="h-8 w-24 rounded-full" />
-              <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="mx-auto h-16 w-4/5 max-w-lg rounded-2xl sm:h-24" />
+            <div className="mt-3 flex justify-center gap-2">
+              <Skeleton className="h-5 w-24 rounded-md" />
+              <Skeleton className="h-6 w-14 rounded-full" />
             </div>
           </div>
           <Skeleton className="mx-auto min-h-24 w-full max-w-xl rounded-2xl" />
