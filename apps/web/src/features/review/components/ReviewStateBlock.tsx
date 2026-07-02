@@ -20,26 +20,37 @@ export function ReviewStateBlock({
 
   if (error) {
     return (
-      <div className="grid gap-4">
-        <p className="text-sm text-danger">{error}</p>
-        <button
-          type="button"
-          className={secondaryTextButtonClassName("w-fit")}
-          onClick={onRetry}
-        >
-          Retry
-        </button>
+      <div className="grid min-h-[28rem] place-items-center rounded-[2rem] border border-border bg-background p-6 text-center">
+        <div className="max-w-md">
+          <p className="text-sm font-semibold text-danger">Review could not load</p>
+          <h2 className="mt-3 text-3xl font-black tracking-tight">
+            Try this deck again.
+          </h2>
+          <p className="mt-3 leading-7 text-muted-foreground">{error}</p>
+          <button
+            type="button"
+            className={secondaryTextButtonClassName("mt-6 w-fit")}
+            onClick={onRetry}
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   if (isEmpty) {
     return (
-      <div>
-        <h2 className="mb-2 text-xl font-semibold">No words to review today.</h2>
-        <p className="text-muted-foreground">
-          Add more words or come back when your vocabulary is due.
-        </p>
+      <div className="grid min-h-[28rem] place-items-center rounded-[2rem] border border-border bg-background p-6 text-center">
+        <div className="max-w-lg">
+          <p className="text-sm font-semibold text-muted-foreground">Queue clear</p>
+          <h2 className="mt-3 text-4xl font-black tracking-tight">
+            No words to review today.
+          </h2>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            Your due list is empty. Add more words or come back when the next cards are ready.
+          </p>
+        </div>
       </div>
     );
   }
