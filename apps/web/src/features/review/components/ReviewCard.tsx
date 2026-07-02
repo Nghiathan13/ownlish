@@ -1,9 +1,5 @@
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
 import { classNames } from "@/shared/lib/classNames";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
 import type { ReviewGrade } from "../lib/reviewSchedule";
 
 type ReviewCardProps = {
@@ -27,146 +23,101 @@ export function ReviewCard({
 }: ReviewCardProps) {
   const canGrade = showMeaning && !isSubmitting;
   const ipa = word.ipaUk ?? word.ipaUs;
-  const progressLabel = totalWords > 0 ? `${remainingWords} due` : "Review";
+  const completedCount = Math.max(totalWords - remainingWords, 0);
+  const progressPercent = totalWords > 0 ? (completedCount / totalWords) * 100 : 0;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
-      <article className="relative overflow-hidden rounded-[2rem] border border-border bg-background p-5 shadow-[0_24px_80px_color-mix(in_srgb,var(--foreground)_10%,transparent)] sm:p-8 lg:min-h-[34rem]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_20%_0%,color-mix(in_srgb,var(--foreground)_12%,transparent),transparent_22rem)]"
-        />
+    <div className="mx-auto grid w-full max-w-3xl gap-3">
+      <article className="rounded-[1.75rem] border border-border bg-background p-5 sm:p-8">
+        <div className="mb-8 grid gap-2">
+          <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
+            <span>
+              {completedCount}/{totalWords || remainingWords}
+            </span>
+            <span>{remainingWords} left</span>
+          </div>
+          <div
+            aria-label={`${completedCount} of ${totalWords} reviewed`}
+            aria-valuemax={totalWords}
+            aria-valuemin={0}
+            aria-valuenow={completedCount}
+            className="h-1.5 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+          >
+            <div
+              className="h-full rounded-full bg-foreground"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
 
-        <div className="relative flex min-h-full flex-col gap-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span className="rounded-full border border-border bg-muted px-3 py-1 font-medium text-foreground">
-                {progressLabel}
-              </span>
-              <span>Level {word.level}</span>
-              <span aria-hidden>-</span>
-              <span>Wrong {word.wrongCount}</span>
-            </div>
+        <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
+          <div>
+            <h2 className="break-words text-[clamp(3rem,11vw,7rem)] font-black leading-[0.9] tracking-tighter">
+              {word.vocabWord.word}
+            </h2>
 
-            <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-              <ShortcutKey>Space</ShortcutKey>
-              <span>reveal</span>
-            </div>
+            {(ipa || word.type || word.band) ? (
+              <dl className="mx-auto mt-6 flex max-w-xl flex-wrap justify-center gap-2 text-sm">
+                {ipa ? <MetaPill label="IPA" value={ipa} variant="mono" /> : null}
+                {word.type ? <MetaPill label="Type" value={word.type} /> : null}
+                {word.band ? <MetaPill label="Band" value={word.band} /> : null}
+              </dl>
+            ) : null}
           </div>
 
-          <div className="grid flex-1 content-center gap-5 py-4">
-            <div>
-              <h2 className="break-words text-[clamp(3.5rem,12vw,8rem)] font-black leading-[0.88] tracking-tighter">
-                {word.vocabWord.word}
-              </h2>
-              <div className="mt-5 flex flex-wrap items-center gap-2 text-muted-foreground">
-                {ipa ? (
-                  <span className="rounded-full border border-border px-3 py-1 font-mono text-sm">
-                    {ipa}
-                  </span>
-                ) : null}
-                {word.type ? (
-                  <span className="rounded-full border border-border px-3 py-1 text-sm">
-                    {word.type}
-                  </span>
-                ) : null}
-                {word.band ? (
-                  <span className="rounded-full border border-border px-3 py-1 text-sm">
-                    {word.band}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-
-            <section
-              className={classNames(
-                "min-h-36 rounded-3xl border p-5 sm:p-6",
-                showMeaning
-                  ? "border-foreground/20 bg-surface"
-                  : "border-dashed border-border bg-muted/60",
-              )}
-            >
-              {showMeaning ? (
-                <ReviewMeaning word={word} />
-              ) : (
-                <div className="grid h-full content-center gap-2 text-muted-foreground">
-                  <p className="text-lg font-semibold text-foreground">
-                    Hold the answer in your head first.
-                  </p>
-                  <p className="max-w-xl leading-7">
-                    Reveal only after you can say the Vietnamese meaning or a clear English definition.
-                  </p>
-                </div>
-              )}
-            </section>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-[1fr_0.9fr_0.9fr]">
+          {showMeaning ? (
+            <ReviewMeaning word={word} />
+          ) : (
             <button
-              type="button"
-              className={secondaryTextButtonClassName("w-full py-3")}
+              className="mx-auto min-h-24 w-full max-w-xl rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-sm font-medium text-muted-foreground"
               onClick={onToggleMeaning}
-            >
-              {showMeaning ? "Hide meaning" : "Reveal meaning"}
-            </button>
-            <button
               type="button"
-              className={secondaryTextButtonClassName(
-                "w-full py-3 text-danger hover:border-danger",
-              )}
-              disabled={!canGrade}
-              onClick={() => onGrade("forgot")}
-              title={showMeaning ? "Forgot" : "Show meaning before grading"}
             >
-              Forgot
+              Press Space or click to reveal
             </button>
-            <button
-              type="button"
-              className={primaryTextButtonClassName("w-full py-3")}
-              disabled={!canGrade}
-              onClick={() => onGrade("remember")}
-              title={showMeaning ? "Remember" : "Show meaning before grading"}
-            >
-              Remember
-            </button>
-          </div>
+          )}
         </div>
       </article>
 
-      <aside className="grid gap-4 lg:content-start">
-        <div className="rounded-[1.5rem] border border-border bg-background/80 p-5">
-          <p className="text-sm font-semibold text-muted-foreground">Session</p>
-          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-1">
-            <Metric label="Due now" value={remainingWords} />
-            <Metric label="Loaded" value={totalWords} />
-          </div>
-        </div>
-
-        <div className="rounded-[1.5rem] border border-border bg-muted/50 p-5">
-          <p className="text-sm font-semibold text-muted-foreground">Keys</p>
-          <dl className="mt-4 grid gap-3 text-sm">
-            <ShortcutRow command="Space" label="Reveal or hide" />
-            <ShortcutRow command="1" label="Forgot" />
-            <ShortcutRow command="2" label="Remember" />
-          </dl>
-        </div>
-
-        {word.nextReview ? (
-          <div className="rounded-[1.5rem] border border-border bg-background/80 p-5 text-sm text-muted-foreground">
-            <p className="font-semibold text-foreground">Scheduled</p>
-            <p className="mt-2">This card was due before this review session.</p>
-          </div>
-        ) : null}
-      </aside>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+        {!showMeaning ? (
+          <Shortcut command="Space" label="Reveal" />
+        ) : (
+          <>
+            <Shortcut command="Space" label="Hide" />
+            <button
+              className="inline-flex items-center gap-1 text-muted-foreground disabled:opacity-50"
+              disabled={!canGrade}
+              onClick={() => onGrade("forgot")}
+              type="button"
+            >
+              <Key>1</Key>
+              <span>Forgot</span>
+            </button>
+            <button
+              className="inline-flex items-center gap-1 font-semibold text-foreground disabled:opacity-50"
+              disabled={!canGrade}
+              onClick={() => onGrade("remember")}
+              type="button"
+            >
+              <Key>2</Key>
+              <span>Remember</span>
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 function ReviewMeaning({ word }: { word: VocabReviewItem }) {
   return (
-    <div className="grid gap-4">
+    <section className="mx-auto grid w-full max-w-xl gap-4 rounded-2xl border border-border bg-surface p-5 text-left">
       <div>
-        <p className="text-sm font-semibold text-muted-foreground">Meaning</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Meaning
+        </p>
         <p className="mt-2 text-2xl font-bold leading-tight">
           {word.meaningVi || word.definition || "No meaning added."}
         </p>
@@ -174,49 +125,66 @@ function ReviewMeaning({ word }: { word: VocabReviewItem }) {
 
       {word.definition && word.meaningVi ? (
         <div>
-          <p className="text-sm font-semibold text-muted-foreground">Definition</p>
-          <p className="mt-1 leading-7">{word.definition}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Definition
+          </p>
+          <p className="mt-2 leading-7">{word.definition}</p>
         </div>
       ) : null}
 
       {word.example ? (
-        <blockquote className="border-l-2 border-border pl-4">
+        <div className="border-t border-border pt-4">
           <p className="leading-7 text-foreground">{word.example}</p>
           {word.exampleVi ? (
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {word.exampleVi}
             </p>
           ) : null}
-        </blockquote>
+        </div>
       ) : null}
+    </section>
+  );
+}
+
+function MetaPill({
+  label,
+  value,
+  variant = "text",
+}: {
+  label: string;
+  value: string;
+  variant?: "mono" | "text";
+}) {
+  return (
+    <div className="inline-flex items-center overflow-hidden rounded-full border border-border bg-background text-muted-foreground">
+      <dt className="border-r border-border bg-muted px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]">
+        {label}
+      </dt>
+      <dd
+        className={classNames(
+          "px-3 py-1 text-foreground",
+          variant === "mono" && "font-mono",
+        )}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
+function Shortcut({ command, label }: { command: string; label: string }) {
   return (
-    <div className="rounded-2xl bg-muted p-4">
-      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-      <p className="mt-2 font-mono text-3xl font-bold leading-none">{value}</p>
-    </div>
+    <span className="inline-flex items-center gap-1">
+      <Key>{command}</Key>
+      <span>{label}</span>
+    </span>
   );
 }
 
-function ShortcutKey({ children }: { children: string }) {
+function Key({ children }: { children: string }) {
   return (
-    <kbd className="rounded-md border border-border bg-background px-2 py-1 font-mono text-[11px] font-semibold text-foreground shadow-sm">
+    <kbd className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
       {children}
     </kbd>
-  );
-}
-
-function ShortcutRow({ command, label }: { command: string; label: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <dt>
-        <ShortcutKey>{command}</ShortcutKey>
-      </dt>
-      <dd className="text-muted-foreground">{label}</dd>
-    </div>
   );
 }

@@ -121,40 +121,20 @@ function ReviewPageContent() {
   }, [currentWord, handleGrade, isSubmittingGrade, showMeaning]);
 
   return (
-    <PageShell className="bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--foreground)_9%,transparent),transparent_30rem)]">
-      <Panel className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div>
-            <p className="mb-2 text-sm font-semibold text-muted-foreground">
-              Spaced repetition
-            </p>
-            <h1 className="max-w-3xl text-4xl font-black leading-none tracking-tighter sm:text-5xl lg:text-6xl">
-              Recall first. Check after.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-              Say the meaning out loud, reveal the card, then grade the answer.
-              Space toggles the answer. Keys 1 and 2 grade it.
-            </p>
-          </div>
-
-          <div className="lg:justify-self-end">
-            {userCollections.length > 0 && resolvedCollectionId ? (
-              <div className="grid gap-2 rounded-2xl border border-border bg-background/80 p-3">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  Review list
-                </p>
-                <ImportTargetCollectionSelect
-                  ariaLabel="Review collection"
-                  collections={userCollections}
-                  onChange={handleCollectionChange}
-                  value={resolvedCollectionId}
-                  variant="toolbar"
-                />
-              </div>
-            ) : isLoadingCollections ? (
-              <ReviewCollectionToolbarSkeleton />
-            ) : null}
-          </div>
+    <PageShell>
+      <Panel className="mx-auto flex min-h-full w-full max-w-4xl flex-col px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+        <div className="mb-4 flex justify-end">
+          {userCollections.length > 0 && resolvedCollectionId ? (
+            <ImportTargetCollectionSelect
+              ariaLabel="Review collection"
+              collections={userCollections}
+              onChange={handleCollectionChange}
+              value={resolvedCollectionId}
+              variant="toolbar"
+            />
+          ) : isLoadingCollections ? (
+            <ReviewCollectionToolbarSkeleton />
+          ) : null}
         </div>
 
         {isLoading || error || isEmpty || !currentWord ? (
