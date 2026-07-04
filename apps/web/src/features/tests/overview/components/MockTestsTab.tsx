@@ -6,6 +6,7 @@ import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOvervi
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
 import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 import { testOverviewCardGridClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { MockTestsTabSkeleton } from "@/features/tests/overview/components/MockTestsTabSkeleton";
 import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTabs";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
