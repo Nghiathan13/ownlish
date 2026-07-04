@@ -5,12 +5,12 @@ import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
-import { iconOnlyButtonClassName, iconTextButtonClassName } from "@/shared/ui/button";
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
 import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { testOverviewCardClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { testOverviewCardClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
 
 type PartPracticeCardProps = {
   summary: PartPracticePartSummary;
@@ -91,9 +91,7 @@ export function PartPracticeCard({
       </div>
       <div className="flex w-full gap-2">
         <button
-          className={iconTextButtonClassName(
-            "flex-1 border-foreground bg-foreground text-background",
-          )}
+          className={testOverviewPracticeButtonClassName}
           disabled={isClearingHistory || isStarting}
           onClick={onPractice}
           type="button"

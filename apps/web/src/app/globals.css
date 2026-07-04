@@ -10,6 +10,7 @@
   --border: color-mix(in srgb, var(--foreground) 16%, transparent);
   --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --hover-overlay: rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="dark"] {
@@ -19,6 +20,7 @@
   --foreground: rgba(255, 255, 255, 0.87);
   --muted-foreground: rgba(255, 255, 255, 0.6);
   --danger: #ff6b6b;
+  --hover-overlay: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -30,6 +32,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-surface: var(--surface);
+  --color-hover-overlay: var(--hover-overlay);
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
 }

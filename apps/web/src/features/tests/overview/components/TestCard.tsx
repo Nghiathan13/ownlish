@@ -6,7 +6,7 @@ import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
-import { iconOnlyButtonClassName, iconTextButtonClassName } from "@/shared/ui/button";
+import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
 import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
@@ -15,7 +15,7 @@ import {
   getTestWrongCount,
 } from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { testOverviewCardClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { testOverviewCardClassName, testOverviewMockButtonClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
 
 type TestCardProps = {
   test: ToeicTestSummary;
@@ -106,9 +106,7 @@ export function TestCard({
       </div>
       <div className="flex w-full gap-2">
         <button
-          className={iconTextButtonClassName(
-            "flex-1 border-border bg-transparent text-foreground hover:border-foreground",
-          )}
+          className={testOverviewMockButtonClassName}
           onClick={onMock}
           type="button"
         >
@@ -116,9 +114,7 @@ export function TestCard({
           Mock
         </button>
         <button
-          className={iconTextButtonClassName(
-            "flex-1 border-foreground bg-foreground text-background",
-          )}
+          className={testOverviewPracticeButtonClassName}
           onClick={onPractice}
           type="button"
         >
