@@ -33,7 +33,7 @@ export function ImmersiveToolbar() {
   );
 
   return (
-    <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-background/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface backdrop-blur-md">
       <div
         className={classNames(
           APP_CONTAINER_CLASS,

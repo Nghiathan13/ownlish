@@ -1,39 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --border: color-mix(in srgb, var(--foreground) 16%, transparent);
-  --danger: #d92d20;
+  color-scheme: light;
+  --background: #fafafa;
   --foreground: #171717;
+  --surface: #ffffff;
+  --danger: #d92d20;
+  --border: color-mix(in srgb, var(--foreground) 16%, transparent);
   --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
   --muted-foreground: color-mix(in srgb, var(--foreground) 64%, transparent);
-  --surface: color-mix(in srgb, var(--foreground) 6%, var(--background));
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ededed;
+  --surface: #1c1c1e;
+  --danger: #ff6b6b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-border: var(--border);
   --color-danger: var(--danger);
-  --color-foreground: var(--foreground);
   --color-focus-ring: var(--focus-ring);
+  --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-surface: var(--surface);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --danger: #ff6b6b;
-    --foreground: #ededed;
-  }
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }

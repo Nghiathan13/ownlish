@@ -74,7 +74,7 @@ export function PracticeQuestionBlock({
 
   return (
     <section
-      className="space-y-3 rounded-xl border border-border p-4"
+      className="space-y-3 rounded-xl border border-border bg-surface p-4"
       key={question.id}
     >
       <PracticeQuestionPrompt

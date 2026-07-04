@@ -19,7 +19,7 @@ export function PracticeTranslationCard({
   return (
     <div
       className={classNames(
-        "text-base text-foreground select-text",
+        "rounded-xl border border-border bg-surface text-base text-foreground select-text",
         className,
       )}
     >

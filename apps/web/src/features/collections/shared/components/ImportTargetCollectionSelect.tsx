@@ -19,13 +19,11 @@ const toolbarSelectClassName = classNames(
   textButtonLayoutClassName,
   secondaryTextButtonColorsClassName,
   "w-fit min-w-[10rem] max-w-[14rem] truncate appearance-none cursor-pointer",
-  "[@media(prefers-color-scheme:dark)]:color-scheme-dark",
 );
 
 const reviewSelectClassName = classNames(
   "h-10 w-full min-w-0 cursor-pointer appearance-none rounded-full border border-border bg-background py-0 pl-4 pr-10 text-sm font-medium text-foreground outline-none",
   "focus:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
-  "[@media(prefers-color-scheme:dark)]:color-scheme-dark",
 );
 
 export function ImportTargetCollectionSelect({
@@ -86,7 +84,7 @@ export function ImportTargetCollectionSelect({
         Import into
       </label>
       <select
-        className="h-10 w-full max-w-md cursor-pointer appearance-none rounded-lg border border-border bg-transparent px-3 text-sm text-foreground outline-none transition hover:border-foreground focus:border-foreground [@media(prefers-color-scheme:dark)]:color-scheme-dark"
+        className="h-10 w-full max-w-md cursor-pointer appearance-none rounded-lg border border-border bg-transparent px-3 text-sm text-foreground outline-none transition hover:border-foreground focus:border-foreground"
         id="import-target-collection"
         onChange={(event) => onChange(event.target.value)}
         value={value}

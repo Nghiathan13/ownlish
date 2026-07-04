@@ -52,7 +52,7 @@ export function PracticeLeftPanel({
   const content = (
     <>
       {mediaSection ? (
-        <div className="flex shrink-0 flex-col gap-4 bg-background">
+        <div className="flex shrink-0 flex-col gap-4 bg-surface">
           {instruction ? (
             <PartInstructionText
               instruction={instruction}
@@ -130,7 +130,7 @@ export function PracticeLeftPanel({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-border p-4">
+    <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
       {content}
     </div>
   );

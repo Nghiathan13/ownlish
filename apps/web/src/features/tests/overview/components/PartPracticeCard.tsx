@@ -31,7 +31,7 @@ export function PartPracticeCard({
   const { partNumber, total, answered, correct, wrong } = summary;
 
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-border p-4">
+    <article className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Part {partNumber}</h2>
