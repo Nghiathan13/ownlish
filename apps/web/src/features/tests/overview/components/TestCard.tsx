@@ -15,6 +15,7 @@ import {
   getTestWrongCount,
 } from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
+import { testOverviewCardClassName } from "@/features/tests/overview/lib/testOverviewCard";
 
 type TestCardProps = {
   test: ToeicTestSummary;
@@ -40,7 +41,7 @@ export function TestCard({
   const answeredQuestionCount = testCorrectCount + testWrongCount;
 
   return (
-    <article className="flex flex-col gap-4 rounded-xl bg-surface p-4">
+    <article className={testOverviewCardClassName}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Test {test.id}</h2>
