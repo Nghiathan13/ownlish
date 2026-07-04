@@ -11,5 +11,5 @@ export const testOverviewMockButtonClassName = iconTextButtonClassName(
 );
 
 export const testOverviewPracticeButtonClassName = iconTextButtonClassName(
-  "flex-1 border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+  "flex-1 border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
 );
