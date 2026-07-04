@@ -1,10 +1,7 @@
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 export const testOverviewCardClassName =
-  "flex flex-col gap-4 rounded-[36px] bg-surface p-4 shadow-card";
-
-export const testOverviewCardHeaderClassName =
-  "flex items-start justify-between gap-3 px-[10px] pt-[10px]";
+  "flex flex-col gap-4 rounded-[36px] bg-surface p-5 shadow-card";
 
 export const testOverviewCardGridClassName =
   "grid gap-8 sm:grid-cols-2 xl:grid-cols-4";
