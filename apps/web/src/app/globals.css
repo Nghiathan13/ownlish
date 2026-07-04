@@ -3,20 +3,21 @@
 :root {
   color-scheme: light;
   --background: #fafafa;
-  --foreground: #171717;
   --surface: #ffffff;
+  --foreground: rgba(0, 0, 0, 0.87);
+  --muted-foreground: rgba(0, 0, 0, 0.6);
   --danger: #d92d20;
   --border: color-mix(in srgb, var(--foreground) 16%, transparent);
   --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
-  --muted-foreground: color-mix(in srgb, var(--foreground) 64%, transparent);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
   --background: #000000;
-  --foreground: #ededed;
   --surface: #1c1c1e;
+  --foreground: rgba(255, 255, 255, 0.87);
+  --muted-foreground: rgba(255, 255, 255, 0.6);
   --danger: #ff6b6b;
 }
 
