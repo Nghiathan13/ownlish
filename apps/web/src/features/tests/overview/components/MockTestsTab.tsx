@@ -5,7 +5,7 @@ import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
 import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
-import { MockTestsTabSkeleton } from "@/features/tests/overview/components/MockTestsTabSkeleton";
+import { testOverviewCardGridClassName } from "@/features/tests/overview/lib/testOverviewCard";
 import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTabs";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
@@ -47,7 +47,7 @@ export function MockTestsTab({
             No tests available for this year yet.
           </p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className={testOverviewCardGridClassName}>
             {overview.tests.map((test) => (
               <TestCard
                 isClearingHistory={overview.clearingTestId === test.id}
