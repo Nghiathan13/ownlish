@@ -3,15 +3,15 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
-  applyTheme,
-  readThemePreference,
+  getThemeServerSnapshot,
+  getThemeSnapshot,
   resolveTheme,
-  THEME_STORAGE_KEY,
+  setThemePreference,
+  subscribeTheme,
   type Theme,
 } from "@/shared/ui/theme/theme";
 
@@ -23,37 +23,14 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-
-  useEffect(() => {
-    const initial = readThemePreference();
-    setThemeState(initial);
-    applyTheme(initial);
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const onSystemThemeChange = () => {
-      if (readThemePreference() !== "system") {
-        return;
-      }
-
-      applyTheme("system");
-    };
-
-    media.addEventListener("change", onSystemThemeChange);
-
-    return () => {
-      media.removeEventListener("change", onSystemThemeChange);
-    };
-  }, []);
-
-  const setTheme = (next: Theme) => {
-    setThemeState(next);
-    applyTheme(next);
-    localStorage.setItem(THEME_STORAGE_KEY, next);
-  };
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    getThemeSnapshot,
+    getThemeServerSnapshot,
+  );
 
   return (
-    <ThemeContext.Provider value={{ setTheme, theme }}>
+    <ThemeContext.Provider value={{ setTheme: setThemePreference, theme }}>
       {children}
     </ThemeContext.Provider>
   );
