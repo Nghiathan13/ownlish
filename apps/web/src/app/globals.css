@@ -12,6 +12,7 @@
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
   --hover-overlay: rgba(0, 0, 0, 0.04);
   --hover-overlay-solid: rgba(255, 255, 255, 0.08);
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 16px rgba(0, 0, 0, 0.24);
 }
 
 [data-theme="dark"] {
@@ -23,6 +24,7 @@
   --danger: #ff6b6b;
   --hover-overlay: rgba(255, 255, 255, 0.08);
   --hover-overlay-solid: rgba(0, 0, 0, 0.04);
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.48);
 }
 
 @theme inline {
@@ -36,6 +38,7 @@
   --color-surface: var(--surface);
   --color-hover-overlay: var(--hover-overlay);
   --color-hover-overlay-solid: var(--hover-overlay-solid);
+  --shadow-card: var(--shadow-card);
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
 }
