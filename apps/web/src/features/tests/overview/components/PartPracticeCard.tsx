@@ -10,7 +10,7 @@ import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
 import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { testOverviewCardClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { testOverviewCardClassName, testOverviewCardHeaderClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
 
 type PartPracticeCardProps = {
   summary: PartPracticePartSummary;
@@ -33,7 +33,7 @@ export function PartPracticeCard({
 
   return (
     <article className={testOverviewCardClassName}>
-      <div className="flex items-start justify-between gap-3">
+      <div className={testOverviewCardHeaderClassName}>
         <div>
           <h2 className="text-lg font-semibold">Part {partNumber}</h2>
           {answered === 0 ? (

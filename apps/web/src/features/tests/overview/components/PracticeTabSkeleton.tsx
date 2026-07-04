@@ -1,5 +1,5 @@
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
-import { testOverviewCardClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { testOverviewCardClassName, testOverviewCardHeaderClassName } from "@/features/tests/overview/lib/testOverviewCard";
 import { SkeletonTabPills } from "@/shared/skeletons/SkeletonTabPills";
 import { Skeleton } from "@/shared/ui/Skeleton";
 
@@ -11,7 +11,7 @@ function PartPracticeCardSkeleton() {
   return (
     <div className="max-w-md">
       <div className={testOverviewCardClassName}>
-        <div className="flex items-start justify-between gap-3">
+        <div className={testOverviewCardHeaderClassName}>
           <div className="flex-1">
             <Skeleton className="h-6 w-20" />
             <Skeleton className="mt-2 h-4 w-36" />

@@ -15,7 +15,7 @@ import {
   getTestWrongCount,
 } from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { testOverviewCardClassName, testOverviewMockButtonClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { testOverviewCardClassName, testOverviewCardHeaderClassName, testOverviewMockButtonClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
 
 type TestCardProps = {
   test: ToeicTestSummary;
@@ -42,7 +42,7 @@ export function TestCard({
 
   return (
     <article className={testOverviewCardClassName}>
-      <div className="flex items-start justify-between gap-3">
+      <div className={testOverviewCardHeaderClassName}>
         <div>
           <h2 className="text-lg font-semibold">Test {test.id}</h2>
           {answeredQuestionCount === 0 ? (
