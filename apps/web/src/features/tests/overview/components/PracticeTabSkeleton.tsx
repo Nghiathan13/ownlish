@@ -9,7 +9,7 @@ type PracticeTabSkeletonProps = {
 function PartPracticeCardSkeleton() {
   return (
     <div className="max-w-md">
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+      <div className="flex flex-col gap-4 rounded-xl bg-surface p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
             <Skeleton className="h-6 w-20" />

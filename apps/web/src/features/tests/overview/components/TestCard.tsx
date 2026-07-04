@@ -40,7 +40,7 @@ export function TestCard({
   const answeredQuestionCount = testCorrectCount + testWrongCount;
 
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+    <article className="flex flex-col gap-4 rounded-xl bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Test {test.id}</h2>
