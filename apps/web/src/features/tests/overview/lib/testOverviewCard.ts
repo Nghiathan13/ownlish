@@ -6,6 +6,8 @@ export const testOverviewCardClassName =
 export const testOverviewCardGridClassName =
   "grid gap-8 sm:grid-cols-2 xl:grid-cols-4";
 
+export const testOverviewCardSkeletonClassName = "min-h-40 w-full rounded-[36px]";
+
 export const testOverviewMockButtonClassName = iconTextButtonClassName(
   "flex-1 rounded-[20px] border-border bg-transparent text-foreground hover:bg-hover-overlay",
 );

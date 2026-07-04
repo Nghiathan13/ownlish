@@ -1,5 +1,5 @@
 import { ToeicYearTabsSkeleton } from "@/features/tests/overview/components/ToeicYearTabsSkeleton";
-import { testOverviewCardGridClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { testOverviewCardGridClassName, testOverviewCardSkeletonClassName } from "@/features/tests/overview/lib/testOverviewCard";
 import { SkeletonCardGrid } from "@/shared/skeletons/SkeletonCardGrid";
 
 type MockTestsTabSkeletonProps = {
@@ -13,6 +13,7 @@ export function MockTestsTabSkeleton({
     <>
       {includeYearTabs ? <ToeicYearTabsSkeleton /> : null}
       <SkeletonCardGrid
+        cardClassName={testOverviewCardSkeletonClassName}
         className={
           includeYearTabs
             ? undefined
