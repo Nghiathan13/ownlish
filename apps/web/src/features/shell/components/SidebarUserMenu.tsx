@@ -6,6 +6,7 @@ import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import { classNames } from "@/shared/lib/classNames";
 import { AccountIcon } from "@/shared/ui/icons/AccountIcon";
 import { LogoutIcon } from "@/shared/ui/icons/LogoutIcon";
+import { sidebarLinkGroupClassName, Tooltip } from "@/shared/ui/Tooltip";
 
 type SidebarUserMenuProps = {
   collapsed: boolean;
@@ -72,12 +73,14 @@ export function SidebarUserMenu({
         type="button"
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label={collapsed ? "Account" : undefined}
         onClick={() => {
           setOpen((current) => !current);
         }}
         className={classNames(
           "flex w-full items-center rounded-lg px-2 py-2 hover:bg-muted",
-          collapsed ? "justify-center" : "gap-2",
+          collapsed ? "relative justify-center" : "gap-2",
+          collapsed && sidebarLinkGroupClassName,
         )}
       >
         <AccountIcon className="size-6 shrink-0" />
@@ -86,6 +89,11 @@ export function SidebarUserMenu({
             <span className="truncate">{displayName}</span>
             {isAdmin ? <AdminBadge /> : null}
           </span>
+        ) : null}
+        {collapsed ? (
+          <Tooltip group="sidebar-link" placement="right">
+            Account
+          </Tooltip>
         ) : null}
       </button>
 

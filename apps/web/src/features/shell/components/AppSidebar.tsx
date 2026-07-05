@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -34,7 +35,12 @@ import {
 const sidebarToggleButtonClassName = classNames(
   iconOnlyButtonClassName(),
   sidebarToggleGroupClassName,
-  "relative size-10 cursor-ew-resize [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
+  "relative size-10 [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
+);
+
+const sidebarCloseButtonClassName = classNames(
+  sidebarToggleButtonClassName,
+  "cursor-ew-resize",
 );
 
 export function AppSidebar() {
@@ -45,28 +51,45 @@ export function AppSidebar() {
   const isAdmin = isAdminUser(user);
   const { collapsed, setCollapsed } = useSidebarCollapsed();
 
+  const handleCollapsedSidebarClick = (event: MouseEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest("a, button")) {
+      return;
+    }
+
+    setCollapsed(false);
+  };
+
   return (
-    <aside className="flex h-full shrink-0 flex-col border-r border-border bg-surface backdrop-blur-md">
+    <aside
+      className={classNames(
+        "flex h-full shrink-0 flex-col border-r border-border bg-surface backdrop-blur-md",
+        collapsed && "cursor-ew-resize",
+      )}
+      onClick={collapsed ? handleCollapsedSidebarClick : undefined}
+    >
       <div
         className={classNames(
           "flex min-h-0 flex-1 flex-col",
           collapsed ? "w-14" : "w-60",
         )}
       >
-        <div className="flex flex-col gap-4 p-2">
+        <div className={classNames("flex flex-col gap-4 p-2", collapsed && "relative z-10")}>
           {collapsed ? (
             <div className="flex justify-center">
               <button
                 type="button"
-                aria-label="Expand sidebar"
+                aria-label="Open sidebar"
                 onClick={() => {
                   setCollapsed(false);
                 }}
-                className={sidebarToggleButtonClassName}
+                className={classNames(
+                  sidebarToggleButtonClassName,
+                  collapsed && "relative z-10",
+                )}
               >
                 <PanelOpenIcon />
                 <Tooltip group="sidebar-toggle" placement="right">
-                  Expand sidebar
+                  Open sidebar
                 </Tooltip>
               </button>
             </div>
@@ -80,15 +103,18 @@ export function AppSidebar() {
               </Link>
               <button
                 type="button"
-                aria-label="Collapse sidebar"
+                aria-label="Close sidebar"
                 onClick={() => {
                   setCollapsed(true);
                 }}
-                className={sidebarToggleButtonClassName}
+                className={classNames(
+                  sidebarCloseButtonClassName,
+                  "relative z-10",
+                )}
               >
                 <PanelCloseIcon />
                 <Tooltip group="sidebar-toggle" placement="bottom">
-                  Collapse sidebar
+                  Close sidebar
                 </Tooltip>
               </button>
             </div>
@@ -112,7 +138,7 @@ export function AppSidebar() {
                         getAppSidebarLinkClass(pathname, link),
                         sidebarLinkGroupClassName,
                         "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
-                        collapsed && "justify-center",
+                        collapsed && "z-10 justify-center",
                       )}
                     >
                       <Icon className="size-6 shrink-0" />
@@ -148,7 +174,7 @@ export function AppSidebar() {
                             getAppSidebarLinkClass(pathname, link),
                             sidebarLinkGroupClassName,
                             "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
-                            collapsed && "justify-center",
+                            collapsed && "z-10 justify-center",
                           )}
                         >
                           <Icon className="size-6 shrink-0" />
@@ -168,7 +194,7 @@ export function AppSidebar() {
           ) : null}
         </div>
 
-        <div className="mt-auto border-t border-border p-2">
+        <div className={classNames("mt-auto border-t border-border p-2", collapsed && "relative z-10")}>
           {isLoading ? (
             <ShellAuthSlotSkeleton collapsed={collapsed} />
           ) : isAuth && user ? (
