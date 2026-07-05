@@ -15,7 +15,7 @@ export function DashboardNavFillIcon({
       className={className}
       {...props}
     >
-      <path d="M530-600v-220h290v220H530ZM140-460v-360h290v360H140Zm390 320v-360h290v360H530Zm-390 0v-220h290v220H140Z" />
+      <path d="M540-600v-200h260v200H540ZM160-480v-320h260v320H160Zm380 320v-320h260v320H540Zm-380 0v-200h260v200H160Z" />
     </svg>
   );
 }
