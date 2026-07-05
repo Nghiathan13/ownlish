@@ -8,7 +8,7 @@ import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 
 const toeicYearButtonClassName =
-  "inline-flex shrink-0 items-center justify-center rounded-lg px-4 py-2 text-base font-normal";
+  "inline-flex shrink-0 items-center justify-center rounded-lg px-4 py-2 text-[15px] leading-[20px] font-normal";
 
 function getToeicYearButtonClassName(isActive: boolean) {
   return classNames(
@@ -37,7 +37,7 @@ export function ToeicYearTabs({
       <button className={primaryTextButtonClassName()} type="button">
         TOEIC
       </button>
-      <div className="flex flex-wrap gap-2 bg-surface p-2">
+      <div className="flex flex-wrap gap-2 rounded-[16px] bg-surface p-2 shadow-card">
         {availableYears.map((year) => {
           const isActive = selectedYear === year;
 
