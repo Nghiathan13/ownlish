@@ -194,7 +194,7 @@ export function AppSidebar() {
           ) : null}
         </div>
 
-        <div className={classNames("mt-auto border-t border-border p-2", collapsed && "relative z-10")}>
+        <div className={classNames("mt-auto p-2", collapsed && "relative z-10")}>
           {isLoading ? (
             <ShellAuthSlotSkeleton collapsed={collapsed} />
           ) : isAuth && user ? (
