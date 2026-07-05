@@ -25,6 +25,17 @@ import {
 } from "@/shared/ui/button";
 import { PanelCloseIcon } from "@/shared/ui/icons/PanelCloseIcon";
 import { PanelOpenIcon } from "@/shared/ui/icons/PanelOpenIcon";
+import {
+  sidebarLinkGroupClassName,
+  sidebarToggleGroupClassName,
+  Tooltip,
+} from "@/shared/ui/Tooltip";
+
+const sidebarToggleButtonClassName = classNames(
+  iconOnlyButtonClassName(),
+  sidebarToggleGroupClassName,
+  "relative size-10 cursor-ew-resize [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
+);
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -48,16 +59,15 @@ export function AppSidebar() {
               <button
                 type="button"
                 aria-label="Expand sidebar"
-                title="Expand sidebar"
                 onClick={() => {
                   setCollapsed(false);
                 }}
-                className={classNames(
-                  iconOnlyButtonClassName(),
-                  "size-10 [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
+                className={sidebarToggleButtonClassName}
               >
                 <PanelOpenIcon />
+                <Tooltip group="sidebar-toggle" placement="right">
+                  Expand sidebar
+                </Tooltip>
               </button>
             </div>
           ) : (
@@ -71,16 +81,15 @@ export function AppSidebar() {
               <button
                 type="button"
                 aria-label="Collapse sidebar"
-                title="Collapse sidebar"
                 onClick={() => {
                   setCollapsed(true);
                 }}
-                className={classNames(
-                  iconOnlyButtonClassName(),
-                  "size-10 [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
+                className={sidebarToggleButtonClassName}
               >
                 <PanelCloseIcon />
+                <Tooltip group="sidebar-toggle" placement="bottom">
+                  Collapse sidebar
+                </Tooltip>
               </button>
             </div>
           )}
@@ -101,19 +110,17 @@ export function AppSidebar() {
                       aria-label={collapsed ? link.label : undefined}
                       className={classNames(
                         getAppSidebarLinkClass(pathname, link),
-                        "group/sidebar-link relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
+                        sidebarLinkGroupClassName,
+                        "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
                         collapsed && "justify-center",
                       )}
                     >
                       <Icon className="size-6 shrink-0" />
                       {!collapsed ? <span>{link.label}</span> : null}
                       {collapsed ? (
-                        <span
-                          aria-hidden
-                          className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-sm font-normal text-foreground shadow-lg group-hover/sidebar-link:block group-focus-visible/sidebar-link:block"
-                        >
+                        <Tooltip group="sidebar-link" placement="right">
                           {link.label}
-                        </span>
+                        </Tooltip>
                       ) : null}
                     </Link>
                   );
@@ -139,19 +146,17 @@ export function AppSidebar() {
                           aria-label={collapsed ? `Admin ${link.label}` : undefined}
                           className={classNames(
                             getAppSidebarLinkClass(pathname, link),
-                            "group/sidebar-link relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
+                            sidebarLinkGroupClassName,
+                            "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
                             collapsed && "justify-center",
                           )}
                         >
                           <Icon className="size-6 shrink-0" />
                           {!collapsed ? <span>{link.label}</span> : null}
                           {collapsed ? (
-                            <span
-                              aria-hidden
-                              className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 hidden -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-sm font-normal text-foreground shadow-lg group-hover/sidebar-link:block group-focus-visible/sidebar-link:block"
-                            >
+                            <Tooltip group="sidebar-link" placement="right">
                               Admin {link.label}
-                            </span>
+                            </Tooltip>
                           ) : null}
                         </Link>
                       );
