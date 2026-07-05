@@ -62,7 +62,7 @@ export function AppSidebar() {
   return (
     <aside
       className={classNames(
-        "flex h-full shrink-0 flex-col border-r border-border bg-surface backdrop-blur-md",
+        "flex h-full shrink-0 flex-col bg-surface shadow-card backdrop-blur-md",
         collapsed && "cursor-ew-resize",
       )}
       onClick={collapsed ? handleCollapsedSidebarClick : undefined}
