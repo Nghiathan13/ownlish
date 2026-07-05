@@ -91,9 +91,7 @@ export function getAppNavLinkClass(pathname: string, link: AppNavLink) {
 export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
   const isActive = isAppNavLinkActive(pathname, link);
 
-  return `text-base font-normal ${
-    isActive
-      ? "bg-muted text-foreground"
-      : "text-muted-foreground hover:text-foreground"
+  return `text-base font-normal text-foreground ${
+    isActive ? "bg-muted" : ""
   }`;
 }

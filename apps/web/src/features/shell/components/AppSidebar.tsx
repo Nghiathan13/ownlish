@@ -35,7 +35,7 @@ import {
 const sidebarToggleButtonClassName = classNames(
   iconOnlyButtonClassName(),
   sidebarToggleGroupClassName,
-  "relative size-10 [&_svg]:size-6 text-muted-foreground hover:bg-muted hover:text-foreground",
+  "relative size-10 [&_svg]:size-6 text-foreground hover:bg-hover-overlay",
 );
 
 const sidebarCloseButtonClassName = classNames(
@@ -137,7 +137,7 @@ export function AppSidebar() {
                       className={classNames(
                         getAppSidebarLinkClass(pathname, link),
                         sidebarLinkGroupClassName,
-                        "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
+                        "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
                         collapsed && "z-10 justify-center",
                       )}
                     >
@@ -173,7 +173,7 @@ export function AppSidebar() {
                           className={classNames(
                             getAppSidebarLinkClass(pathname, link),
                             sidebarLinkGroupClassName,
-                            "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted",
+                            "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
                             collapsed && "z-10 justify-center",
                           )}
                         >

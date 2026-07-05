@@ -78,7 +78,7 @@ export function SidebarUserMenu({
           setOpen((current) => !current);
         }}
         className={classNames(
-          "flex w-full items-center rounded-lg px-2 py-2 hover:bg-muted",
+          "flex w-full items-center rounded-lg px-2 py-2 text-foreground hover:bg-hover-overlay",
           collapsed ? "relative justify-center" : "gap-2",
           collapsed && sidebarLinkGroupClassName,
         )}
