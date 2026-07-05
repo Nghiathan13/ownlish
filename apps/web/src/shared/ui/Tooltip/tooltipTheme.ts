@@ -19,7 +19,7 @@ const tooltipPlacementClassNames: Record<TooltipPlacement, string> = {
 };
 
 export const tooltipBaseClassName =
-  "pointer-events-none absolute z-50 hidden whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-sm font-semibold text-background shadow-lg";
+  "pointer-events-none absolute z-50 hidden whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-semibold text-background";
 
 export function tooltipClassName(
   group: TooltipGroup,
