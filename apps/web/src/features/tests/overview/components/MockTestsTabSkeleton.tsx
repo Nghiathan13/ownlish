@@ -16,7 +16,7 @@ export function MockTestsTabSkeleton({
         cardClassName={testOverviewCardSkeletonClassName}
         className={
           includeYearTabs
-            ? undefined
+            ? "mb-4 grid gap-4 px-16 sm:grid-cols-2 xl:grid-cols-4"
             : testOverviewCardGridClassName
         }
       />

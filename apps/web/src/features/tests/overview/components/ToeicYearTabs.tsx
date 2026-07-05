@@ -23,7 +23,7 @@ export function ToeicYearTabs({
   }
 
   return (
-    <div className="mb-4 flex flex-col items-start gap-2 px-4">
+    <div className="mb-4 flex flex-col items-start gap-2 px-16">
       <button className={primaryTextButtonClassName()} type="button">
         TOEIC
       </button>

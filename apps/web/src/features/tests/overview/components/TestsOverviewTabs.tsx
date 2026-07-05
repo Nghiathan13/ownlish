@@ -24,7 +24,7 @@ export function TestsOverviewTabs({
   selectedTab,
 }: TestsOverviewTabsProps) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 px-4">
+    <div className="mb-4 flex flex-wrap items-center gap-2 px-16">
       <Link
         aria-current={selectedTab === "mock_tests" ? "page" : undefined}
         className={

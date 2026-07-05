@@ -43,6 +43,11 @@ const sidebarCloseButtonClassName = classNames(
   "cursor-ew-resize",
 );
 
+const sidebarOpenButtonClassName = classNames(
+  sidebarToggleButtonClassName,
+  "cursor-ew-resize",
+);
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { logout, status, user } = useAuthSession();
@@ -83,7 +88,7 @@ export function AppSidebar() {
                   setCollapsed(false);
                 }}
                 className={classNames(
-                  sidebarToggleButtonClassName,
+                  sidebarOpenButtonClassName,
                   collapsed && "relative z-10",
                 )}
               >

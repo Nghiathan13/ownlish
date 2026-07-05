@@ -18,7 +18,7 @@ type TestsOverviewPageSkeletonProps = {
 function TestsOverviewTabsSkeleton() {
   return (
     <SkeletonTabPills
-      className="mb-4 flex flex-wrap items-center gap-2 px-4"
+      className="mb-4 flex flex-wrap items-center gap-2 px-16"
       count={2}
       pillClassName="h-10 w-28"
     />
