@@ -40,7 +40,7 @@ until the backend has imported the corresponding data.
 | Language | TypeScript with strict mode |
 | Server state | TanStack React Query 5 |
 | Styling | Tailwind CSS 4, CSS theme variables, `tailwind-merge` |
-| Testing | Vitest 4 |
+| Testing | Vitest 4, Playwright 1 |
 | Static analysis | ESLint 9 with Next.js Core Web Vitals and TypeScript rules |
 | Package manager | pnpm 11.2.2 |
 
@@ -51,6 +51,7 @@ until the backend has imported the corresponding data.
 - pnpm 11.2.2.
 - A compatible EngVocab API. The local defaults expect it at
   `http://localhost:3001`, with `http://localhost:3000` allowed by CORS.
+- Docker is required only for the isolated local browser E2E database.
 
 ## Local Development
 
@@ -100,6 +101,10 @@ put secrets in them, and set their production values before building.
 | --- | --- |
 | `pnpm dev` | Start the Next.js development server |
 | `pnpm test` | Run the Vitest unit test suite once |
+| `pnpm test:e2e` | Build and run the full-stack Playwright suite against the sibling API repository |
+| `pnpm test:e2e:db:up` | Start the isolated local E2E PostgreSQL database |
+| `pnpm test:e2e:db:down` | Remove the isolated local E2E PostgreSQL database |
+| `pnpm test:e2e:install` | Install the local Playwright Chromium browser |
 | `pnpm lint` | Run ESLint across the project |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
@@ -114,7 +119,36 @@ pnpm build
 
 GitHub Actions uses Node.js 22 and pnpm 11.2.2, then runs these gates after a
 frozen-lockfile install for pushes and pull requests to `main`. Unit tests are
-colocated as `*.test.ts`; no browser E2E suite is configured yet.
+colocated as `*.test.ts`.
+
+### Browser E2E
+
+The first Playwright golden path covers protected-route redirection, email
+login through the same-origin auth BFF, creating a word in the default
+collection, restoring the session and persisted word after reload, and logout.
+It runs production builds of both Next.js and NestJS against a separate
+PostgreSQL database.
+
+Keep `engvocab-web` and `engvocab-server` as sibling directories, install both
+repositories' dependencies, then run:
+
+```bash
+pnpm test:e2e:install
+pnpm test:e2e:db:up
+pnpm test:e2e
+pnpm test:e2e:db:down
+```
+
+The local E2E database listens on `localhost:5434`, uses an in-memory Docker
+filesystem, and is distinct from the API development database on port `5433`.
+Set `E2E_DATABASE_URL` to override it. `pnpm test:e2e` applies migrations,
+builds and starts the sibling API on port `3101`, and builds and starts this app
+on port `3100`. Use `localhost` for these URLs so the production `Secure`
+refresh cookie behaves like it does in a browser.
+
+CI runs the Chromium golden path in a separate job with an ephemeral PostgreSQL
+service and checks out the API repository beside the web repository. Playwright
+traces, screenshots, and video are uploaded only when the job fails.
 
 ## Main Routes
 

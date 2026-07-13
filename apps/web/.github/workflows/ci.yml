@@ -39,3 +39,78 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  browser-e2e:
+    name: Browser E2E
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: engvocab
+          POSTGRES_PASSWORD: engvocab
+          POSTGRES_DB: engvocab_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U engvocab -d engvocab_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      E2E_DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab_e2e
+
+    steps:
+      - name: Checkout web
+        uses: actions/checkout@v4
+        with:
+          path: engvocab-web
+
+      - name: Checkout API
+        uses: actions/checkout@v4
+        with:
+          repository: Nghiathan13/engvocab-server
+          path: engvocab-server
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            engvocab-web/pnpm-lock.yaml
+            engvocab-server/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        working-directory: engvocab-web
+        run: pnpm install --frozen-lockfile
+
+      - name: Install API dependencies
+        working-directory: engvocab-server
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
+
+      - name: Install Chromium
+        working-directory: engvocab-web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run browser E2E
+        working-directory: engvocab-web
+        run: pnpm test:e2e
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            engvocab-web/playwright-report
+            engvocab-web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
