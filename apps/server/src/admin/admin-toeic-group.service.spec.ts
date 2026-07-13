@@ -172,7 +172,9 @@ describe('AdminToeicGroupService', () => {
       audioStoragePath: null,
       imageStoragePath: 'toeic/2026/image/ets26_t01/ets26_t01_01.png',
     });
-    storageServiceMock.removeObject.mockRejectedValue(new Error('storage error'));
+    storageServiceMock.removeObject.mockRejectedValue(
+      new Error('storage error'),
+    );
 
     await expect(service.deleteGroupImage(101)).rejects.toBeInstanceOf(
       InternalServerErrorException,
