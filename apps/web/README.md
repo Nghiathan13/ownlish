@@ -12,9 +12,9 @@ authentication, collections, review progress, test sessions, and admin data.
 - **Dashboard:** total, due, mastered, high-wrong-count, and level-distribution
   statistics for the user's default vocabulary collection.
 - **Collections and vocabulary:** create, rename, and delete custom
-  collections; browse Oxford, TOEIC, and IELTS system catalogs; import a full
-  catalog or selected definitions into the default collection; search,
-  paginate, add, edit, and delete vocabulary definitions.
+  collections; browse backend-provided Oxford, TOEIC, and IELTS system
+  catalogs; import a full catalog or selected definitions into the default
+  collection; search, paginate, add, edit, and delete vocabulary definitions.
 - **Review:** collection-specific due-word queues, Remember/Forgot scheduling,
   and keyboard controls (`Space` to reveal, `1` for Forgot, `2` for Remember).
 - **TOEIC:** mock tests, graded practice, wrong-answer review, part selection,
@@ -29,7 +29,8 @@ authentication, collections, review progress, test sessions, and admin data.
 Current boundaries: the TOEIC year picker supports 2019-2026 and defaults to
 2026; mock results report answered/correct/wrong counts without a timer or
 scaled TOEIC score; admin tools edit existing imported tests rather than
-creating, importing, or deleting tests.
+creating, importing, or deleting tests. Catalog and test screens can be empty
+until the backend has imported the corresponding data.
 
 ## Tech Stack
 
@@ -53,6 +54,11 @@ creating, importing, or deleting tests.
 
 ## Local Development
 
+For a fresh full-stack setup, complete the API repository's
+[Local Setup](https://github.com/Nghiathan13/engvocab-server#local-setup) first.
+It starts PostgreSQL, generates the Prisma client, applies migrations, and runs
+the NestJS API on `http://localhost:3001`.
+
 Install the locked dependencies and create the local environment file:
 
 ```bash
@@ -73,6 +79,9 @@ Google Sign-In is optional. To enable it, set
 `GOOGLE_CLIENT_ID` with the same OAuth web client ID. If the frontend variable
 is empty, the Google button is not rendered. Add `http://localhost:3000` and
 the deployed web origin to that client's Authorized JavaScript origins.
+
+Supabase Storage is optional for local API development. Without it, signed
+TOEIC media may be unavailable and admin media uploads will fail.
 
 ## Environment Variables
 
@@ -127,6 +136,9 @@ colocated as `*.test.ts`; no browser E2E suite is configured yet.
 
 `RequireAuth` and `RequireAdmin` provide client-side navigation guards. The API
 must still enforce authentication and authorization for protected operations.
+Admin access requires the API user role to be provisioned as `ADMIN`; the web
+app has no role-promotion flow. See the API repository's
+[Admin Access guide](https://github.com/Nghiathan13/engvocab-server#admin-access).
 
 ## Project Structure
 
@@ -163,8 +175,8 @@ Browser -> NEXT_PUBLIC_API_BASE_URL with an in-memory Bearer access token
 - The BFF forwards auth requests through `AUTH_API_BASE_URL` and extracts the
   refresh token from the upstream `Set-Cookie` response.
 - The BFF stores that token on the web origin as `engvocab.refreshToken`, with
-  `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, a 30-day maximum age, and
-  `Secure` in production.
+  `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, a 30-day maximum age matching
+  the API's default refresh-session TTL, and `Secure` in production.
 - The access token exists only in module memory. On reload or token expiry, the
   client restores the session through `POST /api/auth/refresh`; concurrent
   refresh attempts are deduplicated.
@@ -182,8 +194,14 @@ not stored there.
 
 ## Deployment
 
-The project can use a standard Next.js deployment. For a Vercel Git deployment,
-set the following project environment variables:
+The API repository documents this recommended production topology:
+
+```text
+Vercel web client -> Railway NestJS API -> Supabase Postgres
+                                          Supabase Storage (TOEIC media)
+```
+
+For the Vercel project, set these environment variables:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://<backend-production-url>
@@ -201,13 +219,17 @@ REFRESH_TOKEN_COOKIE_NAME=engvocab.refreshToken
 When Google Sign-In is enabled, also set the backend `GOOGLE_CLIENT_ID` to the
 same web client ID. Backend database, media storage, and hosting are configured
 in the API repository; this client consumes the resulting API endpoints and
-signed media URLs.
+signed media URLs. Configure the Supabase URL, service-role key, storage bucket,
+and signed-URL TTL only on the backend, as described in its
+[production deployment guide](https://github.com/Nghiathan13/engvocab-server#production-deployment).
 
 ## Production Smoke Test
 
 This checklist assumes the backend contains system catalogs and TOEIC content;
 the admin step also requires an `ADMIN` account. After deploying both apps:
 
+- Verify `GET <backend-production-url>/health`. The API root may legitimately
+  return `404`.
 - Register or sign in, then reload; the session should restore through the
   same-origin refresh route.
 - Verify dashboard statistics and custom collection creation, editing,
