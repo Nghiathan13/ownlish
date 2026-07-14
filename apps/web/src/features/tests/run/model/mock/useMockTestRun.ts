@@ -79,7 +79,6 @@ export function useMockTestRun({
     isAuthenticated,
     isFinished,
     onFinishCompleted: handleFinishCompleted,
-    selectedParts,
     shouldRecoverFinish: finishBootstrapStatus === "pending",
   });
 
@@ -98,12 +97,16 @@ export function useMockTestRun({
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isFinished,
-    isLoading: finishBootstrapStatus !== "ready" || runQuery.isLoading,
+    isLoading:
+      finishBootstrapStatus !== "ready" ||
+      runQuery.isLoading ||
+      runQuery.isFetching,
     loadError: runQuery.error,
     finishError: submission.finishError,
     finishRun: submission.finishRun,
     hasPendingAnswers: submission.hasPendingAnswers,
     hasSyncFailures: submission.hasSyncFailures,
+    isFinishAccepted: submission.isFinishAccepted,
     isFinishFailureOpen: submission.isFinishFailureOpen,
     isFinishing: submission.isFinishing,
     isQuestionPending: submission.isQuestionPending,

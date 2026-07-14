@@ -52,6 +52,7 @@ describe("MockGroupScreen", () => {
       group,
       isFinished: false,
       isQuestionPending: (questionId: number) => questionId === 101,
+      isReviewingResults: false,
       mediaError: null,
       onSelect,
       partNumber: 5,
@@ -67,9 +68,52 @@ describe("MockGroupScreen", () => {
     await user.click(optionB);
     expect(onSelect).toHaveBeenCalledWith(101, "B");
 
-    rerender(<MockGroupScreen {...props} isFinished />);
+    rerender(<MockGroupScreen {...props} isReviewingResults />);
 
     expect(screen.queryByRole("button", { name: /A.*Alpha/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /B.*Beta/i })).not.toBeInTheDocument();
+  });
+
+  it("keeps the mock media subtree after Finish is accepted", () => {
+    const listeningGroup: ToeicQuestionGroup = {
+      ...group,
+      partNumber: 1,
+      audioUrl: "https://example.com/audio.mp3",
+      imageUrl: "https://example.com/image.png",
+      questions: [
+        {
+          ...group.questions[0],
+          answerKey: "B",
+        },
+      ],
+    };
+    const props = {
+      group: listeningGroup,
+      isFinished: false,
+      isQuestionPending: () => false,
+      isReviewingResults: false,
+      mediaError: null,
+      onSelect: vi.fn(),
+      partNumber: 1,
+    };
+    const { container, rerender } = render(<MockGroupScreen {...props} />);
+    const mockImage = screen.getByRole("img", { name: "Question 1" });
+
+    expect(container.querySelector("audio")).not.toBeInTheDocument();
+
+    rerender(<MockGroupScreen {...props} isReviewingResults />);
+
+    expect(screen.getByRole("img", { name: "Question 1" })).toBe(mockImage);
+    expect(container.querySelector("audio")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /A.*Alpha/i })).not.toBeInTheDocument();
+
+    rerender(
+      <MockGroupScreen {...props} isFinished isReviewingResults />,
+    );
+
+    expect(container.querySelector("audio")).toHaveAttribute(
+      "src",
+      "https://example.com/audio.mp3",
+    );
   });
 });

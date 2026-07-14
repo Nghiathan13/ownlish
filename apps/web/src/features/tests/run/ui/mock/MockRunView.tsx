@@ -95,7 +95,7 @@ function findGroupIndexForQuestionId(
 function buildMockGridSections(
   groups: ToeicQuestionGroup[],
   activeGroup: ToeicQuestionGroup | null,
-  isFinished: boolean,
+  isReviewingResults: boolean,
 ): QuestionGridSection[] {
   const sections = new Map<number, QuestionGridSection>();
   const activeQuestionIds = new Set(
@@ -118,10 +118,10 @@ function buildMockGridSections(
         displayNumber: getToeicQuestionGridDisplayNumber(question),
         isActive: activeQuestionIds.has(question.id),
         isSelected:
-          !isFinished &&
+          !isReviewingResults &&
           question.selectedKey != null &&
           question.isCorrect == null,
-        result: isFinished
+        result: isReviewingResults
           ? question.isCorrect === true
             ? "correct"
             : question.isCorrect === false
@@ -214,6 +214,7 @@ function MockResultModal({
 export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
   const router = useRouter();
   const mock = useMockTestRun({ selectedParts, sessionId });
+  const isReviewingResults = mock.isFinished || mock.isFinishAccepted;
   const testsListPath = getTestsListPathFromYearValue(
     mock.year ?? DEFAULT_TOEIC_YEAR,
   );
@@ -244,10 +245,12 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
     (group) => !playedAudioGroupIds.includes(group.id),
   );
   const isReadingPhase =
-    isReadingPhaseForced || mock.isFinished || (!hasUnplayedListening && hasListening);
-  const canNavigate = mock.isFinished || isReadingPhase || !hasListening;
+    isReadingPhaseForced ||
+    isReviewingResults ||
+    (!hasUnplayedListening && hasListening);
+  const canNavigate = isReviewingResults || isReadingPhase || !hasListening;
   const shouldPlayListeningAudio =
-    !mock.isFinished &&
+    !isReviewingResults &&
     !isReadingPhase &&
     activeGroup != null &&
     isListeningGroup(activeGroup) &&
@@ -320,8 +323,8 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
   const testLabel = mock.testId ? `Test ${mock.testId}` : null;
 
   useRegisterImmersiveFinish(
-    mock.isFinished ? null : handleFinish,
-    mock.isFinished ? null : testLabel,
+    isReviewingResults ? null : handleFinish,
+    isReviewingResults ? null : testLabel,
     {
       disabled:
         mock.isFinishing || mock.hasPendingAnswers || mock.hasSyncFailures,
@@ -330,15 +333,15 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
   );
 
   useRegisterImmersiveExit(
-    mock.isFinished ? () => undefined : null,
-    mock.isFinished ? testLabel : null,
+    isReviewingResults ? () => undefined : null,
+    isReviewingResults ? testLabel : null,
     testsListPath,
     { showBilingualAction: true },
   );
 
   const questionGridSections = useMemo(
-    () => buildMockGridSections(groups, activeGroup, mock.isFinished),
-    [activeGroup, groups, mock.isFinished],
+    () => buildMockGridSections(groups, activeGroup, isReviewingResults),
+    [activeGroup, groups, isReviewingResults],
   );
   const totalQuestions = mock.totalQuestions;
   const currentQuestionNumber = getSessionQuestionNumber(
@@ -437,6 +440,7 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
             group={activeGroup}
             isFinished={mock.isFinished}
             isQuestionPending={mock.isQuestionPending}
+            isReviewingResults={isReviewingResults}
             mediaError={mediaMessage}
             onSelect={handleSelect}
             partNumber={activeGroup.partNumber ?? 1}

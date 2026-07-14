@@ -34,13 +34,16 @@ export function useMockRunQuery({
       }),
     enabled: enabled && Boolean(isAuthenticated && sessionId),
     staleTime: Infinity,
-    refetchOnMount: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
     retry: false,
   });
 
   return {
     queryKey,
     data: query.data,
+    isFetching: query.isFetching,
     isLoading: query.isLoading,
     error: toQueryErrorMessage(query.error, "Cannot load mock test."),
   };

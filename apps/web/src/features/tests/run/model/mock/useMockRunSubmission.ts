@@ -4,10 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   finishToeicRun,
-  getToeicRun,
   submitToeicAnswer,
 } from "@/entities/toeic/api/toeic";
-import type { ToeicRunResult } from "@/entities/toeic/api/types";
+import type {
+  ToeicQuestion,
+  ToeicRunResult,
+} from "@/entities/toeic/api/types";
 import { updateQuestionSelection } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
@@ -20,6 +22,7 @@ const ANSWER_SYNC_ERROR =
   "Some answers could not be saved. Retry them before finishing.";
 const ANSWER_PENDING_ERROR =
   "Wait for all answers to finish saving before finishing.";
+const FINISH_RETRY_DELAYS = [1_000, 2_000, 5_000] as const;
 
 type QuestionSyncEntry = {
   desiredKey: OptionKey;
@@ -32,9 +35,75 @@ type UseMockRunSubmissionParams = {
   isAuthenticated: boolean;
   isFinished: boolean;
   onFinishCompleted?: () => void;
-  selectedParts?: number[];
   shouldRecoverFinish?: boolean;
 };
+
+type OptimisticQuestionGrade = Pick<
+  ToeicQuestion,
+  "isCorrect" | "selectedKey" | "status"
+>;
+
+function applyMockFinishSnapshot(
+  current: ToeicRunResult,
+  snapshot: ToeicRunResult,
+): ToeicRunResult {
+  const gradeByQuestionId = new Map<number, OptimisticQuestionGrade>();
+  let correctCount = 0;
+  let wrongCount = 0;
+
+  for (const group of snapshot.groups) {
+    for (const question of group.questions) {
+      if (!question.answerKey) {
+        if (question.status === "right") {
+          correctCount += 1;
+        } else if (question.status === "wrong") {
+          wrongCount += 1;
+        }
+
+        gradeByQuestionId.set(question.id, {
+          selectedKey: question.selectedKey,
+          status: question.status,
+          isCorrect: question.isCorrect,
+        });
+        continue;
+      }
+
+      const isCorrect = question.selectedKey === question.answerKey;
+      if (isCorrect) {
+        correctCount += 1;
+      } else {
+        wrongCount += 1;
+      }
+
+      gradeByQuestionId.set(question.id, {
+        selectedKey: question.selectedKey,
+        status: isCorrect ? "right" : "wrong",
+        isCorrect,
+      });
+    }
+  }
+
+  return {
+    ...current,
+    correctCount,
+    wrongCount,
+    groups: current.groups.map((group) => {
+      const questions = group.questions.map((question) => {
+        const grade = gradeByQuestionId.get(question.id);
+        return grade ? { ...question, ...grade } : question;
+      });
+      const statuses = questions.map((question) => question.status);
+      const groupStatus = statuses.some((status) => status === "wrong")
+        ? "wrong"
+        : statuses.length > 0 &&
+            statuses.every((status) => status === "right")
+          ? "right"
+          : null;
+
+      return { ...group, groupStatus, questions };
+    }),
+  };
+}
 
 export function useMockRunSubmission({
   sessionId,
@@ -42,7 +111,6 @@ export function useMockRunSubmission({
   isAuthenticated,
   isFinished,
   onFinishCompleted,
-  selectedParts,
   shouldRecoverFinish = false,
 }: UseMockRunSubmissionParams) {
   const queryClient = useQueryClient();
@@ -50,8 +118,18 @@ export function useMockRunSubmission({
   const failedQuestionIdsRef = useRef(new Set<number>());
   const isFinishingRef = useRef(false);
   const hasFinishIntentRef = useRef(false);
+  const hasServerAcceptedRef = useRef(false);
+  const hasCompletedFinishRef = useRef(false);
   const hasStartedRecoveryRef = useRef(false);
+  const hasNotifiedRecoveryRef = useRef(false);
+  const isRecoveryRef = useRef(false);
+  const finishSnapshotRef = useRef<ToeicRunResult | null>(null);
+  const hasAppliedSnapshotRef = useRef(false);
   const finishPromiseRef = useRef<Promise<void> | null>(null);
+  const finishRunRef = useRef<(() => Promise<void>) | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryDelayIndexRef = useRef(0);
+  const isMountedRef = useRef(true);
   const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -60,8 +138,44 @@ export function useMockRunSubmission({
   );
   const [finishError, setFinishError] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isFinishAccepted, setIsFinishAccepted] = useState(false);
   const [isFinishFailureOpen, setIsFinishFailureOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
+
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current !== null) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleFinishReplay = useCallback(() => {
+    if (
+      retryTimerRef.current !== null ||
+      hasCompletedFinishRef.current ||
+      !isMountedRef.current ||
+      !isAuthenticated
+    ) {
+      return;
+    }
+
+    const delay =
+      FINISH_RETRY_DELAYS[
+        Math.min(
+          retryDelayIndexRef.current,
+          FINISH_RETRY_DELAYS.length - 1,
+        )
+      ];
+    retryDelayIndexRef.current += 1;
+    retryTimerRef.current = setTimeout(() => {
+      retryTimerRef.current = null;
+      if (!isMountedRef.current || hasCompletedFinishRef.current) {
+        return;
+      }
+
+      void finishRunRef.current?.();
+    }, delay);
+  }, [isAuthenticated]);
 
   const setQuestionFailed = useCallback(
     (toeicQuestionId: number, failed: boolean) => {
@@ -136,11 +250,13 @@ export function useMockRunSubmission({
           latestEntry.worker = null;
         }
 
-        setPendingQuestionIds((current) => {
-          const next = new Set(current);
-          next.delete(toeicQuestionId);
-          return next;
-        });
+        if (isMountedRef.current) {
+          setPendingQuestionIds((current) => {
+            const next = new Set(current);
+            next.delete(toeicQuestionId);
+            return next;
+          });
+        }
       });
 
       return worker;
@@ -163,6 +279,13 @@ export function useMockRunSubmission({
       });
 
       if (hasFinishIntentRef.current) {
+        if (hasCompletedFinishRef.current) {
+          void queryClient.invalidateQueries({
+            queryKey,
+            exact: true,
+            refetchType: "none",
+          });
+        }
         return;
       }
 
@@ -211,8 +334,45 @@ export function useMockRunSubmission({
     }
   }, [startQuestionSync]);
 
+  const applySnapshotForResult = useCallback(() => {
+    const snapshot = finishSnapshotRef.current;
+    if (!snapshot || hasAppliedSnapshotRef.current) {
+      return;
+    }
+
+    hasAppliedSnapshotRef.current = true;
+    queryClient.setQueryData<ToeicRunResult>(queryKey, (current) =>
+      current ? applyMockFinishSnapshot(current, snapshot) : current,
+    );
+
+    if (isMountedRef.current) {
+      setIsFinishAccepted(true);
+      setIsResultOpen(true);
+    }
+  }, [queryClient, queryKey]);
+
+  const completeFinish = useCallback(() => {
+    hasCompletedFinishRef.current = true;
+    clearRetryTimer();
+    removeMockFinishCommand(sessionId);
+    void queryClient.invalidateQueries({
+      queryKey,
+      exact: true,
+      refetchType: "none",
+    });
+
+    if (
+      isRecoveryRef.current &&
+      !hasNotifiedRecoveryRef.current &&
+      isMountedRef.current
+    ) {
+      hasNotifiedRecoveryRef.current = true;
+      onFinishCompleted?.();
+    }
+  }, [clearRetryTimer, onFinishCompleted, queryClient, queryKey, sessionId]);
+
   const finishRun = useCallback(() => {
-    if (!isAuthenticated || !sessionId) {
+    if (!isAuthenticated || !sessionId || hasCompletedFinishRef.current) {
       return Promise.resolve();
     }
 
@@ -239,52 +399,97 @@ export function useMockRunSubmission({
         return Promise.resolve();
       }
 
+      finishSnapshotRef.current =
+        queryClient.getQueryData<ToeicRunResult>(queryKey) ?? null;
       hasFinishIntentRef.current = true;
     }
 
+    clearRetryTimer();
     isFinishingRef.current = true;
-    setIsFinishing(true);
+    const showRequestProgress = !hasServerAcceptedRef.current;
+    if (showRequestProgress) {
+      setIsFinishing(true);
+    }
     setFinishError(null);
     setIsFinishFailureOpen(false);
 
     const finishPromise = (async () => {
       try {
-        await runAuthenticatedRequest({
+        const acknowledgement = await runAuthenticatedRequest({
           request: (token) => finishToeicRun(token, sessionId),
         });
 
-        const result = await runAuthenticatedRequest({
-          request: (token) =>
-            getToeicRun(token, sessionId, { parts: selectedParts }),
-        });
+        hasServerAcceptedRef.current = true;
+        applySnapshotForResult();
 
-        queryClient.setQueryData(queryKey, result);
-        removeMockFinishCommand(sessionId);
-        hasFinishIntentRef.current = false;
-        onFinishCompleted?.();
-        setIsResultOpen(true);
+        if (acknowledgement.status === "completed") {
+          completeFinish();
+        } else {
+          scheduleFinishReplay();
+        }
       } catch (error) {
-        setFinishError(
-          error instanceof Error ? error.message : "Cannot finish mock test.",
-        );
-        setIsFinishFailureOpen(true);
+        if (hasServerAcceptedRef.current) {
+          scheduleFinishReplay();
+          return;
+        }
+
+        if (isMountedRef.current) {
+          setFinishError(
+            error instanceof Error
+              ? error.message
+              : "Cannot finish mock test.",
+          );
+          setIsFinishFailureOpen(true);
+        }
       } finally {
         isFinishingRef.current = false;
         finishPromiseRef.current = null;
-        setIsFinishing(false);
+        if (showRequestProgress && isMountedRef.current) {
+          setIsFinishing(false);
+        }
       }
     })();
 
     finishPromiseRef.current = finishPromise;
     return finishPromise;
   }, [
+    applySnapshotForResult,
+    clearRetryTimer,
+    completeFinish,
     isAuthenticated,
-    onFinishCompleted,
     queryClient,
     queryKey,
-    selectedParts,
+    scheduleFinishReplay,
     sessionId,
   ]);
+
+  useEffect(() => {
+    finishRunRef.current = finishRun;
+  }, [finishRun]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      clearRetryTimer();
+    };
+  }, [clearRetryTimer]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      clearRetryTimer();
+      return;
+    }
+
+    if (
+      hasServerAcceptedRef.current &&
+      hasFinishIntentRef.current &&
+      !hasCompletedFinishRef.current &&
+      !finishPromiseRef.current
+    ) {
+      scheduleFinishReplay();
+    }
+  }, [clearRetryTimer, isAuthenticated, scheduleFinishReplay]);
 
   useEffect(() => {
     if (!shouldRecoverFinish) {
@@ -292,12 +497,11 @@ export function useMockRunSubmission({
       return;
     }
 
+    isRecoveryRef.current = true;
     hasFinishIntentRef.current = true;
 
     if (isFinished) {
-      removeMockFinishCommand(sessionId);
-      hasFinishIntentRef.current = false;
-      onFinishCompleted?.();
+      completeFinish();
       return;
     }
 
@@ -307,7 +511,13 @@ export function useMockRunSubmission({
 
     hasStartedRecoveryRef.current = true;
     void finishRun();
-  }, [finishRun, isAuthenticated, isFinished, onFinishCompleted, sessionId, shouldRecoverFinish]);
+  }, [
+    completeFinish,
+    finishRun,
+    isAuthenticated,
+    isFinished,
+    shouldRecoverFinish,
+  ]);
 
   const isQuestionPending = useCallback(
     (toeicQuestionId: number) => pendingQuestionIds.has(toeicQuestionId),
@@ -327,6 +537,7 @@ export function useMockRunSubmission({
     finishRun,
     hasPendingAnswers: pendingQuestionIds.size > 0,
     hasSyncFailures: failedQuestionIds.size > 0,
+    isFinishAccepted,
     isFinishFailureOpen,
     isFinishing,
     isQuestionPending,

@@ -10,7 +10,10 @@ import {
   readMockFinishCommand,
   storeMockFinishCommand,
 } from "@/features/tests/run/model/mock/mockFinishOutbox";
-import { useMockTestRun } from "@/features/tests/run/model/mock/useMockTestRun";
+import {
+  getToeicRunQueryKey,
+  useMockTestRun,
+} from "@/features/tests/run/model/mock/useMockTestRun";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
@@ -38,7 +41,7 @@ function createAccessToken() {
   )}.signature`;
 }
 
-function createFinishedRun(): ToeicRunResult {
+function createRun(isFinished: boolean): ToeicRunResult {
   return {
     sessionId: SESSION_ID,
     mode: "mock_test",
@@ -46,22 +49,22 @@ function createFinishedRun(): ToeicRunResult {
     year: 2026,
     partNumbers: [5],
     totalQuestions: 1,
-    correctCount: 1,
+    correctCount: isFinished ? 1 : 0,
     wrongCount: 0,
-    completedAt: "2026-07-14T00:00:00.000Z",
+    completedAt: isFinished ? "2026-07-14T00:00:00.000Z" : null,
     groups: [
       {
         id: 11,
         partNumber: 5,
         questionStart: 1,
         questionEnd: 1,
-        groupStatus: "right",
+        groupStatus: isFinished ? "right" : null,
         groupType: null,
         accent: null,
         content: "A short passage.",
         contentVi: null,
-        audioUrl: null,
-        audioUrlExpiresAt: null,
+        audioUrl: "https://media.example/audio.mp3?signature=original",
+        audioUrlExpiresAt: "2026-07-15T00:00:00.000Z",
         imageUrl: null,
         imageUrlExpiresAt: null,
         questions: [
@@ -84,6 +87,26 @@ function createFinishedRun(): ToeicRunResult {
             optionCount: 2,
             answerKey: "A",
             selectedKey: "A",
+            status: isFinished ? "right" : "selected",
+            isCorrect: isFinished ? true : null,
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function createOptimisticRun(): ToeicRunResult {
+  return {
+    ...createRun(false),
+    correctCount: 1,
+    groups: [
+      {
+        ...createRun(false).groups[0]!,
+        groupStatus: "right",
+        questions: [
+          {
+            ...createRun(false).groups[0]!.questions[0]!,
             status: "right",
             isCorrect: true,
           },
@@ -93,7 +116,7 @@ function createFinishedRun(): ToeicRunResult {
   };
 }
 
-describe("useMockTestRun Finish recovery", () => {
+describe("useMockTestRun Finish workflow", () => {
   beforeEach(() => {
     setStoredAccessToken(createAccessToken());
     window.localStorage.clear();
@@ -104,25 +127,33 @@ describe("useMockTestRun Finish recovery", () => {
     window.localStorage.clear();
   });
 
-  it("waits for the stored Finish command before loading the canonical session", async () => {
-    const finishResponse = Promise.withResolvers<void>();
+  it("keeps canonical GET blocked through accepted recovery and loads once after completed", async () => {
+    const canonicalResponse = Promise.withResolvers<void>();
     let finishRequestCount = 0;
     let getRequestCount = 0;
     storeMockFinishCommand(SESSION_ID);
 
     mswServer.use(
-      http.patch(FINISH_URL, async () => {
+      http.patch(FINISH_URL, () => {
         finishRequestCount += 1;
-        await finishResponse.promise;
-        return HttpResponse.json({ finished: true });
+        const status = finishRequestCount === 1 ? "accepted" : "completed";
+        return HttpResponse.json(
+          { status },
+          { status: status === "accepted" ? 202 : 200 },
+        );
       }),
-      http.get(RUN_URL, () => {
+      http.get(RUN_URL, async () => {
         getRequestCount += 1;
-        return HttpResponse.json(createFinishedRun());
+        await canonicalResponse.promise;
+        return HttpResponse.json(createRun(true));
       }),
     );
 
     const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      getToeicRunQueryKey(SESSION_ID),
+      createOptimisticRun(),
+    );
     const { result } = renderHook(
       () => useMockTestRun({ selectedParts: [5], sessionId: SESSION_ID }),
       { wrapper: createQueryClientWrapper(queryClient) },
@@ -131,17 +162,25 @@ describe("useMockTestRun Finish recovery", () => {
     await waitFor(() => expect(finishRequestCount).toBe(1));
     expect(getRequestCount).toBe(0);
     expect(result.current.isLoading).toBe(true);
+    expect(result.current.isResultOpen).toBe(false);
+    expect(result.current.isFinishAccepted).toBe(false);
+    expect(readMockFinishCommand(SESSION_ID)).not.toBeNull();
 
-    finishResponse.resolve();
+    await act(async () => result.current.finishRun());
+    await waitFor(() => expect(getRequestCount).toBe(1));
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isFinished).toBe(false);
 
+    canonicalResponse.resolve();
     await waitFor(() => expect(result.current.isFinished).toBe(true));
 
+    expect(finishRequestCount).toBe(2);
     expect(getRequestCount).toBe(1);
-    expect(result.current.isResultOpen).toBe(true);
+    expect(result.current.isResultOpen).toBe(false);
     expect(readMockFinishCommand(SESSION_ID)).toBeNull();
   });
 
-  it("keeps GET blocked after recovery failure and retries the same command", async () => {
+  it("keeps GET blocked after a pre-acceptance failure and retries the stored command", async () => {
     let finishRequestCount = 0;
     let getRequestCount = 0;
     storeMockFinishCommand(SESSION_ID);
@@ -151,11 +190,11 @@ describe("useMockTestRun Finish recovery", () => {
         finishRequestCount += 1;
         return finishRequestCount === 1
           ? HttpResponse.json({ message: "Finish failed." }, { status: 500 })
-          : HttpResponse.json({ finished: true });
+          : HttpResponse.json({ status: "completed" });
       }),
       http.get(RUN_URL, () => {
         getRequestCount += 1;
-        return HttpResponse.json(createFinishedRun());
+        return HttpResponse.json(createRun(true));
       }),
     );
 
@@ -169,13 +208,56 @@ describe("useMockTestRun Finish recovery", () => {
     expect(getRequestCount).toBe(0);
     expect(readMockFinishCommand(SESSION_ID)).not.toBeNull();
 
-    await act(async () => {
-      await result.current.finishRun();
-    });
-
+    await act(async () => result.current.finishRun());
     await waitFor(() => expect(result.current.isFinished).toBe(true));
+
     expect(finishRequestCount).toBe(2);
     expect(getRequestCount).toBe(1);
     expect(readMockFinishCommand(SESSION_ID)).toBeNull();
+  });
+
+  it("does not GET on normal completion but refetches canonical data on revisit", async () => {
+    let finishRequestCount = 0;
+    let getRequestCount = 0;
+
+    mswServer.use(
+      http.get(RUN_URL, () => {
+        getRequestCount += 1;
+        return HttpResponse.json(createRun(getRequestCount > 1));
+      }),
+      http.patch(FINISH_URL, () => {
+        finishRequestCount += 1;
+        return HttpResponse.json({ status: "completed" });
+      }),
+    );
+
+    const queryClient = createTestQueryClient();
+    const firstMount = renderHook(
+      () => useMockTestRun({ selectedParts: [5], sessionId: SESSION_ID }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(firstMount.result.current.isLoading).toBe(false));
+    await act(async () => firstMount.result.current.finishRun());
+
+    expect(finishRequestCount).toBe(1);
+    expect(getRequestCount).toBe(1);
+    expect(firstMount.result.current.isFinishAccepted).toBe(true);
+    expect(firstMount.result.current.isResultOpen).toBe(true);
+    expect(firstMount.result.current.isFinished).toBe(false);
+    expect(firstMount.result.current.sessionData?.completedAt).toBeNull();
+    expect(firstMount.result.current.sessionData?.groups[0]?.audioUrl).toBe(
+      "https://media.example/audio.mp3?signature=original",
+    );
+    expect(readMockFinishCommand(SESSION_ID)).toBeNull();
+
+    firstMount.unmount();
+    const secondMount = renderHook(
+      () => useMockTestRun({ selectedParts: [5], sessionId: SESSION_ID }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(secondMount.result.current.isFinished).toBe(true));
+    expect(getRequestCount).toBe(2);
   });
 });

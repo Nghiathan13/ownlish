@@ -55,6 +55,10 @@ export type SubmitAnswerResult = {
   correctOptionVi?: string | null;
 };
 
+export type FinishToeicRunResult = {
+  status: "accepted" | "completed";
+};
+
 export type ToeicRunResult = {
   /** Mirrors server `ToeicSessionResponse`. */
   sessionId: string;

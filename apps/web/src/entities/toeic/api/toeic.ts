@@ -18,6 +18,7 @@ import { parseSubmitAnswerResult } from "./parseSubmitAnswerResult";
 import type {
   ClearToeicPracticeHistoryResult,
   CreateToeicRunInput,
+  FinishToeicRunResult,
   PracticeMode,
   RefreshMediaGroup,
   ToeicRunMode,
@@ -185,10 +186,19 @@ export async function submitToeicAnswer(
 }
 
 export async function finishToeicRun(token: string, sessionId: string) {
-  await apiRequest(`/tests/runs/${sessionId}/finish`, {
+  const body = await apiRequest(`/tests/runs/${sessionId}/finish`, {
     method: "PATCH",
     token,
   });
+
+  if (
+    !isRecord(body) ||
+    (body.status !== "accepted" && body.status !== "completed")
+  ) {
+    invalidApiResponse();
+  }
+
+  return { status: body.status } satisfies FinishToeicRunResult;
 }
 
 export async function refreshToeicPartMedia(

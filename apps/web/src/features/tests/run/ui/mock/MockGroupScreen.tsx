@@ -20,6 +20,7 @@ type MockGroupScreenProps = {
   group: ToeicQuestionGroup;
   isFinished: boolean;
   isQuestionPending: (toeicQuestionId: number) => boolean;
+  isReviewingResults: boolean;
   mediaError: string | null;
   onSelect: (toeicQuestionId: number, selectedKey: OptionKey) => void;
   partNumber: number;
@@ -29,6 +30,7 @@ export function MockGroupScreen({
   group,
   isFinished,
   isQuestionPending,
+  isReviewingResults,
   mediaError,
   onSelect,
   partNumber,
@@ -37,10 +39,10 @@ export function MockGroupScreen({
   const practiceBilingual = useImmersiveBilingual();
   const isBilingual = practiceBilingual?.isBilingual ?? false;
   const showPassageOnLeft =
-    partConfig.leftPanel === "passage" ? true : isFinished;
+    partConfig.leftPanel === "passage" ? true : isReviewingResults;
 
   const showGroupContentTranslation =
-    isFinished &&
+    isReviewingResults &&
     Boolean(group.contentVi?.trim()) &&
     showsGroupContentTranslation(partConfig);
 
@@ -72,11 +74,11 @@ export function MockGroupScreen({
   const rightPanel = (
     <div className="flex flex-col gap-5">
       {group.questions.map((question) => {
-        const translationVisible = isFinished;
+        const translationVisible = isReviewingResults;
         const showInlineBilingual = isBilingual && translationVisible;
         const questionEnVisible =
           Boolean(question.question?.trim()) &&
-          (isFinished
+          (isReviewingResults
             ? partConfig.showQuestionInRightPanel || translationVisible
             : true);
         const showQuestionBilingual =
@@ -94,15 +96,15 @@ export function MockGroupScreen({
               showBilingual={showQuestionBilingual}
             />
             <QuestionOptions
-              answerKey={isFinished ? question.answerKey : null}
-              isLocked={isFinished}
+              answerKey={isReviewingResults ? question.answerKey : null}
+              isLocked={isReviewingResults}
               onSelect={(key) => onSelect(question.id, key)}
               optionCount={question.optionCount}
               options={question.options}
               selectedKey={question.selectedKey}
               showBilingual={showOptionBilingual}
               showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
-              showResult={isFinished}
+              showResult={isReviewingResults}
             />
             {isQuestionPending(question.id) ? (
               <p className="text-sm text-muted-foreground" role="status">
@@ -110,7 +112,7 @@ export function MockGroupScreen({
               </p>
             ) : null}
             <QuestionTranslationPanel
-              answerKey={isFinished ? question.answerKey : null}
+              answerKey={isReviewingResults ? question.answerKey : null}
               optionCount={question.optionCount}
               options={question.options}
               questionVi={question.questionVi}
