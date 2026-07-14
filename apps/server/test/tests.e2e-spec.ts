@@ -140,6 +140,38 @@ describe('TestsController (e2e)', () => {
       correctOptionEn: 'Option A',
     });
 
+    const retryResponse = await submitToeicAnswerRequest(
+      app.getHttpServer(),
+      accessToken,
+      createdSession.sessionId,
+    )
+      .send({
+        toeicQuestionId: fixture.part1QuestionId,
+        selectedKey: 'B',
+        mode: 'practice',
+      })
+      .expect(201);
+
+    expect(
+      parseResponseBody<SubmitToeicAnswerE2eBody>(retryResponse),
+    ).toMatchObject({
+      graded: true,
+      isCorrect: false,
+      answerKey: 'A',
+    });
+
+    await submitToeicAnswerRequest(
+      app.getHttpServer(),
+      accessToken,
+      createdSession.sessionId,
+    )
+      .send({
+        toeicQuestionId: fixture.part1QuestionId,
+        selectedKey: 'A',
+        mode: 'practice',
+      })
+      .expect(400);
+
     const resumeResponse = await createToeicRunsRequest(
       app.getHttpServer(),
       accessToken,
@@ -276,14 +308,24 @@ describe('TestsController (e2e)', () => {
       },
     );
 
-    const finishResponse = await finishToeicRunRequest(
-      app.getHttpServer(),
-      accessToken,
-      session.sessionId,
-    ).expect(200);
+    const [finishResponse, concurrentFinishResponse] = await Promise.all([
+      finishToeicRunRequest(
+        app.getHttpServer(),
+        accessToken,
+        session.sessionId,
+      ).expect(200),
+      finishToeicRunRequest(
+        app.getHttpServer(),
+        accessToken,
+        session.sessionId,
+      ).expect(200),
+    ]);
 
     const finishedSession =
       parseResponseBody<ToeicSessionE2eBody>(finishResponse);
+    const concurrentFinishedSession = parseResponseBody<ToeicSessionE2eBody>(
+      concurrentFinishResponse,
+    );
     expect(finishedSession).toMatchObject({
       sessionId: session.sessionId,
       mode: 'mock_test',
@@ -291,6 +333,13 @@ describe('TestsController (e2e)', () => {
       correctCount: 0,
     });
     expect(finishedSession.completedAt).toEqual(expect.any(String));
+    expect(concurrentFinishedSession).toMatchObject({
+      sessionId: session.sessionId,
+      mode: 'mock_test',
+      wrongCount: 1,
+      correctCount: 0,
+      completedAt: finishedSession.completedAt,
+    });
 
     await submitToeicAnswerRequest(
       app.getHttpServer(),

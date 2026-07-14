@@ -11,10 +11,40 @@ describe('ToeicRunGrader', () => {
   let grader: ToeicRunGrader;
 
   const prismaMock = createToeicTestsPrismaMock();
+  const mockGradedPracticeQuestion = (
+    status: 'RIGHT' | 'WRONG',
+    selectedKey: 'A' | 'B',
+  ) => {
+    const question = {
+      id: 1001,
+      answerKey: 'A',
+      group: { testPart: { testId: 1 } },
+    };
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'practice-run-id',
+      toeicTestId: 1,
+      mode: 'PRACTICE',
+      completedAt: null,
+    });
+    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
+    prismaMock.toeicRunQuestion.findUnique.mockResolvedValue({
+      id: 'run-question-id',
+      runId: 'practice-run-id',
+      runGroupId: 'run-group-id',
+      toeicQuestionId: 1001,
+      partNumber: 1,
+      selectedKey,
+      status,
+      toeicQuestion: question,
+    });
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     useToeicTestsTransaction(prismaMock);
+    prismaMock.$queryRaw.mockResolvedValue([
+      { id: 'run-id', completedAt: null },
+    ]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -132,6 +162,98 @@ describe('ToeicRunGrader', () => {
     ).rejects.toThrow('TOEIC run is already completed.');
   });
 
+  it('rejects a mock answer when finish wins before the locked write', async () => {
+    const completedAt = new Date('2026-06-21T00:00:00.000Z');
+    const question = {
+      id: 1001,
+      answerKey: 'A',
+      group: { testPart: { testId: 1 } },
+    };
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'mock-run-id',
+      toeicTestId: 1,
+      mode: 'MOCK_TEST',
+      completedAt: null,
+    });
+    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
+    prismaMock.toeicRunQuestion.findUnique.mockResolvedValue({
+      id: 'run-question-id',
+      runId: 'mock-run-id',
+      runGroupId: 'run-group-id',
+      toeicQuestionId: 1001,
+      partNumber: 1,
+      selectedKey: null,
+      status: null,
+      toeicQuestion: question,
+    });
+    prismaMock.$queryRaw.mockResolvedValueOnce([
+      { id: 'mock-run-id', completedAt },
+    ]);
+
+    await expect(
+      grader.submitAnswer('user-id', 'mock-run-id', {
+        toeicQuestionId: 1001,
+        selectedKey: 'B',
+      }),
+    ).rejects.toThrow('TOEIC run is already completed.');
+
+    expect(prismaMock.toeicRunQuestion.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['RIGHT', 'A', true],
+    ['WRONG', 'B', false],
+  ] as const)(
+    'treats the same %s practice answer as an idempotent retry',
+    async (status, selectedKey, isCorrect) => {
+      mockGradedPracticeQuestion(status, selectedKey);
+
+      await expect(
+        grader.submitAnswer('user-id', 'practice-run-id', {
+          toeicQuestionId: 1001,
+          selectedKey,
+        }),
+      ).resolves.toMatchObject({ graded: true, isCorrect });
+
+      expect(prismaMock.toeicRunQuestion.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ['RIGHT', 'A', 'B'],
+    ['WRONG', 'B', 'A'],
+  ] as const)(
+    'rejects changing an already %s practice answer',
+    async (status, previousSelectedKey, selectedKey) => {
+      mockGradedPracticeQuestion(status, previousSelectedKey);
+
+      await expect(
+        grader.submitAnswer('user-id', 'practice-run-id', {
+          toeicQuestionId: 1001,
+          selectedKey,
+        }),
+      ).rejects.toThrow('Graded answers cannot be changed.');
+
+      expect(prismaMock.toeicRunQuestion.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it('keeps right answers locked in review wrong mode', async () => {
+    mockGradedPracticeQuestion('RIGHT', 'A');
+
+    await expect(
+      grader.submitAnswer('user-id', 'practice-run-id', {
+        toeicQuestionId: 1001,
+        selectedKey: 'B',
+        mode: 'review_wrong',
+      }),
+    ).rejects.toThrow('Graded answers cannot be changed.');
+
+    expect(prismaMock.toeicRunQuestion.update).not.toHaveBeenCalled();
+    expect(prismaMock.toeicRunGroup.update).not.toHaveBeenCalled();
+    expect(prismaMock.toeicRun.update).not.toHaveBeenCalled();
+  });
+
   it('completes mock runs by grading selected answers and marking unanswered as wrong', async () => {
     const completedAt = new Date('2026-06-21T00:00:00.000Z');
     jest.useFakeTimers().setSystemTime(completedAt);
@@ -189,5 +311,21 @@ describe('ToeicRunGrader', () => {
       data: { completedAt },
     });
     jest.useRealTimers();
+  });
+
+  it('does not grade a mock run that completed before it acquired the lock', async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([
+      {
+        id: 'mock-run-id',
+        completedAt: new Date('2026-06-21T00:00:00.000Z'),
+      },
+    ]);
+
+    await expect(
+      grader.completeMockRun('mock-run-id'),
+    ).resolves.toBeUndefined();
+
+    expect(prismaMock.toeicRunQuestion.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.toeicRun.update).not.toHaveBeenCalled();
   });
 });

@@ -15,6 +15,22 @@ export class ToeicPartPracticeRepository {
     return this.prisma.$transaction(callback);
   }
 
+  async lockRunForUpdate(
+    tx: Prisma.TransactionClient,
+    runId: string,
+  ): Promise<{ id: string } | null> {
+    const [run] = await tx.$queryRaw<Array<{ id: string }>>(
+      Prisma.sql`
+        SELECT "id"
+        FROM "toeic_part_practice_runs"
+        WHERE "id" = ${runId}
+        FOR UPDATE
+      `,
+    );
+
+    return run ?? null;
+  }
+
   findRunForResponse(
     runId: string,
   ): Promise<PartPracticeRunForResponse | null> {
@@ -171,21 +187,22 @@ export class ToeicPartPracticeRepository {
     userId: string,
     partNumber: number,
   ): Promise<number> {
-    const run = await this.prisma.toeicPartPracticeRun.findUnique({
-      where: {
-        userId_partNumber: {
-          userId,
-          partNumber,
+    return this.transaction(async (tx) => {
+      const run = await tx.toeicPartPracticeRun.findUnique({
+        where: {
+          userId_partNumber: {
+            userId,
+            partNumber,
+          },
         },
-      },
-      select: { id: true },
-    });
+        select: { id: true },
+      });
 
-    if (!run) {
-      return 0;
-    }
+      if (!run) {
+        return 0;
+      }
 
-    await this.transaction(async (tx) => {
+      await this.lockRunForUpdate(tx, run.id);
       await tx.toeicPartPracticeQuestion.updateMany({
         where: { runId: run.id },
         data: {
@@ -208,8 +225,7 @@ export class ToeicPartPracticeRepository {
           totalWrong: 0,
         },
       });
+      return 1;
     });
-
-    return 1;
   }
 }

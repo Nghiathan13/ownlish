@@ -169,6 +169,36 @@ describe('PartPracticeController (e2e)', () => {
       answerKey: 'A',
     });
 
+    const retryResponse = await submitPartPracticeAnswerRequest(
+      app.getHttpServer(),
+      accessToken,
+      session.sessionId,
+    )
+      .send({
+        toeicQuestionId: questionId,
+        selectedKey: 'B',
+      })
+      .expect(201);
+
+    expect(
+      parseResponseBody<SubmitToeicAnswerE2eBody>(retryResponse),
+    ).toMatchObject({
+      graded: true,
+      isCorrect: false,
+      answerKey: 'A',
+    });
+
+    await submitPartPracticeAnswerRequest(
+      app.getHttpServer(),
+      accessToken,
+      session.sessionId,
+    )
+      .send({
+        toeicQuestionId: questionId,
+        selectedKey: 'A',
+      })
+      .expect(400);
+
     const summaryResponse = await request(app.getHttpServer())
       .get('/tests/part-practice/parts')
       .set(withBearerAuth(accessToken))

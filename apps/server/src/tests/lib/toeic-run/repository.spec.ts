@@ -16,6 +16,7 @@ describe('ToeicRunRepository', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     useToeicTestsTransaction(prismaMock);
+    prismaMock.$queryRaw.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -54,11 +55,14 @@ describe('ToeicRunRepository', () => {
   });
 
   it('clears practice answer history without deleting runs', async () => {
-    prismaMock.toeicRun.findMany.mockResolvedValue([{ id: 'run-id' }]);
+    prismaMock.toeicRun.findMany.mockResolvedValue([
+      { id: 'run-b' },
+      { id: 'run-a' },
+    ]);
 
     await expect(
       repository.resetPracticeRunAnswers('user-id', 1),
-    ).resolves.toBe(1);
+    ).resolves.toBe(2);
 
     expect(prismaMock.toeicRun.findMany).toHaveBeenCalledWith({
       where: {
@@ -69,7 +73,7 @@ describe('ToeicRunRepository', () => {
       select: { id: true },
     });
     expect(prismaMock.toeicRunQuestion.updateMany).toHaveBeenCalledWith({
-      where: { runId: { in: ['run-id'] } },
+      where: { runId: { in: ['run-a', 'run-b'] } },
       data: {
         selectedKey: null,
         status: null,
@@ -78,16 +82,27 @@ describe('ToeicRunRepository', () => {
       },
     });
     expect(prismaMock.toeicRunGroup.updateMany).toHaveBeenCalledWith({
-      where: { runId: { in: ['run-id'] } },
+      where: { runId: { in: ['run-a', 'run-b'] } },
       data: { status: null },
     });
     expect(prismaMock.toeicRun.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: ['run-id'] } },
+      where: { id: { in: ['run-a', 'run-b'] } },
       data: {
         totalRight: 0,
         totalWrong: 0,
       },
     });
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(prismaMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prismaMock.toeicRunQuestion.updateMany.mock.invocationCallOrder[0],
+    );
+    const [[lockQuery]] = prismaMock.$queryRaw.mock.calls as Array<
+      [{ sql: string; values: unknown[] }]
+    >;
+    expect(lockQuery.sql).toContain('FROM "toeic_runs"');
+    expect(lockQuery.sql).toContain('ORDER BY "id"');
+    expect(lockQuery.sql).toContain('FOR UPDATE');
+    expect(lockQuery.values).toEqual(['run-a', 'run-b']);
     expect(prismaMock.toeicRun.deleteMany).not.toHaveBeenCalled();
   });
 

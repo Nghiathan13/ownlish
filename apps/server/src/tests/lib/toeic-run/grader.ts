@@ -22,7 +22,6 @@ import { isToeicRunGroupReadyToGrade } from './grader.helpers';
 import type {
   SubmitToeicAnswerResponse,
   ToeicQuestionWithTestPart,
-  ToeicRunQuestionWithQuestion,
 } from './grader.types';
 import { ToeicRunRepository } from './repository';
 
@@ -78,16 +77,16 @@ export class ToeicRunGrader {
     }
 
     if (run.mode === ToeicRunMode.MOCK_TEST) {
-      return this.submitMockAnswer(runQuestion, selectedKey);
-    }
-
-    if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
-      return this.buildGradedResponse(question, answerKey, true);
+      return this.submitMockAnswer(
+        run.id,
+        runQuestion.toeicQuestionId,
+        selectedKey,
+      );
     }
 
     return this.submitGroupAnswer(
       run.id,
-      runQuestion,
+      runQuestion.toeicQuestionId,
       question,
       selectedKey,
       answerKey,
@@ -97,6 +96,16 @@ export class ToeicRunGrader {
 
   async completeMockRun(runId: string): Promise<void> {
     await this.runRepository.transaction(async (tx) => {
+      const run = await this.runRepository.lockRunForUpdate(tx, runId);
+
+      if (!run) {
+        throw new NotFoundException('TOEIC run not found.');
+      }
+
+      if (run.completedAt) {
+        return;
+      }
+
       const questions = await tx.toeicRunQuestion.findMany({
         where: { runId },
         include: { toeicQuestion: true },
@@ -168,28 +177,69 @@ export class ToeicRunGrader {
   }
 
   private async submitMockAnswer(
-    runQuestion: ToeicRunQuestionWithQuestion,
+    runId: string,
+    toeicQuestionId: number,
     selectedKey: ToeicQuestionOptionKey,
   ): Promise<SubmitToeicAnswerResponse> {
-    await this.runRepository.updateRunQuestionSelection(
-      runQuestion.id,
-      selectedKey,
-    );
+    return this.runRepository.transaction(async (tx) => {
+      const runQuestion = await this.findRunQuestionAfterLock(
+        tx,
+        runId,
+        toeicQuestionId,
+      );
 
-    return { graded: false };
+      await tx.toeicRunQuestion.update({
+        where: { id: runQuestion.id },
+        data: {
+          selectedKey,
+          status: ToeicRunQuestionStatus.SELECTED,
+          answeredAt: new Date(),
+        },
+      });
+
+      return { graded: false };
+    });
   }
 
   private async submitGroupAnswer(
     runId: string,
-    runQuestion: ToeicRunQuestionWithQuestion,
+    toeicQuestionId: number,
     question: ToeicQuestionWithTestPart,
     selectedKey: ToeicQuestionOptionKey,
     answerKey: ToeicQuestionOptionKey,
     isReviewWrongSubmission: boolean,
   ): Promise<SubmitToeicAnswerResponse> {
     let graded = false;
+    let idempotentResult: boolean | undefined;
 
     await this.runRepository.transaction(async (tx) => {
+      const runQuestion = await this.findRunQuestionAfterLock(
+        tx,
+        runId,
+        toeicQuestionId,
+      );
+
+      const isGraded =
+        runQuestion.status === ToeicRunQuestionStatus.RIGHT ||
+        runQuestion.status === ToeicRunQuestionStatus.WRONG;
+      const canRetryWrong =
+        isReviewWrongSubmission &&
+        runQuestion.status === ToeicRunQuestionStatus.WRONG;
+
+      if (isGraded && !canRetryWrong) {
+        const currentSelectedKey = runQuestion.selectedKey
+          ?.trim()
+          .toUpperCase();
+
+        if (currentSelectedKey === selectedKey) {
+          idempotentResult =
+            runQuestion.status === ToeicRunQuestionStatus.RIGHT;
+          return;
+        }
+
+        throw new BadRequestException('Graded answers cannot be changed.');
+      }
+
       await tx.toeicRunQuestion.update({
         where: { id: runQuestion.id },
         data: {
@@ -212,6 +262,10 @@ export class ToeicRunGrader {
       }
     });
 
+    if (idempotentResult !== undefined) {
+      return this.buildGradedResponse(question, answerKey, idempotentResult);
+    }
+
     if (!graded) {
       return { graded: false };
     }
@@ -221,6 +275,39 @@ export class ToeicRunGrader {
       answerKey,
       selectedKey === answerKey,
     );
+  }
+
+  private async findRunQuestionAfterLock(
+    tx: Prisma.TransactionClient,
+    runId: string,
+    toeicQuestionId: number,
+  ) {
+    const run = await this.runRepository.lockRunForUpdate(tx, runId);
+
+    if (!run) {
+      throw new NotFoundException('Practice session not found.');
+    }
+
+    if (run.completedAt) {
+      throw new BadRequestException('TOEIC run is already completed.');
+    }
+
+    const runQuestion = await tx.toeicRunQuestion.findUnique({
+      where: {
+        runId_toeicQuestionId: {
+          runId,
+          toeicQuestionId,
+        },
+      },
+    });
+
+    if (!runQuestion) {
+      throw new BadRequestException(
+        'Question does not belong to this session.',
+      );
+    }
+
+    return runQuestion;
   }
 
   private async gradeRunGroup(

@@ -78,10 +78,6 @@ export class ToeicPartPracticeGrader {
       );
     }
 
-    if (runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
-      return this.buildGradedResponse(question, answerKey, true);
-    }
-
     return this.submitGroupAnswer(
       run.id,
       runQuestion,
@@ -115,10 +111,53 @@ export class ToeicPartPracticeGrader {
     isReviewWrongSubmission: boolean,
   ): Promise<SubmitPartPracticeAnswerResponse> {
     let graded = false;
+    let idempotentResult: boolean | undefined;
 
     await this.partPracticeRepository.transaction(async (tx) => {
+      const run = await this.partPracticeRepository.lockRunForUpdate(tx, runId);
+
+      if (!run) {
+        throw new NotFoundException('Part practice session not found.');
+      }
+
+      const currentRunQuestion = await tx.toeicPartPracticeQuestion.findUnique({
+        where: {
+          runId_toeicQuestionId: {
+            runId,
+            toeicQuestionId: runQuestion.toeicQuestionId,
+          },
+        },
+      });
+
+      if (!currentRunQuestion) {
+        throw new BadRequestException(
+          'Question does not belong to this session.',
+        );
+      }
+
+      const isGraded =
+        currentRunQuestion.status === ToeicRunQuestionStatus.RIGHT ||
+        currentRunQuestion.status === ToeicRunQuestionStatus.WRONG;
+      const canRetryWrong =
+        isReviewWrongSubmission &&
+        currentRunQuestion.status === ToeicRunQuestionStatus.WRONG;
+
+      if (isGraded && !canRetryWrong) {
+        const currentSelectedKey = currentRunQuestion.selectedKey
+          ?.trim()
+          .toUpperCase();
+
+        if (currentSelectedKey === selectedKey) {
+          idempotentResult =
+            currentRunQuestion.status === ToeicRunQuestionStatus.RIGHT;
+          return;
+        }
+
+        throw new BadRequestException('Graded answers cannot be changed.');
+      }
+
       await tx.toeicPartPracticeQuestion.update({
-        where: { id: runQuestion.id },
+        where: { id: currentRunQuestion.id },
         data: {
           selectedKey,
           status: ToeicRunQuestionStatus.SELECTED,
@@ -127,17 +166,21 @@ export class ToeicPartPracticeGrader {
       });
 
       const groupQuestions = await tx.toeicPartPracticeQuestion.findMany({
-        where: { runGroupId: runQuestion.runGroupId },
+        where: { runGroupId: currentRunQuestion.runGroupId },
         select: { selectedKey: true, status: true },
       });
 
       if (
         isToeicRunGroupReadyToGrade(groupQuestions, isReviewWrongSubmission)
       ) {
-        await this.gradeRunGroup(tx, runId, runQuestion.runGroupId);
+        await this.gradeRunGroup(tx, runId, currentRunQuestion.runGroupId);
         graded = true;
       }
     });
+
+    if (idempotentResult !== undefined) {
+      return this.buildGradedResponse(question, answerKey, idempotentResult);
+    }
 
     if (!graded) {
       return { graded: false };

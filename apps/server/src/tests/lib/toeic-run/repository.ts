@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, ToeicRunMode, ToeicRunQuestionStatus } from '@prisma/client';
+import { Prisma, ToeicRunMode } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import type { ToeicRunForResponse } from './session.types';
 import { toeicRunResponseInclude } from './response.include';
@@ -18,6 +18,35 @@ export class ToeicRunRepository {
     callback: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
     return this.prisma.$transaction(callback);
+  }
+
+  lockRunsForUpdate(
+    tx: Prisma.TransactionClient,
+    runIds: string[],
+  ): Promise<Array<{ id: string; completedAt: Date | null }>> {
+    if (runIds.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    const sortedRunIds = [...runIds].sort();
+
+    return tx.$queryRaw(
+      Prisma.sql`
+        SELECT "id", "completed_at" AS "completedAt"
+        FROM "toeic_runs"
+        WHERE "id" IN (${Prisma.join(sortedRunIds)})
+        ORDER BY "id"
+        FOR UPDATE
+      `,
+    );
+  }
+
+  async lockRunForUpdate(
+    tx: Prisma.TransactionClient,
+    runId: string,
+  ): Promise<{ id: string; completedAt: Date | null } | null> {
+    const [run] = await this.lockRunsForUpdate(tx, [runId]);
+    return run ?? null;
   }
 
   findRunForResponse(runId: string): Promise<ToeicRunForResponse | null> {
@@ -122,22 +151,22 @@ export class ToeicRunRepository {
     userId: string,
     testId: number,
   ): Promise<number> {
-    const runs = await this.prisma.toeicRun.findMany({
-      where: {
-        userId,
-        toeicTestId: testId,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      select: { id: true },
-    });
+    return this.transaction(async (tx) => {
+      const runs = await tx.toeicRun.findMany({
+        where: {
+          userId,
+          toeicTestId: testId,
+          mode: ToeicRunMode.PRACTICE,
+        },
+        select: { id: true },
+      });
+      const runIds = runs.map((run) => run.id).sort();
 
-    if (runs.length === 0) {
-      return 0;
-    }
+      if (runIds.length === 0) {
+        return 0;
+      }
 
-    const runIds = runs.map((run) => run.id);
-
-    await this.transaction(async (tx) => {
+      await this.lockRunsForUpdate(tx, runIds);
       await tx.toeicRunQuestion.updateMany({
         where: { runId: { in: runIds } },
         data: {
@@ -160,9 +189,8 @@ export class ToeicRunRepository {
           totalWrong: 0,
         },
       });
+      return runIds.length;
     });
-
-    return runs.length;
   }
 
   listQuestionGroupsForParts(
@@ -222,17 +250,6 @@ export class ToeicRunRepository {
         },
       },
       include: { toeicQuestion: true },
-    });
-  }
-
-  updateRunQuestionSelection(runQuestionId: string, selectedKey: string) {
-    return this.prisma.toeicRunQuestion.update({
-      where: { id: runQuestionId },
-      data: {
-        selectedKey,
-        status: ToeicRunQuestionStatus.SELECTED,
-        answeredAt: new Date(),
-      },
     });
   }
 }

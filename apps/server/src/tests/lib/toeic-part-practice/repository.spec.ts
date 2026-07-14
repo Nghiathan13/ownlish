@@ -30,6 +30,7 @@ describe('ToeicPartPracticeRepository', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     useToeicTestsTransaction(prismaMock);
+    prismaMock.$queryRaw.mockResolvedValue([{ id: 'part-run-id' }]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -69,6 +70,17 @@ describe('ToeicPartPracticeRepository', () => {
       where: { id: 'part-run-id' },
       data: { totalRight: 0, totalWrong: 0 },
     });
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(prismaMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prismaMock.toeicPartPracticeQuestion.updateMany.mock
+        .invocationCallOrder[0],
+    );
+    const [[lockQuery]] = prismaMock.$queryRaw.mock.calls as Array<
+      [{ sql: string; values: unknown[] }]
+    >;
+    expect(lockQuery.sql).toContain('FROM "toeic_part_practice_runs"');
+    expect(lockQuery.sql).toContain('FOR UPDATE');
+    expect(lockQuery.values).toEqual(['part-run-id']);
     expect(prismaMock.toeicPartPracticeRun.deleteMany).toBeUndefined();
   });
 

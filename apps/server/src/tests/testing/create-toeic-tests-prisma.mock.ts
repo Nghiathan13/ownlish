@@ -35,6 +35,7 @@ export function createToeicTestsPrismaMock() {
     toeicQuestionGroup: {
       findMany: jest.fn(),
     },
+    $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };
 }
