@@ -54,5 +54,42 @@ export function usePracticeLocalGrade({
     [answerKeyMap, queryClient, queryKey],
   );
 
-  return { gradeLocally };
+  const gradeGroupLocally = useCallback(
+    (
+      entries: Array<{
+        toeicQuestionId: number;
+        selectedKey: OptionKey;
+      }>,
+    ) => {
+      if (!answerKeyMap) {
+        return;
+      }
+
+      queryClient.setQueryData<{ groups: ToeicQuestionGroup[] }>(
+        queryKey,
+        (current) => {
+          if (!current) {
+            return current;
+          }
+
+          return entries.reduce((next, entry) => {
+            const answerKey = answerKeyMap.get(entry.toeicQuestionId);
+            if (!answerKey) {
+              return next;
+            }
+
+            return applyGradedAnswer(
+              next,
+              entry.toeicQuestionId,
+              entry.selectedKey,
+              entry.selectedKey === answerKey,
+            );
+          }, current);
+        },
+      );
+    },
+    [answerKeyMap, queryClient, queryKey],
+  );
+
+  return { gradeLocally, gradeGroupLocally };
 }

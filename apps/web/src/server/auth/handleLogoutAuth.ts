@@ -9,9 +9,21 @@ export async function handleLogoutAuth(): Promise<NextResponse> {
   const body = refreshToken
     ? JSON.stringify({ refreshToken })
     : JSON.stringify({});
+  let response: NextResponse;
 
-  const { json, upstream } = await postUpstreamAuth("/auth/logout", body);
-  const response = NextResponse.json(json, { status: upstream.status });
+  try {
+    const { json, upstream } = await postUpstreamAuth("/auth/logout", body);
+    response = NextResponse.json(json, { status: upstream.status });
+  } catch {
+    response = NextResponse.json(
+      {
+        error: "Bad Gateway",
+        message: "Authentication service unavailable",
+        statusCode: 502,
+      },
+      { status: 502 },
+    );
+  }
 
   clearRefreshCookie(response);
 

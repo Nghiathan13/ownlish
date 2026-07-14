@@ -54,7 +54,7 @@ function createDeferredGroup(questions: ToeicQuestion[]): PracticeGroup {
 }
 
 describe("useDeferredGroupAnswerFlow", () => {
-  it("queues every selection and waits for server grading before revealing", () => {
+  it("queues every selection and grades the group locally before sync finishes", () => {
     const questions = [createQuestion(101), createQuestion(102)];
     const answers = new Map(questions.map((question) => [question.id, question]));
     const pendingQuestionIds = new Set<number>();
@@ -71,7 +71,27 @@ describe("useDeferredGroupAnswerFlow", () => {
         pendingQuestionIds.add(questionId);
       },
     );
+    const gradeGroupLocally = vi.fn(
+      (
+        entries: Array<{
+          toeicQuestionId: number;
+          selectedKey: OptionKey;
+        }>,
+      ) => {
+        for (const entry of entries) {
+          const answer = answers.get(entry.toeicQuestionId);
+          if (!answer) {
+            continue;
+          }
+
+          answer.selectedKey = entry.selectedKey;
+          answer.status = entry.selectedKey === answer.answerKey ? "right" : "wrong";
+          answer.isCorrect = entry.selectedKey === answer.answerKey;
+        }
+      },
+    );
     const practice = {
+      gradeGroupLocally,
       getAnswer: (questionId: number) => answers.get(questionId),
       isQuestionPending: (questionId: number) =>
         pendingQuestionIds.has(questionId),
@@ -79,7 +99,7 @@ describe("useDeferredGroupAnswerFlow", () => {
     } as unknown as PracticeSessionController;
     const practiceGroup = createDeferredGroup(questions);
 
-    const { result, rerender } = renderHook(() =>
+    const { result } = renderHook(() =>
       useDeferredGroupAnswerFlow({
         practice,
         practiceGroup,
@@ -109,17 +129,76 @@ describe("useDeferredGroupAnswerFlow", () => {
       deferGrade: true,
       replace: false,
     });
-    expect(result.current.showGroupReveal).toBe(false);
-    expect(result.current.isGroupPending).toBe(true);
-
-    pendingQuestionIds.clear();
-    for (const answer of answers.values()) {
-      answer.status = answer.id === 101 ? "right" : "wrong";
-      answer.isCorrect = answer.id === 101;
-    }
-    rerender();
+    expect(gradeGroupLocally).toHaveBeenCalledWith([
+      { toeicQuestionId: 101, selectedKey: "B" },
+      { toeicQuestionId: 102, selectedKey: "C" },
+    ]);
 
     expect(result.current.showGroupReveal).toBe(true);
-    expect(result.current.isGroupPending).toBe(false);
+    expect(result.current.isGroupPending).toBe(true);
+    expect(pendingQuestionIds).toEqual(new Set([101, 102]));
+  });
+
+  it("grades only the remaining selectable questions in a mixed review group", () => {
+    const questions = [createQuestion(101), createQuestion(102)];
+    questions[0]!.selectedKey = "A";
+    questions[0]!.status = "right";
+    questions[0]!.isCorrect = true;
+    const answers = new Map(questions.map((question) => [question.id, question]));
+    const gradeGroupLocally = vi.fn(
+      (
+        entries: Array<{
+          toeicQuestionId: number;
+          selectedKey: OptionKey;
+        }>,
+      ) => {
+        for (const entry of entries) {
+          const answer = answers.get(entry.toeicQuestionId);
+          if (!answer) {
+            continue;
+          }
+
+          answer.selectedKey = entry.selectedKey;
+          answer.status = entry.selectedKey === answer.answerKey ? "right" : "wrong";
+          answer.isCorrect = entry.selectedKey === answer.answerKey;
+        }
+      },
+    );
+    const selectAnswer = vi.fn(
+      (questionId: number, selectedKey: OptionKey) => {
+        const answer = answers.get(questionId);
+        if (answer) {
+          answer.selectedKey = selectedKey;
+          answer.status = "selected";
+        }
+      },
+    );
+    const practice = {
+      gradeGroupLocally,
+      getAnswer: (questionId: number) => answers.get(questionId),
+      isQuestionPending: () => false,
+      selectAnswer,
+    } as unknown as PracticeSessionController;
+
+    const { result } = renderHook(() =>
+      useDeferredGroupAnswerFlow({
+        practice,
+        practiceGroup: createDeferredGroup(questions),
+        usesDeferredGroupGrading: true,
+      }),
+    );
+
+    act(() => {
+      result.current.handleSelect(102, "B");
+    });
+
+    expect(selectAnswer).toHaveBeenCalledWith(102, "B", {
+      deferGrade: true,
+      replace: false,
+    });
+    expect(gradeGroupLocally).toHaveBeenCalledWith([
+      { toeicQuestionId: 102, selectedKey: "B" },
+    ]);
+    expect(result.current.showGroupReveal).toBe(true);
   });
 });

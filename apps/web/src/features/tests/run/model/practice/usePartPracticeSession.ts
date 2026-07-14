@@ -66,7 +66,7 @@ export function usePartPracticeSession({
     [sessionData?.groups],
   );
 
-  const { gradeLocally } = usePracticeLocalGrade({
+  const { gradeLocally, gradeGroupLocally } = usePracticeLocalGrade({
     queryKey: runQuery.queryKey,
     answerKeyMap,
   });
@@ -183,6 +183,7 @@ export function usePartPracticeSession({
     failedQuestionIds,
     retryFailedAnswers,
     selectAnswer,
+    gradeGroupLocally,
     submitAnswer,
     refetch: runQuery.refetch,
   };

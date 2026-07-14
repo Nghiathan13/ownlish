@@ -40,7 +40,7 @@ export function useDeferredGroupAnswerFlow({
   });
 
   const showGroupReveal =
-    !usesDeferredGroupGrading || isGroupGraded;
+    !usesDeferredGroupGrading || allSelectableSelected || isGroupGraded;
   const isPartialGroupPhase = usesDeferredGroupGrading && !showGroupReveal;
   const isGroupPending =
     usesDeferredGroupGrading &&
@@ -71,14 +71,33 @@ export function useDeferredGroupAnswerFlow({
         return;
       }
 
-      setLocalSelections((current) => ({
-        ...current,
+      const nextSelections = {
+        ...localSelections,
         [toeicQuestionId]: key,
-      }));
+      };
+      setLocalSelections(nextSelections);
       practice.selectAnswer(toeicQuestionId, key, {
         deferGrade: true,
         replace: Boolean(existing?.selectedKey),
       });
+
+      const allSelected = selectableQuestionIds.every(
+        (questionId) =>
+          (nextSelections[questionId] ??
+            practice.getAnswer(questionId)?.selectedKey) != null,
+      );
+      if (!allSelected) {
+        return;
+      }
+
+      practice.gradeGroupLocally(
+        selectableQuestionIds.map((questionId) => ({
+          toeicQuestionId: questionId,
+          selectedKey: (nextSelections[questionId] ??
+            practice.getAnswer(questionId)?.selectedKey)!,
+        })),
+      );
+      setLocalSelections({});
     },
     [
       localSelections,

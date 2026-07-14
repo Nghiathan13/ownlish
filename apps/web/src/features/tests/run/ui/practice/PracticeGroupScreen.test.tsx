@@ -49,7 +49,7 @@ function createQuestion(id: number, selectedKey: "A" | "B"): ToeicQuestion {
 }
 
 describe("PracticeGroupScreen", () => {
-  it("keeps a pending deferred group unrevealed and wires retry", async () => {
+  it("keeps a fully selected group revealed when sync fails and wires retry", async () => {
     const user = userEvent.setup();
     const questions = [createQuestion(101, "A"), createQuestion(102, "B")];
     const answers = new Map(questions.map((question) => [question.id, question]));
@@ -94,8 +94,10 @@ describe("PracticeGroupScreen", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Some answers could not be saved.",
     );
-    expect(screen.queryByText("(A) Alpha")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Alpha/ })).not.toBeInTheDocument();
+    expect(screen.getAllByText("(A) Alpha")).toHaveLength(2);
+    expect(
+      screen.queryByRole("button", { name: /Alpha/ }),
+    ).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: "Retry saving answers" }),
