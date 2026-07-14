@@ -8,10 +8,7 @@ import type {
   SubmitAnswerResult,
 } from "@/entities/toeic/api/types";
 import { usePracticeRunQuery } from "@/entities/toeic/hooks/usePracticeRunQuery";
-import {
-  getPracticeSessionQueryKey,
-  invalidateToeicRunCaches,
-} from "@/entities/toeic/lib/toeicCache";
+import { getPracticeSessionQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -88,22 +85,17 @@ export function usePracticeSession({
   );
 
   const handleSubmissionSuccess = useCallback(
-    async (result: SubmitAnswerResult) => {
+    (result: SubmitAnswerResult) => {
       if (!result.graded) {
         return;
       }
 
-      if (mode === "review_wrong") {
-        await invalidateToeicRunCaches(queryClient);
-        return;
-      }
-
-      await Promise.all([
-        queryClient.refetchQueries({ queryKey: runQuery.queryKey }),
-        queryClient.invalidateQueries({ queryKey: ["tests"] }),
-      ]);
+      return queryClient.invalidateQueries({
+        queryKey: ["tests"],
+        refetchType: "none",
+      });
     },
-    [mode, queryClient, runQuery.queryKey],
+    [queryClient],
   );
 
   const {

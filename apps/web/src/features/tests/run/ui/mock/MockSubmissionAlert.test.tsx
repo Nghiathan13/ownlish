@@ -10,7 +10,6 @@ describe("MockSubmissionAlert", () => {
 
     render(
       <MockSubmissionAlert
-        finishError={null}
         hasSyncFailures
         onRetry={onRetry}
       />,

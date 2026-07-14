@@ -3,21 +3,15 @@ import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 type MockSubmissionAlertProps = {
-  finishError: string | null;
   hasSyncFailures: boolean;
   onRetry: () => void;
 };
 
 export function MockSubmissionAlert({
-  finishError,
   hasSyncFailures,
   onRetry,
 }: MockSubmissionAlertProps) {
-  const message = hasSyncFailures
-    ? "Some answers could not be saved."
-    : finishError;
-
-  if (!message) {
+  if (!hasSyncFailures) {
     return null;
   }
 
@@ -31,20 +25,18 @@ export function MockSubmissionAlert({
       )}
       role="alert"
     >
-      <p>{message}</p>
-      {hasSyncFailures ? (
-        <button
-          className={secondaryTextButtonClassName(
-            statusColorClasses.danger.border,
-            statusColorClasses.danger.text,
-            statusColorClasses.danger.backgroundHover,
-          )}
-          onClick={onRetry}
-          type="button"
-        >
-          Retry saving answers
-        </button>
-      ) : null}
+      <p>Some answers could not be saved.</p>
+      <button
+        className={secondaryTextButtonClassName(
+          statusColorClasses.danger.border,
+          statusColorClasses.danger.text,
+          statusColorClasses.danger.backgroundHover,
+        )}
+        onClick={onRetry}
+        type="button"
+      >
+        Retry saving answers
+      </button>
     </div>
   );
 }

@@ -10,7 +10,7 @@ import type {
 import { usePartPracticeRunQuery } from "@/entities/toeic/hooks/usePartPracticeRunQuery";
 import {
   getPartPracticeSessionQueryKey,
-  invalidatePartPracticeOverview,
+  getPartPracticeOverviewQueryKey,
 } from "@/entities/toeic/lib/toeicCache";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
@@ -85,17 +85,17 @@ export function usePartPracticeSession({
   );
 
   const handleSubmissionSuccess = useCallback(
-    async (result: SubmitAnswerResult) => {
+    (result: SubmitAnswerResult) => {
       if (!result.graded) {
         return;
       }
 
-      await Promise.all([
-        queryClient.refetchQueries({ queryKey: runQuery.queryKey }),
-        invalidatePartPracticeOverview(queryClient, runQuery.userId),
-      ]);
+      return queryClient.invalidateQueries({
+        queryKey: getPartPracticeOverviewQueryKey(runQuery.userId),
+        refetchType: "none",
+      });
     },
-    [queryClient, runQuery.queryKey, runQuery.userId],
+    [queryClient, runQuery.userId],
   );
 
   const {

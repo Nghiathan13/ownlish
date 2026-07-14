@@ -184,11 +184,11 @@ export async function submitToeicAnswer(
   return parseSubmitAnswerResult(body);
 }
 
-export function finishToeicRun(token: string, sessionId: string) {
-  return apiRequest(`/tests/runs/${sessionId}/finish`, {
+export async function finishToeicRun(token: string, sessionId: string) {
+  await apiRequest(`/tests/runs/${sessionId}/finish`, {
     method: "PATCH",
     token,
-  }).then(parseToeicRunResult);
+  });
 }
 
 export async function refreshToeicPartMedia(

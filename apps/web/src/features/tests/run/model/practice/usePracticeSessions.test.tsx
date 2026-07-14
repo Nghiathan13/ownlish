@@ -145,107 +145,133 @@ describe("practice session submission adapters", () => {
     vi.restoreAllMocks();
   });
 
-  it("submits regular practice answers through the full-run endpoint", async () => {
-    const session = createPracticeRun();
-    const queryClient = createTestQueryClient();
-    queryClient.setQueryData(PRACTICE_QUERY_KEY, session);
-    queryMocks.usePracticeRunQuery.mockReturnValue({
-      data: session,
-      error: null,
-      isLoading: false,
-      queryKey: PRACTICE_QUERY_KEY,
-      refetch: vi.fn(),
-    });
-    let submittedBody: unknown;
+  it.each(["practice", "review_wrong"] as const)(
+    "submits regular %s answers without refetching the current session",
+    async (mode) => {
+      const session = createPracticeRun();
+      const queryClient = createTestQueryClient();
+      const refetch = vi.fn();
+      queryClient.setQueryData(PRACTICE_QUERY_KEY, session);
+      queryMocks.usePracticeRunQuery.mockReturnValue({
+        data: session,
+        error: null,
+        isLoading: false,
+        queryKey: PRACTICE_QUERY_KEY,
+        refetch,
+      });
+      const refetchQueries = vi.spyOn(queryClient, "refetchQueries");
+      const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+      let submittedBody: unknown;
 
-    mswServer.use(
-      http.post(PRACTICE_ANSWER_URL, async ({ request }) => {
-        submittedBody = await request.json();
-        return HttpResponse.json({ graded: false });
-      }),
-    );
-
-    const { result } = renderHook(
-      () =>
-        usePracticeSession({
-          enabled: true,
-          mode: "practice",
-          selectedParts: [3],
-          sessionId: SESSION_ID,
+      mswServer.use(
+        http.post(PRACTICE_ANSWER_URL, async ({ request }) => {
+          submittedBody = await request.json();
+          return HttpResponse.json({
+            graded: true,
+            isCorrect: false,
+            answerKey: "A",
+            correctOptionEn: "Alpha",
+            correctOptionVi: null,
+          });
         }),
-      { wrapper: createQueryClientWrapper(queryClient) },
-    );
+      );
 
-    act(() => {
-      result.current.selectAnswer(101, "B", { deferGrade: true });
-    });
+      const { result } = renderHook(
+        () =>
+          usePracticeSession({
+            enabled: true,
+            mode,
+            selectedParts: [3],
+            sessionId: SESSION_ID,
+          }),
+        { wrapper: createQueryClientWrapper(queryClient) },
+      );
 
-    await waitFor(() => expect(result.current.isSubmitting).toBe(false));
+      act(() => {
+        result.current.selectAnswer(101, "B", { deferGrade: true });
+      });
 
-    expect(submittedBody).toEqual({
-      mode: "practice",
-      selectedKey: "B",
-      toeicQuestionId: 101,
-    });
-    expect(
-      queryClient.getQueryData<ToeicRunResult>(PRACTICE_QUERY_KEY)?.groups[0]
-        ?.questions[0],
-    ).toMatchObject({ selectedKey: "B", status: "selected" });
-  });
+      await waitFor(() => expect(result.current.isSubmitting).toBe(false));
 
-  it("submits part practice answers and reconciles the current session", async () => {
-    const session = createPartPracticeRun();
-    const queryClient = createTestQueryClient();
-    queryClient.setQueryData(PART_QUERY_KEY, session);
-    queryMocks.usePartPracticeRunQuery.mockReturnValue({
-      data: session,
-      error: null,
-      isLoading: false,
-      queryKey: PART_QUERY_KEY,
-      refetch: vi.fn(),
-      userId: "user-id",
-    });
-    const refetchQueries = vi.spyOn(queryClient, "refetchQueries");
-    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
-    let submittedBody: unknown;
+      expect(submittedBody).toEqual({
+        mode,
+        selectedKey: "B",
+        toeicQuestionId: 101,
+      });
+      expect(refetchQueries).not.toHaveBeenCalled();
+      expect(refetch).not.toHaveBeenCalled();
+      expect(invalidateQueries).toHaveBeenCalledTimes(1);
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ["tests"],
+        refetchType: "none",
+      });
+      expect(
+        queryClient.getQueryData<ToeicRunResult>(PRACTICE_QUERY_KEY)?.groups[0]
+          ?.questions[0],
+      ).toMatchObject({ selectedKey: "B", status: "selected" });
+    },
+  );
 
-    mswServer.use(
-      http.post(PART_ANSWER_URL, async ({ request }) => {
-        submittedBody = await request.json();
-        return HttpResponse.json({
-          graded: true,
-          isCorrect: true,
-          answerKey: "A",
-          correctOptionEn: "Alpha",
-          correctOptionVi: null,
-        });
-      }),
-    );
+  it.each(["practice", "review_wrong"] as const)(
+    "submits part %s answers without refetching the current session",
+    async (mode) => {
+      const session = createPartPracticeRun();
+      const queryClient = createTestQueryClient();
+      const refetch = vi.fn();
+      queryClient.setQueryData(PART_QUERY_KEY, session);
+      queryMocks.usePartPracticeRunQuery.mockReturnValue({
+        data: session,
+        error: null,
+        isLoading: false,
+        queryKey: PART_QUERY_KEY,
+        refetch,
+        userId: "user-id",
+      });
+      const refetchQueries = vi.spyOn(queryClient, "refetchQueries");
+      const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+      let submittedBody: unknown;
 
-    const { result } = renderHook(
-      () =>
-        usePartPracticeSession({
-          enabled: true,
-          mode: "practice",
-          sessionId: SESSION_ID,
+      mswServer.use(
+        http.post(PART_ANSWER_URL, async ({ request }) => {
+          submittedBody = await request.json();
+          return HttpResponse.json({
+            graded: true,
+            isCorrect: true,
+            answerKey: "A",
+            correctOptionEn: "Alpha",
+            correctOptionVi: null,
+          });
         }),
-      { wrapper: createQueryClientWrapper(queryClient) },
-    );
+      );
 
-    act(() => {
-      result.current.selectAnswer(101, "A", { deferGrade: true });
-    });
+      const { result } = renderHook(
+        () =>
+          usePartPracticeSession({
+            enabled: true,
+            mode,
+            sessionId: SESSION_ID,
+          }),
+        { wrapper: createQueryClientWrapper(queryClient) },
+      );
 
-    await waitFor(() => expect(result.current.isSubmitting).toBe(false));
+      act(() => {
+        result.current.selectAnswer(101, "A", { deferGrade: true });
+      });
 
-    expect(submittedBody).toEqual({
-      mode: "practice",
-      selectedKey: "A",
-      toeicQuestionId: 101,
-    });
-    expect(refetchQueries).toHaveBeenCalledWith({ queryKey: PART_QUERY_KEY });
-    expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ["part-practice-overview", { userId: "user-id" }],
-    });
-  });
+      await waitFor(() => expect(result.current.isSubmitting).toBe(false));
+
+      expect(submittedBody).toEqual({
+        mode,
+        selectedKey: "A",
+        toeicQuestionId: 101,
+      });
+      expect(refetchQueries).not.toHaveBeenCalled();
+      expect(refetch).not.toHaveBeenCalled();
+      expect(invalidateQueries).toHaveBeenCalledTimes(1);
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ["part-practice-overview", { userId: "user-id" }],
+        refetchType: "none",
+      });
+    },
+  );
 });

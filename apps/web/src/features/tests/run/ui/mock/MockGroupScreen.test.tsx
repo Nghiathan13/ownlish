@@ -45,13 +45,12 @@ const group: ToeicQuestionGroup = {
 };
 
 describe("MockGroupScreen", () => {
-  it("announces autosave without blocking answer changes, then locks on finish", async () => {
+  it("announces autosave without blocking answer changes, then locks when completed", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const props = {
       group,
       isFinished: false,
-      isFinishing: false,
       isQuestionPending: (questionId: number) => questionId === 101,
       mediaError: null,
       onSelect,
@@ -68,9 +67,9 @@ describe("MockGroupScreen", () => {
     await user.click(optionB);
     expect(onSelect).toHaveBeenCalledWith(101, "B");
 
-    rerender(<MockGroupScreen {...props} isFinishing />);
+    rerender(<MockGroupScreen {...props} isFinished />);
 
-    expect(screen.getByRole("button", { name: /A.*Alpha/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /B.*Beta/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /A.*Alpha/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /B.*Beta/i })).not.toBeInTheDocument();
   });
 });

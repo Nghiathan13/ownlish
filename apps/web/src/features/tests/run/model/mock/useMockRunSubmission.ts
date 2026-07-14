@@ -1,16 +1,25 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { finishToeicRun, submitToeicAnswer } from "@/entities/toeic/api/toeic";
+import {
+  finishToeicRun,
+  getToeicRun,
+  submitToeicAnswer,
+} from "@/entities/toeic/api/toeic";
 import type { ToeicRunResult } from "@/entities/toeic/api/types";
 import { updateQuestionSelection } from "@/entities/toeic/lib/runState";
-import { invalidateToeicRunCaches } from "@/entities/toeic/lib/toeicCache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
+import {
+  removeMockFinishCommand,
+  storeMockFinishCommand,
+} from "@/features/tests/run/model/mock/mockFinishOutbox";
 
 const ANSWER_SYNC_ERROR =
   "Some answers could not be saved. Retry them before finishing.";
+const ANSWER_PENDING_ERROR =
+  "Wait for all answers to finish saving before finishing.";
 
 type QuestionSyncEntry = {
   desiredKey: OptionKey;
@@ -22,6 +31,9 @@ type UseMockRunSubmissionParams = {
   queryKey: readonly unknown[];
   isAuthenticated: boolean;
   isFinished: boolean;
+  onFinishCompleted?: () => void;
+  selectedParts?: number[];
+  shouldRecoverFinish?: boolean;
 };
 
 export function useMockRunSubmission({
@@ -29,11 +41,16 @@ export function useMockRunSubmission({
   queryKey,
   isAuthenticated,
   isFinished,
+  onFinishCompleted,
+  selectedParts,
+  shouldRecoverFinish = false,
 }: UseMockRunSubmissionParams) {
   const queryClient = useQueryClient();
   const syncEntriesRef = useRef(new Map<number, QuestionSyncEntry>());
   const failedQuestionIdsRef = useRef(new Set<number>());
   const isFinishingRef = useRef(false);
+  const hasFinishIntentRef = useRef(false);
+  const hasStartedRecoveryRef = useRef(false);
   const finishPromiseRef = useRef<Promise<void> | null>(null);
   const [pendingQuestionIds, setPendingQuestionIds] = useState<Set<number>>(
     () => new Set(),
@@ -43,6 +60,7 @@ export function useMockRunSubmission({
   );
   const [finishError, setFinishError] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isFinishFailureOpen, setIsFinishFailureOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
 
   const setQuestionFailed = useCallback(
@@ -132,11 +150,19 @@ export function useMockRunSubmission({
 
   const selectAnswer = useCallback(
     (toeicQuestionId: number, selectedKey: OptionKey) => {
-      if (
-        !isAuthenticated ||
-        isFinished ||
-        isFinishingRef.current
-      ) {
+      if (!isAuthenticated || isFinished) {
+        return;
+      }
+
+      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
+        if (!current) {
+          return current;
+        }
+
+        return updateQuestionSelection(current, toeicQuestionId, selectedKey);
+      });
+
+      if (hasFinishIntentRef.current) {
         return;
       }
 
@@ -152,14 +178,6 @@ export function useMockRunSubmission({
           worker: null,
         });
       }
-
-      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
-        if (!current) {
-          return current;
-        }
-
-        return updateQuestionSelection(current, toeicQuestionId, selectedKey);
-      });
 
       void startQuestionSync(toeicQuestionId);
     },
@@ -193,24 +211,6 @@ export function useMockRunSubmission({
     }
   }, [startQuestionSync]);
 
-  const waitForPendingSubmissions = useCallback(async () => {
-    while (true) {
-      const workers = Array.from(syncEntriesRef.current.values())
-        .map((entry) => entry.worker)
-        .filter((worker): worker is Promise<void> => worker !== null);
-
-      if (workers.length === 0) {
-        break;
-      }
-
-      await Promise.all(workers);
-    }
-
-    if (failedQuestionIdsRef.current.size > 0) {
-      throw new Error(ANSWER_SYNC_ERROR);
-    }
-  }, []);
-
   const finishRun = useCallback(() => {
     if (!isAuthenticated || !sessionId) {
       return Promise.resolve();
@@ -220,23 +220,54 @@ export function useMockRunSubmission({
       return finishPromiseRef.current;
     }
 
+    if (!hasFinishIntentRef.current) {
+      if (failedQuestionIdsRef.current.size > 0) {
+        setFinishError(ANSWER_SYNC_ERROR);
+        return Promise.resolve();
+      }
+
+      if (syncEntriesRef.current.size > 0) {
+        setFinishError(ANSWER_PENDING_ERROR);
+        return Promise.resolve();
+      }
+
+      try {
+        storeMockFinishCommand(sessionId);
+      } catch {
+        setFinishError("Cannot save the Finish request on this device.");
+        setIsFinishFailureOpen(true);
+        return Promise.resolve();
+      }
+
+      hasFinishIntentRef.current = true;
+    }
+
     isFinishingRef.current = true;
     setIsFinishing(true);
     setFinishError(null);
+    setIsFinishFailureOpen(false);
 
     const finishPromise = (async () => {
       try {
-        await waitForPendingSubmissions();
-        const result = await runAuthenticatedRequest({
+        await runAuthenticatedRequest({
           request: (token) => finishToeicRun(token, sessionId),
         });
+
+        const result = await runAuthenticatedRequest({
+          request: (token) =>
+            getToeicRun(token, sessionId, { parts: selectedParts }),
+        });
+
         queryClient.setQueryData(queryKey, result);
-        await invalidateToeicRunCaches(queryClient);
+        removeMockFinishCommand(sessionId);
+        hasFinishIntentRef.current = false;
+        onFinishCompleted?.();
         setIsResultOpen(true);
       } catch (error) {
         setFinishError(
           error instanceof Error ? error.message : "Cannot finish mock test.",
         );
+        setIsFinishFailureOpen(true);
       } finally {
         isFinishingRef.current = false;
         finishPromiseRef.current = null;
@@ -248,11 +279,35 @@ export function useMockRunSubmission({
     return finishPromise;
   }, [
     isAuthenticated,
+    onFinishCompleted,
     queryClient,
     queryKey,
+    selectedParts,
     sessionId,
-    waitForPendingSubmissions,
   ]);
+
+  useEffect(() => {
+    if (!shouldRecoverFinish) {
+      hasStartedRecoveryRef.current = false;
+      return;
+    }
+
+    hasFinishIntentRef.current = true;
+
+    if (isFinished) {
+      removeMockFinishCommand(sessionId);
+      hasFinishIntentRef.current = false;
+      onFinishCompleted?.();
+      return;
+    }
+
+    if (!isAuthenticated || hasStartedRecoveryRef.current) {
+      return;
+    }
+
+    hasStartedRecoveryRef.current = true;
+    void finishRun();
+  }, [finishRun, isAuthenticated, isFinished, onFinishCompleted, sessionId, shouldRecoverFinish]);
 
   const isQuestionPending = useCallback(
     (toeicQuestionId: number) => pendingQuestionIds.has(toeicQuestionId),
@@ -260,12 +315,19 @@ export function useMockRunSubmission({
   );
 
   const closeResult = useCallback(() => setIsResultOpen(false), []);
+  const closeFinishFailure = useCallback(
+    () => setIsFinishFailureOpen(false),
+    [],
+  );
 
   return {
+    closeFinishFailure,
     closeResult,
     finishError,
     finishRun,
+    hasPendingAnswers: pendingQuestionIds.size > 0,
     hasSyncFailures: failedQuestionIds.size > 0,
+    isFinishFailureOpen,
     isFinishing,
     isQuestionPending,
     isResultOpen,

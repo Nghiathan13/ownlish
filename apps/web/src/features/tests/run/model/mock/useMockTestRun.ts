@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getToeicRunQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { useMockRunQuery } from "@/features/tests/run/model/mock/useMockRunQuery";
 import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRunSubmission";
+import { readMockFinishCommand } from "@/features/tests/run/model/mock/mockFinishOutbox";
 
 export { getToeicRunQueryKey };
 
@@ -15,16 +16,57 @@ type UseMockTestRunParams = {
   selectedParts?: number[];
 };
 
+type FinishBootstrapState = {
+  sessionId: string;
+  status: "checking" | "pending" | "ready";
+};
+
 export function useMockTestRun({
   sessionId,
   selectedParts,
 }: UseMockTestRunParams) {
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const [finishBootstrap, setFinishBootstrap] =
+    useState<FinishBootstrapState>({
+      sessionId,
+      status: "checking",
+    });
+  const finishBootstrapStatus =
+    finishBootstrap.sessionId === sessionId
+      ? finishBootstrap.status
+      : "checking";
 
-  const runQuery = useMockRunQuery({ sessionId, selectedParts });
+  useEffect(() => {
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (!isActive) {
+        return;
+      }
+
+      setFinishBootstrap({
+        sessionId,
+        status: readMockFinishCommand(sessionId) ? "pending" : "ready",
+      });
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [sessionId]);
+
+  const runQuery = useMockRunQuery({
+    sessionId,
+    selectedParts,
+    enabled: finishBootstrapStatus === "ready",
+  });
   const sessionData = runQuery.data;
   const isFinished = Boolean(sessionData?.completedAt);
+
+  const handleFinishCompleted = useCallback(() => {
+    setFinishBootstrap({ sessionId, status: "ready" });
+  }, [sessionId]);
 
   const answersByQuestionId = useMemo(
     () => toAnswerMap(sessionData?.groups ?? []),
@@ -36,6 +78,9 @@ export function useMockTestRun({
     queryKey: runQuery.queryKey,
     isAuthenticated,
     isFinished,
+    onFinishCompleted: handleFinishCompleted,
+    selectedParts,
+    shouldRecoverFinish: finishBootstrapStatus === "pending",
   });
 
   const getAnswer = useCallback(
@@ -53,15 +98,18 @@ export function useMockTestRun({
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isFinished,
-    isLoading: runQuery.isLoading,
+    isLoading: finishBootstrapStatus !== "ready" || runQuery.isLoading,
     loadError: runQuery.error,
     finishError: submission.finishError,
     finishRun: submission.finishRun,
+    hasPendingAnswers: submission.hasPendingAnswers,
     hasSyncFailures: submission.hasSyncFailures,
+    isFinishFailureOpen: submission.isFinishFailureOpen,
     isFinishing: submission.isFinishing,
     isQuestionPending: submission.isQuestionPending,
     isResultOpen: submission.isResultOpen,
     closeResult: submission.closeResult,
+    closeFinishFailure: submission.closeFinishFailure,
     retryFailedAnswers: submission.retryFailedAnswers,
     selectAnswer: submission.selectAnswer,
     sessionData,

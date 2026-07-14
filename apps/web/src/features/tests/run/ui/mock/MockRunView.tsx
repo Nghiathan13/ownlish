@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MockGroupScreen } from "@/features/tests/run/ui/mock/MockGroupScreen";
+import { MockFinishFailureModal } from "@/features/tests/run/ui/mock/MockFinishFailureModal";
 import { MockSubmissionAlert } from "@/features/tests/run/ui/mock/MockSubmissionAlert";
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
@@ -322,7 +323,8 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
     mock.isFinished ? null : handleFinish,
     mock.isFinished ? null : testLabel,
     {
-      disabled: mock.isFinishing || mock.hasSyncFailures,
+      disabled:
+        mock.isFinishing || mock.hasPendingAnswers || mock.hasSyncFailures,
       isPending: mock.isFinishing,
     },
   );
@@ -350,8 +352,22 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
     totalQuestions,
   });
 
+  const finishFailureModal = mock.isFinishFailureOpen ? (
+    <MockFinishFailureModal
+      error={mock.finishError ?? "Cannot finish mock test."}
+      isRetrying={mock.isFinishing}
+      onClose={mock.closeFinishFailure}
+      onRetry={() => void mock.finishRun()}
+    />
+  ) : null;
+
   if (mock.isLoading) {
-    return <TestRunLoadingSkeleton variant="mock_test" />;
+    return (
+      <>
+        <TestRunLoadingSkeleton variant="mock_test" />
+        {finishFailureModal}
+      </>
+    );
   }
 
   if (mock.loadError) {
@@ -413,7 +429,6 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
       />
       <div className="flex min-h-0 flex-1 flex-col">
         <MockSubmissionAlert
-          finishError={mock.finishError}
           hasSyncFailures={mock.hasSyncFailures}
           onRetry={mock.retryFailedAnswers}
         />
@@ -421,7 +436,6 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
           <MockGroupScreen
             group={activeGroup}
             isFinished={mock.isFinished}
-            isFinishing={mock.isFinishing}
             isQuestionPending={mock.isQuestionPending}
             mediaError={mediaMessage}
             onSelect={handleSelect}
@@ -438,6 +452,7 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
           wrongCount={mock.wrongCount}
         />
       ) : null}
+      {finishFailureModal}
     </PageShell>
   );
 }

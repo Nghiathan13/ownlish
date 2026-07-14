@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { expandToeicRunParts, getToeicRun } from "@/entities/toeic/api/toeic";
+import { getToeicRun } from "@/entities/toeic/api/toeic";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import { getPracticeSessionQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -29,14 +29,11 @@ export function usePracticeRunQuery({
     queryKey,
     queryFn: () =>
       runAuthenticatedRequest({
-        request: async (token) => {
-          await expandToeicRunParts(token, sessionId, selectedParts);
-
-          return getToeicRun(token, sessionId, {
+        request: (token) =>
+          getToeicRun(token, sessionId, {
             parts: selectedParts,
             mode,
-          });
-        },
+          }),
       }),
     enabled: enabled && isAuthenticated && Boolean(sessionId),
     staleTime: Infinity,
