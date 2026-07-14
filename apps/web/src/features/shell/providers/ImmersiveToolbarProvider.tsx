@@ -28,6 +28,11 @@ type RegisterExitOptions = {
   showBilingualAction?: boolean;
 };
 
+type RegisterFinishOptions = {
+  disabled?: boolean;
+  isPending?: boolean;
+};
+
 type ImmersiveExitContextValue = {
   exit: () => Promise<void>;
   title: string | null;
@@ -46,11 +51,14 @@ type ImmersiveQuestionNavContextValue = {
 };
 
 type ImmersiveFinishContextValue = {
+  disabled: boolean;
   finish: () => Promise<void>;
+  isPending: boolean;
   title: string | null;
   registerFinishHandler: (
     handler: FinishHandler | null,
     title?: string | null,
+    options?: RegisterFinishOptions,
   ) => void;
 };
 
@@ -78,8 +86,11 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
   const handlerRef = useRef<ExitHandler | null>(null);
   const backHrefRef = useRef("/");
   const finishHandlerRef = useRef<FinishHandler | null>(null);
+  const finishDisabledRef = useRef(false);
   const [exitTitle, setExitTitle] = useState<string | null>(null);
   const [finishTitle, setFinishTitle] = useState<string | null>(null);
+  const [isFinishDisabled, setIsFinishDisabled] = useState(false);
+  const [isFinishPending, setIsFinishPending] = useState(false);
   const [showBilingualAction, setShowBilingualAction] = useState(false);
   const [questionNav, setQuestionNav] =
     useState<ImmersiveQuestionNavState | null>(null);
@@ -110,9 +121,17 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
   );
 
   const registerFinishHandler = useCallback(
-    (handler: FinishHandler | null, title: string | null = null) => {
+    (
+      handler: FinishHandler | null,
+      title: string | null = null,
+      options: RegisterFinishOptions = {},
+    ) => {
+      const disabled = Boolean(handler && options.disabled);
       finishHandlerRef.current = handler;
+      finishDisabledRef.current = disabled;
       setFinishTitle(handler ? title : null);
+      setIsFinishDisabled(disabled);
+      setIsFinishPending(Boolean(handler && options.isPending));
     },
     [],
   );
@@ -145,7 +164,7 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
   }, [router]);
 
   const finish = useCallback(async () => {
-    if (finishHandlerRef.current) {
+    if (finishHandlerRef.current && !finishDisabledRef.current) {
       await finishHandlerRef.current();
     }
   }, []);
@@ -170,11 +189,19 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
 
   const finishValue = useMemo(
     () => ({
+      disabled: isFinishDisabled,
       finish,
+      isPending: isFinishPending,
       registerFinishHandler,
       title: finishTitle,
     }),
-    [finish, finishTitle, registerFinishHandler],
+    [
+      finish,
+      finishTitle,
+      isFinishDisabled,
+      isFinishPending,
+      registerFinishHandler,
+    ],
   );
 
   const bilingualValue = useMemo(
@@ -240,19 +267,22 @@ export function useRegisterImmersiveExit(
 export function useRegisterImmersiveFinish(
   handler: FinishHandler | null,
   title: string | null = null,
+  options: RegisterFinishOptions = {},
 ) {
   const context = useImmersiveFinish();
   const registerFinishHandler = context?.registerFinishHandler;
+  const disabled = options.disabled ?? false;
+  const isPending = options.isPending ?? false;
 
   useEffect(() => {
     if (!registerFinishHandler) {
       return;
     }
 
-    registerFinishHandler(handler, title);
+    registerFinishHandler(handler, title, { disabled, isPending });
 
     return () => {
-      registerFinishHandler(null, null);
+      registerFinishHandler(null, null, {});
     };
-  }, [handler, registerFinishHandler, title]);
+  }, [disabled, handler, isPending, registerFinishHandler, title]);
 }

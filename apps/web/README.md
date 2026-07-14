@@ -40,7 +40,7 @@ until the backend has imported the corresponding data.
 | Language | TypeScript with strict mode |
 | Server state | TanStack React Query 5 |
 | Styling | Tailwind CSS 4, CSS theme variables, `tailwind-merge` |
-| Testing | Vitest 4, Playwright 1 |
+| Testing | Vitest 4, React Testing Library, MSW 2, Playwright 1 |
 | Static analysis | ESLint 9 with Next.js Core Web Vitals and TypeScript rules |
 | Package manager | pnpm 11.2.2 |
 
@@ -100,7 +100,9 @@ put secrets in them, and set their production values before building.
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Start the Next.js development server |
-| `pnpm test` | Run the Vitest unit test suite once |
+| `pnpm test` | Run all Vitest unit and component-integration tests once |
+| `pnpm test:unit` | Run Node-based `*.test.ts` unit tests |
+| `pnpm test:component` | Run jsdom-based `*.test.tsx` component-integration tests |
 | `pnpm test:e2e` | Build and run the full-stack Playwright suite against the sibling API repository |
 | `pnpm test:e2e:db:up` | Start the isolated local E2E PostgreSQL database |
 | `pnpm test:e2e:db:down` | Remove the isolated local E2E PostgreSQL database |
@@ -118,8 +120,9 @@ pnpm build
 ```
 
 GitHub Actions uses Node.js 22 and pnpm 11.2.2, then runs these gates after a
-frozen-lockfile install for pushes and pull requests to `main`. Unit tests are
-colocated as `*.test.ts`.
+frozen-lockfile install for pushes and pull requests to `main`. Node unit tests
+are colocated as `*.test.ts`; React component-integration tests are colocated as
+`*.test.tsx` and exercise HTTP behavior through MSW.
 
 ### Browser E2E
 
@@ -192,7 +195,9 @@ composition remains where it is page-specific. API clients treat JSON responses
 as `unknown` and generally validate data used by the UI with domain parsers.
 TanStack Query owns remote state, while small contexts handle auth, theme, and
 the immersive test toolbar. Internal imports use the `@/*` alias defined in
-`tsconfig.json`.
+`tsconfig.json`. New or refactored feature code uses FSD-style `model`, `ui`,
+`api`, and `lib` segments; shared component-test infrastructure lives under
+`src/shared/lib/testing`.
 
 ## Authentication and API Flow
 

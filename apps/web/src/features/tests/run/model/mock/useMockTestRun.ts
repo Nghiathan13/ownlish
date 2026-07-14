@@ -3,11 +3,10 @@
 import { useCallback, useMemo } from "react";
 import { getToeicRunQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
-import { useMockRunQuery } from "@/entities/toeic/hooks/useMockRunQuery";
 import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
-import { useFinishMockRun } from "./useFinishMockRun";
-import { useMockAnswerSync } from "./useMockAnswerSync";
+import { useMockRunQuery } from "@/features/tests/run/model/mock/useMockRunQuery";
+import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRunSubmission";
 
 export { getToeicRunQueryKey };
 
@@ -32,18 +31,11 @@ export function useMockTestRun({
     [sessionData?.groups],
   );
 
-  const answerSync = useMockAnswerSync({
+  const submission = useMockRunSubmission({
     sessionId,
     queryKey: runQuery.queryKey,
     isAuthenticated,
     isFinished,
-  });
-
-  const finish = useFinishMockRun({
-    sessionId,
-    queryKey: runQuery.queryKey,
-    isAuthenticated,
-    waitForPendingSubmissions: answerSync.waitForPendingSubmissions,
   });
 
   const getAnswer = useCallback(
@@ -63,12 +55,15 @@ export function useMockTestRun({
     isFinished,
     isLoading: runQuery.isLoading,
     loadError: runQuery.error,
-    finishError: finish.finishError,
-    finishRun: finish.finishRun,
-    isQuestionPending: answerSync.isQuestionPending,
-    isResultOpen: finish.isResultOpen,
-    closeResult: finish.closeResult,
-    selectAnswer: answerSync.selectAnswer,
+    finishError: submission.finishError,
+    finishRun: submission.finishRun,
+    hasSyncFailures: submission.hasSyncFailures,
+    isFinishing: submission.isFinishing,
+    isQuestionPending: submission.isQuestionPending,
+    isResultOpen: submission.isResultOpen,
+    closeResult: submission.closeResult,
+    retryFailedAnswers: submission.retryFailedAnswers,
+    selectAnswer: submission.selectAnswer,
     sessionData,
   };
 }

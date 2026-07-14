@@ -43,13 +43,15 @@ export function ImmersiveToolbar() {
         <div className="flex items-center gap-4">
           {showsFinish ? (
             <button
+              aria-busy={finishContext?.isPending ?? false}
               className={primaryTextButtonClassName()}
+              disabled={finishContext?.disabled ?? false}
               onClick={() => {
                 void finishContext?.finish();
               }}
               type="button"
             >
-              Finish
+              {finishContext?.isPending ? "Finishing..." : "Finish"}
             </button>
           ) : (
             <button

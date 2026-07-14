@@ -3,7 +3,7 @@
 import { Suspense, use, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
-import { MockRunView } from "@/features/tests/run/components/MockRunView";
+import { MockRunView } from "@/features/tests/run/ui/mock/MockRunView";
 import { PracticeRunView } from "@/features/tests/run/components/PracticeRunView";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
@@ -88,7 +88,13 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
   }
 
   if (mode === "mock_test") {
-    return <MockRunView selectedParts={selectedParts} sessionId={sessionId} />;
+    return (
+      <MockRunView
+        key={sessionId}
+        selectedParts={selectedParts}
+        sessionId={sessionId}
+      />
+    );
   }
 
   return (

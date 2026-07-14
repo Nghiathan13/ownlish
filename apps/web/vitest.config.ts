@@ -7,4 +7,30 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {
+    projects: [
+      {
+        extends: true,
+        test: {
+          environment: "node",
+          include: ["src/**/*.test.ts"],
+          name: "unit",
+        },
+      },
+      {
+        extends: true,
+        test: {
+          environment: "jsdom",
+          environmentOptions: {
+            jsdom: {
+              url: "http://localhost:3000",
+            },
+          },
+          include: ["src/**/*.test.tsx"],
+          name: "component",
+          setupFiles: ["./src/shared/lib/testing/setupComponentTests.ts"],
+        },
+      },
+    ],
+  },
 });

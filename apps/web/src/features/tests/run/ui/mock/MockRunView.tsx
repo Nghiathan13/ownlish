@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MockGroupScreen } from "@/features/tests/run/components/MockGroupScreen";
+import { MockGroupScreen } from "@/features/tests/run/ui/mock/MockGroupScreen";
+import { MockSubmissionAlert } from "@/features/tests/run/ui/mock/MockSubmissionAlert";
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
-import { useMockTestRun } from "@/features/tests/run/hooks/useMockTestRun";
+import { useMockTestRun } from "@/features/tests/run/model/mock/useMockTestRun";
 import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
 import {
   useRegisterImmersiveExit,
@@ -255,6 +256,8 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
     shouldPlayListeningAudio && !activeGroup.audioUrl
       ? "Audio is not available for this question group."
       : mediaError;
+  const finishRun = mock.finishRun;
+  const selectAnswer = mock.selectAnswer;
 
   const markAudioPlayed = useCallback(
     (groupId: number) => {
@@ -304,20 +307,24 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
 
   const handleSelect = useCallback(
     (toeicQuestionId: number, selectedKey: OptionKey) => {
-      mock.selectAnswer(toeicQuestionId, selectedKey);
+      selectAnswer(toeicQuestionId, selectedKey);
     },
-    [mock],
+    [selectAnswer],
   );
 
   const handleFinish = useCallback(async () => {
-    await mock.finishRun();
-  }, [mock]);
+    await finishRun();
+  }, [finishRun]);
 
   const testLabel = mock.testId ? `Test ${mock.testId}` : null;
 
   useRegisterImmersiveFinish(
     mock.isFinished ? null : handleFinish,
     mock.isFinished ? null : testLabel,
+    {
+      disabled: mock.isFinishing || mock.hasSyncFailures,
+      isPending: mock.isFinishing,
+    },
   );
 
   useRegisterImmersiveExit(
@@ -405,11 +412,18 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
         onError={() => setMediaError("Audio could not be loaded.")}
       />
       <div className="flex min-h-0 flex-1 flex-col">
+        <MockSubmissionAlert
+          finishError={mock.finishError}
+          hasSyncFailures={mock.hasSyncFailures}
+          onRetry={mock.retryFailedAnswers}
+        />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MockGroupScreen
             group={activeGroup}
             isFinished={mock.isFinished}
-            mediaError={mediaMessage ?? mock.finishError}
+            isFinishing={mock.isFinishing}
+            isQuestionPending={mock.isQuestionPending}
+            mediaError={mediaMessage}
             onSelect={handleSelect}
             partNumber={activeGroup.partNumber ?? 1}
           />

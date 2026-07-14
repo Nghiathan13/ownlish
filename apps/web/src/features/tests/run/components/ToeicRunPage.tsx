@@ -1,5 +1,5 @@
 import type { PracticeMode } from "@/entities/toeic/api/types";
-import { ToeicSessionPage } from "./ToeicSessionPage";
+import { ToeicSessionPage } from "@/features/tests/run/ui/ToeicSessionPage";
 
 type ToeicRunPageProps = {
   params: Promise<{

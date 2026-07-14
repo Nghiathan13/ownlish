@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getToeicRun } from "@/entities/toeic/api/toeic";
 import { getToeicRunQueryKey } from "@/entities/toeic/lib/toeicCache";
@@ -20,7 +21,7 @@ export function useMockRunQuery({
 }: UseMockRunQueryParams) {
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const queryKey = getToeicRunQueryKey(sessionId);
+  const queryKey = useMemo(() => getToeicRunQueryKey(sessionId), [sessionId]);
 
   const query = useQuery({
     queryKey,

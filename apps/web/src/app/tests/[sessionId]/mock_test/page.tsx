@@ -1,4 +1,4 @@
-import { ToeicSessionPage } from "@/features/tests/run/components/ToeicSessionPage";
+import { ToeicSessionPage } from "@/features/tests/run/ui/ToeicSessionPage";
 
 type MockTestPageProps = {
   params: Promise<{
