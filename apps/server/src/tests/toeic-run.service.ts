@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { ToeicRunMode } from '@prisma/client';
@@ -19,6 +20,9 @@ import type { ToeicRunForResponse } from './lib/toeic-run/session.types';
 
 @Injectable()
 export class ToeicRunService {
+  private readonly logger = new Logger(ToeicRunService.name);
+  private readonly activeMockRunCompletions = new Set<string>();
+
   constructor(
     private readonly runRepository: ToeicRunRepository,
     private readonly sessionMapper: ToeicRunSessionMapper,
@@ -269,7 +273,7 @@ export class ToeicRunService {
   async finishRun(
     userId: string,
     sessionId: string,
-  ): Promise<ToeicSessionResponse> {
+  ): Promise<{ status: 'accepted' | 'completed' }> {
     const run = await this.runRepository.findOwnedRun(userId, sessionId);
 
     if (!run) {
@@ -280,16 +284,34 @@ export class ToeicRunService {
       throw new BadRequestException('Only mock test runs can be finished.');
     }
 
-    if (!run.completedAt) {
-      await this.runGrader.completeMockRun(run.id);
+    if (run.completedAt) {
+      return { status: 'completed' };
     }
 
-    const finishedRun = await this.runMaterializer.findRunForResponse(run.id);
-    if (!finishedRun) {
-      throw new NotFoundException('TOEIC run not found.');
+    this.scheduleMockRunCompletion(run.id);
+    return { status: 'accepted' };
+  }
+
+  private scheduleMockRunCompletion(runId: string): void {
+    if (this.activeMockRunCompletions.has(runId)) {
+      return;
     }
 
-    return this.formatSession(finishedRun);
+    this.activeMockRunCompletions.add(runId);
+    setImmediate(() => void this.completeMockRunInBackground(runId));
+  }
+
+  private async completeMockRunInBackground(runId: string): Promise<void> {
+    try {
+      await this.runGrader.completeMockRun(runId);
+    } catch (error) {
+      this.logger.error(
+        `Failed to finish mock run ${runId}.`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    } finally {
+      this.activeMockRunCompletions.delete(runId);
+    }
   }
 
   async clearTestHistory(userId: string, testId: number) {

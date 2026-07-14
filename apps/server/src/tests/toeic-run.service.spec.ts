@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   ToeicRunGroupStatus,
@@ -251,18 +252,31 @@ describe('ToeicRunService', () => {
     );
   });
 
-  it('finishes mock runs through the grader and session mapper', async () => {
-    const finishedRun = buildToeicRunForResponse({
+  it('accepts mock completion before starting the background grader', async () => {
+    runRepositoryMock.findOwnedRun.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
-      totalWrong: 2,
-      completedAt: new Date('2026-06-21T00:00:00.000Z'),
+      toeicTestId: 1,
+      selectedParts: [1],
+      completedAt: null,
     });
-    const formattedResponse = {
-      sessionId: 'mock-run-id',
-      mode: 'mock_test',
-      wrongCount: 2,
-    };
+    runGraderMock.completeMockRun.mockResolvedValue(undefined);
+
+    await expect(service.finishRun('user-id', 'mock-run-id')).resolves.toEqual({
+      status: 'accepted',
+    });
+
+    expect(runGraderMock.completeMockRun).not.toHaveBeenCalled();
+
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(runGraderMock.completeMockRun).toHaveBeenCalledWith('mock-run-id');
+    expect(runMaterializerMock.findRunForResponse).not.toHaveBeenCalled();
+    expect(sessionMapperMock.formatSessionResponse).not.toHaveBeenCalled();
+  });
+
+  it('does not start duplicate background graders while completion is active', async () => {
+    let resolveCompletion: (() => void) | undefined;
 
     runRepositoryMock.findOwnedRun.mockResolvedValue({
       id: 'mock-run-id',
@@ -271,45 +285,73 @@ describe('ToeicRunService', () => {
       selectedParts: [1],
       completedAt: null,
     });
-    runMaterializerMock.findRunForResponse.mockResolvedValue(finishedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue(
-      formattedResponse,
+    runGraderMock.completeMockRun.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveCompletion = resolve;
+        }),
     );
 
-    await expect(service.finishRun('user-id', 'mock-run-id')).resolves.toBe(
-      formattedResponse,
-    );
+    await service.finishRun('user-id', 'mock-run-id');
+    await new Promise<void>((resolve) => setImmediate(resolve));
 
-    expect(runGraderMock.completeMockRun).toHaveBeenCalledWith('mock-run-id');
-    expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(
-      finishedRun,
-      [1],
-      { year: 2026 },
-    );
+    await expect(service.finishRun('user-id', 'mock-run-id')).resolves.toEqual({
+      status: 'accepted',
+    });
+
+    expect(runGraderMock.completeMockRun).toHaveBeenCalledTimes(1);
+
+    resolveCompletion?.();
+    await Promise.resolve();
   });
 
-  it('skips mock completion when the run is already finished', async () => {
-    const finishedRun = buildToeicRunForResponse({
+  it('returns completed without materializing an already finished run', async () => {
+    runRepositoryMock.findOwnedRun.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
+      toeicTestId: 1,
+      selectedParts: [1],
       completedAt: new Date('2026-06-21T00:00:00.000Z'),
     });
+
+    await expect(service.finishRun('user-id', 'mock-run-id')).resolves.toEqual({
+      status: 'completed',
+    });
+
+    expect(runGraderMock.completeMockRun).not.toHaveBeenCalled();
+    expect(runMaterializerMock.findRunForResponse).not.toHaveBeenCalled();
+    expect(sessionMapperMock.formatSessionResponse).not.toHaveBeenCalled();
+  });
+
+  it('allows a replay to retry after background grading fails', async () => {
+    const loggerError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
 
     runRepositoryMock.findOwnedRun.mockResolvedValue({
       id: 'mock-run-id',
       mode: ToeicRunMode.MOCK_TEST,
       toeicTestId: 1,
       selectedParts: [1],
-      completedAt: finishedRun.completedAt,
+      completedAt: null,
     });
-    runMaterializerMock.findRunForResponse.mockResolvedValue(finishedRun);
-    sessionMapperMock.formatSessionResponse.mockResolvedValue({
-      sessionId: 'mock-run-id',
-    });
+    runGraderMock.completeMockRun
+      .mockRejectedValueOnce(new Error('grading failed'))
+      .mockResolvedValueOnce(undefined);
 
     await service.finishRun('user-id', 'mock-run-id');
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    await Promise.resolve();
 
-    expect(runGraderMock.completeMockRun).not.toHaveBeenCalled();
+    await service.finishRun('user-id', 'mock-run-id');
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(runGraderMock.completeMockRun).toHaveBeenCalledTimes(2);
+    expect(loggerError).toHaveBeenCalledWith(
+      'Failed to finish mock run mock-run-id.',
+      expect.any(String),
+    );
+    loggerError.mockRestore();
   });
 
   it('clears practice answer history for a test', async () => {

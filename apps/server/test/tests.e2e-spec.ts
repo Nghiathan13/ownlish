@@ -18,6 +18,7 @@ import {
 } from './helpers/e2e-toeic';
 import type {
   E2eToeicFixture,
+  FinishToeicRunE2eBody,
   SubmitToeicAnswerE2eBody,
   ToeicSessionE2eBody,
   ToeicTestListE2eBody,
@@ -308,24 +309,47 @@ describe('TestsController (e2e)', () => {
       },
     );
 
-    const [finishResponse, concurrentFinishResponse] = await Promise.all([
-      finishToeicRunRequest(
-        app.getHttpServer(),
-        accessToken,
-        session.sessionId,
-      ).expect(200),
-      finishToeicRunRequest(
-        app.getHttpServer(),
-        accessToken,
-        session.sessionId,
-      ).expect(200),
-    ]);
+    const acceptedResponse = await finishToeicRunRequest(
+      app.getHttpServer(),
+      accessToken,
+      session.sessionId,
+    ).expect(202);
+    expect(parseResponseBody<FinishToeicRunE2eBody>(acceptedResponse)).toEqual({
+      status: 'accepted',
+    });
 
+    const completionDeadline = Date.now() + 10_000;
+    let completed = false;
+    while (Date.now() < completionDeadline) {
+      const replayResponse = await finishToeicRunRequest(
+        app.getHttpServer(),
+        accessToken,
+        session.sessionId,
+      );
+      const replayBody =
+        parseResponseBody<FinishToeicRunE2eBody>(replayResponse);
+
+      expect([200, 202]).toContain(replayResponse.status);
+      expect(replayBody.status).toBe(
+        replayResponse.status === 200 ? 'completed' : 'accepted',
+      );
+
+      if (replayResponse.status === 200) {
+        completed = true;
+        break;
+      }
+
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+    }
+    expect(completed).toBe(true);
+
+    const finishedResponse = await getToeicRunRequest(
+      app.getHttpServer(),
+      accessToken,
+      session.sessionId,
+    ).expect(200);
     const finishedSession =
-      parseResponseBody<ToeicSessionE2eBody>(finishResponse);
-    const concurrentFinishedSession = parseResponseBody<ToeicSessionE2eBody>(
-      concurrentFinishResponse,
-    );
+      parseResponseBody<ToeicSessionE2eBody>(finishedResponse);
     expect(finishedSession).toMatchObject({
       sessionId: session.sessionId,
       mode: 'mock_test',
@@ -333,13 +357,6 @@ describe('TestsController (e2e)', () => {
       correctCount: 0,
     });
     expect(finishedSession.completedAt).toEqual(expect.any(String));
-    expect(concurrentFinishedSession).toMatchObject({
-      sessionId: session.sessionId,
-      mode: 'mock_test',
-      wrongCount: 1,
-      correctCount: 0,
-      completedAt: finishedSession.completedAt,
-    });
 
     await submitToeicAnswerRequest(
       app.getHttpServer(),
@@ -351,7 +368,7 @@ describe('TestsController (e2e)', () => {
         selectedKey: 'A',
       })
       .expect(400);
-  });
+  }, 15_000);
 
   it('rejects review wrong mode for mock sessions', async () => {
     const createResponse = await createToeicRunsRequest(

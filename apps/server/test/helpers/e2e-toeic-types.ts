@@ -40,6 +40,10 @@ export type SubmitToeicAnswerE2eBody = {
   correctOptionVi?: string | null;
 };
 
+export type FinishToeicRunE2eBody = {
+  status: 'accepted' | 'completed';
+};
+
 export type ToeicTestListItemE2eBody = {
   id: number;
   year: number;

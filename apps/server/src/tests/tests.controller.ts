@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -10,8 +11,10 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
@@ -125,11 +128,20 @@ export class TestsController {
   }
 
   @Patch('runs/:sessionId/finish')
-  finishRun(
+  async finishRun(
     @Req() request: AuthRequest,
     @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Res({ passthrough: true }) response: Response,
   ) {
-    return this.toeicRunService.finishRun(request.user.id, sessionId);
+    const result = await this.toeicRunService.finishRun(
+      request.user.id,
+      sessionId,
+    );
+
+    response.status(
+      result.status === 'accepted' ? HttpStatus.ACCEPTED : HttpStatus.OK,
+    );
+    return result;
   }
 
   @Delete(':testId/practice-history')
