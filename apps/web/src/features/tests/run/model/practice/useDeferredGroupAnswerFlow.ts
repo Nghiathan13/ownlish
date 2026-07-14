@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
+import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { isPracticeAnswerGraded } from "@/features/tests/run/lib/practiceAnswers";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
@@ -29,8 +29,8 @@ export function useDeferredGroupAnswerFlow({
       .map((question) => question.id);
   }, [practice, practiceGroup.questions]);
 
-  const allSelectableGraded = selectableQuestionIds.every((questionId) =>
-    isPracticeAnswerGraded(practice.getAnswer(questionId)),
+  const isGroupGraded = practiceGroup.questions.every((question) =>
+    isPracticeAnswerGraded(practice.getAnswer(question.id)),
   );
 
   const allSelectableSelected = selectableQuestionIds.every((questionId) => {
@@ -40,11 +40,12 @@ export function useDeferredGroupAnswerFlow({
   });
 
   const showGroupReveal =
-    !usesDeferredGroupGrading ||
-    allSelectableSelected ||
-    allSelectableGraded;
-
+    !usesDeferredGroupGrading || isGroupGraded;
   const isPartialGroupPhase = usesDeferredGroupGrading && !showGroupReveal;
+  const isGroupPending =
+    usesDeferredGroupGrading &&
+    allSelectableSelected &&
+    selectableQuestionIds.some(practice.isQuestionPending);
 
   const handleSelect = useCallback(
     (toeicQuestionId: number, key: OptionKey) => {
@@ -63,41 +64,21 @@ export function useDeferredGroupAnswerFlow({
         return;
       }
 
-      const nextSelections = {
-        ...localSelections,
-        [toeicQuestionId]: key,
-      };
-      setLocalSelections(nextSelections);
-
-      const allSelected = selectableQuestionIds.every(
-        (questionId) =>
-          (nextSelections[questionId] ??
-            practice.getAnswer(questionId)?.selectedKey) != null,
-      );
-
-      if (!allSelected) {
+      if (!usesDeferredGroupGrading) {
         practice.selectAnswer(toeicQuestionId, key, {
-          deferGrade: true,
           replace: Boolean(existing?.selectedKey),
         });
         return;
       }
 
-      const entries = selectableQuestionIds.map((questionId) => ({
-        toeicQuestionId: questionId,
-        selectedKey: (nextSelections[questionId] ??
-          practice.getAnswer(questionId)?.selectedKey)!,
+      setLocalSelections((current) => ({
+        ...current,
+        [toeicQuestionId]: key,
       }));
-      practice.gradeGroupLocally(entries);
-      setLocalSelections({});
-
-      void practice
-        .syncAnswerToServer(toeicQuestionId, key, {
-          replace: Boolean(existing?.selectedKey),
-        })
-        .catch(() => {
-          practice.rollbackGroupGrade(entries);
-        });
+      practice.selectAnswer(toeicQuestionId, key, {
+        deferGrade: true,
+        replace: Boolean(existing?.selectedKey),
+      });
     },
     [
       localSelections,
@@ -116,6 +97,7 @@ export function useDeferredGroupAnswerFlow({
   return {
     showGroupReveal,
     isPartialGroupPhase,
+    isGroupPending,
     handleSelect,
     getLocalSelectedKey,
   };

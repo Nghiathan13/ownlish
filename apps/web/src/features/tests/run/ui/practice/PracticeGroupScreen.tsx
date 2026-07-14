@@ -1,10 +1,11 @@
 "use client";
 
 import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftPanel";
-import { PracticeQuestionBlock } from "@/features/tests/run/components/PracticeQuestionBlock";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
-import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
-import { useDeferredGroupAnswerFlow } from "@/features/tests/run/hooks/useDeferredGroupAnswerFlow";
+import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
+import { useDeferredGroupAnswerFlow } from "@/features/tests/run/model/practice/useDeferredGroupAnswerFlow";
+import { PracticeQuestionBlock } from "@/features/tests/run/ui/practice/PracticeQuestionBlock";
+import { PracticeSubmissionAlert } from "@/features/tests/run/ui/practice/PracticeSubmissionAlert";
 import { useSignedMedia } from "@/features/tests/run/hooks/useSignedMedia";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { getPracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
@@ -75,6 +76,7 @@ export function PracticeGroupScreen({
       localSelectedKey: answerFlow.getLocalSelectedKey(question.id),
       usesDeferredGroupGrading,
       showGroupReveal: answerFlow.showGroupReveal,
+      isDeferredGroupPending: answerFlow.isGroupPending,
       partConfig,
       isBilingual,
     });
@@ -98,9 +100,10 @@ export function PracticeGroupScreen({
     <>
       {questionBlocks}
       {practice.hasSyncFailures ? (
-        <p className="text-base text-red-600">
-          Some answers could not be saved. Please retry before leaving this group.
-        </p>
+        <PracticeSubmissionAlert
+          isSubmitting={practice.isSubmitting}
+          onRetry={practice.retryFailedAnswers}
+        />
       ) : null}
     </>
   );
@@ -118,7 +121,9 @@ export function PracticeGroupScreen({
   return (
     <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
       {leftPanel}
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">{rightPanel}</div>
+      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
+        {rightPanel}
+      </div>
     </div>
   );
 }

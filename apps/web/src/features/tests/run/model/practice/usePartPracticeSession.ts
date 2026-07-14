@@ -1,21 +1,30 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { getPartPracticeSessionQueryKey } from "@/entities/toeic/lib/toeicCache";
-import { toAnswerMap } from "@/entities/toeic/lib/runState";
-import { usePartPracticeRunQuery } from "@/entities/toeic/hooks/usePartPracticeRunQuery";
+import { useQueryClient } from "@tanstack/react-query";
+import { submitPartPracticeAnswer } from "@/entities/toeic/api/partPractice";
 import type {
   PracticeMode,
   SubmitAnswerResult,
 } from "@/entities/toeic/api/types";
+import { usePartPracticeRunQuery } from "@/entities/toeic/hooks/usePartPracticeRunQuery";
+import {
+  getPartPracticeSessionQueryKey,
+  invalidatePartPracticeOverview,
+} from "@/entities/toeic/lib/toeicCache";
+import { toAnswerMap } from "@/entities/toeic/lib/runState";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import {
   buildAnswerKeyMap,
   type OptionKey,
 } from "@/features/tests/run/lib/answerKeyMap";
 import { isPracticeAnswerGraded } from "@/features/tests/run/lib/practiceAnswers";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import {
+  type PracticeAnswerSubmission,
+  usePracticeAnswerSubmission,
+} from "./usePracticeAnswerSubmission";
 import { usePracticeLocalGrade } from "./usePracticeLocalGrade";
-import { usePartPracticeAnswerSync } from "./usePartPracticeAnswerSync";
 
 export { getPartPracticeSessionQueryKey };
 
@@ -36,6 +45,7 @@ export function usePartPracticeSession({
   mode = "practice",
   enabled,
 }: UsePartPracticeSessionParams) {
+  const queryClient = useQueryClient();
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
 
@@ -56,19 +66,49 @@ export function usePartPracticeSession({
     [sessionData?.groups],
   );
 
-  const { gradeLocally, gradeGroupLocally, rollbackGroupGrade } =
-    usePracticeLocalGrade({
-      queryKey: runQuery.queryKey,
-      answerKeyMap,
-    });
-
-  const answerSync = usePartPracticeAnswerSync({
-    sessionId,
-    mode,
+  const { gradeLocally } = usePracticeLocalGrade({
     queryKey: runQuery.queryKey,
-    userId: runQuery.userId,
-    isAuthenticated,
-    answersByQuestionId,
+    answerKeyMap,
+  });
+
+  const submit = useCallback(
+    ({ toeicQuestionId, selectedKey }: PracticeAnswerSubmission) =>
+      runAuthenticatedRequest({
+        request: (token) =>
+          submitPartPracticeAnswer(token, sessionId, {
+            toeicQuestionId,
+            selectedKey,
+            mode,
+          }),
+      }),
+    [mode, sessionId],
+  );
+
+  const handleSubmissionSuccess = useCallback(
+    async (result: SubmitAnswerResult) => {
+      if (!result.graded) {
+        return;
+      }
+
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: runQuery.queryKey }),
+        invalidatePartPracticeOverview(queryClient, runQuery.userId),
+      ]);
+    },
+    [queryClient, runQuery.queryKey, runQuery.userId],
+  );
+
+  const {
+    failedQuestionIds,
+    hasSyncFailures,
+    isQuestionPending,
+    isQuestionSyncFailed,
+    isSubmitting,
+    queueAnswer,
+    retryFailedAnswers,
+  } = usePracticeAnswerSubmission({
+    submit,
+    onSuccess: handleSubmissionSuccess,
   });
 
   const getAnswer = useCallback(
@@ -82,6 +122,10 @@ export function usePartPracticeSession({
       selectedKey: OptionKey,
       options?: SelectAnswerOptions,
     ) => {
+      if (!isAuthenticated || !sessionId) {
+        return;
+      }
+
       const existingAnswer = answersByQuestionId.get(toeicQuestionId);
       if (
         existingAnswer &&
@@ -101,11 +145,15 @@ export function usePartPracticeSession({
         });
       }
 
-      void answerSync.syncAnswerToServer(toeicQuestionId, selectedKey, {
-        replace: options?.replace,
-      });
+      queueAnswer(toeicQuestionId, selectedKey);
     },
-    [answersByQuestionId, answerSync, gradeLocally],
+    [
+      answersByQuestionId,
+      gradeLocally,
+      isAuthenticated,
+      queueAnswer,
+      sessionId,
+    ],
   );
 
   const submitAnswer = useCallback(
@@ -128,16 +176,13 @@ export function usePartPracticeSession({
     getAnswer,
     isStarting: runQuery.isLoading,
     startError: runQuery.error,
-    isSubmitting: answerSync.isSubmitting,
-    isQuestionPending: answerSync.isQuestionPending,
-    isQuestionSyncFailed: answerSync.isQuestionSyncFailed,
-    hasSyncFailures: answerSync.hasSyncFailures,
-    failedQuestionIds: answerSync.failedQuestionIds,
+    isSubmitting,
+    isQuestionPending,
+    isQuestionSyncFailed,
+    hasSyncFailures,
+    failedQuestionIds,
+    retryFailedAnswers,
     selectAnswer,
-    gradeGroupLocally,
-    rollbackGroupGrade,
-    syncAnswerToServer: answerSync.syncAnswerToServer,
-    retrySync: answerSync.retrySync,
     submitAnswer,
     refetch: runQuery.refetch,
   };

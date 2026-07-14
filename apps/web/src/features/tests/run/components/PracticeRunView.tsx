@@ -10,7 +10,7 @@ import {
   TestRunLoadingSkeleton,
   type TestRunLoadingVariant,
 } from "@/features/tests/run/components/TestRunLoadingSkeleton";
-import { usePracticeSession } from "@/features/tests/run/hooks/usePracticeSession";
+import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import {
   buildPracticeRunQuestions,

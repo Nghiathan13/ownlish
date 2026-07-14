@@ -1,8 +1,8 @@
 "use client";
 
-import { PracticeGroupScreen } from "@/features/tests/run/components/PracticeGroupScreen";
 import type { PartPracticeQuestionGroup } from "@/entities/toeic/api/types";
-import type { PracticeSessionController } from "@/features/tests/run/lib/practiceSessionController";
+import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
+import { PracticeGroupScreen } from "@/features/tests/run/ui/practice/PracticeGroupScreen";
 import type { PracticeRunStep } from "@/features/tests/run/lib/practiceRunSteps";
 
 type PartPracticeStepContentProps = {

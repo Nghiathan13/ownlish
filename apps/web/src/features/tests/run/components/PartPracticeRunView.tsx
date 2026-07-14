@@ -9,7 +9,7 @@ import {
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
-import { usePartPracticeSession } from "@/features/tests/run/hooks/usePartPracticeSession";
+import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
   buildAggregatePracticeRunQuestions,

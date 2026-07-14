@@ -26,7 +26,13 @@ function PartPracticeSessionPageContent({
   const searchParams = useSearchParams();
   const mode = parsePartPracticeRunMode(searchParams.get("mode"));
 
-  return <PartPracticeRunView practiceMode={mode} sessionId={sessionId} />;
+  return (
+    <PartPracticeRunView
+      key={`${mode}-${sessionId}`}
+      practiceMode={mode}
+      sessionId={sessionId}
+    />
+  );
 }
 
 export function PartPracticeSessionPage({ params }: PartPracticeSessionPageProps) {

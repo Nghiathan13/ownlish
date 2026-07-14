@@ -28,6 +28,7 @@ export function getPracticeQuestionPresentation({
   localSelectedKey,
   usesDeferredGroupGrading,
   showGroupReveal,
+  isDeferredGroupPending,
   partConfig,
   isBilingual,
 }: {
@@ -36,6 +37,7 @@ export function getPracticeQuestionPresentation({
   localSelectedKey: OptionKey | null;
   usesDeferredGroupGrading: boolean;
   showGroupReveal: boolean;
+  isDeferredGroupPending: boolean;
   partConfig: PartPracticeConfig;
   isBilingual: boolean;
 }): PracticeQuestionPresentation {
@@ -45,14 +47,15 @@ export function getPracticeQuestionPresentation({
   let showResult: boolean;
 
   if (usesDeferredGroupGrading) {
-    selectedKey = localSelectedKey ?? answer?.selectedKey ?? null;
     if (isPracticeAnswerGraded(answer) || showGroupReveal) {
+      selectedKey = answer?.selectedKey ?? localSelectedKey ?? null;
       answerKey = answer?.answerKey ?? question.answerKey ?? null;
       isLocked = true;
       showResult = true;
     } else {
+      selectedKey = localSelectedKey ?? answer?.selectedKey ?? null;
       answerKey = null;
-      isLocked = false;
+      isLocked = isDeferredGroupPending;
       showResult = false;
     }
   } else {

@@ -99,6 +99,7 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
 
   return (
     <PracticeRunView
+      key={`${mode}-${sessionId}`}
       practiceMode={mode}
       selectedParts={selectedParts}
       sessionId={sessionId}
