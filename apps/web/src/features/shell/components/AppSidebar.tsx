@@ -103,7 +103,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
 
   return (
     <div className="relative flex flex-col gap-2">
-      <span className="absolute bottom-5 left-5 top-5 w-px bg-border" />
+      <span className="absolute top-8 left-5 h-6 w-px bg-border" />
       {TESTS_SUB_LINKS.map((subLink) => {
         const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
 
@@ -227,7 +227,16 @@ export function AppSidebar() {
 
                   if (link.activeMatch === "/tests") {
                     return (
-                      <div key={link.href} className="flex flex-col gap-2">
+                      <div
+                        className={classNames(
+                          "relative flex flex-col gap-2",
+                          collapsed && "items-center",
+                        )}
+                        key={link.href}
+                      >
+                        {!collapsed ? (
+                          <span className="absolute left-5 top-8 h-6 w-px bg-border" />
+                        ) : null}
                         <button
                           aria-expanded={testsExpanded}
                           aria-label={collapsed ? link.label : undefined}
