@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { Suspense, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -52,19 +52,16 @@ const sidebarOpenButtonClassName = classNames(
   "cursor-ew-resize",
 );
 
-type RenderTestsSubNavArgs = {
+type TestsSubNavProps = {
   collapsed: boolean;
-  currentTab: ReturnType<typeof parseTestsOverviewTab>;
-  pathname: string;
   testsExpanded: boolean;
 };
 
-function renderTestsSubNav({
-  collapsed,
-  currentTab,
-  pathname,
-  testsExpanded,
-}: RenderTestsSubNavArgs) {
+function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = parseTestsOverviewTab(searchParams.get("tab"));
+
   if (!testsExpanded) {
     return null;
   }
@@ -147,8 +144,6 @@ export function AppSidebar() {
   const isLoading = isLoadingStatus(status);
   const isAdmin = isAdminUser(user);
   const { collapsed, setCollapsed } = useSidebarCollapsed();
-  const searchParams = useSearchParams();
-  const currentTab = parseTestsOverviewTab(searchParams.get("tab"));
   const [testsExpanded, setTestsExpanded] = useState(() =>
     pathname.startsWith("/tests"),
   );
@@ -266,12 +261,12 @@ export function AppSidebar() {
                             </Tooltip>
                           ) : null}
                         </button>
-                        {renderTestsSubNav({
-                          collapsed,
-                          currentTab,
-                          pathname,
-                          testsExpanded,
-                        })}
+                        <Suspense fallback={null}>
+                          <TestsSubNav
+                            collapsed={collapsed}
+                            testsExpanded={testsExpanded}
+                          />
+                        </Suspense>
                       </div>
                     );
                   }
