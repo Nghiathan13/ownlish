@@ -19,6 +19,7 @@ describe('AuthController (e2e)', () => {
   const googleSub = 'google-sub-auth-e2e';
 
   const googleTokenServiceMock = {
+    verifyAuthorizationCode: jest.fn(),
     verifyIdToken: jest.fn(),
   };
 
@@ -190,7 +191,7 @@ describe('AuthController (e2e)', () => {
       })
       .expect(201);
 
-    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+    googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
       sub: googleSub,
       email,
       name: 'Google Linked',
@@ -199,7 +200,8 @@ describe('AuthController (e2e)', () => {
     const agent = request.agent(app.getHttpServer());
     const googleResponse = await agent
       .post('/auth/google')
-      .send({ idToken: 'mock-google-id-token' })
+      .set('x-requested-with', 'XMLHttpRequest')
+      .send({ code: 'mock-google-authorization-code' })
       .expect(201);
 
     const googleBody = parseResponseBody<ClientAuthBody>(googleResponse);
@@ -226,7 +228,7 @@ describe('AuthController (e2e)', () => {
   });
 
   it('rejects password login for Google-only users', async () => {
-    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+    googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
       sub: googleSub,
       email,
       name: 'Google Only',
@@ -234,7 +236,8 @@ describe('AuthController (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/auth/google')
-      .send({ idToken: 'mock-google-id-token' })
+      .set('x-requested-with', 'XMLHttpRequest')
+      .send({ code: 'mock-google-authorization-code' })
       .expect(201);
 
     await request(app.getHttpServer())
