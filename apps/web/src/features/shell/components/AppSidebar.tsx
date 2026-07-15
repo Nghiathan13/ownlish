@@ -102,7 +102,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
   }
 
   return (
-    <div className="relative flex flex-col gap-2">
+    <div className="relative flex flex-col gap-1">
       <span className="absolute top-8 left-5 h-6 w-px bg-border" />
       {TESTS_SUB_LINKS.map((subLink) => {
         const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
@@ -229,7 +229,7 @@ export function AppSidebar() {
                     return (
                       <div
                         className={classNames(
-                          "relative flex flex-col gap-2",
+                          "relative flex flex-col gap-1",
                           collapsed && "items-center",
                         )}
                         key={link.href}
