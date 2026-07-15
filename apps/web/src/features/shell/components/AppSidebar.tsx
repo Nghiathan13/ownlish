@@ -68,7 +68,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-2">
         {TESTS_SUB_LINKS.map((subLink) => {
           const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
 
@@ -102,37 +102,36 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
   }
 
   return (
-    <div className="relative ml-5">
-      <span className="absolute bottom-0 left-0 top-0 w-px bg-border" />
-      <div className="flex flex-col">
-        {TESTS_SUB_LINKS.map((subLink) => {
-          const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
+    <div className="relative flex flex-col gap-2">
+      <span className="absolute bottom-5 left-5 top-5 w-px bg-border" />
+      {TESTS_SUB_LINKS.map((subLink) => {
+        const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
 
-          return (
-            <Link
-              aria-current={isSubActive ? "page" : undefined}
-              className={classNames(
-                "relative flex items-center gap-2 rounded-lg py-2 pl-4 pr-2 hover:bg-hover-overlay",
-                isSubActive && "bg-muted",
-              )}
-              href={subLink.href}
-              key={subLink.tab}
-              scroll={false}
-            >
-              <span className="absolute left-0 top-1/2 h-px w-4 -translate-y-1/2 bg-border" />
+        return (
+          <Link
+            aria-current={isSubActive ? "page" : undefined}
+            className={classNames(
+              "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+              isSubActive && "bg-muted",
+            )}
+            href={subLink.href}
+            key={subLink.tab}
+            scroll={false}
+          >
+            <span className="flex size-6 shrink-0 items-center justify-center">
               <span
                 className={classNames(
-                  "size-2 shrink-0 rounded-full",
+                  "size-2 rounded-full",
                   isSubActive ? "bg-foreground" : "bg-muted-foreground",
                 )}
               />
-              <span className="text-base font-normal text-foreground">
-                {subLink.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+            </span>
+            <span className="text-base font-normal text-foreground">
+              {subLink.label}
+            </span>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -228,14 +227,14 @@ export function AppSidebar() {
 
                   if (link.activeMatch === "/tests") {
                     return (
-                      <div key={link.href} className="flex flex-col">
+                      <div key={link.href} className="flex flex-col gap-2">
                         <button
                           aria-expanded={testsExpanded}
                           aria-label={collapsed ? link.label : undefined}
                           className={classNames(
                             getAppSidebarLinkClass(pathname, link),
                             sidebarLinkGroupClassName,
-                            "relative flex w-full items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+                            "relative flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
                             collapsed && "z-10 justify-center",
                           )}
                           onClick={() => setTestsExpanded((value) => !value)}

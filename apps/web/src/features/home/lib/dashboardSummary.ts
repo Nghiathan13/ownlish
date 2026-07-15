@@ -12,7 +12,6 @@ export type DashboardPartPracticeSummary = {
 };
 
 export type DashboardNextAction = {
-  description: string;
   href: string;
   label: string;
   title: string;
@@ -84,7 +83,6 @@ export function getDashboardNextAction({
   if (stats && stats.due > 0) {
     return {
       title: `Review ${stats.due} vocabulary ${stats.due === 1 ? "item" : "items"}`,
-      description: "Reviewing now keeps these items on schedule.",
       href: "/review",
       label: "Start review",
     };
@@ -93,9 +91,6 @@ export function getDashboardNextAction({
   if (partPractice.wrong > 0) {
     return {
       title: `Revisit ${partPractice.wrong} Part Practice ${partPractice.wrong === 1 ? "mistake" : "mistakes"}`,
-      description: partPractice.attentionPart
-        ? `Part ${partPractice.attentionPart.partNumber} has the highest current mistake rate.`
-        : "Review the mistakes from your current practice.",
       href: "/tests",
       label: "Open Part Practice",
     };
@@ -104,7 +99,6 @@ export function getDashboardNextAction({
   if (stats && stats.total === 0) {
     return {
       title: "Build your first vocabulary list",
-      description: "Add vocabulary to create your first review queue.",
       href: "/collections?tab=user",
       label: "Browse collections",
     };
@@ -113,9 +107,6 @@ export function getDashboardNextAction({
   if (partPractice.answered > 0) {
     return {
       title: "Keep your Part Practice momentum",
-      description: partPractice.suggestedPartNumber
-        ? `Continue with Part ${partPractice.suggestedPartNumber} from your current progress.`
-        : "Choose a short practice session to continue.",
       href: "/tests",
       label: "Continue practice",
     };
@@ -123,7 +114,6 @@ export function getDashboardNextAction({
 
   return {
     title: "Start a short Part Practice session",
-    description: "Choose one TOEIC part for a focused practice session.",
     href: "/tests",
     label: "Explore Part Practice",
   };

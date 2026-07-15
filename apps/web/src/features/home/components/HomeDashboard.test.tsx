@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomeDashboard } from "@/features/home/components/HomeDashboard";
@@ -93,7 +93,7 @@ describe("HomeDashboard", () => {
     );
   });
 
-  it("shows one clear next action and scoped learning progress", () => {
+  it("shows one concise card for each learning area", () => {
     render(<HomeDashboard />);
 
     expect(
@@ -105,7 +105,7 @@ describe("HomeDashboard", () => {
     expect(
       screen.getByRole("heading", { name: "Daily vocabulary" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Part 3 needs attention")).toBeInTheDocument();
+    expect(screen.getByText("Focus: Part 3")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /start review/i })).toHaveAttribute(
       "href",
       "/review",
@@ -114,24 +114,8 @@ describe("HomeDashboard", () => {
       screen.getByRole("link", { name: /open part practice/i }),
     ).toHaveAttribute("href", "/tests");
     expect(screen.queryByText("Current queue")).not.toBeInTheDocument();
-    expect(screen.queryByText("Vocabulary due")).not.toBeInTheDocument();
-    expect(screen.queryByText("Part mistakes")).not.toBeInTheDocument();
-  });
-
-  it("does not invent study time or learning streak values", () => {
-    render(<HomeDashboard />);
-
-    const studyTime = screen.getByRole("region", { name: "Study time" });
-    const learningStreak = screen.getByRole("region", {
-      name: "Learning streak",
-    });
-
-    expect(within(studyTime).getByText("Not tracked yet")).toBeInTheDocument();
-    expect(
-      within(learningStreak).getByText("Not tracked yet"),
-    ).toBeInTheDocument();
-    expect(within(studyTime).queryByText(/0\s*(min|hour)/i)).toBeNull();
-    expect(within(learningStreak).queryByText(/0\s*days?/i)).toBeNull();
+    expect(screen.queryByText("Learning rhythm")).not.toBeInTheDocument();
+    expect(screen.queryByText("Learning progress")).not.toBeInTheDocument();
   });
 
   it("keeps vocabulary available when Part Practice fails", async () => {
@@ -186,7 +170,7 @@ describe("HomeDashboard", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("No vocabulary items yet")).toBeInTheDocument();
     expect(
-      screen.getByText("Ready for your first practice"),
+      screen.getByText("Start a part"),
     ).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent(/NaN|Infinity/);
   });
