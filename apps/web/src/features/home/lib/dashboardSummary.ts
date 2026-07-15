@@ -84,8 +84,7 @@ export function getDashboardNextAction({
   if (stats && stats.due > 0) {
     return {
       title: `Review ${stats.due} vocabulary ${stats.due === 1 ? "item" : "items"}`,
-      description:
-        "A short review now keeps recently learned vocabulary from slipping away.",
+      description: "Reviewing now keeps these items on schedule.",
       href: "/review",
       label: "Start review",
     };
@@ -95,8 +94,8 @@ export function getDashboardNextAction({
     return {
       title: `Revisit ${partPractice.wrong} Part Practice ${partPractice.wrong === 1 ? "mistake" : "mistakes"}`,
       description: partPractice.attentionPart
-        ? `Part ${partPractice.attentionPart.partNumber} needs the most attention based on your current practice.`
-        : "Reviewing mistakes is the clearest next step in your current practice.",
+        ? `Part ${partPractice.attentionPart.partNumber} has the highest current mistake rate.`
+        : "Review the mistakes from your current practice.",
       href: "/tests",
       label: "Open Part Practice",
     };
@@ -105,8 +104,7 @@ export function getDashboardNextAction({
   if (stats && stats.total === 0) {
     return {
       title: "Build your first vocabulary list",
-      description:
-        "Add a few useful words now, then EngVocab can prepare a review queue for you.",
+      description: "Add vocabulary to create your first review queue.",
       href: "/collections?tab=user",
       label: "Browse collections",
     };
@@ -116,8 +114,8 @@ export function getDashboardNextAction({
     return {
       title: "Keep your Part Practice momentum",
       description: partPractice.suggestedPartNumber
-        ? `Continue with Part ${partPractice.suggestedPartNumber} while your progress is fresh.`
-        : "Choose a short practice session and keep moving forward.",
+        ? `Continue with Part ${partPractice.suggestedPartNumber} from your current progress.`
+        : "Choose a short practice session to continue.",
       href: "/tests",
       label: "Continue practice",
     };
@@ -125,8 +123,7 @@ export function getDashboardNextAction({
 
   return {
     title: "Start a short Part Practice session",
-    description:
-      "Choose one TOEIC part and build confidence one focused session at a time.",
+    description: "Choose one TOEIC part for a focused practice session.",
     href: "/tests",
     label: "Explore Part Practice",
   };

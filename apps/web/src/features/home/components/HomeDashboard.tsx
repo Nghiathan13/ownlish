@@ -23,21 +23,15 @@ import {
   getMasteryPercentage,
   type DashboardPartPracticeSummary,
 } from "@/features/home/lib/dashboardSummary";
-import { classNames } from "@/shared/lib/classNames";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
-import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
-import { ReviewNavIcon } from "@/shared/ui/icons/ReviewNavIcon";
-import { TestsNavIcon } from "@/shared/ui/icons/TestsNavIcon";
-import { WrongIcon } from "@/shared/ui/icons/WrongIcon";
 import { PageShell } from "@/shared/ui/PageShell";
-import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 const dashboardButtonInteractionClassName =
-  "gap-2 transition duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px [&_svg]:size-5 [&_svg]:shrink-0";
+  "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px [&_svg]:size-5 [&_svg]:shrink-0";
 
 export function HomeDashboard() {
   const { status, user } = useAuthSession();
@@ -79,16 +73,13 @@ export function HomeDashboard() {
   if (!isAuthenticated) {
     return (
       <PageShell centered className="px-4 py-8">
-        <section className="w-full max-w-xl rounded-3xl bg-surface p-6 shadow-card sm:p-8">
-          <p className="mb-3 text-sm font-medium text-muted-foreground">
-            EngVocab
-          </p>
-          <h1 className="max-w-lg text-3xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl">
-            A calmer way to build your English every day.
+        <section className="w-full max-w-xl rounded-2xl border border-border bg-surface p-6 sm:p-8">
+          <p className="text-sm font-medium text-muted-foreground">EngVocab</p>
+          <h1 className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl">
+            Build your English with a clear daily routine.
           </h1>
           <p className="mt-4 max-w-lg leading-7 text-muted-foreground">
-            Sign in to review due vocabulary, practice TOEIC, and keep your next
-            study step clear.
+            Sign in to review vocabulary and continue your TOEIC practice.
           </p>
           <Link
             className={primaryTextButtonClassName(
@@ -108,24 +99,14 @@ export function HomeDashboard() {
   const partPractice = buildPartPracticeSummary(summaries);
   const nextAction = getDashboardNextAction({ partPractice, stats });
   const displayName = getDisplayName(user?.name, user?.email);
-  const suggestedFocus = partPracticeError
-    ? "—"
-    : partPractice.suggestedPartNumber
-      ? `Part ${partPractice.suggestedPartNumber}`
-      : "Choose a part";
 
   return (
     <PageShell>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16">
-        <header className="mb-7 sm:mb-9">
-          <p className="text-sm font-medium text-muted-foreground">Dashboard</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-7 sm:px-6 sm:pt-9 lg:px-8 lg:pb-16">
+        <header className="mb-6 sm:mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Welcome back, {displayName}
           </h1>
-          <p className="mt-3 max-w-2xl leading-7 text-muted-foreground text-pretty">
-            Keep the next step small and clear. Your current review and Part
-            Practice progress are gathered here.
-          </p>
         </header>
 
         {isLoadingCollections ? (
@@ -172,73 +153,112 @@ export function HomeDashboard() {
         ) : isLoadingVocab || isLoadingPartPractice ? (
           <HomeDashboardSkeleton />
         ) : (
-          <div className="flex flex-col gap-5 sm:gap-6">
-            <article className="relative overflow-hidden rounded-[1.75rem] bg-amber-100/80 p-5 text-amber-950 dark:bg-amber-950/40 dark:text-amber-50 sm:p-7 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.65fr)] lg:gap-8">
-              <div
-                aria-hidden
-                className="absolute -right-16 -top-20 size-56 rounded-full border-[2.5rem] border-amber-200/60 dark:border-amber-800/20"
-              />
-              <div className="relative max-w-2xl">
-                <p className="text-sm font-semibold">Next up</p>
-                <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-3xl">
-                  {nextAction.title}
-                </h2>
-                <p className="mt-3 max-w-xl leading-7 text-amber-950/70 text-pretty dark:text-amber-100/70">
-                  {nextAction.description}
-                </p>
-                <Link
-                  className={primaryTextButtonClassName(
-                    dashboardButtonInteractionClassName,
-                    "mt-6 border-amber-950 bg-amber-950 text-amber-50 dark:border-amber-50 dark:bg-amber-50 dark:text-amber-950",
-                  )}
-                  href={nextAction.href}
+          <div className="flex flex-col gap-9 sm:gap-11">
+            <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+              <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
+                <article className="bg-sky-50/70 p-5 dark:bg-sky-950/20 sm:p-7 lg:p-8">
+                  <p className="text-sm font-medium text-sky-800 dark:text-sky-300">
+                    Next up
+                  </p>
+                  <h2 className="mt-3 max-w-2xl text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-3xl">
+                    {nextAction.title}
+                  </h2>
+                  <p className="mt-3 max-w-xl leading-7 text-muted-foreground text-pretty">
+                    {nextAction.description}
+                  </p>
+                  <Link
+                    className={primaryTextButtonClassName(
+                      dashboardButtonInteractionClassName,
+                      "mt-6",
+                    )}
+                    href={nextAction.href}
+                  >
+                    {nextAction.label}
+                    <ArrowForwardIcon />
+                  </Link>
+                </article>
+
+                <LearningRhythm />
+              </div>
+            </section>
+
+            <section aria-labelledby="learning-progress-title">
+              <div className="mb-4 max-w-2xl">
+                <h2
+                  className="text-xl font-semibold tracking-tight sm:text-2xl"
+                  id="learning-progress-title"
                 >
-                  {nextAction.label}
-                  <ArrowForwardIcon />
-                </Link>
-              </div>
-
-              <div className="relative mt-7 rounded-2xl bg-surface/75 p-4 text-foreground shadow-sm backdrop-blur-sm lg:mt-0 lg:self-stretch">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Current queue
+                  Learning progress
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Vocabulary uses your default collection. TOEIC reflects Part
+                  Practice only.
                 </p>
-                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
-                  <Metric
-                    label="Vocabulary due"
-                    value={vocabError ? "—" : (stats?.due ?? 0)}
-                  />
-                  <Metric
-                    label="Part mistakes"
-                    value={partPracticeError ? "—" : partPractice.wrong}
-                  />
-                  <Metric
-                    className="col-span-2 border-t border-border pt-4"
-                    label="Suggested focus"
-                    value={suggestedFocus}
-                  />
-                </dl>
               </div>
-            </article>
 
-            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:gap-6">
-              <VocabularyOverview
-                collectionName={defaultCollection.name}
-                error={vocabError}
-                onRetry={() => void reloadVocab()}
-                stats={stats}
-              />
-              <PartPracticeOverview
-                error={partPracticeError}
-                onRetry={() => void reloadPartPractice()}
-                partPractice={partPractice}
-                hasSummaries={summaries.length > 0}
-              />
-            </div>
-
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface divide-y divide-border lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:divide-x lg:divide-y-0">
+                <VocabularyOverview
+                  collectionName={defaultCollection.name}
+                  error={vocabError}
+                  onRetry={() => void reloadVocab()}
+                  stats={stats}
+                />
+                <PartPracticeOverview
+                  error={partPracticeError}
+                  hasSummaries={summaries.length > 0}
+                  onRetry={() => void reloadPartPractice()}
+                  partPractice={partPractice}
+                />
+              </div>
+            </section>
           </div>
         )}
       </div>
     </PageShell>
+  );
+}
+
+function LearningRhythm() {
+  return (
+    <aside
+      aria-labelledby="learning-rhythm-title"
+      className="border-t border-border p-5 sm:p-7 lg:border-l lg:border-t-0 lg:p-8"
+    >
+      <h2 className="font-semibold" id="learning-rhythm-title">
+        Learning rhythm
+      </h2>
+
+      <div className="mt-4 divide-y divide-border">
+        <section
+          aria-labelledby="study-time-title"
+          className="pb-4"
+        >
+          <h3 className="text-sm text-muted-foreground" id="study-time-title">
+            Study time
+          </h3>
+          <p className="mt-1 text-lg font-semibold">Not tracked yet</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Daily and weekly totals
+          </p>
+        </section>
+
+        <section
+          aria-labelledby="learning-streak-title"
+          className="pt-4"
+        >
+          <h3
+            className="text-sm text-muted-foreground"
+            id="learning-streak-title"
+          >
+            Learning streak
+          </h3>
+          <p className="mt-1 text-lg font-semibold">Not tracked yet</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Consecutive study days
+          </p>
+        </section>
+      </div>
+    </aside>
   );
 }
 
@@ -258,24 +278,17 @@ function VocabularyOverview({
   return (
     <section
       aria-labelledby="vocabulary-overview-title"
-      className="rounded-[1.5rem] bg-surface p-5 shadow-card sm:p-6"
+      className="flex flex-col p-5 sm:p-7"
     >
-      <div className="flex items-start gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-950 dark:bg-amber-950/50 dark:text-amber-100">
-          <ReviewNavIcon className="size-6" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-muted-foreground">
-            Vocabulary · default collection
-          </p>
-          <h2
-            className="mt-0.5 truncate text-xl font-semibold tracking-tight"
-            id="vocabulary-overview-title"
-          >
-            {collectionName}
-          </h2>
-        </div>
-      </div>
+      <p className="text-sm font-medium text-sky-800 dark:text-sky-300">
+        Vocabulary
+      </p>
+      <h3
+        className="mt-1 truncate text-xl font-semibold tracking-tight"
+        id="vocabulary-overview-title"
+      >
+        {collectionName}
+      </h3>
 
       {error ? (
         <InlinePanelState
@@ -284,11 +297,10 @@ function VocabularyOverview({
           onAction={onRetry}
         />
       ) : !stats || stats.total === 0 ? (
-        <div className="mt-7 rounded-2xl bg-muted p-5">
+        <div className="mt-7 border-l-2 border-sky-600 pl-4 dark:border-sky-400">
           <p className="font-semibold">No vocabulary items yet</p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Add words to this collection and your review progress will appear
-            here.
+            Add words to this collection to start tracking mastery.
           </p>
           <Link
             className={secondaryTextButtonClassName(
@@ -303,58 +315,28 @@ function VocabularyOverview({
         </div>
       ) : (
         <>
-          <div className="mt-7 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Ready to review</p>
-              <p className="mt-1 font-mono text-4xl font-semibold tracking-tight tabular-nums">
-                {stats.due}
-              </p>
-            </div>
-            <p className="pb-1 text-right text-sm text-muted-foreground">
-              {masteryPercentage}% mastered
-            </p>
-          </div>
-
-          <ProgressTrack
-            label={`${stats.mastered} of ${stats.total} vocabulary items mastered`}
-            value={masteryPercentage}
-          />
-
-          <dl className="mt-6 grid grid-cols-3 gap-3 border-t border-border pt-5">
-            <Metric label="Study items" value={stats.total} />
+          <dl className="mt-8 grid grid-cols-2 gap-6">
             <Metric
-              label="Mastered"
-              value={stats.mastered}
-              valueClassName={statusColorClasses.success.text}
+              detail={`${stats.mastered} of ${stats.total} items`}
+              label="Mastery"
+              value={`${masteryPercentage}%`}
             />
             <Metric
+              detail="High mistake count"
               label="Needs attention"
               value={stats.highWrongCount}
-              valueClassName={
-                stats.highWrongCount > 0
-                  ? statusColorClasses.danger.text
-                  : undefined
-              }
             />
           </dl>
 
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              className={primaryTextButtonClassName(
-                dashboardButtonInteractionClassName,
-              )}
-              href="/review"
-            >
-              {stats.due > 0 ? "Review due items" : "Open review queue"}
-              <ArrowForwardIcon />
-            </Link>
+          <div className="mt-8 lg:mt-auto lg:pt-8">
             <Link
               className={secondaryTextButtonClassName(
                 dashboardButtonInteractionClassName,
               )}
               href={getCollectionsListPath("user")}
             >
-              Manage
+              Manage collection
+              <ArrowForwardIcon />
             </Link>
           </div>
         </>
@@ -374,29 +356,20 @@ function PartPracticeOverview({
   onRetry: () => void;
   partPractice: DashboardPartPracticeSummary;
 }) {
-  const answeredPercentage = partPractice.total
-    ? Math.round((partPractice.answered / partPractice.total) * 100)
-    : 0;
-
   return (
     <section
       aria-labelledby="part-practice-overview-title"
-      className="rounded-[1.5rem] bg-surface p-5 shadow-card sm:p-6"
+      className="flex flex-col p-5 sm:p-7"
     >
-      <div className="flex items-start gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200">
-          <TestsNavIcon className="size-6" />
-        </span>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">TOEIC</p>
-          <h2
-            className="mt-0.5 text-xl font-semibold tracking-tight"
-            id="part-practice-overview-title"
-          >
-            Part Practice
-          </h2>
-        </div>
-      </div>
+      <p className="text-sm font-medium text-sky-800 dark:text-sky-300">
+        TOEIC
+      </p>
+      <h3
+        className="mt-1 text-xl font-semibold tracking-tight"
+        id="part-practice-overview-title"
+      >
+        Part Practice
+      </h3>
 
       {error ? (
         <InlinePanelState
@@ -405,7 +378,7 @@ function PartPracticeOverview({
           onAction={onRetry}
         />
       ) : !hasSummaries ? (
-        <div className="mt-7 rounded-2xl bg-muted p-5">
+        <div className="mt-7 border-l-2 border-sky-600 pl-4 dark:border-sky-400">
           <p className="font-semibold">Part Practice is not available yet</p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             Open Tests to check the available TOEIC practice material.
@@ -423,140 +396,87 @@ function PartPracticeOverview({
         </div>
       ) : (
         <>
-          <div className="mt-7 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Current accuracy</p>
-              <p className="mt-1 font-mono text-4xl font-semibold tracking-tight tabular-nums">
-                {partPractice.accuracy == null ? "—" : `${partPractice.accuracy}%`}
-              </p>
-            </div>
-            <p className="pb-1 text-right text-sm text-muted-foreground">
-              {partPractice.answered} of {partPractice.total} answered
-            </p>
-          </div>
-
-          <ProgressTrack
-            label={`${partPractice.answered} of ${partPractice.total} Part Practice questions answered`}
-            value={answeredPercentage}
-          />
-
-          {partPractice.attentionPart ? (
-            <div className="mt-6 rounded-2xl bg-red-50/80 p-4 dark:bg-red-950/25">
-              <div className="flex items-start gap-3">
-                <WrongIcon
-                  className={classNames(
-                    "mt-0.5 size-5 shrink-0",
-                    statusColorClasses.danger.text,
-                  )}
-                />
-                <div>
-                  <p className="font-semibold">
-                    Part {partPractice.attentionPart.partNumber} needs attention
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {partPractice.attentionPart.wrong} wrong out of{" "}
-                    {partPractice.attentionPart.answered} answered in this part.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-6 rounded-2xl bg-emerald-50/80 p-4 dark:bg-emerald-950/25">
-              <div className="flex items-start gap-3">
-                <CheckIcon
-                  className={classNames(
-                    "mt-0.5 size-5 shrink-0",
-                    statusColorClasses.success.text,
-                  )}
-                />
-                <div>
-                  <p className="font-semibold">
-                    {partPractice.answered > 0
-                      ? "No mistakes waiting for review"
-                      : "Ready for your first practice"}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    {partPractice.answered > 0
-                      ? "Choose another part when you are ready to continue."
-                      : "Start with one part and build from there."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-5">
+          <dl className="mt-8 grid grid-cols-2 gap-6">
             <Metric
-              label="Correct"
-              value={partPractice.correct}
-              valueClassName={statusColorClasses.success.text}
+              detail={`${partPractice.correct} correct of ${partPractice.answered} answered`}
+              label="Accuracy"
+              value={
+                partPractice.accuracy == null
+                  ? "Not started"
+                  : `${partPractice.accuracy}%`
+              }
             />
             <Metric
-              label="Wrong"
-              value={partPractice.wrong}
-              valueClassName={
-                partPractice.wrong > 0
-                  ? statusColorClasses.danger.text
-                  : undefined
-              }
+              detail={`of ${partPractice.total} questions`}
+              label="Answered"
+              value={partPractice.answered}
             />
           </dl>
 
-          <Link
-            className={primaryTextButtonClassName(
-              dashboardButtonInteractionClassName,
-              "mt-7",
+          <div className="mt-7 border-l-2 border-sky-600 pl-4 dark:border-sky-400">
+            {partPractice.attentionPart ? (
+              <>
+                <p className="text-sm text-muted-foreground">Focus next</p>
+                <p className="mt-1 font-semibold">
+                  Part {partPractice.attentionPart.partNumber} needs attention
+                </p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {partPractice.attentionPart.wrong} mistakes in{" "}
+                  {partPractice.attentionPart.answered} answered questions.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold">
+                  {partPractice.answered > 0
+                    ? "No mistakes waiting for review"
+                    : "Ready for your first practice"}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {partPractice.answered > 0
+                    ? "Choose another part when you are ready to continue."
+                    : "Start with one part and build from there."}
+                </p>
+              </>
             )}
-            href="/tests"
-          >
-            Open Part Practice
-            <ArrowForwardIcon />
-          </Link>
+          </div>
+
+          <div className="mt-8 lg:mt-auto lg:pt-8">
+            <Link
+              className={primaryTextButtonClassName(
+                dashboardButtonInteractionClassName,
+              )}
+              href="/tests"
+            >
+              Open Part Practice
+              <ArrowForwardIcon />
+            </Link>
+          </div>
         </>
       )}
     </section>
   );
 }
 
-function ProgressTrack({ label, value }: { label: string; value: number }) {
-  return (
-    <div
-      aria-label={label}
-      aria-valuemax={100}
-      aria-valuemin={0}
-      aria-valuenow={value}
-      className="mt-4 h-2 overflow-hidden rounded-full bg-muted"
-      role="progressbar"
-    >
-      <div
-        className="h-full rounded-full bg-foreground transition-[width] duration-500"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  );
-}
-
 function Metric({
-  className,
+  detail,
   label,
   value,
-  valueClassName,
 }: {
-  className?: string;
+  detail: string;
   label: string;
   value: number | string;
-  valueClassName?: string;
 }) {
   return (
-    <div className={className}>
-      <dt className="text-xs leading-5 text-muted-foreground">{label}</dt>
-      <dd
-        className={classNames(
-          "mt-1 font-mono text-xl font-semibold tracking-tight tabular-nums",
-          valueClassName,
-        )}
-      >
-        {value}
+    <div>
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="mt-1">
+        <span className="block font-mono text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
+          {value}
+        </span>
+        <span className="mt-2 block text-xs leading-5 text-muted-foreground">
+          {detail}
+        </span>
       </dd>
     </div>
   );
@@ -572,7 +492,7 @@ function InlinePanelState({
   onAction: () => void;
 }) {
   return (
-    <div className="mt-7 rounded-2xl bg-muted p-5" role="alert">
+    <div className="mt-7 border-l-2 border-border pl-4" role="alert">
       <p className="font-semibold text-foreground">This section did not load.</p>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{message}</p>
       <button
@@ -598,7 +518,7 @@ function DashboardMessage({
 }) {
   return (
     <section
-      className="flex flex-col items-start justify-between gap-5 rounded-3xl bg-surface p-6 text-muted-foreground shadow-card sm:flex-row sm:items-center sm:p-8"
+      className="flex flex-col items-start justify-between gap-5 rounded-2xl border border-border bg-surface p-6 text-muted-foreground sm:flex-row sm:items-center sm:p-8"
       role={role}
     >
       {children}

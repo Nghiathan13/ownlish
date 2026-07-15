@@ -5,10 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MockTestsTab } from "@/features/tests/overview/components/MockTestsTab";
 import { PracticeTab } from "@/features/tests/overview/components/PracticeTab";
 import { TestsOverviewPageSkeleton } from "@/features/tests/overview/components/TestsOverviewPageSkeleton";
-import {
-  TestsOverviewTabs,
-  parseTestsOverviewTab,
-} from "@/features/tests/overview/components/TestsOverviewTabs";
 import { useAvailableToeicYears } from "@/features/tests/overview/hooks/useAvailableToeicYears";
 import { resolveToeicSelectedYear } from "@/features/tests/overview/lib/toeicTestYears";
 import {
@@ -19,7 +15,7 @@ import {
 } from "@/features/tests/shared/constants/toeicYears";
 import {
   getTestsOverviewRedirectTarget,
-  parsePracticeOverviewPartParam,
+  parseTestsOverviewTab,
 } from "@/features/tests/shared/lib/partPracticePaths";
 import {
   isAuthenticatedStatus,
@@ -36,9 +32,6 @@ export function TestsPage() {
   const requestedYear: ToeicYear =
     parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;
   const selectedTab = parseTestsOverviewTab(searchParams.get("tab"));
-  const selectedPartNumber = parsePracticeOverviewPartParam(
-    searchParams.get("part"),
-  );
   const redirectTarget = getTestsOverviewRedirectTarget(searchParams);
   const { availableYears, isLoadingYears } = useAvailableToeicYears({
     isAuthenticated,
@@ -73,9 +66,6 @@ export function TestsPage() {
 
     return getTestsListPath(resolvedYear);
   }, [availableYears, isLoadingYears, requestedYear, selectedTab]);
-  const mockYearForLinks = selectedYear;
-  const partForLinks = selectedPartNumber ?? 1;
-
   useEffect(() => {
     if (redirectTarget) {
       router.replace(redirectTarget, { scroll: false });
@@ -108,11 +98,6 @@ export function TestsPage() {
 
   return (
     <PageShell>
-      <TestsOverviewTabs
-        mockYear={mockYearForLinks}
-        partNumber={partForLinks}
-        selectedTab={selectedTab}
-      />
       {selectedTab === "part_practice" ? (
         <PracticeTab />
       ) : (

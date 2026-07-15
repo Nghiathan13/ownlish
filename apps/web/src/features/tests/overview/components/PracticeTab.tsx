@@ -4,7 +4,6 @@ import { PartPracticeCard } from "@/features/tests/overview/components/PartPract
 import { PartPracticeTabs } from "@/features/tests/overview/components/PartPracticeTabs";
 import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
 import { usePartPracticeOverview } from "@/features/tests/overview/hooks/usePartPracticeOverview";
-import { testOverviewCardGridClassName } from "@/features/tests/overview/lib/testOverviewCard";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
 
@@ -25,6 +24,10 @@ function buildPartSummary(
 
 export function PracticeTab() {
   const overview = usePartPracticeOverview();
+  const selectedSummary = buildPartSummary(
+    overview.summaries,
+    overview.selectedPartNumber,
+  );
 
   return (
     <>
@@ -48,35 +51,37 @@ export function PracticeTab() {
             </button>
           </div>
         ) : (
-          <div className={testOverviewCardGridClassName}>
-            {overview.allPartNumbers.map((partNumber) => {
-              const summary = buildPartSummary(overview.summaries, partNumber);
-
-              return (
-                <PartPracticeCard
-                  isClearingHistory={
-                    overview.isClearing &&
-                    overview.clearingPartNumber === partNumber
-                  }
-                  isStarting={
-                    overview.isStarting &&
-                    overview.startingPartNumber === partNumber
-                  }
-                  key={partNumber}
-                  onClearHistory={() => void overview.clearHistory(partNumber)}
-                  onPractice={() =>
-                    void overview.startPartPractice(partNumber, "practice")
-                  }
-                  onReviewWrong={() =>
-                    void overview.startPartPractice(partNumber, "review_wrong")
-                  }
-                  summary={summary}
-                />
-              );
-            })}
+          <div className="max-w-md">
+            <PartPracticeCard
+              isClearingHistory={
+                overview.isClearing &&
+                overview.clearingPartNumber === overview.selectedPartNumber
+              }
+              isStarting={
+                overview.isStarting &&
+                overview.startingPartNumber === overview.selectedPartNumber
+              }
+              onClearHistory={() =>
+                void overview.clearHistory(overview.selectedPartNumber)
+              }
+              onPractice={() =>
+                void overview.startPartPractice(
+                  overview.selectedPartNumber,
+                  "practice",
+                )
+              }
+              onReviewWrong={() =>
+                void overview.startPartPractice(
+                  overview.selectedPartNumber,
+                  "review_wrong",
+                )
+              }
+              summary={selectedSummary}
+            />
           </div>
         )}
       </div>
     </>
   );
 }
+

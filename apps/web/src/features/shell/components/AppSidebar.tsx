@@ -1,8 +1,8 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   useAuthSession,
   isAuthenticatedStatus,
@@ -18,12 +18,16 @@ import {
   APP_NAV_LINKS,
   getAppSidebarLinkClass,
   isAppNavLinkActive,
+  isTestsSubLinkActive,
+  TESTS_SUB_LINKS,
 } from "@/features/shell/lib/appNavLinks";
+import { parseTestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import { classNames } from "@/shared/lib/classNames";
 import {
   iconOnlyButtonClassName,
   primaryTextButtonClassName,
 } from "@/shared/ui/button";
+import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { PanelCloseIcon } from "@/shared/ui/icons/PanelCloseIcon";
 import { PanelOpenIcon } from "@/shared/ui/icons/PanelOpenIcon";
 import {
@@ -48,6 +52,94 @@ const sidebarOpenButtonClassName = classNames(
   "cursor-ew-resize",
 );
 
+type RenderTestsSubNavArgs = {
+  collapsed: boolean;
+  currentTab: ReturnType<typeof parseTestsOverviewTab>;
+  pathname: string;
+  testsExpanded: boolean;
+};
+
+function renderTestsSubNav({
+  collapsed,
+  currentTab,
+  pathname,
+  testsExpanded,
+}: RenderTestsSubNavArgs) {
+  if (!testsExpanded) {
+    return null;
+  }
+
+  if (collapsed) {
+    return (
+      <div className="flex flex-col items-center gap-1">
+        {TESTS_SUB_LINKS.map((subLink) => {
+          const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
+
+          return (
+            <Link
+              aria-current={isSubActive ? "page" : undefined}
+              aria-label={subLink.label}
+              className={classNames(
+                sidebarLinkGroupClassName,
+                "relative flex size-10 items-center justify-center rounded-lg hover:bg-hover-overlay",
+                isSubActive && "bg-muted",
+              )}
+              href={subLink.href}
+              key={subLink.tab}
+              scroll={false}
+            >
+              <span
+                className={classNames(
+                  "size-2 rounded-full",
+                  isSubActive ? "bg-foreground" : "bg-muted-foreground",
+                )}
+              />
+              <Tooltip group="sidebar-link" placement="right">
+                {subLink.label}
+              </Tooltip>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative ml-5">
+      <span className="absolute bottom-0 left-0 top-0 w-px bg-border" />
+      <div className="flex flex-col">
+        {TESTS_SUB_LINKS.map((subLink) => {
+          const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
+
+          return (
+            <Link
+              aria-current={isSubActive ? "page" : undefined}
+              className={classNames(
+                "relative flex items-center gap-2 rounded-lg py-2 pl-4 pr-2 hover:bg-hover-overlay",
+                isSubActive && "bg-muted",
+              )}
+              href={subLink.href}
+              key={subLink.tab}
+              scroll={false}
+            >
+              <span className="absolute left-0 top-1/2 h-px w-4 -translate-y-1/2 bg-border" />
+              <span
+                className={classNames(
+                  "size-2 shrink-0 rounded-full",
+                  isSubActive ? "bg-foreground" : "bg-muted-foreground",
+                )}
+              />
+              <span className="text-base font-normal text-foreground">
+                {subLink.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { logout, status, user } = useAuthSession();
@@ -55,6 +147,11 @@ export function AppSidebar() {
   const isLoading = isLoadingStatus(status);
   const isAdmin = isAdminUser(user);
   const { collapsed, setCollapsed } = useSidebarCollapsed();
+  const searchParams = useSearchParams();
+  const currentTab = parseTestsOverviewTab(searchParams.get("tab"));
+  const [testsExpanded, setTestsExpanded] = useState(() =>
+    pathname.startsWith("/tests"),
+  );
 
   const handleCollapsedSidebarClick = (event: MouseEvent<HTMLElement>) => {
     if ((event.target as HTMLElement).closest("a, button")) {
@@ -133,6 +230,51 @@ export function AppSidebar() {
                 {APP_NAV_LINKS.map((link) => {
                   const isActive = isAppNavLinkActive(pathname, link);
                   const Icon = isActive ? link.activeIcon : link.icon;
+
+                  if (link.activeMatch === "/tests") {
+                    return (
+                      <div key={link.href} className="flex flex-col">
+                        <button
+                          aria-expanded={testsExpanded}
+                          aria-label={collapsed ? link.label : undefined}
+                          className={classNames(
+                            getAppSidebarLinkClass(pathname, link),
+                            sidebarLinkGroupClassName,
+                            "relative flex w-full items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+                            collapsed && "z-10 justify-center",
+                          )}
+                          onClick={() => setTestsExpanded((value) => !value)}
+                          type="button"
+                        >
+                          <Icon className="size-6 shrink-0" />
+                          {!collapsed ? (
+                            <span className="flex-1 text-left">
+                              {link.label}
+                            </span>
+                          ) : null}
+                          {!collapsed ? (
+                            <ArrowForwardIcon
+                              className={classNames(
+                                "size-4 shrink-0 text-muted-foreground",
+                                testsExpanded && "rotate-90",
+                              )}
+                            />
+                          ) : null}
+                          {collapsed ? (
+                            <Tooltip group="sidebar-link" placement="right">
+                              {link.label}
+                            </Tooltip>
+                          ) : null}
+                        </button>
+                        {renderTestsSubNav({
+                          collapsed,
+                          currentTab,
+                          pathname,
+                          testsExpanded,
+                        })}
+                      </div>
+                    );
+                  }
 
                   return (
                     <Link

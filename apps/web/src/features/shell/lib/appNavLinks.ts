@@ -3,6 +3,10 @@ import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPath,
 } from "@/features/tests/shared/constants/toeicYears";
+import {
+  getTestsOverviewPath,
+  type TestsOverviewTab,
+} from "@/features/tests/shared/lib/partPracticePaths";
 import { CollectionsNavFillIcon } from "@/shared/ui/icons/CollectionsNavFillIcon";
 import { CollectionsNavIcon } from "@/shared/ui/icons/CollectionsNavIcon";
 import { DashboardNavFillIcon } from "@/shared/ui/icons/DashboardNavFillIcon";
@@ -94,4 +98,35 @@ export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
   return `text-base font-normal text-foreground ${
     isActive ? "bg-muted" : ""
   }`;
+}
+
+export type TestsSubLink = {
+  href: string;
+  label: string;
+  tab: TestsOverviewTab;
+};
+
+export const TESTS_SUB_LINKS: TestsSubLink[] = [
+  {
+    href: getTestsListPath(DEFAULT_TOEIC_YEAR),
+    label: "Mock Tests",
+    tab: "mock_tests",
+  },
+  {
+    href: getTestsOverviewPath({ tab: "part_practice" }),
+    label: "Part Practice",
+    tab: "part_practice",
+  },
+];
+
+export function isTestsSubLinkActive(
+  pathname: string,
+  currentTab: TestsOverviewTab,
+  subLink: TestsSubLink,
+): boolean {
+  if (!pathname.startsWith("/tests")) {
+    return false;
+  }
+
+  return currentTab === subLink.tab;
 }

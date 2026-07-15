@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomeDashboard } from "@/features/home/components/HomeDashboard";
@@ -113,6 +113,25 @@ describe("HomeDashboard", () => {
     expect(
       screen.getByRole("link", { name: /open part practice/i }),
     ).toHaveAttribute("href", "/tests");
+    expect(screen.queryByText("Current queue")).not.toBeInTheDocument();
+    expect(screen.queryByText("Vocabulary due")).not.toBeInTheDocument();
+    expect(screen.queryByText("Part mistakes")).not.toBeInTheDocument();
+  });
+
+  it("does not invent study time or learning streak values", () => {
+    render(<HomeDashboard />);
+
+    const studyTime = screen.getByRole("region", { name: "Study time" });
+    const learningStreak = screen.getByRole("region", {
+      name: "Learning streak",
+    });
+
+    expect(within(studyTime).getByText("Not tracked yet")).toBeInTheDocument();
+    expect(
+      within(learningStreak).getByText("Not tracked yet"),
+    ).toBeInTheDocument();
+    expect(within(studyTime).queryByText(/0\s*(min|hour)/i)).toBeNull();
+    expect(within(learningStreak).queryByText(/0\s*days?/i)).toBeNull();
   });
 
   it("keeps vocabulary available when Part Practice fails", async () => {
