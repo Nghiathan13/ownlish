@@ -125,13 +125,41 @@ export class TestsStorageService {
       ...new Set(storagePaths.filter((path): path is string => Boolean(path))),
     ];
 
-    const entries = await Promise.all(
-      uniquePaths.map(async (path) => {
-        const signed = await this.createSignedUrl(path);
-        return [path, signed] as const;
+    if (uniquePaths.length === 0) {
+      return new Map<string, SignedMediaUrl | null>();
+    }
+
+    const client = this.getClient();
+    if (!client) {
+      this.logger.warn(
+        'Supabase Storage is not configured; skipping signed URLs.',
+      );
+      return new Map(uniquePaths.map((path) => [path, null]));
+    }
+
+    const { data, error } = await client.storage
+      .from(env.toeicStorageBucket)
+      .createSignedUrls(uniquePaths, env.toeicSignedUrlTtlSeconds);
+
+    if (error || !data) {
+      this.logger.warn(
+        `Failed to sign media URLs: ${error?.message ?? 'unknown error'}`,
+      );
+      return new Map(uniquePaths.map((path) => [path, null]));
+    }
+
+    const signedUrlByPath = new Map(
+      data.map((item) => [item.path, item.signedUrl]),
+    );
+    const expiresAt = new Date(
+      Date.now() + env.toeicSignedUrlTtlSeconds * 1000,
+    ).toISOString();
+
+    return new Map(
+      uniquePaths.map((path) => {
+        const url = signedUrlByPath.get(path);
+        return [path, url ? { url, expiresAt } : null];
       }),
     );
-
-    return new Map(entries);
   }
 }
