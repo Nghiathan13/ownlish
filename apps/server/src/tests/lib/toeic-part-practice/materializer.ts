@@ -28,24 +28,14 @@ export class ToeicPartPracticeMaterializer {
     partNumber: number,
   ): Promise<PartPracticeRunForResponse> {
     const existingRun = await this.findRunByUserAndPart(userId, partNumber);
+    if (existingRun) {
+      return existingRun;
+    }
+
     const catalogGroups =
       await this.partPracticeRepository.listQuestionGroupsForPartCatalog(
         partNumber,
       );
-
-    if (existingRun) {
-      await this.attachGroupsToExistingRun(
-        existingRun.id,
-        existingRun.partNumber,
-        existingRun.groups,
-        catalogGroups,
-      );
-      const refreshed = await this.findRunForResponse(existingRun.id);
-      if (!refreshed) {
-        throw new NotFoundException('Part practice session not found.');
-      }
-      return refreshed;
-    }
 
     const run = await this.partPracticeRepository.transaction(async (tx) => {
       const createdRun = await tx.toeicPartPracticeRun.create({
@@ -73,42 +63,6 @@ export class ToeicPartPracticeMaterializer {
     }
 
     return created;
-  }
-
-  private async attachGroupsToExistingRun(
-    runId: string,
-    partNumber: number,
-    existingGroups: PartPracticeRunForResponse['groups'],
-    catalogGroups: ToeicQuestionGroupForPartPractice[],
-  ): Promise<void> {
-    const existingGroupIds = new Set(
-      existingGroups.map((group) => group.toeicQuestionGroupId),
-    );
-    const newGroups = catalogGroups.filter(
-      (group) => !existingGroupIds.has(group.id),
-    );
-    if (newGroups.length === 0) {
-      return;
-    }
-
-    const nextGroupSortOrder =
-      existingGroups.reduce(
-        (highest, group) => Math.max(highest, group.sortOrder),
-        -1,
-      ) + 1;
-    const nextQuestionSortOrder =
-      (await this.partPracticeRepository.countRunQuestions(runId)) + 1;
-
-    await this.partPracticeRepository.transaction(async (tx) => {
-      await this.attachQuestionGroupsToRun(
-        tx,
-        runId,
-        partNumber,
-        newGroups,
-        nextGroupSortOrder,
-        nextQuestionSortOrder,
-      );
-    });
   }
 
   private async attachQuestionGroupsToRun(

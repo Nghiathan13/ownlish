@@ -33,7 +33,6 @@ describe('ToeicPartPracticeMaterializer', () => {
     findRunByUserAndPart: jest.fn(),
     listQuestionGroupsForPartCatalog: jest.fn(),
     transaction: jest.fn(),
-    countRunQuestions: jest.fn(),
     findRunForResponse: jest.fn(),
   };
 
@@ -53,7 +52,7 @@ describe('ToeicPartPracticeMaterializer', () => {
     materializer = module.get(ToeicPartPracticeMaterializer);
   });
 
-  it('attaches only missing catalog groups to an existing run and returns refreshed run', async () => {
+  it('returns an existing run without syncing catalog groups', async () => {
     const existingRun = buildPartPracticeRunForResponse({
       id: 'run-id',
       groups: [
@@ -63,81 +62,22 @@ describe('ToeicPartPracticeMaterializer', () => {
         }),
       ],
     });
-    const catalogGroups = [
-      buildCatalogGroup({ id: 101 }),
-      buildCatalogGroup({
-        id: 102,
-        questions: [{ id: 1002, questionNumber: 1 }],
-      }),
-    ];
-    const refreshedRun = buildPartPracticeRunForResponse({
-      id: 'run-id',
-      groups: [
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 101,
-          sortOrder: 0,
-        }),
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 102,
-          sortOrder: 1,
-          question: { id: 1002, questionNumber: 1 } as never,
-        }),
-      ],
-    });
-    const txMock = {
-      toeicPartPracticeGroup: {
-        create: jest.fn().mockResolvedValue({ id: 'new-group-id' }),
-      },
-      toeicPartPracticeQuestion: {
-        createMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-    };
 
     repositoryMock.findRunByUserAndPart.mockResolvedValue(existingRun);
-    repositoryMock.listQuestionGroupsForPartCatalog.mockResolvedValue(
-      catalogGroups,
-    );
-    repositoryMock.countRunQuestions.mockResolvedValue(1);
-    repositoryMock.findRunForResponse.mockResolvedValue(refreshedRun);
-    repositoryMock.transaction.mockImplementation(
-      async (callback: (tx: typeof txMock) => Promise<void>) =>
-        callback(txMock),
-    );
 
     await expect(
       materializer.findOrCreateRunWithQuestions('user-id', 1),
-    ).resolves.toBe(refreshedRun);
+    ).resolves.toBe(existingRun);
 
+    expect(repositoryMock.findRunByUserAndPart).toHaveBeenCalledWith(
+      'user-id',
+      1,
+    );
     expect(
       repositoryMock.listQuestionGroupsForPartCatalog,
-    ).toHaveBeenCalledWith(1);
-    expect(repositoryMock.transaction).toHaveBeenCalledTimes(1);
-    expect(txMock.toeicPartPracticeGroup.create).toHaveBeenCalledTimes(1);
-    expect(txMock.toeicPartPracticeGroup.create).toHaveBeenCalledWith({
-      data: {
-        runId: 'run-id',
-        toeicQuestionGroupId: 102,
-        toeicTestId: 1,
-        partNumber: 1,
-        questionStart: 1,
-        questionEnd: 1,
-        sortOrder: 1,
-      },
-    });
-    expect(txMock.toeicPartPracticeQuestion.createMany).toHaveBeenCalledWith({
-      data: [
-        {
-          runId: 'run-id',
-          runGroupId: 'new-group-id',
-          toeicQuestionId: 1002,
-          toeicTestId: 1,
-          partNumber: 1,
-          questionNumber: 1,
-          sortOrder: 2,
-        },
-      ],
-    });
-    expect(repositoryMock.findRunForResponse).toHaveBeenCalledWith('run-id');
+    ).not.toHaveBeenCalled();
+    expect(repositoryMock.transaction).not.toHaveBeenCalled();
+    expect(repositoryMock.findRunForResponse).not.toHaveBeenCalled();
   });
 
   it('creates a new run when none exists for the user and part', async () => {
