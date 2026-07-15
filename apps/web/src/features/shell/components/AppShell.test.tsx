@@ -1,0 +1,52 @@
+import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppShell } from "@/features/shell/components/AppShell";
+
+const mocks = vi.hoisted(() => ({
+  useAuthSession: vi.fn(),
+  usePathname: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: mocks.usePathname,
+}));
+
+vi.mock("@/features/auth/hooks/useAuthSession", () => ({
+  isAuthenticatedStatus: (status: string) => status === "authenticated",
+  isLoadingStatus: (status: string) => status === "loading",
+  useAuthSession: mocks.useAuthSession,
+}));
+
+vi.mock("@/features/shell/components/AppSidebar", () => ({
+  AppSidebar: () => <div data-testid="app-sidebar" />,
+}));
+
+vi.mock("@/features/shell/components/MobileTopNav", () => ({
+  MobileTopNav: () => <div data-testid="mobile-top-nav" />,
+}));
+
+describe("AppShell", () => {
+  beforeEach(() => {
+    mocks.usePathname.mockReturnValue("/");
+    mocks.useAuthSession.mockReturnValue({ status: "guest" });
+  });
+
+  it("renders the guest home with a top navbar instead of a sidebar", () => {
+    render(
+      <AppShell>
+        <div>Home content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("link", { name: "EngVocab" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/login",
+    );
+    expect(screen.queryByTestId("app-sidebar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mobile-top-nav")).not.toBeInTheDocument();
+  });
+});

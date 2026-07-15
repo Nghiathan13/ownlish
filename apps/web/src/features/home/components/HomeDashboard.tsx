@@ -66,29 +66,7 @@ export function HomeDashboard() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <PageShell centered className="px-4 py-8">
-        <section className="w-full max-w-xl rounded-2xl border border-border bg-surface p-6 sm:p-8">
-          <p className="text-sm font-medium text-muted-foreground">EngVocab</p>
-          <h1 className="mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-balance sm:text-4xl">
-            Build your English with a clear daily routine.
-          </h1>
-          <p className="mt-4 max-w-lg leading-7 text-muted-foreground">
-            Sign in to review vocabulary and continue your TOEIC practice.
-          </p>
-          <Link
-            className={primaryTextButtonClassName(
-              dashboardButtonInteractionClassName,
-              "mt-7",
-            )}
-            href="/login"
-          >
-            Sign in
-            <ArrowForwardIcon />
-          </Link>
-        </section>
-      </PageShell>
-    );
+    return <PageShell>{null}</PageShell>;
   }
 
   return (

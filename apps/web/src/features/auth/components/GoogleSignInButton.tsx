@@ -1,42 +1,34 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import Image from "next/image";
 import Script from "next/script";
-import { classNames } from "@/shared/lib/classNames";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type GoogleSignInButtonProps = {
   disabled?: boolean;
-  onCredential: (idToken: string) => void | Promise<void>;
+  onCode: (code: string) => void | Promise<void>;
+  onError: (message: string) => void;
 };
 
-type GoogleCredentialResponse = {
-  credential?: string;
+type GoogleCodeResponse = {
+  code?: string;
+};
+
+type GoogleCodeClient = {
+  requestCode: () => void;
 };
 
 type GoogleIdentityApi = {
   accounts: {
-    id: {
-      initialize: (config: {
+    oauth2: {
+      initCodeClient: (config: {
+        callback: (response: GoogleCodeResponse) => void;
         client_id: string;
-        callback: (response: GoogleCredentialResponse) => void;
-        auto_select?: boolean;
-      }) => void;
-      renderButton: (
-        parent: HTMLElement,
-        options: {
-          type?: string;
-          theme?: string;
-          size?: string;
-          text?: string;
-          width?: number;
-        },
-      ) => void;
+        error_callback: () => void;
+        scope: string;
+        ux_mode: "popup";
+      }) => GoogleCodeClient;
     };
   };
 };
@@ -48,41 +40,38 @@ declare global {
 }
 
 const GIS_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
-const DEFAULT_BUTTON_WIDTH = 360;
-/** GIS `size: "large"` standard button height */
-const GIS_BUTTON_MIN_HEIGHT_PX = 40;
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
-function getButtonWidth(containerWidth: number) {
-  return Math.max(200, Math.min(Math.floor(containerWidth), 400));
-}
+export const isGoogleSignInConfigured = Boolean(GOOGLE_CLIENT_ID);
 
 function isGoogleIdentityReady() {
-  return Boolean(window.google?.accounts?.id);
+  return Boolean(window.google?.accounts?.oauth2?.initCodeClient);
 }
 
 export function GoogleSignInButton({
   disabled = false,
-  onCredential,
+  onCode,
+  onError,
 }: GoogleSignInButtonProps) {
-  const buttonHostRef = useRef<HTMLDivElement>(null);
+  const codeClientRef = useRef<GoogleCodeClient | null>(null);
   const disabledRef = useRef(disabled);
-  const onCredentialRef = useRef(onCredential);
-  const buttonWidthRef = useRef<number | null>(null);
-  const renderedWidthRef = useRef<number | null>(null);
-  const resizeRafRef = useRef<number | null>(null);
+  const onCodeRef = useRef(onCode);
+  const onErrorRef = useRef(onError);
   const [isScriptReady, setIsScriptReady] = useState(
     () => typeof window !== "undefined" && isGoogleIdentityReady(),
   );
-  const [buttonWidth, setButtonWidth] = useState<number | null>(null);
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
   useEffect(() => {
     disabledRef.current = disabled;
   }, [disabled]);
 
   useEffect(() => {
-    onCredentialRef.current = onCredential;
-  }, [onCredential]);
+    onCodeRef.current = onCode;
+  }, [onCode]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   const markScriptReady = useCallback(() => {
     if (isGoogleIdentityReady()) {
@@ -90,97 +79,43 @@ export function GoogleSignInButton({
     }
   }, []);
 
-  useLayoutEffect(() => {
-    const container = buttonHostRef.current;
-    if (!container) {
-      return;
-    }
-
-    const applyMeasuredWidth = () => {
-      const nextWidth = getButtonWidth(
-        container.offsetWidth || DEFAULT_BUTTON_WIDTH,
-      );
-
-      if (nextWidth === buttonWidthRef.current) {
-        return;
-      }
-
-      buttonWidthRef.current = nextWidth;
-      setButtonWidth(nextWidth);
-    };
-
-    applyMeasuredWidth();
-
-    const observer = new ResizeObserver(() => {
-      if (resizeRafRef.current !== null) {
-        cancelAnimationFrame(resizeRafRef.current);
-      }
-
-      resizeRafRef.current = requestAnimationFrame(() => {
-        resizeRafRef.current = null;
-        applyMeasuredWidth();
-      });
-    });
-
-    observer.observe(container);
-
-    return () => {
-      observer.disconnect();
-      if (resizeRafRef.current !== null) {
-        cancelAnimationFrame(resizeRafRef.current);
-      }
-    };
-  }, []);
-
   useEffect(() => {
-    if (!isScriptReady || !clientId || !isGoogleIdentityReady()) {
+    if (!isScriptReady || !isGoogleSignInConfigured || !isGoogleIdentityReady()) {
       return;
     }
 
-    window.google!.accounts.id.initialize({
-      auto_select: false,
-      client_id: clientId,
+    const client = window.google!.accounts.oauth2.initCodeClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "openid email profile",
+      ux_mode: "popup",
       callback: (response) => {
-        if (!response.credential || disabledRef.current) {
+        if (!response.code || disabledRef.current) {
           return;
         }
 
-        void onCredentialRef.current(response.credential);
+        void onCodeRef.current(response.code);
+      },
+      error_callback: () => {
+        if (!disabledRef.current) {
+          onErrorRef.current("Google sign-in could not be completed. Please try again.");
+        }
       },
     });
-  }, [clientId, isScriptReady]);
 
-  useEffect(() => {
-    const host = buttonHostRef.current;
+    codeClientRef.current = client;
 
-    if (
-      !isScriptReady ||
-      !clientId ||
-      !isGoogleIdentityReady() ||
-      !host ||
-      buttonWidth === null
-    ) {
-      return;
-    }
+    return () => {
+      if (codeClientRef.current === client) {
+        codeClientRef.current = null;
+      }
+    };
+  }, [isScriptReady]);
 
-    if (renderedWidthRef.current === buttonWidth) {
-      return;
-    }
-
-    host.innerHTML = "";
-    window.google!.accounts.id.renderButton(host, {
-      size: "large",
-      text: "continue_with",
-      theme: "outline",
-      type: "standard",
-      width: buttonWidth,
-    });
-    renderedWidthRef.current = buttonWidth;
-  }, [buttonWidth, clientId, isScriptReady]);
-
-  if (!clientId) {
+  if (!isGoogleSignInConfigured) {
     return null;
   }
+
+  const isDisabled = disabled || !isScriptReady;
 
   return (
     <>
@@ -190,16 +125,17 @@ export function GoogleSignInButton({
         src={GIS_SCRIPT_SRC}
         strategy="afterInteractive"
       />
-      <div
-        aria-disabled={disabled}
-        className={classNames(
-          "flex w-full justify-center",
-          disabled && "pointer-events-none opacity-60",
+      <button
+        className={secondaryTextButtonClassName(
+          "w-full gap-3 hover:bg-hover-overlay active:translate-y-px",
         )}
-        style={{ minHeight: GIS_BUTTON_MIN_HEIGHT_PX }}
+        disabled={isDisabled}
+        onClick={() => codeClientRef.current?.requestCode()}
+        type="button"
       >
-        <div className="w-full" ref={buttonHostRef} />
-      </div>
+        <Image alt="" aria-hidden height={18} src="/google.svg" width={18} />
+        {isScriptReady ? "Continue with Google" : "Loading Google..."}
+      </button>
     </>
   );
 }

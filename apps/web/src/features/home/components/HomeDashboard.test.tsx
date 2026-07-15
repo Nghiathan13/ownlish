@@ -82,15 +82,15 @@ describe("HomeDashboard", () => {
     });
   });
 
-  it("offers sign in to a guest", () => {
+  it("keeps the guest home body empty", () => {
     mocks.useAuthSession.mockReturnValue({ status: "guest", user: null });
 
     render(<HomeDashboard />);
 
-    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
-      "href",
-      "/login",
-    );
+    expect(
+      screen.queryByText("Build your English with a clear daily routine."),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /sign in/i })).not.toBeInTheDocument();
   });
 
   it("shows vocabulary metrics and graded progress for all TOEIC parts", () => {

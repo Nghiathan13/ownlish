@@ -36,6 +36,9 @@ export function googleLogin(input: GoogleLoginInput) {
   return apiRequest("/api/auth/google", {
     method: "POST",
     body: JSON.stringify(input),
+    headers: {
+      "X-Requested-With": "XMLHttpRequest",
+    },
     sameOrigin: true,
   }).then(parseAuthResponse);
 }

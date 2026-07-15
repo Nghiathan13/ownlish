@@ -8,7 +8,7 @@ export function PartPracticeTabsSkeleton({
 }) {
   return (
     <SkeletonTabPills
-      className="mx-16 mb-16 flex flex-wrap gap-2 rounded-[16px] bg-surface p-2 shadow-card"
+      className="mx-16 mt-16 mb-8 flex w-fit flex-wrap gap-2 rounded-[16px] bg-surface p-2 shadow-card"
       count={count}
       pillClassName="h-10 w-16"
     />
