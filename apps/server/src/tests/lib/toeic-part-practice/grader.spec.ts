@@ -1,151 +1,124 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
+import { ToeicRunQuestionStatus } from '@prisma/client';
 import { ToeicPartPracticeGrader } from './grader';
 import { ToeicPartPracticeRepository } from './repository';
-import { PrismaService } from '../../../prisma/prisma.service';
-import {
-  createToeicTestsPrismaMock,
-  useToeicTestsTransaction,
-} from '../../testing/create-toeic-tests-prisma.mock';
-
-function createPartPracticePrismaMock() {
-  const base = createToeicTestsPrismaMock();
-  return {
-    ...base,
-    toeicPartPracticeRun: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
-    toeicPartPracticeQuestion: {
-      count: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
-    toeicPartPracticeGroup: {
-      update: jest.fn(),
-    },
-  };
-}
 
 describe('ToeicPartPracticeGrader', () => {
   let grader: ToeicPartPracticeGrader;
-  const prismaMock = createPartPracticePrismaMock();
-  const mockGradedPartPracticeQuestion = (
-    status: 'RIGHT' | 'WRONG',
-    selectedKey: 'A' | 'B',
-  ) => {
-    const question = {
-      id: 1001,
-      answerKey: 'A',
-      group: { testPart: { testId: 1, partNumber: 1 } },
-    };
-    prismaMock.toeicPartPracticeRun.findFirst.mockResolvedValue({
-      id: 'part-run-id',
-      partNumber: 1,
-    });
-    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
-    prismaMock.toeicPartPracticeQuestion.findUnique.mockResolvedValue({
-      id: 'run-question-id',
-      runId: 'part-run-id',
-      runGroupId: 'run-group-id',
-      toeicQuestionId: 1001,
-      partNumber: 1,
-      selectedKey,
-      status,
-      toeicQuestion: question,
-    });
+
+  const repositoryMock = {
+    findOwnedRun: jest.fn(),
+    findQuestionWithTestPart: jest.fn(),
+    lockRunForUpdate: jest.fn(),
+    transaction: jest.fn(),
+  };
+
+  const txMock = {
+    toeicQuestion: {
+      findMany: jest.fn(),
+    },
+    toeicPartPracticeAnswer: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
+      count: jest.fn(),
+    },
+    toeicPartPracticeRun: {
+      update: jest.fn(),
+    },
+  };
+
+  const question = {
+    id: 1001,
+    answerKey: 'A',
+    group: { id: 101, testPart: { testId: 1, partNumber: 1 } },
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    useToeicTestsTransaction(prismaMock);
-    prismaMock.$queryRaw.mockResolvedValue([{ id: 'part-run-id' }]);
+
+    repositoryMock.lockRunForUpdate.mockResolvedValue({ id: 'part-run-id' });
+    repositoryMock.transaction.mockImplementation(
+      async (callback: (tx: typeof txMock) => Promise<unknown>) =>
+        callback(txMock),
+    );
+    txMock.toeicPartPracticeRun.update.mockResolvedValue({});
+    txMock.toeicPartPracticeAnswer.update.mockResolvedValue({});
+    txMock.toeicPartPracticeAnswer.create.mockResolvedValue({});
+    txMock.toeicPartPracticeAnswer.findUnique.mockResolvedValue(null);
+    txMock.toeicPartPracticeAnswer.count.mockResolvedValue(0);
+    txMock.toeicQuestion.findMany.mockResolvedValue([
+      { id: 1001, answerKey: 'A' },
+    ]);
+    txMock.toeicPartPracticeAnswer.findMany.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ToeicPartPracticeGrader,
-        ToeicPartPracticeRepository,
-        { provide: PrismaService, useValue: prismaMock },
+        { provide: ToeicPartPracticeRepository, useValue: repositoryMock },
       ],
     }).compile();
 
     grader = module.get(ToeicPartPracticeGrader);
   });
 
-  it('grades a group when every question in the group is selected', async () => {
-    const question = {
-      id: 1001,
-      answerKey: 'A',
-      group: { testPart: { testId: 1, partNumber: 1 } },
-    };
-    prismaMock.toeicPartPracticeRun.findFirst.mockResolvedValue({
+  it('grades a single-question group when the answer is selected', async () => {
+    repositoryMock.findOwnedRun.mockResolvedValue({
       id: 'part-run-id',
       partNumber: 1,
     });
-    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
-    prismaMock.toeicPartPracticeQuestion.findUnique.mockResolvedValue({
-      id: 'run-question-id',
-      runId: 'part-run-id',
-      runGroupId: 'run-group-id',
-      toeicQuestionId: 1001,
-      partNumber: 1,
-      selectedKey: null,
-      status: null,
-      toeicQuestion: question,
-    });
-    prismaMock.toeicPartPracticeQuestion.findMany
-      .mockResolvedValueOnce([{ selectedKey: 'A', status: 'SELECTED' }])
-      .mockResolvedValueOnce([
-        {
-          id: 'run-question-id',
-          runGroupId: 'run-group-id',
-          status: 'SELECTED',
-          selectedKey: 'A',
-          toeicQuestion: question,
-        },
-      ])
-      .mockResolvedValueOnce([{ status: 'RIGHT' }]);
-    prismaMock.toeicPartPracticeQuestion.count
-      .mockResolvedValueOnce(1)
-      .mockResolvedValueOnce(0);
+    repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+    txMock.toeicPartPracticeAnswer.findMany.mockResolvedValue([
+      {
+        id: 'answer-1',
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+        status: ToeicRunQuestionStatus.SELECTED,
+      },
+    ]);
 
     await expect(
       grader.submitAnswer('user-id', 'part-run-id', {
         toeicQuestionId: 1001,
         selectedKey: 'A',
       }),
-    ).resolves.toMatchObject({
-      graded: true,
-      isCorrect: true,
-      answerKey: 'A',
+    ).resolves.toMatchObject({ graded: true, isCorrect: true });
+
+    expect(txMock.toeicPartPracticeAnswer.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        runId: 'part-run-id',
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+        status: ToeicRunQuestionStatus.SELECTED,
+      }),
+    });
+    expect(txMock.toeicPartPracticeAnswer.update).toHaveBeenCalledWith({
+      where: { id: 'answer-1' },
+      data: expect.objectContaining({
+        status: ToeicRunQuestionStatus.RIGHT,
+      }),
     });
   });
 
-  it('returns graded false when the group is not ready', async () => {
-    const question = {
-      id: 1001,
-      answerKey: 'A',
-      group: { testPart: { testId: 1, partNumber: 1 } },
-    };
-    prismaMock.toeicPartPracticeRun.findFirst.mockResolvedValue({
+  it('does not grade when not every question in the group is selected', async () => {
+    repositoryMock.findOwnedRun.mockResolvedValue({
       id: 'part-run-id',
       partNumber: 1,
     });
-    prismaMock.toeicQuestion.findUnique.mockResolvedValue(question);
-    prismaMock.toeicPartPracticeQuestion.findUnique.mockResolvedValue({
-      id: 'run-question-id',
-      runId: 'part-run-id',
-      runGroupId: 'run-group-id',
-      toeicQuestionId: 1001,
-      partNumber: 1,
-      selectedKey: null,
-      status: null,
-      toeicQuestion: question,
-    });
-    prismaMock.toeicPartPracticeQuestion.findMany.mockResolvedValue([
-      { selectedKey: 'A', status: 'SELECTED' },
-      { selectedKey: null, status: null },
+    repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+    txMock.toeicQuestion.findMany.mockResolvedValue([
+      { id: 1001, answerKey: 'A' },
+      { id: 1002, answerKey: 'B' },
+    ]);
+    txMock.toeicPartPracticeAnswer.findMany.mockResolvedValue([
+      {
+        id: 'answer-1',
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+        status: ToeicRunQuestionStatus.SELECTED,
+      },
     ]);
 
     await expect(
@@ -162,7 +135,20 @@ describe('ToeicPartPracticeGrader', () => {
   ] as const)(
     'treats the same %s answer as an idempotent retry',
     async (status, selectedKey, isCorrect) => {
-      mockGradedPartPracticeQuestion(status, selectedKey);
+      repositoryMock.findOwnedRun.mockResolvedValue({
+        id: 'part-run-id',
+        partNumber: 1,
+      });
+      repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+      txMock.toeicPartPracticeAnswer.findUnique.mockResolvedValue({
+        id: 'answer-1',
+        toeicQuestionId: 1001,
+        selectedKey,
+        status:
+          status === 'RIGHT'
+            ? ToeicRunQuestionStatus.RIGHT
+            : ToeicRunQuestionStatus.WRONG,
+      });
 
       await expect(
         grader.submitAnswer('user-id', 'part-run-id', {
@@ -171,9 +157,8 @@ describe('ToeicPartPracticeGrader', () => {
         }),
       ).resolves.toMatchObject({ graded: true, isCorrect });
 
-      expect(
-        prismaMock.toeicPartPracticeQuestion.update,
-      ).not.toHaveBeenCalled();
+      expect(txMock.toeicPartPracticeAnswer.update).not.toHaveBeenCalled();
+      expect(txMock.toeicPartPracticeAnswer.create).not.toHaveBeenCalled();
     },
   );
 
@@ -183,7 +168,20 @@ describe('ToeicPartPracticeGrader', () => {
   ] as const)(
     'rejects changing an already %s answer',
     async (status, previousSelectedKey, selectedKey) => {
-      mockGradedPartPracticeQuestion(status, previousSelectedKey);
+      repositoryMock.findOwnedRun.mockResolvedValue({
+        id: 'part-run-id',
+        partNumber: 1,
+      });
+      repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+      txMock.toeicPartPracticeAnswer.findUnique.mockResolvedValue({
+        id: 'answer-1',
+        toeicQuestionId: 1001,
+        selectedKey: previousSelectedKey,
+        status:
+          status === 'RIGHT'
+            ? ToeicRunQuestionStatus.RIGHT
+            : ToeicRunQuestionStatus.WRONG,
+      });
 
       await expect(
         grader.submitAnswer('user-id', 'part-run-id', {
@@ -192,17 +190,34 @@ describe('ToeicPartPracticeGrader', () => {
         }),
       ).rejects.toThrow('Graded answers cannot be changed.');
 
-      expect(
-        prismaMock.toeicPartPracticeQuestion.update,
-      ).not.toHaveBeenCalled();
+      expect(txMock.toeicPartPracticeAnswer.update).not.toHaveBeenCalled();
+      expect(txMock.toeicPartPracticeAnswer.create).not.toHaveBeenCalled();
     },
   );
 
   it('allows review wrong to replace a wrong answer', async () => {
-    mockGradedPartPracticeQuestion('WRONG', 'B');
-    prismaMock.toeicPartPracticeQuestion.findMany.mockResolvedValue([
-      { selectedKey: 'A', status: 'SELECTED' },
-      { selectedKey: 'D', status: 'WRONG' },
+    repositoryMock.findOwnedRun.mockResolvedValue({
+      id: 'part-run-id',
+      partNumber: 1,
+    });
+    repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+    txMock.toeicPartPracticeAnswer.findUnique.mockResolvedValue({
+      id: 'answer-1',
+      toeicQuestionId: 1001,
+      selectedKey: 'B',
+      status: ToeicRunQuestionStatus.WRONG,
+    });
+    txMock.toeicQuestion.findMany.mockResolvedValue([
+      { id: 1001, answerKey: 'A' },
+      { id: 1002, answerKey: 'B' },
+    ]);
+    txMock.toeicPartPracticeAnswer.findMany.mockResolvedValue([
+      {
+        id: 'answer-1',
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+        status: ToeicRunQuestionStatus.SELECTED,
+      },
     ]);
 
     await expect(
@@ -213,18 +228,27 @@ describe('ToeicPartPracticeGrader', () => {
       }),
     ).resolves.toEqual({ graded: false });
 
-    expect(prismaMock.toeicPartPracticeQuestion.update).toHaveBeenCalledWith({
-      where: { id: 'run-question-id' },
-      data: {
+    expect(txMock.toeicPartPracticeAnswer.update).toHaveBeenCalledWith({
+      where: { id: 'answer-1' },
+      data: expect.objectContaining({
         selectedKey: 'A',
-        status: 'SELECTED',
-        answeredAt: expect.any(Date) as Date,
-      },
+        status: ToeicRunQuestionStatus.SELECTED,
+      }),
     });
   });
 
   it('keeps right answers locked in review wrong mode', async () => {
-    mockGradedPartPracticeQuestion('RIGHT', 'A');
+    repositoryMock.findOwnedRun.mockResolvedValue({
+      id: 'part-run-id',
+      partNumber: 1,
+    });
+    repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+    txMock.toeicPartPracticeAnswer.findUnique.mockResolvedValue({
+      id: 'answer-1',
+      toeicQuestionId: 1001,
+      selectedKey: 'A',
+      status: ToeicRunQuestionStatus.RIGHT,
+    });
 
     await expect(
       grader.submitAnswer('user-id', 'part-run-id', {
@@ -234,8 +258,35 @@ describe('ToeicPartPracticeGrader', () => {
       }),
     ).rejects.toThrow('Graded answers cannot be changed.');
 
-    expect(prismaMock.toeicPartPracticeQuestion.update).not.toHaveBeenCalled();
-    expect(prismaMock.toeicPartPracticeGroup.update).not.toHaveBeenCalled();
-    expect(prismaMock.toeicPartPracticeRun.update).not.toHaveBeenCalled();
+    expect(txMock.toeicPartPracticeAnswer.update).not.toHaveBeenCalled();
+    expect(txMock.toeicPartPracticeAnswer.create).not.toHaveBeenCalled();
+    expect(txMock.toeicPartPracticeRun.update).not.toHaveBeenCalled();
+  });
+
+  it('reads the answer only after the run is locked', async () => {
+    repositoryMock.findOwnedRun.mockResolvedValue({
+      id: 'part-run-id',
+      partNumber: 1,
+    });
+    repositoryMock.findQuestionWithTestPart.mockResolvedValue(question);
+    txMock.toeicPartPracticeAnswer.findUnique.mockResolvedValue({
+      id: 'answer-1',
+      toeicQuestionId: 1001,
+      selectedKey: 'A',
+      status: ToeicRunQuestionStatus.RIGHT,
+    });
+
+    await expect(
+      grader.submitAnswer('user-id', 'part-run-id', {
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+      }),
+    ).resolves.toMatchObject({ graded: true, isCorrect: true });
+
+    expect(
+      repositoryMock.lockRunForUpdate.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      txMock.toeicPartPracticeAnswer.findUnique.mock.invocationCallOrder[0],
+    );
   });
 });

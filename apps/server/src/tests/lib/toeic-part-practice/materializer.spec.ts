@@ -1,39 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ToeicPartPracticeMaterializer } from './materializer';
-import type { ToeicQuestionGroupForPartPractice } from './materializer.types';
 import { ToeicPartPracticeRepository } from './repository';
-import {
-  buildPartPracticePhotoRunGroup,
-  buildPartPracticeRunForResponse,
-} from '../../testing/part-practice.fixtures';
-
-function buildCatalogGroup(
-  overrides: Partial<ToeicQuestionGroupForPartPractice> & { id: number },
-): ToeicQuestionGroupForPartPractice {
-  return {
-    questionStart: 1,
-    questionEnd: 1,
-    testPart: {
-      partNumber: 1,
-      testId: 1,
-      test: {
-        year: 2026,
-        testNumber: 1,
-      },
-    },
-    questions: [{ id: overrides.id * 10, questionNumber: 1 }],
-    ...overrides,
-  };
-}
+import { buildPartPracticeRunForResponse } from '../../testing/part-practice.fixtures';
 
 describe('ToeicPartPracticeMaterializer', () => {
   let materializer: ToeicPartPracticeMaterializer;
 
   const repositoryMock = {
-    findRunByUserAndPart: jest.fn(),
-    listQuestionGroupsForPartCatalog: jest.fn(),
     transaction: jest.fn(),
-    findRunForResponse: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -52,71 +26,30 @@ describe('ToeicPartPracticeMaterializer', () => {
     materializer = module.get(ToeicPartPracticeMaterializer);
   });
 
-  it('returns an existing run without syncing catalog groups', async () => {
-    const existingRun = buildPartPracticeRunForResponse({
-      id: 'run-id',
-      groups: [
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 101,
-          sortOrder: 0,
-        }),
-      ],
-    });
+  it('uses the user and part unique key to atomically get or create a run', async () => {
+    const run = buildPartPracticeRunForResponse({ id: 'run-id' });
+    const upsert = jest.fn().mockResolvedValue(run);
 
-    repositoryMock.findRunByUserAndPart.mockResolvedValue(existingRun);
-
-    await expect(
-      materializer.findOrCreateRunWithQuestions('user-id', 1),
-    ).resolves.toBe(existingRun);
-
-    expect(repositoryMock.findRunByUserAndPart).toHaveBeenCalledWith(
-      'user-id',
-      1,
-    );
-    expect(
-      repositoryMock.listQuestionGroupsForPartCatalog,
-    ).not.toHaveBeenCalled();
-    expect(repositoryMock.transaction).not.toHaveBeenCalled();
-    expect(repositoryMock.findRunForResponse).not.toHaveBeenCalled();
-  });
-
-  it('creates a new run when none exists for the user and part', async () => {
-    const catalogGroups = [buildCatalogGroup({ id: 101 })];
-    const createdRun = buildPartPracticeRunForResponse({ id: 'new-run-id' });
-    const txMock = {
-      toeicPartPracticeRun: {
-        create: jest.fn().mockResolvedValue({ id: 'new-run-id' }),
-      },
-      toeicPartPracticeGroup: {
-        create: jest.fn().mockResolvedValue({ id: 'group-id' }),
-      },
-      toeicPartPracticeQuestion: {
-        createMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-    };
-
-    repositoryMock.findRunByUserAndPart.mockResolvedValue(null);
-    repositoryMock.listQuestionGroupsForPartCatalog.mockResolvedValue(
-      catalogGroups,
-    );
-    repositoryMock.findRunForResponse.mockResolvedValue(createdRun);
     repositoryMock.transaction.mockImplementation(
-      async (callback: (tx: typeof txMock) => Promise<{ id: string }>) =>
-        callback(txMock),
+      async (
+        callback: (tx: {
+          toeicPartPracticeRun: { upsert: jest.Mock };
+        }) => Promise<typeof run>,
+      ) =>
+        callback({
+          toeicPartPracticeRun: {
+            upsert,
+          },
+        }),
     );
 
-    await expect(
-      materializer.findOrCreateRunWithQuestions('user-id', 1),
-    ).resolves.toBe(createdRun);
+    await expect(materializer.findOrCreateRun('user-id', 1)).resolves.toBe(run);
 
-    expect(txMock.toeicPartPracticeRun.create).toHaveBeenCalledWith({
-      data: {
-        userId: 'user-id',
-        partNumber: 1,
-      },
+    expect(repositoryMock.transaction).toHaveBeenCalledTimes(1);
+    expect(upsert).toHaveBeenCalledWith({
+      where: { userId_partNumber: { userId: 'user-id', partNumber: 1 } },
+      create: { userId: 'user-id', partNumber: 1 },
+      update: {},
     });
-    expect(repositoryMock.findRunForResponse).toHaveBeenCalledWith(
-      'new-run-id',
-    );
   });
 });

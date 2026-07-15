@@ -14,11 +14,8 @@ function createPartPracticePrismaMock() {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
-    toeicPartPracticeQuestion: {
-      updateMany: jest.fn(),
-    },
-    toeicPartPracticeGroup: {
-      updateMany: jest.fn(),
+    toeicPartPracticeAnswer: {
+      deleteMany: jest.fn(),
     },
   };
 }
@@ -46,25 +43,17 @@ describe('ToeicPartPracticeRepository', () => {
     prismaMock.toeicPartPracticeRun.findUnique.mockResolvedValue({
       id: 'part-run-id',
     });
+    prismaMock.toeicPartPracticeAnswer.deleteMany.mockResolvedValue({
+      count: 5,
+    });
+    prismaMock.toeicPartPracticeRun.update.mockResolvedValue({});
 
     await expect(
       repository.resetPartPracticeAnswers('user-id', 1),
     ).resolves.toBe(1);
 
-    expect(
-      prismaMock.toeicPartPracticeQuestion.updateMany,
-    ).toHaveBeenCalledWith({
+    expect(prismaMock.toeicPartPracticeAnswer.deleteMany).toHaveBeenCalledWith({
       where: { runId: 'part-run-id' },
-      data: {
-        selectedKey: null,
-        status: null,
-        answeredAt: null,
-        gradedAt: null,
-      },
-    });
-    expect(prismaMock.toeicPartPracticeGroup.updateMany).toHaveBeenCalledWith({
-      where: { runId: 'part-run-id' },
-      data: { status: null },
     });
     expect(prismaMock.toeicPartPracticeRun.update).toHaveBeenCalledWith({
       where: { id: 'part-run-id' },
@@ -72,8 +61,7 @@ describe('ToeicPartPracticeRepository', () => {
     });
     expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
     expect(prismaMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
-      prismaMock.toeicPartPracticeQuestion.updateMany.mock
-        .invocationCallOrder[0],
+      prismaMock.toeicPartPracticeAnswer.deleteMany.mock.invocationCallOrder[0],
     );
     const [[lockQuery]] = prismaMock.$queryRaw.mock.calls as Array<
       [{ sql: string; values: unknown[] }]
@@ -81,7 +69,6 @@ describe('ToeicPartPracticeRepository', () => {
     expect(lockQuery.sql).toContain('FROM "toeic_part_practice_runs"');
     expect(lockQuery.sql).toContain('FOR UPDATE');
     expect(lockQuery.values).toEqual(['part-run-id']);
-    expect(prismaMock.toeicPartPracticeRun.deleteMany).toBeUndefined();
   });
 
   it('returns zero when no aggregate run exists', async () => {

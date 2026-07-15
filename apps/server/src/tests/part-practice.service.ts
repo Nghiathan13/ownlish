@@ -13,7 +13,6 @@ import type {
   ToeicPartPracticeSessionResponse,
 } from './lib/toeic-part-practice/session.response.types';
 import type { PartPracticeRunForResponse } from './lib/toeic-part-practice/session.types';
-import { isWrongReviewToeicGroup } from './lib/toeic-run/session.formatters';
 
 @Injectable()
 export class PartPracticeService {
@@ -52,11 +51,11 @@ export class PartPracticeService {
         }
 
         const [correct, wrong] = await Promise.all([
-          this.partPracticeRepository.countRunQuestionsByStatus(
+          this.partPracticeRepository.countAnswersByStatus(
             run.id,
             ToeicRunQuestionStatus.RIGHT,
           ),
-          this.partPracticeRepository.countRunQuestionsByStatus(
+          this.partPracticeRepository.countAnswersByStatus(
             run.id,
             ToeicRunQuestionStatus.WRONG,
           ),
@@ -84,17 +83,12 @@ export class PartPracticeService {
 
     await this.assertPartExistsInCatalog(partNumber);
 
-    if (mode === 'review_wrong') {
-      return this.createReviewWrongSession(userId, partNumber);
-    }
+    const run = await this.partPracticeMaterializer.findOrCreateRun(
+      userId,
+      partNumber,
+    );
 
-    const run =
-      await this.partPracticeMaterializer.findOrCreateRunWithQuestions(
-        userId,
-        partNumber,
-      );
-
-    return this.formatSession(run);
+    return this.formatSession(run, mode);
   }
 
   async getRun(
@@ -102,30 +96,16 @@ export class PartPracticeService {
     sessionId: string,
     dto: GetPartPracticeRunDto = {},
   ): Promise<ToeicPartPracticeSessionResponse> {
-    const loadedRun = await this.partPracticeRepository.findOwnedRunMeta(
+    const run = await this.partPracticeRepository.findOwnedRunMeta(
       userId,
       sessionId,
     );
 
-    if (!loadedRun) {
-      throw new NotFoundException('Part practice session not found.');
-    }
-
-    const run = await this.partPracticeMaterializer.findRunForResponse(
-      loadedRun.id,
-    );
     if (!run) {
       throw new NotFoundException('Part practice session not found.');
     }
 
-    if (dto.mode === 'review_wrong') {
-      return this.formatSession(run, {
-        mode: 'review_wrong',
-        groupFilter: (group) => isWrongReviewToeicGroup(group),
-      });
-    }
-
-    return this.formatSession(run);
+    return this.formatSession(run, dto.mode);
   }
 
   async submitAnswer(
@@ -151,22 +131,6 @@ export class PartPracticeService {
     return { resetRunCount };
   }
 
-  private async createReviewWrongSession(
-    userId: string,
-    partNumber: number,
-  ): Promise<ToeicPartPracticeSessionResponse> {
-    const run =
-      await this.partPracticeMaterializer.findOrCreateRunWithQuestions(
-        userId,
-        partNumber,
-      );
-
-    return this.formatSession(run, {
-      mode: 'review_wrong',
-      groupFilter: (group) => isWrongReviewToeicGroup(group),
-    });
-  }
-
   private async assertPartExistsInCatalog(partNumber: number): Promise<void> {
     const total =
       await this.partPracticeRepository.countCatalogQuestionsByPart(partNumber);
@@ -178,13 +142,8 @@ export class PartPracticeService {
 
   private formatSession(
     run: PartPracticeRunForResponse,
-    options?: {
-      mode?: 'practice' | 'review_wrong';
-      groupFilter?: (
-        group: PartPracticeRunForResponse['groups'][number],
-      ) => boolean;
-    },
+    mode?: 'practice' | 'review_wrong',
   ): Promise<ToeicPartPracticeSessionResponse> {
-    return this.partPracticeSessionMapper.formatSessionResponse(run, options);
+    return this.partPracticeSessionMapper.formatSessionResponse(run, { mode });
   }
 }

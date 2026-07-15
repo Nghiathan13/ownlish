@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, ToeicRunQuestionStatus } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import type { ToeicQuestionGroupForPartPractice } from './materializer.types';
-import { partPracticeRunResponseInclude } from './response.include';
 import type { PartPracticeRunForResponse } from './session.types';
 
 @Injectable()
@@ -31,15 +29,6 @@ export class ToeicPartPracticeRepository {
     return run ?? null;
   }
 
-  findRunForResponse(
-    runId: string,
-  ): Promise<PartPracticeRunForResponse | null> {
-    return this.prisma.toeicPartPracticeRun.findUnique({
-      where: { id: runId },
-      include: partPracticeRunResponseInclude(),
-    });
-  }
-
   findRunByUserAndPart(
     userId: string,
     partNumber: number,
@@ -51,7 +40,6 @@ export class ToeicPartPracticeRepository {
           partNumber,
         },
       },
-      include: partPracticeRunResponseInclude(),
     });
   }
 
@@ -61,6 +49,8 @@ export class ToeicPartPracticeRepository {
       select: {
         id: true,
         partNumber: true,
+        totalRight: true,
+        totalWrong: true,
       },
     });
   }
@@ -97,20 +87,17 @@ export class ToeicPartPracticeRepository {
     });
   }
 
-  async countRunQuestionsByStatus(
+  countAnswersByStatus(
     runId: string,
     status: ToeicRunQuestionStatus,
   ): Promise<number> {
-    return this.prisma.toeicPartPracticeQuestion.count({
+    return this.prisma.toeicPartPracticeAnswer.count({
       where: { runId, status },
     });
   }
 
-  listQuestionGroupsForPart(
-    db: Pick<PrismaService, 'toeicQuestionGroup'> | Prisma.TransactionClient,
-    partNumber: number,
-  ): Promise<ToeicQuestionGroupForPartPractice[]> {
-    return db.toeicQuestionGroup.findMany({
+  listFullQuestionGroupsForPart(partNumber: number) {
+    return this.prisma.toeicQuestionGroup.findMany({
       where: {
         testPart: {
           partNumber,
@@ -131,10 +118,6 @@ export class ToeicPartPracticeRepository {
         },
         questions: {
           orderBy: { questionNumber: 'asc' },
-          select: {
-            id: true,
-            questionNumber: true,
-          },
         },
       },
       orderBy: [
@@ -146,16 +129,29 @@ export class ToeicPartPracticeRepository {
     });
   }
 
-  listQuestionGroupsForPartCatalog(
-    partNumber: number,
-  ): Promise<ToeicQuestionGroupForPartPractice[]> {
-    return this.listQuestionGroupsForPart(this.prisma, partNumber);
-  }
-
-  countRunQuestions(runId: string): Promise<number> {
-    return this.prisma.toeicPartPracticeQuestion.count({
+  listAnswersForRun(runId: string) {
+    return this.prisma.toeicPartPracticeAnswer.findMany({
       where: { runId },
     });
+  }
+
+  listAnswersForQuestions(runId: string, toeicQuestionIds: number[]) {
+    return this.prisma.toeicPartPracticeAnswer.findMany({
+      where: {
+        runId,
+        toeicQuestionId: { in: toeicQuestionIds },
+      },
+    });
+  }
+
+  listQuestionIdsByGroup(groupId: number): Promise<number[]> {
+    return this.prisma.toeicQuestion
+      .findMany({
+        where: { groupId },
+        select: { id: true },
+        orderBy: { questionNumber: 'asc' },
+      })
+      .then((questions) => questions.map((q) => q.id));
   }
 
   findQuestionWithTestPart(toeicQuestionId: number) {
@@ -168,18 +164,6 @@ export class ToeicPartPracticeRepository {
           },
         },
       },
-    });
-  }
-
-  findRunQuestionWithQuestion(runId: string, toeicQuestionId: number) {
-    return this.prisma.toeicPartPracticeQuestion.findUnique({
-      where: {
-        runId_toeicQuestionId: {
-          runId,
-          toeicQuestionId,
-        },
-      },
-      include: { toeicQuestion: true },
     });
   }
 
@@ -203,19 +187,8 @@ export class ToeicPartPracticeRepository {
       }
 
       await this.lockRunForUpdate(tx, run.id);
-      await tx.toeicPartPracticeQuestion.updateMany({
+      await tx.toeicPartPracticeAnswer.deleteMany({
         where: { runId: run.id },
-        data: {
-          selectedKey: null,
-          status: null,
-          answeredAt: null,
-          gradedAt: null,
-        },
-      });
-
-      await tx.toeicPartPracticeGroup.updateMany({
-        where: { runId: run.id },
-        data: { status: null },
       });
 
       await tx.toeicPartPracticeRun.update({

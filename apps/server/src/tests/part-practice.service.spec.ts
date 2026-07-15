@@ -1,16 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ToeicRunGroupStatus, ToeicRunQuestionStatus } from '@prisma/client';
+import { ToeicRunQuestionStatus } from '@prisma/client';
 import { PartPracticeService } from './part-practice.service';
 import { ToeicPartPracticeGrader } from './lib/toeic-part-practice/grader';
 import { ToeicPartPracticeMaterializer } from './lib/toeic-part-practice/materializer';
 import { ToeicPartPracticeRepository } from './lib/toeic-part-practice/repository';
 import { ToeicPartPracticeSessionMapper } from './lib/toeic-part-practice/session.mapper';
-import type { FormatPartPracticeSessionResponseOptions } from './lib/toeic-part-practice/session.types';
-import {
-  buildPartPracticePhotoRunGroup,
-  buildPartPracticeRunForResponse,
-} from './testing/part-practice.fixtures';
-import { getMockCallArg } from '../testing/jest-mock-call';
+import { buildPartPracticeRunForResponse } from './testing/part-practice.fixtures';
 
 describe('PartPracticeService', () => {
   let service: PartPracticeService;
@@ -19,13 +14,12 @@ describe('PartPracticeService', () => {
     listCatalogPartNumbers: jest.fn(),
     countCatalogQuestionsByPart: jest.fn(),
     findRunByUserAndPart: jest.fn(),
-    countRunQuestionsByStatus: jest.fn(),
+    countAnswersByStatus: jest.fn(),
     findOwnedRunMeta: jest.fn(),
     resetPartPracticeAnswers: jest.fn(),
   };
   const materializerMock = {
-    findOrCreateRunWithQuestions: jest.fn(),
-    findRunForResponse: jest.fn(),
+    findOrCreateRun: jest.fn(),
   };
   const sessionMapperMock = {
     formatSessionResponse: jest.fn(),
@@ -59,7 +53,7 @@ describe('PartPracticeService', () => {
     repositoryMock.findRunByUserAndPart
       .mockResolvedValueOnce({ id: 'run-1' })
       .mockResolvedValueOnce(null);
-    repositoryMock.countRunQuestionsByStatus
+    repositoryMock.countAnswersByStatus
       .mockResolvedValueOnce(2)
       .mockResolvedValueOnce(1);
 
@@ -82,7 +76,7 @@ describe('PartPracticeService', () => {
       ],
     });
 
-    expect(repositoryMock.countRunQuestionsByStatus).toHaveBeenCalledWith(
+    expect(repositoryMock.countAnswersByStatus).toHaveBeenCalledWith(
       'run-1',
       ToeicRunQuestionStatus.RIGHT,
     );
@@ -92,44 +86,33 @@ describe('PartPracticeService', () => {
     const run = buildPartPracticeRunForResponse({ id: 'run-id' });
     const formatted = { sessionId: 'run-id', mode: 'practice' };
 
-    materializerMock.findOrCreateRunWithQuestions.mockResolvedValue(run);
+    materializerMock.findOrCreateRun.mockResolvedValue(run);
     sessionMapperMock.formatSessionResponse.mockResolvedValue(formatted);
 
     await expect(service.createRun('user-id', { partNumber: 1 })).resolves.toBe(
       formatted,
     );
 
-    expect(materializerMock.findOrCreateRunWithQuestions).toHaveBeenCalledWith(
-      'user-id',
-      1,
-    );
+    expect(materializerMock.findOrCreateRun).toHaveBeenCalledWith('user-id', 1);
+    expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(run, {
+      mode: 'practice',
+    });
   });
 
-  it('creates a review wrong session with group filter', async () => {
-    const run = buildPartPracticeRunForResponse({
-      groups: [
-        buildPartPracticePhotoRunGroup({
-          status: ToeicRunGroupStatus.WRONG,
-        }),
-      ],
-    });
+  it('creates a review wrong session with mode option', async () => {
+    const run = buildPartPracticeRunForResponse({ id: 'run-id' });
     const formatted = { sessionId: 'run-id', mode: 'review_wrong' };
 
-    materializerMock.findOrCreateRunWithQuestions.mockResolvedValue(run);
+    materializerMock.findOrCreateRun.mockResolvedValue(run);
     sessionMapperMock.formatSessionResponse.mockResolvedValue(formatted);
 
     await expect(
       service.createRun('user-id', { partNumber: 1, mode: 'review_wrong' }),
     ).resolves.toBe(formatted);
 
-    const formatOptions =
-      getMockCallArg<FormatPartPracticeSessionResponseOptions>(
-        sessionMapperMock.formatSessionResponse,
-        0,
-        1,
-      );
-    expect(formatOptions.mode).toBe('review_wrong');
-    expect(formatOptions.groupFilter).toBeDefined();
+    expect(sessionMapperMock.formatSessionResponse).toHaveBeenCalledWith(run, {
+      mode: 'review_wrong',
+    });
   });
 
   it('clears only aggregate history for the requested part', async () => {

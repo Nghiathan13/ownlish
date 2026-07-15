@@ -1,5 +1,5 @@
 import type { ToeicQuestionOptionKey } from '../toeic-question-mapper';
-import type { ToeicQuestion, ToeicRunQuestionStatus } from '@prisma/client';
+import type { ToeicQuestion } from '@prisma/client';
 
 export type SubmitPartPracticeAnswerResponse = {
   graded: boolean;
@@ -17,15 +17,4 @@ export type PartPracticeQuestionWithTestPart = ToeicQuestion & {
       partNumber: number;
     };
   };
-};
-
-export type PartPracticeRunQuestionWithQuestion = {
-  id: string;
-  runId: string;
-  runGroupId: string;
-  toeicQuestionId: number;
-  partNumber: number;
-  selectedKey: string | null;
-  status: ToeicRunQuestionStatus | null;
-  toeicQuestion: ToeicQuestion;
 };

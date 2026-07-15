@@ -1,13 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ToeicRunGroupStatus,
-  ToeicRunQuestionStatus as QuestionStatus,
-} from '@prisma/client';
-import { isWrongReviewToeicGroup } from '../toeic-run/session.formatters';
+import { ToeicRunQuestionStatus } from '@prisma/client';
 import { ToeicPartPracticeSessionMapper } from './session.mapper';
+import { ToeicPartPracticeRepository } from './repository';
 import { TestsStorageService } from '../../tests-storage.service';
 import {
-  buildPartPracticePhotoRunGroup,
+  buildCatalogGroupForPartPractice,
   buildPartPracticeRunForResponse,
 } from '../../testing/part-practice.fixtures';
 
@@ -16,6 +13,10 @@ describe('ToeicPartPracticeSessionMapper', () => {
 
   const storageMock = {
     createSignedUrls: jest.fn(),
+  };
+  const repositoryMock = {
+    listFullQuestionGroupsForPart: jest.fn(),
+    listAnswersForRun: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -26,32 +27,35 @@ describe('ToeicPartPracticeSessionMapper', () => {
       providers: [
         ToeicPartPracticeSessionMapper,
         { provide: TestsStorageService, useValue: storageMock },
+        { provide: ToeicPartPracticeRepository, useValue: repositoryMock },
       ],
     }).compile();
 
     mapper = module.get(ToeicPartPracticeSessionMapper);
   });
 
-  it('formats groups with test metadata and session question numbers', async () => {
-    const session = buildPartPracticeRunForResponse({
-      groups: [
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 101,
-          toeicTestId: 10,
-          year: 2025,
-          testNumber: 2,
-          sortOrder: 0,
-        }),
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 102,
-          toeicTestId: 11,
-          year: 2026,
-          testNumber: 1,
-          sortOrder: 1,
-          question: { id: 1002, questionNumber: 2 } as never,
-        }),
-      ],
-    });
+  it('formats catalog groups with test metadata and session question numbers', async () => {
+    const session = buildPartPracticeRunForResponse({ partNumber: 1 });
+
+    repositoryMock.listFullQuestionGroupsForPart.mockResolvedValue([
+      buildCatalogGroupForPartPractice({
+        id: 101,
+        testId: 10,
+        year: 2025,
+        testNumber: 2,
+        question: { id: 1001, questionNumber: 1, answerKey: 'A' },
+      }),
+      buildCatalogGroupForPartPractice({
+        id: 102,
+        testId: 11,
+        year: 2026,
+        testNumber: 1,
+        questionStart: 2,
+        questionEnd: 2,
+        question: { id: 1002, questionNumber: 2, answerKey: 'B' },
+      }),
+    ]);
+    repositoryMock.listAnswersForRun.mockResolvedValue([]);
 
     await expect(mapper.formatSessionResponse(session)).resolves.toMatchObject({
       sessionId: 'part-practice-run-id',
@@ -65,7 +69,7 @@ describe('ToeicPartPracticeSessionMapper', () => {
           year: 2025,
           testNumber: 2,
           partNumber: 1,
-          questions: [{ sessionQuestionNumber: 1 }],
+          questions: [{ sessionQuestionNumber: 1, selectedKey: null }],
         },
         {
           id: 102,
@@ -80,62 +84,53 @@ describe('ToeicPartPracticeSessionMapper', () => {
 
   it('masks wrong questions in review_wrong while highlighting correct ones', async () => {
     const session = buildPartPracticeRunForResponse({
+      partNumber: 1,
       totalRight: 1,
       totalWrong: 1,
-      questions: [
-        {
-          toeicQuestionId: 1001,
-          selectedKey: 'A',
-          status: QuestionStatus.RIGHT,
-          toeicQuestion: { answerKey: 'A' },
-        },
-        {
-          toeicQuestionId: 1002,
-          selectedKey: 'B',
-          status: QuestionStatus.WRONG,
-          toeicQuestion: { answerKey: 'A' },
-        },
-      ],
-      groups: [
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 101,
-          status: ToeicRunGroupStatus.WRONG,
-          answerStatus: QuestionStatus.RIGHT,
-          selectedKey: 'A',
-        }),
-        buildPartPracticePhotoRunGroup({
-          toeicQuestionGroupId: 102,
-          sortOrder: 1,
-          question: { id: 1002, questionNumber: 2 } as never,
-          answerStatus: QuestionStatus.WRONG,
-          selectedKey: 'B',
-        }),
-      ],
     });
 
-    await expect(
-      mapper.formatSessionResponse(session, {
-        mode: 'review_wrong',
-        groupFilter: (group) => isWrongReviewToeicGroup(group),
+    repositoryMock.listFullQuestionGroupsForPart.mockResolvedValue([
+      buildCatalogGroupForPartPractice({
+        id: 101,
+        question: { id: 1001, questionNumber: 1, answerKey: 'A' },
       }),
+      buildCatalogGroupForPartPractice({
+        id: 102,
+        questionStart: 2,
+        questionEnd: 2,
+        question: { id: 1002, questionNumber: 2, answerKey: 'A' },
+      }),
+    ]);
+    repositoryMock.listAnswersForRun.mockResolvedValue([
+      {
+        id: 'answer-1',
+        runId: session.id,
+        toeicQuestionId: 1001,
+        selectedKey: 'A',
+        status: ToeicRunQuestionStatus.RIGHT,
+        answeredAt: new Date(),
+        gradedAt: new Date(),
+      },
+      {
+        id: 'answer-2',
+        runId: session.id,
+        toeicQuestionId: 1002,
+        selectedKey: 'B',
+        status: ToeicRunQuestionStatus.WRONG,
+        answeredAt: new Date(),
+        gradedAt: new Date(),
+      },
+    ]);
+
+    await expect(
+      mapper.formatSessionResponse(session, { mode: 'review_wrong' }),
     ).resolves.toMatchObject({
       mode: 'review_wrong',
-      totalQuestions: 2,
+      totalQuestions: 1,
       groups: [
         {
-          id: 101,
-          groupStatus: 'wrong',
-          questions: [
-            {
-              id: 1001,
-              selectedKey: 'A',
-              status: 'right',
-              isCorrect: true,
-            },
-          ],
-        },
-        {
           id: 102,
+          groupStatus: 'wrong',
           questions: [
             {
               id: 1002,

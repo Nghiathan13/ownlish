@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import {
   Prisma,
-  ToeicRunGroupStatus,
   ToeicRunQuestionStatus,
   type ToeicQuestion,
 } from '@prisma/client';
@@ -18,9 +17,9 @@ import {
   type ToeicQuestionOptionKey,
 } from '../toeic-question-mapper';
 import { isToeicRunGroupReadyToGrade } from '../toeic-run/grader.helpers';
+import type { ToeicRunQuestionGradeState } from '../toeic-run/grader.types';
 import type {
   PartPracticeQuestionWithTestPart,
-  PartPracticeRunQuestionWithQuestion,
   SubmitPartPracticeAnswerResponse,
 } from './grader.types';
 import { ToeicPartPracticeRepository } from './repository';
@@ -66,21 +65,8 @@ export class ToeicPartPracticeGrader {
       throw new BadRequestException('Invalid answer.');
     }
 
-    const runQuestion =
-      await this.partPracticeRepository.findRunQuestionWithQuestion(
-        run.id,
-        question.id,
-      );
-
-    if (!runQuestion) {
-      throw new BadRequestException(
-        'Question does not belong to this session.',
-      );
-    }
-
     return this.submitGroupAnswer(
       run.id,
-      runQuestion,
       question,
       selectedKey,
       answerKey,
@@ -104,7 +90,6 @@ export class ToeicPartPracticeGrader {
 
   private async submitGroupAnswer(
     runId: string,
-    runQuestion: PartPracticeRunQuestionWithQuestion,
     question: PartPracticeQuestionWithTestPart,
     selectedKey: ToeicQuestionOptionKey,
     answerKey: ToeicQuestionOptionKey,
@@ -120,62 +105,92 @@ export class ToeicPartPracticeGrader {
         throw new NotFoundException('Part practice session not found.');
       }
 
-      const currentRunQuestion = await tx.toeicPartPracticeQuestion.findUnique({
+      const existingAnswer = await tx.toeicPartPracticeAnswer.findUnique({
         where: {
           runId_toeicQuestionId: {
             runId,
-            toeicQuestionId: runQuestion.toeicQuestionId,
+            toeicQuestionId: question.id,
           },
         },
       });
 
-      if (!currentRunQuestion) {
-        throw new BadRequestException(
-          'Question does not belong to this session.',
-        );
+      if (existingAnswer?.status === ToeicRunQuestionStatus.RIGHT) {
+        if (existingAnswer.selectedKey !== selectedKey) {
+          throw new BadRequestException('Graded answers cannot be changed.');
+        }
+
+        idempotentResult = true;
+        return;
       }
 
-      const isGraded =
-        currentRunQuestion.status === ToeicRunQuestionStatus.RIGHT ||
-        currentRunQuestion.status === ToeicRunQuestionStatus.WRONG;
-      const canRetryWrong =
-        isReviewWrongSubmission &&
-        currentRunQuestion.status === ToeicRunQuestionStatus.WRONG;
-
-      if (isGraded && !canRetryWrong) {
-        const currentSelectedKey = currentRunQuestion.selectedKey
-          ?.trim()
-          .toUpperCase();
-
-        if (currentSelectedKey === selectedKey) {
-          idempotentResult =
-            currentRunQuestion.status === ToeicRunQuestionStatus.RIGHT;
+      if (
+        existingAnswer &&
+        existingAnswer.status === ToeicRunQuestionStatus.WRONG &&
+        !isReviewWrongSubmission
+      ) {
+        if (existingAnswer.selectedKey === selectedKey) {
+          idempotentResult = false;
           return;
         }
 
         throw new BadRequestException('Graded answers cannot be changed.');
       }
 
-      await tx.toeicPartPracticeQuestion.update({
-        where: { id: currentRunQuestion.id },
-        data: {
-          selectedKey,
-          status: ToeicRunQuestionStatus.SELECTED,
-          answeredAt: new Date(),
-        },
-      });
+      const now = new Date();
 
-      const groupQuestions = await tx.toeicPartPracticeQuestion.findMany({
-        where: { runGroupId: currentRunQuestion.runGroupId },
-        select: { selectedKey: true, status: true },
-      });
-
-      if (
-        isToeicRunGroupReadyToGrade(groupQuestions, isReviewWrongSubmission)
-      ) {
-        await this.gradeRunGroup(tx, runId, currentRunQuestion.runGroupId);
-        graded = true;
+      if (existingAnswer) {
+        await tx.toeicPartPracticeAnswer.update({
+          where: { id: existingAnswer.id },
+          data: {
+            selectedKey,
+            status: ToeicRunQuestionStatus.SELECTED,
+            answeredAt: now,
+            gradedAt: null,
+          },
+        });
+      } else {
+        await tx.toeicPartPracticeAnswer.create({
+          data: {
+            runId,
+            toeicQuestionId: question.id,
+            selectedKey,
+            status: ToeicRunQuestionStatus.SELECTED,
+            answeredAt: now,
+          },
+        });
       }
+
+      const groupQuestions = await tx.toeicQuestion.findMany({
+        where: { groupId: question.group.id },
+        select: { id: true, answerKey: true },
+        orderBy: { questionNumber: 'asc' },
+      });
+      const groupQuestionIds = groupQuestions.map((q) => q.id);
+
+      const groupAnswers = await tx.toeicPartPracticeAnswer.findMany({
+        where: { runId, toeicQuestionId: { in: groupQuestionIds } },
+      });
+
+      const answerByQuestionId = new Map(
+        groupAnswers.map((a) => [a.toeicQuestionId, a]),
+      );
+
+      const gradeStates: ToeicRunQuestionGradeState[] = groupQuestionIds.map(
+        (qId) => {
+          const answer = answerByQuestionId.get(qId);
+          return {
+            selectedKey: answer?.selectedKey ?? null,
+            status: answer?.status ?? null,
+          };
+        },
+      );
+
+      if (isToeicRunGroupReadyToGrade(gradeStates, isReviewWrongSubmission)) {
+        graded = true;
+        await this.gradeRunGroup(tx, groupQuestions, answerByQuestionId);
+      }
+
+      await this.recalculateRunTotals(tx, runId);
     });
 
     if (idempotentResult !== undefined) {
@@ -195,97 +210,43 @@ export class ToeicPartPracticeGrader {
 
   private async gradeRunGroup(
     tx: Prisma.TransactionClient,
-    runId: string,
-    runGroupId: string,
+    groupQuestions: Array<{ id: number; answerKey: string | null }>,
+    answerByQuestionId: Map<
+      number,
+      { id: string; selectedKey: string; status: ToeicRunQuestionStatus }
+    >,
   ): Promise<void> {
-    const questions = await tx.toeicPartPracticeQuestion.findMany({
-      where: { runGroupId },
-      include: { toeicQuestion: true },
-    });
+    for (const q of groupQuestions) {
+      const answer = answerByQuestionId.get(q.id);
 
-    for (const question of questions) {
-      if (question.status === ToeicRunQuestionStatus.RIGHT) {
+      if (!answer || answer.status === ToeicRunQuestionStatus.RIGHT) {
         continue;
       }
 
-      const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-      const selectedKey = question.selectedKey?.trim().toUpperCase();
+      const qAnswerKey = parseAnswerKey(q.answerKey);
+      const qSelectedKey = answer.selectedKey?.trim().toUpperCase();
 
       if (
-        !answerKey ||
-        !selectedKey ||
-        !isToeicQuestionOptionKey(selectedKey)
+        !qAnswerKey ||
+        !qSelectedKey ||
+        !isToeicQuestionOptionKey(qSelectedKey)
       ) {
         continue;
       }
 
-      const isCorrect = selectedKey === answerKey;
-      await this.gradeRunQuestion(tx, {
-        runId,
-        runQuestion: question,
-        selectedKey,
-        isCorrect,
+      const isCorrect = qSelectedKey === qAnswerKey;
+
+      await tx.toeicPartPracticeAnswer.update({
+        where: { id: answer.id },
+        data: {
+          selectedKey: qSelectedKey,
+          status: isCorrect
+            ? ToeicRunQuestionStatus.RIGHT
+            : ToeicRunQuestionStatus.WRONG,
+          gradedAt: new Date(),
+        },
       });
     }
-  }
-
-  private async gradeRunQuestion(
-    tx: Prisma.TransactionClient,
-    input: {
-      runId: string;
-      runQuestion: {
-        id: string;
-        runGroupId: string;
-        status: ToeicRunQuestionStatus | null;
-      };
-      selectedKey: string;
-      isCorrect: boolean;
-    },
-  ): Promise<void> {
-    if (input.runQuestion.status === ToeicRunQuestionStatus.RIGHT) {
-      return;
-    }
-
-    await tx.toeicPartPracticeQuestion.update({
-      where: { id: input.runQuestion.id },
-      data: {
-        selectedKey: input.selectedKey,
-        status: input.isCorrect
-          ? ToeicRunQuestionStatus.RIGHT
-          : ToeicRunQuestionStatus.WRONG,
-        answeredAt: new Date(),
-        gradedAt: new Date(),
-      },
-    });
-
-    await this.refreshRunGroupStatus(tx, input.runQuestion.runGroupId);
-    await this.recalculateRunTotals(tx, input.runId);
-  }
-
-  private async refreshRunGroupStatus(
-    tx: Prisma.TransactionClient,
-    runGroupId: string,
-  ): Promise<void> {
-    const questions = await tx.toeicPartPracticeQuestion.findMany({
-      where: { runGroupId },
-      select: { status: true },
-    });
-
-    const status = questions.some(
-      (question) => question.status === ToeicRunQuestionStatus.WRONG,
-    )
-      ? ToeicRunGroupStatus.WRONG
-      : questions.length > 0 &&
-          questions.every(
-            (question) => question.status === ToeicRunQuestionStatus.RIGHT,
-          )
-        ? ToeicRunGroupStatus.RIGHT
-        : null;
-
-    await tx.toeicPartPracticeGroup.update({
-      where: { id: runGroupId },
-      data: { status },
-    });
   }
 
   private async recalculateRunTotals(
@@ -293,10 +254,10 @@ export class ToeicPartPracticeGrader {
     runId: string,
   ): Promise<void> {
     const [totalRight, totalWrong] = await Promise.all([
-      tx.toeicPartPracticeQuestion.count({
+      tx.toeicPartPracticeAnswer.count({
         where: { runId, status: ToeicRunQuestionStatus.RIGHT },
       }),
-      tx.toeicPartPracticeQuestion.count({
+      tx.toeicPartPracticeAnswer.count({
         where: { runId, status: ToeicRunQuestionStatus.WRONG },
       }),
     ]);
