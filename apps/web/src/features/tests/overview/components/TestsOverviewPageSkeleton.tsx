@@ -50,7 +50,7 @@ export function TestsOverviewPageSkeleton({
       )}
 
       {selectedTab === "part_practice" ? (
-        <PracticeTabSkeleton />
+        <PracticeTabSkeleton includePartTabs />
       ) : selectedTab === "mock_tests" ? (
         <MockTestsTabSkeleton includeYearTabs />
       ) : (

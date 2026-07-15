@@ -1,99 +1,82 @@
 "use client";
 
-import Link from "next/link";
 import { PartPracticeCard } from "@/features/tests/overview/components/PartPracticeCard";
+import { PartPracticeTabs } from "@/features/tests/overview/components/PartPracticeTabs";
 import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
 import { usePartPracticeOverview } from "@/features/tests/overview/hooks/usePartPracticeOverview";
-import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePaths";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
-import { classNames } from "@/shared/lib/classNames";
+import { testOverviewCardGridClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import { secondaryTextButtonClassName } from "@/shared/ui/button";
+import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
 
-export function PracticeTab() {
-  const overview = usePartPracticeOverview();
-  const selectedSummary =
-    overview.summaries.find(
-      (summary) => summary.partNumber === overview.selectedPartNumber,
-    ) ?? {
-      partNumber: overview.selectedPartNumber,
+function buildPartSummary(
+  summaries: PartPracticePartSummary[],
+  partNumber: number,
+): PartPracticePartSummary {
+  return (
+    summaries.find((summary) => summary.partNumber === partNumber) ?? {
+      partNumber,
       total: 0,
       answered: 0,
       correct: 0,
       wrong: 0,
-    };
+    }
+  );
+}
+
+export function PracticeTab() {
+  const overview = usePartPracticeOverview();
 
   return (
-    <div className="flex flex-col gap-4 px-4">
-      <div className="flex flex-wrap gap-2">
-        {overview.allPartNumbers.map((partNumber) => {
-          const isSelected = overview.selectedPartNumber === partNumber;
+    <>
+      <PartPracticeTabs
+        partNumbers={overview.allPartNumbers}
+        selectedPartNumber={overview.selectedPartNumber}
+      />
 
-          return (
-            <Link
-              aria-current={isSelected ? "page" : undefined}
-              className={classNames(
-                isSelected
-                  ? primaryTextButtonClassName()
-                  : secondaryTextButtonClassName(),
-              )}
-              href={getTestsOverviewPath({
-                tab: "part_practice",
-                part: partNumber,
-              })}
-              key={partNumber}
-              scroll={false}
+      <div className="mb-4 flex flex-col gap-4 px-16">
+        {overview.isLoading ? (
+          <PracticeTabSkeleton includePartTabs={false} />
+        ) : overview.error ? (
+          <div className="space-y-3">
+            <p className="text-muted-foreground">{overview.error}</p>
+            <button
+              className={secondaryTextButtonClassName()}
+              onClick={() => void overview.reload()}
+              type="button"
             >
-              Part {partNumber}
-            </Link>
-          );
-        })}
-      </div>
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className={testOverviewCardGridClassName}>
+            {overview.allPartNumbers.map((partNumber) => {
+              const summary = buildPartSummary(overview.summaries, partNumber);
 
-      {overview.isLoading ? (
-        <PracticeTabSkeleton includePartPills={false} />
-      ) : overview.error ? (
-        <div className="space-y-3">
-          <p className="text-muted-foreground">{overview.error}</p>
-          <button
-            className={secondaryTextButtonClassName()}
-            onClick={() => void overview.reload()}
-            type="button"
-          >
-            Retry
-          </button>
-        </div>
-      ) : (
-        <div className="max-w-md">
-          <PartPracticeCard
-            isClearingHistory={
-              overview.isClearing &&
-              overview.clearingPartNumber === overview.selectedPartNumber
-            }
-            isStarting={
-              overview.isStarting &&
-              overview.startingPartNumber === overview.selectedPartNumber
-            }
-            onClearHistory={() =>
-              void overview.clearHistory(overview.selectedPartNumber)
-            }
-            onPractice={() =>
-              void overview.startPartPractice(
-                overview.selectedPartNumber,
-                "practice",
-              )
-            }
-            onReviewWrong={() =>
-              void overview.startPartPractice(
-                overview.selectedPartNumber,
-                "review_wrong",
-              )
-            }
-            summary={selectedSummary}
-          />
-        </div>
-      )}
-    </div>
+              return (
+                <PartPracticeCard
+                  isClearingHistory={
+                    overview.isClearing &&
+                    overview.clearingPartNumber === partNumber
+                  }
+                  isStarting={
+                    overview.isStarting &&
+                    overview.startingPartNumber === partNumber
+                  }
+                  key={partNumber}
+                  onClearHistory={() => void overview.clearHistory(partNumber)}
+                  onPractice={() =>
+                    void overview.startPartPractice(partNumber, "practice")
+                  }
+                  onReviewWrong={() =>
+                    void overview.startPartPractice(partNumber, "review_wrong")
+                  }
+                  summary={summary}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
