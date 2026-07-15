@@ -93,29 +93,19 @@ describe("HomeDashboard", () => {
     );
   });
 
-  it("shows one concise card for each learning area", () => {
+  it("shows vocabulary metrics and graded progress for all TOEIC parts", () => {
     render(<HomeDashboard />);
 
-    expect(
-      screen.getByRole("heading", { name: "Welcome back, Linh" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Review 4 vocabulary items" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Daily vocabulary" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Focus: Part 3")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /start review/i })).toHaveAttribute(
-      "href",
-      "/review",
-    );
-    expect(
-      screen.getByRole("link", { name: /open part practice/i }),
-    ).toHaveAttribute("href", "/tests");
-    expect(screen.queryByText("Current queue")).not.toBeInTheDocument();
-    expect(screen.queryByText("Learning rhythm")).not.toBeInTheDocument();
-    expect(screen.queryByText("Learning progress")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Vocabulary" })).toBeInTheDocument();
+    expect(screen.getByText("Due for review")).toBeInTheDocument();
+    expect(screen.getByText("Mastered")).toBeInTheDocument();
+    expect(screen.getByText("Difficult")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "TOEIC" })).toBeInTheDocument();
+    expect(screen.getByText("14")).toBeInTheDocument();
+    expect(screen.getByText("8/10 (80%)")).toBeInTheDocument();
+    expect(screen.getByText("1/4 (25%)")).toBeInTheDocument();
+    expect(screen.getAllByText("0/0 (0%)")).toHaveLength(5);
   });
 
   it("keeps vocabulary available when Part Practice fails", async () => {
@@ -130,9 +120,7 @@ describe("HomeDashboard", () => {
 
     render(<HomeDashboard />);
 
-    expect(
-      screen.getByRole("heading", { name: "Daily vocabulary" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Vocabulary" })).toBeInTheDocument();
     expect(screen.getByText("Cannot connect to server.")).toBeInTheDocument();
 
     await user.click(
@@ -141,7 +129,7 @@ describe("HomeDashboard", () => {
     expect(reloadPartPractice).toHaveBeenCalledTimes(1);
   });
 
-  it("shows useful onboarding when learning progress is empty", () => {
+  it("renders zero-valued metrics without invalid progress", () => {
     mocks.useVocabStats.mockReturnValue({
       error: null,
       isLoading: false,
@@ -165,13 +153,7 @@ describe("HomeDashboard", () => {
 
     render(<HomeDashboard />);
 
-    expect(
-      screen.getByRole("heading", { name: "Build your first vocabulary list" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("No vocabulary items yet")).toBeInTheDocument();
-    expect(
-      screen.getByText("Start a part"),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText("0/0 (0%)")).toHaveLength(7);
     expect(document.body).not.toHaveTextContent(/NaN|Infinity/);
   });
 

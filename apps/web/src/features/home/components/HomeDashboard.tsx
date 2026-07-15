@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
 import type { VocabStats } from "@/entities/vocab/api/vocab";
 import {
   getCollectionsListPath,
@@ -17,12 +18,6 @@ import { useCollectionsListQuery } from "@/features/collections/shared/data/hook
 import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
 import { useDashboardPartPractice } from "@/features/home/hooks/useDashboardPartPractice";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
-import {
-  buildPartPracticeSummary,
-  getDashboardNextAction,
-  getMasteryPercentage,
-  type DashboardPartPracticeSummary,
-} from "@/features/home/lib/dashboardSummary";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -96,19 +91,9 @@ export function HomeDashboard() {
     );
   }
 
-  const partPractice = buildPartPracticeSummary(summaries);
-  const nextAction = getDashboardNextAction({ partPractice, stats });
-  const displayName = getDisplayName(user?.name, user?.email);
-
   return (
     <PageShell>
       <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-7 sm:px-6 sm:pt-9 lg:px-8 lg:pb-16">
-        <header className="mb-6 sm:mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Welcome back, {displayName}
-          </h1>
-        </header>
-
         {isLoadingCollections ? (
           <HomeDashboardSkeleton />
         ) : collectionsError ? (
@@ -153,129 +138,54 @@ export function HomeDashboard() {
         ) : isLoadingVocab || isLoadingPartPractice ? (
           <HomeDashboardSkeleton />
         ) : (
-          <section
-            aria-label="Learning overview"
-            className="grid gap-4 lg:grid-cols-12 lg:gap-5"
-          >
-            <NextActionCard nextAction={nextAction} />
+          <div className="flex flex-col gap-9 sm:gap-11">
             <VocabularyOverview
-              collectionName={defaultCollection.name}
               error={vocabError}
               onRetry={() => void reloadVocab()}
               stats={stats}
             />
             <PartPracticeOverview
               error={partPracticeError}
-              hasSummaries={summaries.length > 0}
               onRetry={() => void reloadPartPractice()}
-              partPractice={partPractice}
+              summaries={summaries}
             />
-          </section>
+          </div>
         )}
       </div>
     </PageShell>
   );
 }
 
-function NextActionCard({
-  nextAction,
-}: {
-  nextAction: ReturnType<typeof getDashboardNextAction>;
-}) {
-  return (
-    <article className="flex min-h-60 flex-col rounded-2xl border border-border bg-muted p-6 sm:p-7 lg:col-span-5">
-      <p className="text-sm font-medium text-muted-foreground">Next</p>
-      <h2 className="mt-3 max-w-md text-2xl font-semibold leading-tight tracking-tight text-balance sm:text-3xl">
-        {nextAction.title}
-      </h2>
-      <Link
-        className={primaryTextButtonClassName(
-          dashboardButtonInteractionClassName,
-          "mt-auto self-start pt-6",
-        )}
-        href={nextAction.href}
-      >
-        {nextAction.label}
-        <ArrowForwardIcon />
-      </Link>
-    </article>
-  );
-}
-
 function VocabularyOverview({
-  collectionName,
   error,
   onRetry,
   stats,
 }: {
-  collectionName: string;
   error: string | null;
   onRetry: () => void;
   stats: VocabStats | null;
 }) {
-  const masteryPercentage = getMasteryPercentage(stats);
-
   return (
-    <section
-      aria-labelledby="vocabulary-overview-title"
-      className="flex min-h-60 flex-col rounded-2xl border border-border bg-surface p-6 sm:p-7 lg:col-span-3"
-    >
-      <p className="text-sm font-medium text-muted-foreground">Vocabulary</p>
-      <h3
-        className="mt-1 truncate text-xl font-semibold tracking-tight"
-        id="vocabulary-overview-title"
+    <section aria-labelledby="vocabulary-title">
+      <h1
+        className="text-2xl font-semibold tracking-tight sm:text-3xl"
+        id="vocabulary-title"
       >
-        {collectionName}
-      </h3>
-
+        Vocabulary
+      </h1>
       {error ? (
         <InlinePanelState
           actionLabel="Retry vocabulary"
           message={error}
           onAction={onRetry}
         />
-      ) : !stats || stats.total === 0 ? (
-        <div className="mt-7 border-l-2 border-border pl-4">
-          <p className="font-semibold">No vocabulary items yet</p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Add words to this collection to start tracking mastery.
-          </p>
-          <Link
-            className={secondaryTextButtonClassName(
-              dashboardButtonInteractionClassName,
-              "mt-4",
-            )}
-            href={getCollectionsListPath("user")}
-          >
-            Browse collections
-            <ArrowForwardIcon />
-          </Link>
-        </div>
       ) : (
-        <>
-          <dl className="mt-8 grid grid-cols-2 gap-4">
-            <Metric
-              label="Mastery"
-              value={`${masteryPercentage}%`}
-            />
-            <Metric
-              label="Difficult"
-              value={stats.highWrongCount}
-            />
-          </dl>
-
-          <div className="mt-auto pt-6">
-            <Link
-              className={secondaryTextButtonClassName(
-                dashboardButtonInteractionClassName,
-              )}
-              href={getCollectionsListPath("user")}
-            >
-              Manage collection
-              <ArrowForwardIcon />
-            </Link>
-          </div>
-        </>
+        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+          <MetricCard label="Study time" value="-" />
+          <MetricCard label="Due for review" value={stats?.due ?? 0} />
+          <MetricCard label="Mastered" value={stats?.mastered ?? 0} />
+          <MetricCard label="Difficult" value={stats?.highWrongCount ?? 0} />
+        </div>
       )}
     </section>
   );
@@ -283,90 +193,47 @@ function VocabularyOverview({
 
 function PartPracticeOverview({
   error,
-  hasSummaries,
   onRetry,
-  partPractice,
+  summaries,
 }: {
   error: string | null;
-  hasSummaries: boolean;
   onRetry: () => void;
-  partPractice: DashboardPartPracticeSummary;
+  summaries: PartPracticePartSummary[];
 }) {
-  return (
-    <section
-      aria-labelledby="part-practice-overview-title"
-      className="flex min-h-60 flex-col rounded-2xl border border-border bg-surface p-6 sm:p-7 lg:col-span-4"
-    >
-      <p className="text-sm font-medium text-muted-foreground">TOEIC</p>
-      <h3
-        className="mt-1 text-xl font-semibold tracking-tight"
-        id="part-practice-overview-title"
-      >
-        Part Practice
-      </h3>
+  const answered = summaries.reduce((total, summary) => total + summary.answered, 0);
 
+  return (
+    <section aria-labelledby="toeic-title">
+      <h2
+        className="text-2xl font-semibold tracking-tight sm:text-3xl"
+        id="toeic-title"
+      >
+        TOEIC
+      </h2>
       {error ? (
         <InlinePanelState
           actionLabel="Retry Part Practice"
           message={error}
           onAction={onRetry}
         />
-      ) : !hasSummaries ? (
-        <div className="mt-7 border-l-2 border-border pl-4">
-          <p className="font-semibold">Part Practice is not available yet</p>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Open Tests to check the available TOEIC practice material.
-          </p>
-          <Link
-            className={secondaryTextButtonClassName(
-              dashboardButtonInteractionClassName,
-              "mt-4",
-            )}
-            href="/tests"
-          >
-            Open Tests
-            <ArrowForwardIcon />
-          </Link>
-        </div>
       ) : (
         <>
-          <dl className="mt-8 grid grid-cols-2 gap-4">
-            <Metric
-              label="Accuracy"
-              value={
-                partPractice.accuracy == null
-                  ? "-"
-                  : `${partPractice.accuracy}%`
-              }
-            />
-            <Metric
-              label="Answered"
-              value={`${partPractice.answered}/${partPractice.total}`}
-            />
-          </dl>
-
-          <div className="mt-6">
-            {partPractice.attentionPart ? (
-              <p className="text-sm text-muted-foreground">
-                Focus: Part {partPractice.attentionPart.partNumber}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {partPractice.answered > 0 ? "No focus part" : "Start a part"}
-              </p>
-            )}
+          <div className="mt-4 grid grid-cols-2 gap-4 lg:max-w-[calc(50%-0.625rem)] lg:gap-5">
+            <MetricCard label="Answered" value={answered} />
+            <MetricCard label="Study time" value="-" />
           </div>
-
-          <div className="mt-auto pt-6">
-            <Link
-              className={primaryTextButtonClassName(
-                dashboardButtonInteractionClassName,
-              )}
-              href="/tests"
-            >
-              Open Part Practice
-              <ArrowForwardIcon />
-            </Link>
+          <div className="mt-5 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+            <div className="space-y-5">
+              {Array.from({ length: 7 }, (_, index) => (
+                <PartProgress
+                  key={index + 1}
+                  partNumber={index + 1}
+                  summary={summaries.find(
+                    (summary) => summary.partNumber === index + 1,
+                  )}
+                />
+              ))}
+            </div>
           </div>
         </>
       )}
@@ -374,21 +241,42 @@ function PartPracticeOverview({
   );
 }
 
-function Metric({
-  label,
-  value,
+function MetricCard({ label, value }: { label: string; value: number | string }) {
+  return (
+    <article className="min-h-32 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="mt-3 font-mono text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
+        {value}
+      </p>
+    </article>
+  );
+}
+
+function PartProgress({
+  partNumber,
+  summary,
 }: {
-  label: string;
-  value: number | string;
+  partNumber: number;
+  summary: PartPracticePartSummary | undefined;
 }) {
+  const correct = summary?.correct ?? 0;
+  const answered = summary?.answered ?? 0;
+  const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
   return (
     <div>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="mt-1">
-        <span className="block font-mono text-3xl font-semibold tracking-tight tabular-nums">
-          {value}
-        </span>
-      </dd>
+      <div className="flex items-baseline justify-between gap-4 text-sm">
+        <p className="font-medium">Part {partNumber}</p>
+        <p className="font-mono tabular-nums text-muted-foreground">
+          {correct}/{answered} ({accuracy}%)
+        </p>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-foreground"
+          style={{ width: `${accuracy}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -435,14 +323,4 @@ function DashboardMessage({
       {children}
     </section>
   );
-}
-
-function getDisplayName(name: string | null | undefined, email?: string) {
-  const trimmedName = name?.trim();
-
-  if (trimmedName) {
-    return trimmedName.split(/\s+/)[0];
-  }
-
-  return email?.split("@")[0] || "there";
 }

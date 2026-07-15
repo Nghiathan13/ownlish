@@ -234,7 +234,7 @@ export function AppSidebar() {
                         )}
                         key={link.href}
                       >
-                        {!collapsed ? (
+                        {!collapsed && testsExpanded ? (
                           <span className="absolute left-5 top-8 h-6 w-px bg-border" />
                         ) : null}
                         <button
