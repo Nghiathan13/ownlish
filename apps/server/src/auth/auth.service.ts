@@ -72,7 +72,9 @@ export class AuthService {
   }
 
   async googleLogin(dto: GoogleLoginDto): Promise<AuthResponse> {
-    const verified = await this.googleTokenService.verifyIdToken(dto.idToken);
+    const verified = await this.googleTokenService.verifyAuthorizationCode(
+      dto.code,
+    );
     const email = verified.email.trim().toLowerCase();
 
     const userByGoogleSub = await this.usersService.findByGoogleSub(

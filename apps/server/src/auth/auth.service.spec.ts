@@ -38,7 +38,7 @@ describe('AuthService', () => {
   };
 
   const googleTokenServiceMock = {
-    verifyIdToken: jest.fn(),
+    verifyAuthorizationCode: jest.fn(),
   };
 
   const user = {
@@ -225,7 +225,7 @@ describe('AuthService', () => {
       name: 'Google User',
     };
 
-    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+    googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
       sub: 'google-sub',
       email: 'test@example.com',
       name: 'Google User',
@@ -235,8 +235,11 @@ describe('AuthService', () => {
     usersServiceMock.create.mockResolvedValue(googleUser);
     jwtServiceMock.signAsync.mockResolvedValue('access-token');
 
-    const result = await service.googleLogin({ idToken: 'id-token' });
+    const result = await service.googleLogin({ code: 'authorization-code' });
 
+    expect(googleTokenServiceMock.verifyAuthorizationCode).toHaveBeenCalledWith(
+      'authorization-code',
+    );
     expect(usersServiceMock.create).toHaveBeenCalledWith({
       email: 'test@example.com',
       googleSub: 'google-sub',
@@ -252,7 +255,7 @@ describe('AuthService', () => {
       googleSub: 'google-sub',
     };
 
-    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+    googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
       sub: 'google-sub',
       email: 'test@example.com',
       name: 'Google User',
@@ -262,7 +265,7 @@ describe('AuthService', () => {
     usersServiceMock.linkGoogleSub.mockResolvedValue(linkedUser);
     jwtServiceMock.signAsync.mockResolvedValue('access-token');
 
-    const result = await service.googleLogin({ idToken: 'id-token' });
+    const result = await service.googleLogin({ code: 'authorization-code' });
 
     expect(usersServiceMock.linkGoogleSub).toHaveBeenCalledWith(
       user.id,
@@ -275,7 +278,7 @@ describe('AuthService', () => {
   });
 
   it('throws conflict when email is linked to another Google account', async () => {
-    googleTokenServiceMock.verifyIdToken.mockResolvedValue({
+    googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
       sub: 'new-google-sub',
       email: 'test@example.com',
       name: 'Google User',
@@ -287,7 +290,7 @@ describe('AuthService', () => {
     });
 
     await expect(
-      service.googleLogin({ idToken: 'id-token' }),
+      service.googleLogin({ code: 'authorization-code' }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 

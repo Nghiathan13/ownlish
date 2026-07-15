@@ -1,3 +1,4 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -131,7 +132,7 @@ describe('AuthController', () => {
 
   it('delegates google login to AuthService', async () => {
     const dto = {
-      idToken: 'google-id-token',
+      code: 'google-authorization-code',
     };
     const response = {
       accessToken: 'access-token',
@@ -148,7 +149,7 @@ describe('AuthController', () => {
     authServiceMock.googleLogin.mockResolvedValue(response);
 
     await expect(
-      controller.googleLogin(dto, responseMock as Response),
+      controller.googleLogin(dto, 'XMLHttpRequest', responseMock as Response),
     ).resolves.toEqual({
       accessToken: response.accessToken,
       user: response.user,
@@ -159,6 +160,17 @@ describe('AuthController', () => {
       response.refreshToken,
       expect.objectContaining({ httpOnly: true, path: '/auth' }),
     );
+  });
+
+  it('rejects Google login requests without the popup CSRF header', async () => {
+    await expect(
+      controller.googleLogin(
+        { code: 'google-authorization-code' },
+        undefined,
+        responseMock as Response,
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(authServiceMock.googleLogin).not.toHaveBeenCalled();
   });
 
   it('delegates refresh to AuthService', async () => {

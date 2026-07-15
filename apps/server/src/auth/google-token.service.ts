@@ -10,7 +10,41 @@ export type VerifiedGoogleToken = {
 
 @Injectable()
 export class GoogleTokenService {
-  private readonly client = new OAuth2Client();
+  private readonly verificationClient = new OAuth2Client();
+
+  async verifyAuthorizationCode(code: string): Promise<VerifiedGoogleToken> {
+    if (
+      !env.googleClientId ||
+      !env.googleClientSecret ||
+      !env.googleRedirectUri
+    ) {
+      throw new UnauthorizedException('Google login is not configured');
+    }
+
+    try {
+      const client = new OAuth2Client(
+        env.googleClientId,
+        env.googleClientSecret,
+        env.googleRedirectUri,
+      );
+      const { tokens } = await client.getToken({
+        code,
+        redirect_uri: env.googleRedirectUri,
+      });
+
+      if (!tokens.id_token) {
+        throw new UnauthorizedException('Invalid Google authorization code');
+      }
+
+      return this.verifyIdToken(tokens.id_token);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      throw new UnauthorizedException('Invalid Google authorization code');
+    }
+  }
 
   async verifyIdToken(idToken: string): Promise<VerifiedGoogleToken> {
     if (!env.googleClientId) {
@@ -18,7 +52,7 @@ export class GoogleTokenService {
     }
 
     try {
-      const ticket = await this.client.verifyIdToken({
+      const ticket = await this.verificationClient.verifyIdToken({
         idToken,
         audience: env.googleClientId,
       });

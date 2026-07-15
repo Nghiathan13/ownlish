@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Post,
   Req,
   Res,
@@ -88,8 +89,13 @@ export class AuthController {
   })
   async googleLogin(
     @Body() dto: GoogleLoginDto,
+    @Headers('x-requested-with') requestedWith: string | undefined,
     @Res({ passthrough: true }) response: Response,
   ): Promise<ClientAuthResponse> {
+    if (requestedWith !== 'XMLHttpRequest') {
+      throw new UnauthorizedException('Invalid Google login request');
+    }
+
     const authResponse = await this.authService.googleLogin(dto);
 
     return this.setRefreshCookie(response, authResponse);
