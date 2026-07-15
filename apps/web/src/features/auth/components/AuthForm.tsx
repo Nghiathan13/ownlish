@@ -1,69 +1,58 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
 import { classNames } from "@/shared/lib/classNames";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
-import { Field } from "@/shared/ui/Field";
+import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { Panel } from "@/shared/ui/Panel";
 import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 import { TextInput } from "@/shared/ui/TextInput";
+import { EmailIcon, PasswordIcon } from "@/shared/ui/icons";
 import {
   GoogleSignInButton,
   isGoogleSignInConfigured,
 } from "@/features/auth/components/GoogleSignInButton";
 import { useAuthSession } from "../hooks/useAuthSession";
-import { getAuthValidationError, type AuthMode } from "../lib/authValidation";
 
 type AuthFormProps = {
   redirectTo?: string;
 };
 
+type EmailPasswordMode = "login" | "register";
+
 export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
   const router = useRouter();
   const { googleLogin, login, register } = useAuthSession();
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<EmailPasswordMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isRegister = mode === "register";
-  const validationError = getAuthValidationError({
-    email,
-    mode,
-    name,
-    password,
-  });
+  function clearError() {
+    if (error) {
+      setError(null);
+    }
+  }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleEmailPasswordSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
     setError(null);
-
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      if (isRegister) {
-        await register({
-          email: email.trim(),
-          password,
-          name: name.trim() || undefined,
-        });
+      const credentials = {
+        email: email.trim(),
+        password,
+      };
+
+      if (mode === "register") {
+        await register(credentials);
       } else {
-        await login({
-          email: email.trim(),
-          password,
-        });
+        await login(credentials);
       }
 
       router.replace(redirectTo);
@@ -78,104 +67,96 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
     }
   }
 
-  function switchMode(nextMode: AuthMode) {
+  function switchMode(nextMode: EmailPasswordMode) {
     setMode(nextMode);
+    setPassword("");
     setError(null);
-  }
-
-  function clearError() {
-    if (error) {
-      setError(null);
-    }
   }
 
   return (
     <Panel
-      className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}
       aria-labelledby="auth-title"
+      className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}
     >
-      <h1 id="auth-title" className="text-3xl font-bold leading-tight">
-        {isRegister ? "Create account" : "Sign in"}
+      <h1 className="text-3xl font-bold leading-tight" id="auth-title">
+        Get started with Engvocab
       </h1>
 
-      <div className="my-6 flex gap-3" aria-label="Auth mode">
-        <button
-          type="button"
-          className={
-            mode === "login"
-              ? primaryTextButtonClassName()
-              : secondaryTextButtonClassName()
-          }
-          onClick={() => switchMode("login")}
-          aria-pressed={mode === "login"}
-          disabled={isSubmitting}
-        >
-          Login
-        </button>
-        <button
-          type="button"
-          className={
-            mode === "register"
-              ? primaryTextButtonClassName()
-              : secondaryTextButtonClassName()
-          }
-          onClick={() => switchMode("register")}
-          aria-pressed={mode === "register"}
-          disabled={isSubmitting}
-        >
-          Register
-        </button>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="grid gap-4"
-        noValidate
-        aria-busy={isSubmitting}
-      >
-        {isRegister ? (
-          <Field label="Name">
-            <TextInput
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value);
-                clearError();
-              }}
-              autoComplete="name"
-              maxLength={80}
+      {isGoogleSignInConfigured ? (
+        <>
+          <div className="mt-6">
+            <GoogleSignInButton
               disabled={isSubmitting}
-            />
-          </Field>
-        ) : null}
+              onCode={async (code) => {
+                setError(null);
+                setIsSubmitting(true);
 
-        <Field label="Email">
+                try {
+                  await googleLogin({ code });
+                  router.replace(redirectTo);
+                } catch (caughtError) {
+                  setError(
+                    caughtError instanceof ApiError
+                      ? caughtError.message
+                      : "Cannot connect to server.",
+                  );
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              onError={setError}
+            />
+          </div>
+
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-sm text-muted-foreground">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+        </>
+      ) : null}
+
+      <form className="grid gap-4" onSubmit={handleEmailPasswordSubmit}>
+        <div className="relative">
+          <EmailIcon
+            data-testid="email-icon"
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
+          />
           <TextInput
-            type="email"
-            value={email}
+            aria-label="Email"
+            autoComplete="email"
+            className="w-full rounded-md px-4 py-2 pl-11 pr-4"
             onChange={(event) => {
               setEmail(event.target.value);
               clearError();
             }}
-            autoComplete="email"
+            placeholder="Email"
             required
-            disabled={isSubmitting}
+            type="email"
+            value={email}
           />
-        </Field>
+        </div>
 
-        <Field label="Password">
+        <div className="relative">
+          <PasswordIcon
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2"
+            data-testid="password-icon"
+          />
           <TextInput
-            type="password"
-            value={password}
+            aria-label="Password"
+            autoComplete={mode === "register" ? "new-password" : "current-password"}
+            className="w-full rounded-md px-4 py-2 pl-11 pr-4"
+            minLength={mode === "register" ? 8 : undefined}
             onChange={(event) => {
               setPassword(event.target.value);
               clearError();
             }}
-            autoComplete={isRegister ? "new-password" : "current-password"}
-            minLength={8}
+            placeholder="Password"
             required
-            disabled={isSubmitting}
+            type="password"
+            value={password}
           />
-        </Field>
+        </div>
 
         {error ? (
           <p className="m-0 text-sm text-danger" role="alert">
@@ -184,49 +165,39 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
         ) : null}
 
         <button
-          type="submit"
           className={primaryTextButtonClassName()}
           disabled={isSubmitting}
+          type="submit"
         >
-          {isSubmitting
-            ? "Please wait..."
-            : isRegister
-              ? "Create account"
-              : "Sign in"}
+          {isSubmitting ? "Please wait..." : "Continue"}
         </button>
+
+        {mode === "login" ? (
+          <p className="text-center text-sm text-muted-foreground">
+            New to Engvocab?{" "}
+            <button
+              className="font-medium text-foreground underline underline-offset-4"
+              disabled={isSubmitting}
+              onClick={() => switchMode("register")}
+              type="button"
+            >
+              Create account
+            </button>
+          </p>
+        ) : (
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              className="font-medium text-foreground underline underline-offset-4"
+              disabled={isSubmitting}
+              onClick={() => switchMode("login")}
+              type="button"
+            >
+              Sign in
+            </button>
+          </p>
+        )}
       </form>
-
-      {isGoogleSignInConfigured ? (
-        <>
-          <div className="my-4 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-sm text-muted-foreground">or</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <GoogleSignInButton
-            disabled={isSubmitting}
-            onCode={async (code) => {
-              setError(null);
-              setIsSubmitting(true);
-
-              try {
-                await googleLogin({ code });
-                router.replace(redirectTo);
-              } catch (caughtError) {
-                setError(
-                  caughtError instanceof ApiError
-                    ? caughtError.message
-                    : "Cannot connect to server.",
-                );
-              } finally {
-                setIsSubmitting(false);
-              }
-            }}
-            onError={setError}
-          />
-        </>
-      ) : null}
     </Panel>
   );
 }

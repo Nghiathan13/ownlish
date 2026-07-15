@@ -4,6 +4,8 @@ export { ArrowForwardIcon } from "./ArrowForwardIcon";
 export { CheckIcon } from "./CheckIcon";
 export { DeleteIcon } from "./DeleteIcon";
 export { EditIcon } from "./EditIcon";
+export { EmailIcon } from "./EmailIcon";
+export { PasswordIcon } from "./PasswordIcon";
 export { RemoveIcon } from "./RemoveIcon";
 export { SearchIcon } from "./SearchIcon";
 export { SwapColumnIcon } from "./SwapColumnIcon";

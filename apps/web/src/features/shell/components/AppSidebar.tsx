@@ -68,7 +68,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-1">
         {TESTS_SUB_LINKS.map((subLink) => {
           const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
 
