@@ -166,17 +166,17 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
 
         <button
           className={primaryTextButtonClassName()}
-          disabled={isSubmitting}
+          disabled={isSubmitting || email.trim().length === 0 || password.length === 0}
           type="submit"
         >
-          {isSubmitting ? "Please wait..." : "Continue"}
+          {isSubmitting ? "Please wait..." : mode === "register" ? "Create" : "Continue"}
         </button>
 
         {mode === "login" ? (
           <p className="text-center text-sm text-muted-foreground">
             New to Engvocab?{" "}
             <button
-              className="font-medium text-foreground underline underline-offset-4"
+              className="cursor-pointer font-medium text-foreground underline underline-offset-4"
               disabled={isSubmitting}
               onClick={() => switchMode("register")}
               type="button"
@@ -188,7 +188,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <button
-              className="font-medium text-foreground underline underline-offset-4"
+              className="cursor-pointer font-medium text-foreground underline underline-offset-4"
               disabled={isSubmitting}
               onClick={() => switchMode("login")}
               type="button"

@@ -44,12 +44,16 @@ describe("AuthForm", () => {
     expect(screen.getByTestId("email-icon")).toBeInTheDocument();
     expect(screen.getByTestId("password-icon")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create account" })).toBeInTheDocument();
+    const submitButton = screen.getByRole("button", { name: "Continue" });
+    expect(submitButton).toBeDisabled();
 
     const email = screen.getByPlaceholderText("Email");
     const password = screen.getByPlaceholderText("Password");
     await user.type(email, "linh@example.com");
+    expect(submitButton).toBeDisabled();
     await user.type(password, "test123456");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(submitButton).toBeEnabled();
+    await user.click(submitButton);
 
     expect(email).toHaveValue("linh@example.com");
     expect(mocks.login).toHaveBeenCalledWith({
@@ -68,7 +72,7 @@ describe("AuthForm", () => {
     await user.click(screen.getByRole("button", { name: "Create account" }));
     await user.type(screen.getByPlaceholderText("Email"), "linh@example.com");
     await user.type(screen.getByPlaceholderText("Password"), "test123456");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Create" }));
 
     expect(mocks.register).toHaveBeenCalledWith({
       email: "linh@example.com",
