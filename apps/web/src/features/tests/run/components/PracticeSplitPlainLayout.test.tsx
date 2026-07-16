@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
 
@@ -15,21 +15,14 @@ describe("PracticeSplitPlainLayout", () => {
     window.localStorage.clear();
   });
 
-  it("resizes the desktop panels with the keyboard and persists the ratio", async () => {
+  it("starts with an unfocusable pointer-only separator", () => {
     renderLayout();
 
     const separator = screen.getByRole("separator", {
       name: "Resize question and answer panels",
     });
 
-    expect(separator).toHaveAttribute("aria-valuenow", "50");
-
-    fireEvent.keyDown(separator, { key: "ArrowRight" });
-
-    expect(separator).toHaveAttribute("aria-valuenow", "52");
-    await waitFor(() => {
-      expect(window.localStorage.getItem(STORAGE_KEY)).toBe("52");
-    });
+    expect(separator).not.toHaveAttribute("tabindex");
   });
 
   it("restores the saved desktop panel ratio", async () => {
@@ -37,10 +30,11 @@ describe("PracticeSplitPlainLayout", () => {
     renderLayout();
 
     await waitFor(() => {
-      expect(screen.getByRole("separator")).toHaveAttribute(
-        "aria-valuenow",
-        "65",
-      );
+      expect(
+        screen.getByRole("separator").parentElement?.style.getPropertyValue(
+          "--tests-split-left-panel-width",
+        ),
+      ).toBe("65%");
     });
   });
 });
