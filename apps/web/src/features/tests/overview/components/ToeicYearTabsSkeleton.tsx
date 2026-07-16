@@ -3,7 +3,7 @@ import { SkeletonTabPills } from "@/shared/skeletons/SkeletonTabPills";
 export function ToeicYearTabsSkeleton({ count = 3 }: { count?: number }) {
   return (
     <SkeletonTabPills
-      className="mx-16 mt-16 mb-8 flex w-fit flex-wrap gap-2 rounded-[16px] bg-surface p-2 shadow-card"
+      className="mx-8 mt-8 mb-8 grid w-fit grid-cols-4 gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:mx-16 lg:mt-16 lg:flex lg:flex-wrap"
       count={count}
       pillClassName="h-10 w-16"
     />

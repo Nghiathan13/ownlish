@@ -4,7 +4,7 @@ export const testOverviewCardClassName =
   "flex min-w-[300px] flex-col gap-4 rounded-[16px] bg-surface p-4 shadow-card";
 
 export const testOverviewCardGridClassName =
-  "grid gap-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]";
+  "grid gap-4 lg:gap-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]";
 
 export const testOverviewCardSkeletonClassName = "min-h-40 w-full rounded-[20px]";
 

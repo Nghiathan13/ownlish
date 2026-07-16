@@ -30,7 +30,7 @@ export function PartPracticeTabs({
   }
 
   return (
-    <div className="mx-16 mt-16 mb-8 flex w-fit flex-wrap gap-2 rounded-[16px] bg-surface p-2 shadow-card">
+    <div className="mx-8 mt-8 mb-8 grid w-fit grid-cols-4 gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:mx-16 lg:mt-16 lg:flex lg:flex-wrap">
       {partNumbers.map((partNumber) => {
         const isActive = selectedPartNumber === partNumber;
 
