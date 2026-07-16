@@ -17,8 +17,8 @@ describe('TestsService', () => {
     toeicRun: {
       findMany: jest.fn(),
     },
-    toeicRunQuestion: {
-      groupBy: jest.fn(),
+    toeicRunAnswer: {
+      findMany: jest.fn(),
     },
   };
 
@@ -53,24 +53,21 @@ describe('TestsService', () => {
       { id: 'latest-run', toeicTestId: 1 },
       { id: 'older-run', toeicTestId: 1 },
     ]);
-    prismaMock.toeicRunQuestion.groupBy.mockResolvedValue([
-      {
+    prismaMock.toeicRunAnswer.findMany.mockResolvedValue([
+      ...Array.from({ length: 4 }, () => ({
         runId: 'latest-run',
-        partNumber: 1,
         status: 'RIGHT',
-        _count: { _all: 4 },
-      },
+        toeicQuestion: { group: { testPart: { partNumber: 1 } } },
+      })),
+      ...Array.from({ length: 2 }, () => ({
+        runId: 'latest-run',
+        status: 'WRONG',
+        toeicQuestion: { group: { testPart: { partNumber: 1 } } },
+      })),
       {
         runId: 'latest-run',
-        partNumber: 1,
         status: 'WRONG',
-        _count: { _all: 2 },
-      },
-      {
-        runId: 'latest-run',
-        partNumber: 2,
-        status: 'WRONG',
-        _count: { _all: 1 },
+        toeicQuestion: { group: { testPart: { partNumber: 2 } } },
       },
     ]);
 

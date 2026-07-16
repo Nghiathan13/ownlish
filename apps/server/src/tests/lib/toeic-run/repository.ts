@@ -1,9 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ToeicRunMode } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import type { ToeicRunForResponse } from './session.types';
-import { toeicRunResponseInclude } from './response.include';
-import type { ToeicQuestionGroupForRun } from './materializer.types';
 import type {
   ToeicOwnedRunMeta,
   ToeicOwnedRunRecord,
@@ -49,28 +46,6 @@ export class ToeicRunRepository {
     return run ?? null;
   }
 
-  findRunForResponse(runId: string): Promise<ToeicRunForResponse | null> {
-    return this.prisma.toeicRun.findUnique({
-      where: { id: runId },
-      include: toeicRunResponseInclude(),
-    });
-  }
-
-  findLatestPracticeRun(
-    userId: string,
-    testId: number,
-  ): Promise<ToeicRunForResponse | null> {
-    return this.prisma.toeicRun.findFirst({
-      where: {
-        userId,
-        toeicTestId: testId,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      orderBy: { createdAt: 'desc' },
-      include: toeicRunResponseInclude(),
-    });
-  }
-
   findOwnedRunMeta(
     userId: string,
     sessionId: string,
@@ -82,6 +57,9 @@ export class ToeicRunRepository {
         mode: true,
         toeicTestId: true,
         selectedParts: true,
+        totalRight: true,
+        totalWrong: true,
+        completedAt: true,
       },
     });
   }
@@ -167,19 +145,8 @@ export class ToeicRunRepository {
       }
 
       await this.lockRunsForUpdate(tx, runIds);
-      await tx.toeicRunQuestion.updateMany({
+      await tx.toeicRunAnswer.deleteMany({
         where: { runId: { in: runIds } },
-        data: {
-          selectedKey: null,
-          status: null,
-          answeredAt: null,
-          gradedAt: null,
-        },
-      });
-
-      await tx.toeicRunGroup.updateMany({
-        where: { runId: { in: runIds } },
-        data: { status: null },
       });
 
       await tx.toeicRun.updateMany({
@@ -193,12 +160,8 @@ export class ToeicRunRepository {
     });
   }
 
-  listQuestionGroupsForParts(
-    db: Pick<PrismaService, 'toeicQuestionGroup'> | Prisma.TransactionClient,
-    testId: number,
-    selectedParts: number[],
-  ): Promise<ToeicQuestionGroupForRun[]> {
-    return db.toeicQuestionGroup.findMany({
+  listFullQuestionGroupsForParts(testId: number, selectedParts: number[]) {
+    return this.prisma.toeicQuestionGroup.findMany({
       where: {
         testPart: {
           testId,
@@ -211,21 +174,14 @@ export class ToeicRunRepository {
         },
         questions: {
           orderBy: { questionNumber: 'asc' },
-          select: {
-            id: true,
-            questionNumber: true,
-          },
         },
       },
       orderBy: [{ questionStart: 'asc' }, { id: 'asc' }],
     });
   }
 
-  listQuestionGroupsForPartsForTest(
-    testId: number,
-    selectedParts: number[],
-  ): Promise<ToeicQuestionGroupForRun[]> {
-    return this.listQuestionGroupsForParts(this.prisma, testId, selectedParts);
+  listAnswersForRun(runId: string) {
+    return this.prisma.toeicRunAnswer.findMany({ where: { runId } });
   }
 
   findQuestionWithTestPart(toeicQuestionId: number) {
@@ -238,18 +194,6 @@ export class ToeicRunRepository {
           },
         },
       },
-    });
-  }
-
-  findRunQuestionWithQuestion(runId: string, toeicQuestionId: number) {
-    return this.prisma.toeicRunQuestion.findUnique({
-      where: {
-        runId_toeicQuestionId: {
-          runId,
-          toeicQuestionId,
-        },
-      },
-      include: { toeicQuestion: true },
     });
   }
 }

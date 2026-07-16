@@ -19,17 +19,6 @@ export type ToeicQuestionWithTestPart = ToeicQuestion & {
   };
 };
 
-export type ToeicRunQuestionWithQuestion = {
-  id: string;
-  runId: string;
-  runGroupId: string;
-  toeicQuestionId: number;
-  partNumber: number;
-  selectedKey: string | null;
-  status: ToeicRunQuestionStatus | null;
-  toeicQuestion: ToeicQuestion;
-};
-
 export type ToeicRunQuestionGradeState = {
   selectedKey: string | null;
   status: ToeicRunQuestionStatus | null;

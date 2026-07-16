@@ -16,26 +16,23 @@ export function createToeicTestsPrismaMock() {
       updateMany: jest.fn(),
       deleteMany: jest.fn(),
     },
-    toeicRunQuestion: {
+    toeicRunAnswer: {
       count: jest.fn(),
-      createMany: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
-      updateMany: jest.fn(),
-    },
-    toeicRunGroup: {
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
     },
     toeicQuestion: {
+      findMany: jest.fn(),
       findUnique: jest.fn(),
     },
     toeicQuestionGroup: {
       findMany: jest.fn(),
     },
     $queryRaw: jest.fn(),
+    $executeRaw: jest.fn(),
     $transaction: jest.fn(),
   };
 }

@@ -1,148 +1,88 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { Prisma, ToeicRunMode } from '@prisma/client';
 import type { ToeicRunForResponse } from './session.types';
-import type {
-  CreateToeicRunWithQuestionsInput,
-  ToeicQuestionGroupForRun,
-} from './materializer.types';
 import { ToeicRunRepository } from './repository';
 
 @Injectable()
 export class ToeicRunMaterializer {
   constructor(private readonly runRepository: ToeicRunRepository) {}
 
-  findLatestPracticeRun(
-    userId: string,
-    testId: number,
-  ): Promise<ToeicRunForResponse | null> {
-    return this.runRepository.findLatestPracticeRun(userId, testId);
-  }
-
-  findRunForResponse(runId: string): Promise<ToeicRunForResponse | null> {
-    return this.runRepository.findRunForResponse(runId);
-  }
-
-  async ensurePracticeRunIncludesParts(
-    runId: string,
-    testId: number,
-    selectedParts: number[],
-  ): Promise<void> {
-    await this.runRepository.transaction(async (tx) => {
-      const run = await tx.toeicRun.findUnique({
-        where: { id: runId },
-        include: {
-          groups: {
-            select: {
-              toeicQuestionGroupId: true,
-              partNumber: true,
-              sortOrder: true,
-            },
-          },
+  async findOrCreatePracticeRun(input: {
+    userId: string;
+    testId: number;
+    selectedParts: number[];
+  }): Promise<ToeicRunForResponse> {
+    return this.runRepository.transaction(async (tx) => {
+      await tx.$executeRaw(
+        Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${input.userId}), ${input.testId})`,
+      );
+      const existingRun = await tx.toeicRun.findFirst({
+        where: {
+          userId: input.userId,
+          toeicTestId: input.testId,
+          mode: ToeicRunMode.PRACTICE,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          mode: true,
+          toeicTestId: true,
+          selectedParts: true,
+          totalRight: true,
+          totalWrong: true,
+          completedAt: true,
         },
       });
 
-      if (!run) {
-        return;
-      }
-
-      const nextSelectedParts = [
-        ...new Set([...run.selectedParts, ...selectedParts]),
-      ].sort((a, b) => a - b);
-      const existingGroupIds = new Set(
-        run.groups.map((group) => group.toeicQuestionGroupId),
-      );
-      const nextGroupSortOrder =
-        run.groups.reduce(
-          (highest, group) => Math.max(highest, group.sortOrder),
-          -1,
-        ) + 1;
-      const groups = await this.runRepository.listQuestionGroupsForParts(
-        tx,
-        testId,
-        selectedParts,
-      );
-      const newGroups = groups.filter(
-        (group) => !existingGroupIds.has(group.id),
-      );
-
-      await this.attachQuestionGroupsToRun(
-        tx,
-        runId,
-        newGroups,
-        nextGroupSortOrder,
-      );
-
-      if (nextSelectedParts.join(',') !== run.selectedParts.join(',')) {
-        await tx.toeicRun.update({
-          where: { id: runId },
-          data: { selectedParts: nextSelectedParts },
+      if (!existingRun) {
+        return tx.toeicRun.create({
+          data: {
+            userId: input.userId,
+            toeicTestId: input.testId,
+            mode: ToeicRunMode.PRACTICE,
+            selectedParts: input.selectedParts,
+          },
         });
       }
+
+      const selectedParts = [
+        ...new Set([...existingRun.selectedParts, ...input.selectedParts]),
+      ].sort((a, b) => a - b);
+      if (selectedParts.join(',') === existingRun.selectedParts.join(',')) {
+        return existingRun;
+      }
+
+      return tx.toeicRun.update({
+        where: { id: existingRun.id },
+        data: { selectedParts },
+        select: {
+          id: true,
+          mode: true,
+          toeicTestId: true,
+          selectedParts: true,
+          totalRight: true,
+          totalWrong: true,
+          completedAt: true,
+        },
+      });
     });
   }
 
-  async createRunWithQuestions(
-    input: CreateToeicRunWithQuestionsInput,
-  ): Promise<ToeicRunForResponse> {
-    const groups = await this.runRepository.listQuestionGroupsForPartsForTest(
-      input.testId,
-      input.selectedParts,
-    );
-
-    const run = await this.runRepository.transaction(async (tx) => {
-      const createdRun = await tx.toeicRun.create({
+  createRun(input: {
+    userId: string;
+    testId: number;
+    mode: ToeicRunMode;
+    selectedParts: number[];
+  }): Promise<ToeicRunForResponse> {
+    return this.runRepository.transaction((tx) =>
+      tx.toeicRun.create({
         data: {
           userId: input.userId,
           toeicTestId: input.testId,
           mode: input.mode,
           selectedParts: input.selectedParts,
         },
-      });
-
-      await this.attachQuestionGroupsToRun(tx, createdRun.id, groups, 0);
-
-      return createdRun;
-    });
-
-    const created = await this.findRunForResponse(run.id);
-    if (!created) {
-      throw new NotFoundException('Practice session not found.');
-    }
-
-    return created;
-  }
-
-  private async attachQuestionGroupsToRun(
-    tx: Prisma.TransactionClient,
-    runId: string,
-    groups: ToeicQuestionGroupForRun[],
-    startSortOrder: number,
-  ): Promise<void> {
-    let nextSortOrder = startSortOrder;
-
-    for (const group of groups) {
-      const runGroup = await tx.toeicRunGroup.create({
-        data: {
-          runId,
-          toeicQuestionGroupId: group.id,
-          partNumber: group.testPart.partNumber,
-          questionStart: group.questionStart,
-          questionEnd: group.questionEnd,
-          sortOrder: nextSortOrder,
-        },
-      });
-      nextSortOrder += 1;
-
-      await tx.toeicRunQuestion.createMany({
-        data: group.questions.map((question) => ({
-          runId,
-          runGroupId: runGroup.id,
-          toeicQuestionId: question.id,
-          partNumber: group.testPart.partNumber,
-          questionNumber: question.questionNumber,
-          sortOrder: question.questionNumber,
-        })),
-      });
-    }
+      }),
+    );
   }
 }

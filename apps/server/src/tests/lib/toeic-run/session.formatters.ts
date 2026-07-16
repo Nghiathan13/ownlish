@@ -1,35 +1,8 @@
-import {
-  ToeicRunGroupStatus,
-  ToeicRunMode,
-  ToeicRunQuestionStatus,
-} from '@prisma/client';
-import type {
-  ToeicRunGroupForResponse,
-  ToeicSessionResponseMode,
-} from './session.types';
+import { ToeicRunGroupStatus, ToeicRunQuestionStatus } from '@prisma/client';
 import type {
   ToeicSessionGroupStatusResponse,
   ToeicSessionQuestionStatusResponse,
 } from './session.response.types';
-
-export function formatToeicRunMode(
-  mode: ToeicRunMode,
-): ToeicSessionResponseMode {
-  if (mode === ToeicRunMode.MOCK_TEST) {
-    return 'mock_test';
-  }
-
-  return 'practice';
-}
-
-export function isWrongReviewToeicGroup(group: ToeicRunGroupForResponse) {
-  return (
-    group.status === ToeicRunGroupStatus.WRONG ||
-    group.questions.some(
-      (question) => question.status === ToeicRunQuestionStatus.WRONG,
-    )
-  );
-}
 
 export function formatToeicGroupStatus(
   status: ToeicRunGroupStatus | null,

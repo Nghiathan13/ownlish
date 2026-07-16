@@ -5,6 +5,9 @@ export type ToeicOwnedRunMeta = {
   mode: ToeicRunMode;
   toeicTestId: number;
   selectedParts: number[];
+  totalRight: number;
+  totalWrong: number;
+  completedAt: Date | null;
 };
 
 export type ToeicOwnedRunRecord = Pick<

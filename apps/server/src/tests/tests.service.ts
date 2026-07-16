@@ -54,25 +54,32 @@ export class TestsService {
     }
 
     const latestRunIds = [...latestRunByTestId.values()];
-    const progressCounts = latestRunIds.length
-      ? await this.prisma.toeicRunQuestion.groupBy({
-          by: ['runId', 'partNumber', 'status'],
+    const progressAnswers = latestRunIds.length
+      ? await this.prisma.toeicRunAnswer.findMany({
           where: {
             runId: { in: latestRunIds },
             status: {
               in: [ToeicRunQuestionStatus.RIGHT, ToeicRunQuestionStatus.WRONG],
             },
           },
-          _count: { _all: true },
+          select: {
+            runId: true,
+            status: true,
+            toeicQuestion: {
+              select: {
+                group: {
+                  select: { testPart: { select: { partNumber: true } } },
+                },
+              },
+            },
+          },
         })
       : [];
     const progressCountByPart = new Map<string, number>();
 
-    for (const count of progressCounts) {
-      progressCountByPart.set(
-        `${count.runId}:${count.partNumber}:${count.status}`,
-        count._count._all,
-      );
+    for (const answer of progressAnswers) {
+      const key = `${answer.runId}:${answer.toeicQuestion.group.testPart.partNumber}:${answer.status}`;
+      progressCountByPart.set(key, (progressCountByPart.get(key) ?? 0) + 1);
     }
 
     return {

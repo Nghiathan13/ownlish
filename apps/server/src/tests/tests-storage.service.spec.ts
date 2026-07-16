@@ -7,7 +7,8 @@ describe('TestsStorageService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(TestsStorageService.prototype as never, 'getClient' as never)
+    jest
+      .spyOn(TestsStorageService.prototype as never, 'getClient' as never)
       .mockReturnValue(client as never);
   });
 
@@ -37,12 +38,8 @@ describe('TestsStorageService', () => {
       ['audio/part-3.mp3', 'images/part-3.png'],
       900,
     );
-    expect(signed.get('audio/part-3.mp3')?.url).toBe(
-      'https://storage/audio',
-    );
-    expect(signed.get('images/part-3.png')?.url).toBe(
-      'https://storage/image',
-    );
+    expect(signed.get('audio/part-3.mp3')?.url).toBe('https://storage/audio');
+    expect(signed.get('images/part-3.png')?.url).toBe('https://storage/image');
   });
 
   it('keeps every path unresolved when the batch request fails', async () => {
@@ -84,10 +81,9 @@ describe('TestsStorageService', () => {
     const signed = await service.createSignedUrls(paths);
 
     expect(createSignedUrls).toHaveBeenCalledTimes(2);
-    expect(createSignedUrls.mock.calls[0]?.[0]).toHaveLength(1000);
-    expect(createSignedUrls.mock.calls[1]?.[0]).toEqual([
-      'audio/part-3-1000.mp3',
-    ]);
+    const calls = createSignedUrls.mock.calls as unknown as Array<[string[]]>;
+    expect(calls[0]?.[0]).toHaveLength(1000);
+    expect(calls[1]?.[0]).toEqual(['audio/part-3-1000.mp3']);
     expect(signed.get('audio/part-3-1000.mp3')?.url).toBe(
       'https://storage/audio/part-3-1000.mp3',
     );

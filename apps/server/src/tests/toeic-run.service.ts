@@ -10,7 +10,6 @@ import { SubmitToeicAnswerDto } from './dto/submit-toeic-answer.dto';
 import { CreateToeicRunDto } from './dto/create-toeic-run.dto';
 import { GetToeicRunDto } from './dto/get-toeic-run.dto';
 import { ToeicRunGrader } from './lib/toeic-run/grader';
-import { isWrongReviewToeicGroup } from './lib/toeic-run/session.formatters';
 import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
 import { ToeicRunRepository } from './lib/toeic-run/repository';
 import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
@@ -40,7 +39,7 @@ export class ToeicRunService {
     await this.runRepository.assertTestAndPartsExist(dto.testId, selectedParts);
 
     if (mode === 'mock_test') {
-      const run = await this.runMaterializer.createRunWithQuestions({
+      const run = await this.runMaterializer.createRun({
         userId,
         testId: dto.testId,
         mode: ToeicRunMode.MOCK_TEST,
@@ -54,32 +53,9 @@ export class ToeicRunService {
       return this.createReviewWrongSession(userId, dto.testId, selectedParts);
     }
 
-    const existingRun = await this.runMaterializer.findLatestPracticeRun(
-      userId,
-      dto.testId,
-    );
-
-    if (existingRun) {
-      await this.runMaterializer.ensurePracticeRunIncludesParts(
-        existingRun.id,
-        dto.testId,
-        selectedParts,
-      );
-
-      const refreshedRun = await this.runMaterializer.findRunForResponse(
-        existingRun.id,
-      );
-      if (!refreshedRun) {
-        throw new NotFoundException('Practice session not found.');
-      }
-
-      return this.formatSession(refreshedRun, selectedParts);
-    }
-
-    const run = await this.runMaterializer.createRunWithQuestions({
+    const run = await this.runMaterializer.findOrCreatePracticeRun({
       userId,
       testId: dto.testId,
-      mode: ToeicRunMode.PRACTICE,
       selectedParts,
     });
 
@@ -127,41 +103,14 @@ export class ToeicRunService {
     testId: number,
     selectedParts: number[],
   ) {
-    const existingRun = await this.runMaterializer.findLatestPracticeRun(
+    const run = await this.runMaterializer.findOrCreatePracticeRun({
       userId,
       testId,
-    );
-
-    if (!existingRun) {
-      const run = await this.runMaterializer.createRunWithQuestions({
-        userId,
-        testId,
-        mode: ToeicRunMode.PRACTICE,
-        selectedParts,
-      });
-
-      return this.formatSession(run, selectedParts, {
-        mode: 'review_wrong',
-        groupFilter: (group) => isWrongReviewToeicGroup(group),
-      });
-    }
-
-    await this.runMaterializer.ensurePracticeRunIncludesParts(
-      existingRun.id,
-      testId,
       selectedParts,
-    );
+    });
 
-    const refreshedRun = await this.runMaterializer.findRunForResponse(
-      existingRun.id,
-    );
-    if (!refreshedRun) {
-      throw new NotFoundException('Practice session not found.');
-    }
-
-    return this.formatSession(refreshedRun, selectedParts, {
+    return this.formatSession(run, selectedParts, {
       mode: 'review_wrong',
-      groupFilter: (group) => isWrongReviewToeicGroup(group),
     });
   }
 
@@ -183,6 +132,14 @@ export class ToeicRunService {
       ? this.parsePartsQuery(dto.parts)
       : [...loadedRun.selectedParts];
 
+    if (
+      visibleParts.some(
+        (partNumber) => !loadedRun.selectedParts.includes(partNumber),
+      )
+    ) {
+      throw new BadRequestException('Requested part is not in this session.');
+    }
+
     if (loadedRun.mode === ToeicRunMode.MOCK_TEST) {
       if (dto.mode === 'review_wrong') {
         throw new BadRequestException(
@@ -195,12 +152,7 @@ export class ToeicRunService {
         visibleParts,
       );
 
-      const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
-      if (!run) {
-        throw new NotFoundException('TOEIC run not found.');
-      }
-
-      return this.formatSession(run, visibleParts);
+      return this.formatSession(loadedRun, visibleParts);
     }
 
     await this.runRepository.assertTestAndPartsExist(
@@ -208,19 +160,13 @@ export class ToeicRunService {
       visibleParts,
     );
 
-    const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
-    if (!run) {
-      throw new NotFoundException('Practice session not found.');
-    }
-
     if (dto.mode === 'review_wrong') {
-      return this.formatSession(run, visibleParts, {
+      return this.formatSession(loadedRun, visibleParts, {
         mode: 'review_wrong',
-        groupFilter: (group) => isWrongReviewToeicGroup(group),
       });
     }
 
-    return this.formatSession(run, visibleParts);
+    return this.formatSession(loadedRun, visibleParts);
   }
 
   async expandRunParts(
@@ -248,16 +194,11 @@ export class ToeicRunService {
       loadedRun.toeicTestId,
       selectedParts,
     );
-    await this.runMaterializer.ensurePracticeRunIncludesParts(
-      loadedRun.id,
-      loadedRun.toeicTestId,
+    const run = await this.runMaterializer.findOrCreatePracticeRun({
+      userId,
+      testId: loadedRun.toeicTestId,
       selectedParts,
-    );
-
-    const run = await this.runMaterializer.findRunForResponse(loadedRun.id);
-    if (!run) {
-      throw new NotFoundException('Practice session not found.');
-    }
+    });
 
     return this.formatSession(run, selectedParts);
   }

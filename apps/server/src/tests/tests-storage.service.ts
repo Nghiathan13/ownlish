@@ -12,7 +12,11 @@ const MAX_SIGNED_URLS_PER_REQUEST = 1000;
 function chunkPaths(paths: string[]): string[][] {
   const chunks: string[][] = [];
 
-  for (let index = 0; index < paths.length; index += MAX_SIGNED_URLS_PER_REQUEST) {
+  for (
+    let index = 0;
+    index < paths.length;
+    index += MAX_SIGNED_URLS_PER_REQUEST
+  ) {
     chunks.push(paths.slice(index, index + MAX_SIGNED_URLS_PER_REQUEST));
   }
 
@@ -170,7 +174,9 @@ export class TestsStorageService {
         );
       }),
     );
-    const signedUrlByPath = new Map(batchResults.flatMap((batch) => [...batch]));
+    const signedUrlByPath = new Map(
+      batchResults.flatMap((batch) => [...batch]),
+    );
     const expiresAt = new Date(
       Date.now() + env.toeicSignedUrlTtlSeconds * 1000,
     ).toISOString();

@@ -72,18 +72,8 @@ describe('ToeicRunRepository', () => {
       },
       select: { id: true },
     });
-    expect(prismaMock.toeicRunQuestion.updateMany).toHaveBeenCalledWith({
+    expect(prismaMock.toeicRunAnswer.deleteMany).toHaveBeenCalledWith({
       where: { runId: { in: ['run-a', 'run-b'] } },
-      data: {
-        selectedKey: null,
-        status: null,
-        answeredAt: null,
-        gradedAt: null,
-      },
-    });
-    expect(prismaMock.toeicRunGroup.updateMany).toHaveBeenCalledWith({
-      where: { runId: { in: ['run-a', 'run-b'] } },
-      data: { status: null },
     });
     expect(prismaMock.toeicRun.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['run-a', 'run-b'] } },
@@ -94,7 +84,7 @@ describe('ToeicRunRepository', () => {
     });
     expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
     expect(prismaMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
-      prismaMock.toeicRunQuestion.updateMany.mock.invocationCallOrder[0],
+      prismaMock.toeicRunAnswer.deleteMany.mock.invocationCallOrder[0],
     );
     const [[lockQuery]] = prismaMock.$queryRaw.mock.calls as Array<
       [{ sql: string; values: unknown[] }]

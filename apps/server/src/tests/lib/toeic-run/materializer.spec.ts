@@ -10,7 +10,6 @@ import {
 
 describe('ToeicRunMaterializer', () => {
   let materializer: ToeicRunMaterializer;
-
   const prismaMock = createToeicTestsPrismaMock();
 
   beforeEach(async () => {
@@ -21,29 +20,40 @@ describe('ToeicRunMaterializer', () => {
       providers: [
         ToeicRunMaterializer,
         ToeicRunRepository,
-        {
-          provide: PrismaService,
-          useValue: prismaMock,
-        },
+        { provide: PrismaService, useValue: prismaMock },
       ],
     }).compile();
 
     materializer = module.get(ToeicRunMaterializer);
   });
 
-  it('creates a run with question groups and reloads the full session', async () => {
-    prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([
-      {
-        id: 101,
-        questionStart: 1,
-        questionEnd: 1,
-        testPart: { partNumber: 1 },
-        questions: [{ id: 1001, questionNumber: 1 }],
-      },
-    ]);
+  it('creates a practice run inside the per-user/test lock', async () => {
+    prismaMock.toeicRun.findFirst.mockResolvedValue(null);
     prismaMock.toeicRun.create.mockResolvedValue({ id: 'run-id' });
-    prismaMock.toeicRunGroup.create.mockResolvedValue({ id: 'group-id' });
-    prismaMock.toeicRun.findUnique.mockResolvedValue({
+
+    await expect(
+      materializer.findOrCreatePracticeRun({
+        userId: 'user-1',
+        testId: 1,
+        selectedParts: [1],
+      }),
+    ).resolves.toEqual({ id: 'run-id' });
+
+    expect(prismaMock.toeicRun.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-1',
+        toeicTestId: 1,
+        mode: ToeicRunMode.PRACTICE,
+        selectedParts: [1],
+      },
+    });
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prismaMock.toeicQuestionGroup.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.toeicRunAnswer.create).not.toHaveBeenCalled();
+  });
+
+  it('unions new parts into an existing practice run', async () => {
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
       id: 'run-id',
       mode: ToeicRunMode.PRACTICE,
       toeicTestId: 1,
@@ -51,106 +61,47 @@ describe('ToeicRunMaterializer', () => {
       totalRight: 0,
       totalWrong: 0,
       completedAt: null,
-      questions: [],
-      groups: [],
     });
+    prismaMock.toeicRun.update.mockResolvedValue({ id: 'run-id' });
 
-    const run = await materializer.createRunWithQuestions({
+    await materializer.findOrCreatePracticeRun({
       userId: 'user-1',
       testId: 1,
-      mode: ToeicRunMode.PRACTICE,
-      selectedParts: [1],
+      selectedParts: [2, 1],
     });
 
-    expect(prismaMock.toeicRunGroup.create).toHaveBeenCalledWith({
-      data: {
-        runId: 'run-id',
-        toeicQuestionGroupId: 101,
-        partNumber: 1,
-        questionStart: 1,
-        questionEnd: 1,
-        sortOrder: 0,
-      },
-    });
-    expect(prismaMock.toeicRunQuestion.createMany).toHaveBeenCalledWith({
-      data: [
-        {
-          runId: 'run-id',
-          runGroupId: 'group-id',
-          toeicQuestionId: 1001,
-          partNumber: 1,
-          questionNumber: 1,
-          sortOrder: 1,
-        },
-      ],
-    });
-    expect(run.id).toBe('run-id');
-  });
-
-  it('expands an existing practice run without duplicating groups', async () => {
-    prismaMock.toeicRun.findUnique.mockResolvedValue({
-      id: 'run-id',
-      selectedParts: [1],
-      groups: [
-        {
-          toeicQuestionGroupId: 101,
-          partNumber: 1,
-          sortOrder: 0,
-        },
-      ],
-    });
-    prismaMock.toeicQuestionGroup.findMany.mockResolvedValue([
-      {
-        id: 101,
-        questionStart: 1,
-        questionEnd: 1,
-        testPart: { partNumber: 1 },
-        questions: [{ id: 1001, questionNumber: 1 }],
-      },
-      {
-        id: 102,
-        questionStart: 2,
-        questionEnd: 2,
-        testPart: { partNumber: 2 },
-        questions: [{ id: 1002, questionNumber: 2 }],
-      },
-    ]);
-    prismaMock.toeicRunGroup.create.mockResolvedValue({ id: 'group-id-2' });
-
-    await materializer.ensurePracticeRunIncludesParts('run-id', 1, [2]);
-
-    expect(prismaMock.toeicRunGroup.create).toHaveBeenCalledTimes(1);
-    expect(prismaMock.toeicRunGroup.create).toHaveBeenCalledWith({
-      data: {
-        runId: 'run-id',
-        toeicQuestionGroupId: 102,
-        partNumber: 2,
-        questionStart: 2,
-        questionEnd: 2,
-        sortOrder: 1,
-      },
-    });
     expect(prismaMock.toeicRun.update).toHaveBeenCalledWith({
       where: { id: 'run-id' },
       data: { selectedParts: [1, 2] },
+      select: {
+        id: true,
+        mode: true,
+        toeicTestId: true,
+        selectedParts: true,
+        totalRight: true,
+        totalWrong: true,
+        completedAt: true,
+      },
     });
   });
 
-  it('finds the latest practice run for a user and test', async () => {
-    prismaMock.toeicRun.findFirst.mockResolvedValue({ id: 'run-id' });
-
-    await expect(
-      materializer.findLatestPracticeRun('user-id', 1),
-    ).resolves.toEqual({ id: 'run-id' });
-
-    expect(prismaMock.toeicRun.findFirst).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-id',
-        toeicTestId: 1,
-        mode: ToeicRunMode.PRACTICE,
-      },
-      orderBy: { createdAt: 'desc' },
-      include: expect.any(Object) as unknown,
+  it('does not write when all requested parts are already present', async () => {
+    prismaMock.toeicRun.findFirst.mockResolvedValue({
+      id: 'run-id',
+      mode: ToeicRunMode.PRACTICE,
+      toeicTestId: 1,
+      selectedParts: [1, 2],
+      totalRight: 0,
+      totalWrong: 0,
+      completedAt: null,
     });
+
+    await materializer.findOrCreatePracticeRun({
+      userId: 'user-1',
+      testId: 1,
+      selectedParts: [2],
+    });
+
+    expect(prismaMock.toeicRun.update).not.toHaveBeenCalled();
   });
 });

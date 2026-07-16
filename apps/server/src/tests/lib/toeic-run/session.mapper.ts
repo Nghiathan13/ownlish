@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ToeicRunQuestionStatus } from '@prisma/client';
+import {
+  ToeicRunGroupStatus,
+  ToeicRunMode,
+  ToeicRunQuestionStatus,
+  type ToeicQuestion,
+  type ToeicQuestionGroup,
+} from '@prisma/client';
 import {
   countOptions,
   isToeicQuestionOptionKey,
@@ -10,42 +16,75 @@ import {
   formatToeicGroupStatus,
   formatToeicQuestionCorrectness,
   formatToeicQuestionStatus,
-  formatToeicRunMode,
 } from './session.formatters';
 import type {
   FormatToeicSessionResponseOptions,
   ToeicRunForResponse,
-  ToeicRunGroupForResponse,
 } from './session.types';
 import type { ToeicSessionResponse } from './session.response.types';
 import { TestsStorageService } from '../../tests-storage.service';
+import { ToeicRunRepository } from './repository';
+
+type CatalogGroup = ToeicQuestionGroup & {
+  testPart: { partNumber: number };
+  questions: ToeicQuestion[];
+};
+
+function getGroupStatus(statuses: ToeicRunQuestionStatus[]) {
+  if (statuses.some((status) => status === ToeicRunQuestionStatus.WRONG)) {
+    return ToeicRunGroupStatus.WRONG;
+  }
+
+  return statuses.length > 0 &&
+    statuses.every((status) => status === ToeicRunQuestionStatus.RIGHT)
+    ? ToeicRunGroupStatus.RIGHT
+    : null;
+}
 
 @Injectable()
 export class ToeicRunSessionMapper {
-  constructor(private readonly storageService: TestsStorageService) {}
+  constructor(
+    private readonly storageService: TestsStorageService,
+    private readonly repository: ToeicRunRepository,
+  ) {}
 
   async formatSessionResponse(
     session: ToeicRunForResponse,
     visibleParts = session.selectedParts,
     options: FormatToeicSessionResponseOptions,
   ): Promise<ToeicSessionResponse> {
-    const visiblePartSet = new Set(visibleParts);
-    const visibleGroups = this.sortVisibleGroups(
-      session.groups
-        .filter((group) => visiblePartSet.has(group.partNumber))
-        .filter(options.groupFilter ?? (() => true)),
+    const [catalogGroups, answers] = await Promise.all([
+      this.repository.listFullQuestionGroupsForParts(
+        session.toeicTestId,
+        visibleParts,
+      ),
+      this.repository.listAnswersForRun(session.id),
+    ]);
+    const responseMode =
+      options.mode ??
+      (session.mode === ToeicRunMode.MOCK_TEST ? 'mock_test' : 'practice');
+    const answerByQuestionId = new Map(
+      answers.map((answer) => [answer.toeicQuestionId, answer]),
     );
+    const completedMock =
+      session.mode === ToeicRunMode.MOCK_TEST && session.completedAt != null;
+    const visibleGroups = (catalogGroups as CatalogGroup[]).filter((group) => {
+      if (responseMode !== 'review_wrong') {
+        return true;
+      }
+
+      return group.questions.some(
+        (question) =>
+          answerByQuestionId.get(question.id)?.status ===
+          ToeicRunQuestionStatus.WRONG,
+      );
+    });
     const signedUrls = await this.storageService.createSignedUrls(
       visibleGroups.flatMap((group) => [
-        group.toeicQuestionGroup.audioStoragePath,
-        group.toeicQuestionGroup.imageStoragePath,
+        group.audioStoragePath,
+        group.imageStoragePath,
       ]),
     );
-
-    const answerByQuestionId = new Map(
-      session.questions.map((answer) => [answer.toeicQuestionId, answer]),
-    );
-    const responseMode = options.mode ?? formatToeicRunMode(session.mode);
     let nextSessionQuestionNumber = 1;
 
     return {
@@ -62,83 +101,69 @@ export class ToeicRunSessionMapper {
       wrongCount: session.totalWrong,
       completedAt: session.completedAt?.toISOString() ?? null,
       groups: visibleGroups.map((group) => {
-        const audioSigned = group.toeicQuestionGroup.audioStoragePath
-          ? signedUrls.get(group.toeicQuestionGroup.audioStoragePath)
+        const statuses = group.questions
+          .map(
+            (question) =>
+              answerByQuestionId.get(question.id)?.status ??
+              (completedMock ? ToeicRunQuestionStatus.WRONG : null),
+          )
+          .filter((status): status is ToeicRunQuestionStatus => status != null);
+        const audioSigned = group.audioStoragePath
+          ? signedUrls.get(group.audioStoragePath)
           : null;
-        const imageSigned = group.toeicQuestionGroup.imageStoragePath
-          ? signedUrls.get(group.toeicQuestionGroup.imageStoragePath)
+        const imageSigned = group.imageStoragePath
+          ? signedUrls.get(group.imageStoragePath)
           : null;
-        const questions = group.questions.map((question) => {
-          const answer = answerByQuestionId.get(question.toeicQuestionId);
-          const answerStatus = answer?.status ?? null;
-          const isReviewRetryQuestion =
-            responseMode === 'review_wrong' &&
-            answerStatus !== ToeicRunQuestionStatus.RIGHT;
-          const selectedKey = isReviewRetryQuestion
-            ? null
-            : answer?.selectedKey?.trim().toUpperCase();
-          const answerKey = parseAnswerKey(question.toeicQuestion.answerKey);
-          const sessionQuestionNumber = nextSessionQuestionNumber;
-          nextSessionQuestionNumber += 1;
-
-          return {
-            id: question.toeicQuestionId,
-            questionNumber: question.toeicQuestion.questionNumber,
-            sessionQuestionNumber,
-            question: question.toeicQuestion.question,
-            questionVi: question.toeicQuestion.questionVi,
-            options: mapQuestionOptions(question.toeicQuestion),
-            optionCount: countOptions(question.toeicQuestion),
-            answerKey,
-            selectedKey:
-              selectedKey && isToeicQuestionOptionKey(selectedKey)
-                ? selectedKey
-                : null,
-            status: isReviewRetryQuestion
-              ? null
-              : formatToeicQuestionStatus(answerStatus),
-            isCorrect: isReviewRetryQuestion
-              ? null
-              : formatToeicQuestionCorrectness(answerStatus),
-          };
-        });
 
         return {
-          id: group.toeicQuestionGroupId,
-          partNumber: group.partNumber,
+          id: group.id,
+          partNumber: group.testPart.partNumber,
           questionStart: group.questionStart,
           questionEnd: group.questionEnd,
-          groupStatus: formatToeicGroupStatus(group.status),
-          groupType: group.toeicQuestionGroup.groupType,
-          accent: group.toeicQuestionGroup.accent,
-          content: group.toeicQuestionGroup.content,
-          contentVi: group.toeicQuestionGroup.contentVi,
+          groupStatus: formatToeicGroupStatus(getGroupStatus(statuses)),
+          groupType: group.groupType,
+          accent: group.accent,
+          content: group.content,
+          contentVi: group.contentVi,
           audioUrl: audioSigned?.url ?? null,
           audioUrlExpiresAt: audioSigned?.expiresAt ?? null,
           imageUrl: imageSigned?.url ?? null,
           imageUrlExpiresAt: imageSigned?.expiresAt ?? null,
-          questions,
+          questions: group.questions.map((question) => {
+            const answer = answerByQuestionId.get(question.id);
+            const answerStatus =
+              answer?.status ??
+              (completedMock ? ToeicRunQuestionStatus.WRONG : null);
+            const reviewRetry =
+              responseMode === 'review_wrong' &&
+              answerStatus !== ToeicRunQuestionStatus.RIGHT;
+            const sessionQuestionNumber = nextSessionQuestionNumber++;
+
+            return {
+              id: question.id,
+              questionNumber: question.questionNumber,
+              sessionQuestionNumber,
+              question: question.question,
+              questionVi: question.questionVi,
+              options: mapQuestionOptions(question),
+              optionCount: countOptions(question),
+              answerKey: parseAnswerKey(question.answerKey),
+              selectedKey: reviewRetry
+                ? null
+                : answer?.selectedKey &&
+                    isToeicQuestionOptionKey(answer.selectedKey)
+                  ? answer.selectedKey
+                  : null,
+              status: reviewRetry
+                ? null
+                : formatToeicQuestionStatus(answerStatus),
+              isCorrect: reviewRetry
+                ? null
+                : formatToeicQuestionCorrectness(answerStatus),
+            };
+          }),
         };
       }),
     };
-  }
-
-  private sortVisibleGroups(groups: ToeicRunGroupForResponse[]) {
-    return groups
-      .map((group) => ({
-        ...group,
-        questions: [...group.questions].sort(
-          (left, right) =>
-            left.toeicQuestion.questionNumber -
-            right.toeicQuestion.questionNumber,
-        ),
-      }))
-      .sort(
-        (left, right) =>
-          left.partNumber - right.partNumber ||
-          left.questionStart - right.questionStart ||
-          left.questionEnd - right.questionEnd ||
-          left.toeicQuestionGroupId - right.toeicQuestionGroupId,
-      );
   }
 }
