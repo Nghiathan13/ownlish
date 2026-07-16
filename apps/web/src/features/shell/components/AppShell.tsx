@@ -44,12 +44,12 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <div className="hidden lg:flex">
+    <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
+      <div className="hidden sm:flex">
         <AppSidebar />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="lg:hidden">
+        <div className="sm:hidden">
           <MobileTopNav />
         </div>
         {children}
