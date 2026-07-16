@@ -52,8 +52,8 @@ function PartCheckboxOption({
         disabled
           ? "cursor-not-allowed border-border opacity-60"
           : checked
-            ? "border-foreground bg-muted/40"
-            : "border-border hover:border-foreground",
+            ? "cursor-pointer border-foreground bg-muted/40"
+            : "cursor-pointer border-border hover:border-foreground",
       )}
       disabled={disabled}
       onClick={onToggle}

@@ -38,7 +38,7 @@ test("persists a protected vocabulary session and clears it on logout", async ({
 
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(E2E_USER_PASSWORD);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   await expect(page).toHaveURL(
     (url) =>

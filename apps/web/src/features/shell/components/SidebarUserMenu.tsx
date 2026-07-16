@@ -78,7 +78,7 @@ export function SidebarUserMenu({
           setOpen((current) => !current);
         }}
         className={classNames(
-          "flex w-full items-center rounded-lg px-2 py-2 text-foreground hover:bg-hover-overlay",
+          "flex w-full cursor-pointer items-center rounded-lg px-2 py-2 text-foreground hover:bg-hover-overlay",
           collapsed ? "relative justify-center" : "gap-2",
           collapsed && sidebarLinkGroupClassName,
         )}
@@ -128,7 +128,7 @@ export function SidebarUserMenu({
               setOpen(false);
               onLogout();
             }}
-            className="flex w-full items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay"
+            className="flex w-full cursor-pointer items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay"
           >
             <LogoutIcon className="size-6 shrink-0" />
             Logout
