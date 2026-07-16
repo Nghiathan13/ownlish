@@ -84,7 +84,7 @@ export function AdminToeicPracticeLeftPanel({
               // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
               <img
                 alt={`Question ${questionNumber}`}
-                className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
+                className="mx-auto max-h-[420px] w-full object-contain"
                 key={group.imageUrl}
                 src={group.imageUrl}
               />

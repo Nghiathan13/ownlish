@@ -86,7 +86,7 @@ export function AdminToeicMediaPreview({
               ? `Question ${questionNumber}`
               : "Group visual"
           }
-          className="mx-auto max-h-[420px] w-full rounded-lg object-contain"
+          className="mx-auto max-h-[420px] w-full object-contain"
           key={displayImageUrl}
           src={displayImageUrl}
         />
