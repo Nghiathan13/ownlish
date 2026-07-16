@@ -22,7 +22,7 @@ export function AuthQueryReset() {
       return;
     }
 
-    if (status === "guest" && previousUserIdRef.current) {
+    if (previousUserIdRef.current) {
       queryClient.clear();
       previousUserIdRef.current = null;
     }

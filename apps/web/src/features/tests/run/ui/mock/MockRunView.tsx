@@ -439,7 +439,6 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
           <MockGroupScreen
             group={activeGroup}
             isFinished={mock.isFinished}
-            isQuestionPending={mock.isQuestionPending}
             isReviewingResults={isReviewingResults}
             mediaError={mediaMessage}
             onSelect={handleSelect}

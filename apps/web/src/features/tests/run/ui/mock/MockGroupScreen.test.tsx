@@ -45,13 +45,12 @@ const group: ToeicQuestionGroup = {
 };
 
 describe("MockGroupScreen", () => {
-  it("announces autosave without blocking answer changes, then locks when completed", async () => {
+  it("allows answer changes, then locks when completed", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const props = {
       group,
       isFinished: false,
-      isQuestionPending: (questionId: number) => questionId === 101,
       isReviewingResults: false,
       mediaError: null,
       onSelect,
@@ -61,7 +60,7 @@ describe("MockGroupScreen", () => {
     const optionA = screen.getByRole("button", { name: /A.*Alpha/i });
     const optionB = screen.getByRole("button", { name: /B.*Beta/i });
 
-    expect(screen.getByRole("status")).toHaveTextContent("Saving answer...");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(optionA).toBeEnabled();
     expect(optionB).toBeEnabled();
 
@@ -90,7 +89,6 @@ describe("MockGroupScreen", () => {
     const props = {
       group: listeningGroup,
       isFinished: false,
-      isQuestionPending: () => false,
       isReviewingResults: false,
       mediaError: null,
       onSelect: vi.fn(),

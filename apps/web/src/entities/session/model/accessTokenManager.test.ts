@@ -22,6 +22,7 @@ vi.mock("@/shared/api/http", () => {
 });
 
 import { ApiError } from "@/shared/api/http";
+import type { AuthResponse } from "@/entities/auth/types";
 import { refreshSession } from "@/entities/session/api/refreshSession";
 import {
   clearStoredAccessToken,
@@ -31,6 +32,7 @@ import {
 import {
   bootstrapClientSession,
   clearClientSession,
+  discardClientAccessToken,
   establishSession,
   getValidAccessToken,
   setSessionInvalidHandler,
@@ -86,6 +88,69 @@ describe("accessTokenManager", () => {
     expect(getStoredAccessToken()).toBe(freshToken);
   });
 
+  it("retries a refresh conflict without clearing the session", async () => {
+    const expiredToken = createTestToken(Math.floor(Date.now() / 1000) - 120);
+    const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
+
+    setStoredAccessToken(expiredToken);
+    refreshSessionMock
+      .mockRejectedValueOnce(new ApiError("Refresh conflict", 409))
+      .mockResolvedValueOnce({
+        accessToken: freshToken,
+        user: { id: "user-1", email: "user@example.com", name: null, role: "USER" as const },
+      });
+
+    await expect(getValidAccessToken()).resolves.toBe(freshToken);
+
+    expect(refreshSessionMock).toHaveBeenCalledTimes(2);
+    expect(getStoredAccessToken()).toBe(freshToken);
+  });
+
+  it("does not store a refresh response after another tab changes the session", async () => {
+    const expiredToken = createTestToken(Math.floor(Date.now() / 1000) - 120);
+    const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
+    let resolveRefresh!: (value: AuthResponse) => void;
+    const pendingRefresh = new Promise<AuthResponse>((resolve) => {
+      resolveRefresh = resolve;
+    });
+
+    setStoredAccessToken(expiredToken);
+    refreshSessionMock.mockReturnValue(pendingRefresh);
+
+    const pendingToken = getValidAccessToken();
+    discardClientAccessToken();
+    resolveRefresh({
+      accessToken: freshToken,
+      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+    });
+
+    await expect(pendingToken).rejects.toThrow("Session changed while refreshing.");
+    expect(getStoredAccessToken()).toBeNull();
+  });
+
+  it("keeps a newly established token when an earlier refresh resolves", async () => {
+    const expiredToken = createTestToken(Math.floor(Date.now() / 1000) - 120);
+    const refreshedToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
+    const loginToken = createTestToken(Math.floor(Date.now() / 1000) + 7200);
+    let resolveRefresh!: (value: AuthResponse) => void;
+    const pendingRefresh = new Promise<AuthResponse>((resolve) => {
+      resolveRefresh = resolve;
+    });
+
+    setStoredAccessToken(expiredToken);
+    refreshSessionMock.mockReturnValue(pendingRefresh);
+
+    const pendingToken = getValidAccessToken();
+    establishSession({ accessToken: loginToken });
+    resolveRefresh({
+      accessToken: refreshedToken,
+      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+    });
+
+    await expect(pendingToken).rejects.toThrow("Session changed while refreshing.");
+    expect(getStoredAccessToken()).toBe(loginToken);
+  });
+
   it("dedupes concurrent refresh requests", async () => {
     const expiredToken = createTestToken(Math.floor(Date.now() / 1000) - 120);
     const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
@@ -128,7 +193,7 @@ describe("accessTokenManager", () => {
     const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
     const session = {
       accessToken: freshToken,
-      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" as const },
     };
 
     refreshSessionMock.mockResolvedValue(session);

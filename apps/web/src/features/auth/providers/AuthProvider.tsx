@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -23,6 +24,7 @@ import {
   clearClientSession,
   bootstrapClientSession,
   establishSession,
+  discardClientAccessToken,
   setSessionInvalidHandler,
 } from "@/entities/session/model/accessTokenManager";
 import { isUnauthorizedError } from "@/shared/api/http";
@@ -41,10 +43,30 @@ type AuthSessionContextValue = {
 };
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
+const BOOTSTRAP_RETRY_DELAY_MS = 1_000;
+const AUTH_SESSION_CHANNEL_NAME = "engvocab-auth";
+
+type AuthSessionMessage =
+  | { type: "session-changed" }
+  | { type: "session-signed-out" };
+
+function isAuthSessionMessage(value: unknown): value is AuthSessionMessage {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value &&
+    (value.type === "session-changed" || value.type === "session-signed-out")
+  );
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
+  const sessionChannelRef = useRef<BroadcastChannel | null>(null);
+
+  const notifyOtherTabs = useCallback((message: AuthSessionMessage) => {
+    sessionChannelRef.current?.postMessage(message);
+  }, []);
 
   const clearSession = useCallback(() => {
     clearClientSession();
@@ -63,30 +85,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: number | null = null;
+    let syncVersion = 0;
 
-    async function bootstrapSession() {
+    function clearRetryTimer() {
+      if (retryTimer) {
+        window.clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+    }
+
+    async function bootstrapSession(version: number) {
       try {
         const session = await bootstrapClientSession();
 
-        if (!cancelled) {
+        if (!cancelled && version === syncVersion) {
           setUser(session.user);
           setStatus("authenticated");
         }
       } catch (error) {
-        if (!cancelled) {
+        if (!cancelled && version === syncVersion) {
           if (isUnauthorizedError(error)) {
             clearClientSession();
           } else {
-            setStatus("guest");
+            retryTimer = window.setTimeout(() => {
+              void bootstrapSession(version);
+            }, BOOTSTRAP_RETRY_DELAY_MS);
           }
         }
       }
     }
 
-    void bootstrapSession();
+    function synchronizeSession() {
+      syncVersion += 1;
+      clearRetryTimer();
+      discardClientAccessToken();
+      setUser(null);
+      setStatus("loading");
+      void bootstrapSession(syncVersion);
+    }
+
+    function synchronizeSignedOutSession() {
+      syncVersion += 1;
+      clearRetryTimer();
+      discardClientAccessToken();
+      setUser(null);
+      setStatus("guest");
+    }
+
+    const channel =
+      typeof BroadcastChannel === "undefined"
+        ? null
+        : new BroadcastChannel(AUTH_SESSION_CHANNEL_NAME);
+
+    if (channel) {
+      const handleMessage = (event: MessageEvent<unknown>) => {
+        if (!isAuthSessionMessage(event.data)) {
+          return;
+        }
+
+        if (event.data.type === "session-changed") {
+          synchronizeSession();
+          return;
+        }
+
+        synchronizeSignedOutSession();
+      };
+
+      channel.addEventListener("message", handleMessage);
+      sessionChannelRef.current = channel;
+
+      void bootstrapSession(syncVersion);
+
+      return () => {
+        cancelled = true;
+        clearRetryTimer();
+        channel.removeEventListener("message", handleMessage);
+        channel.close();
+        if (sessionChannelRef.current === channel) {
+          sessionChannelRef.current = null;
+        }
+      };
+    }
+
+    void bootstrapSession(syncVersion);
 
     return () => {
       cancelled = true;
+      clearRetryTimer();
     };
   }, []);
 
@@ -95,28 +181,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     establishSession({ accessToken: response.accessToken });
     setUser(response.user);
     setStatus("authenticated");
-  }, []);
+    notifyOtherTabs({ type: "session-changed" });
+  }, [notifyOtherTabs]);
 
   const register = useCallback(async (input: RegisterInput) => {
     const response = await registerRequest(input);
     establishSession({ accessToken: response.accessToken });
     setUser(response.user);
     setStatus("authenticated");
-  }, []);
+    notifyOtherTabs({ type: "session-changed" });
+  }, [notifyOtherTabs]);
 
   const googleLogin = useCallback(async (input: GoogleLoginInput) => {
     const response = await googleLoginRequest(input);
     establishSession({ accessToken: response.accessToken });
     setUser(response.user);
     setStatus("authenticated");
-  }, []);
+    notifyOtherTabs({ type: "session-changed" });
+  }, [notifyOtherTabs]);
 
   const logout = useCallback(async () => {
     await logoutSession().catch(() => undefined);
     clearSession();
     setUser(null);
     setStatus("guest");
-  }, [clearSession]);
+    notifyOtherTabs({ type: "session-signed-out" });
+  }, [clearSession, notifyOtherTabs]);
 
   const value = useMemo<AuthSessionContextValue>(
     () => ({

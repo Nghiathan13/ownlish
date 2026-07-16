@@ -19,7 +19,6 @@ import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 type MockGroupScreenProps = {
   group: ToeicQuestionGroup;
   isFinished: boolean;
-  isQuestionPending: (toeicQuestionId: number) => boolean;
   isReviewingResults: boolean;
   mediaError: string | null;
   onSelect: (toeicQuestionId: number, selectedKey: OptionKey) => void;
@@ -29,7 +28,6 @@ type MockGroupScreenProps = {
 export function MockGroupScreen({
   group,
   isFinished,
-  isQuestionPending,
   isReviewingResults,
   mediaError,
   onSelect,
@@ -106,11 +104,6 @@ export function MockGroupScreen({
               showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
               showResult={isReviewingResults}
             />
-            {isQuestionPending(question.id) ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                Saving answer...
-              </p>
-            ) : null}
             <QuestionTranslationPanel
               answerKey={isReviewingResults ? question.answerKey : null}
               optionCount={question.optionCount}
