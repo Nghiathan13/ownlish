@@ -6,11 +6,17 @@ const DEFAULT_LEFT_PANEL_WIDTH = 50;
 const MIN_LEFT_PANEL_WIDTH = 30;
 const MAX_LEFT_PANEL_WIDTH = 70;
 const SPLIT_PANEL_STORAGE_KEY = "engvocab:tests-split-left-panel-width";
+const DRAG_START_THRESHOLD_PX = 6;
 
 type PracticeSplitPlainLayoutProps = {
   left: ReactNode;
   navigation?: ReactNode;
   right: ReactNode;
+};
+
+type SplitDragStart = {
+  clientX: number;
+  leftPanelWidth: number;
 };
 
 function clampLeftPanelWidth(value: number) {
@@ -39,6 +45,7 @@ export function PracticeSplitPlainLayout({
   right,
 }: PracticeSplitPlainLayoutProps) {
   const splitContainerRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<SplitDragStart | null>(null);
   const [leftPanelWidth, setLeftPanelWidth] = useState(getInitialLeftPanelWidth);
 
   useEffect(() => {
@@ -48,18 +55,26 @@ export function PracticeSplitPlainLayout({
     );
   }, [leftPanelWidth]);
 
-  function updateSplitFromClientX(clientX: number) {
+  function updateSplitFromDrag(clientX: number) {
     const container = splitContainerRef.current;
-    if (!container) {
+    const dragStart = dragStartRef.current;
+    if (!container || !dragStart) {
       return;
     }
 
-    const { left, width } = container.getBoundingClientRect();
+    const { width } = container.getBoundingClientRect();
     if (width === 0) {
       return;
     }
 
-    setLeftPanelWidth(clampLeftPanelWidth(((clientX - left) / width) * 100));
+    const movement = clientX - dragStart.clientX;
+    if (Math.abs(movement) <= DRAG_START_THRESHOLD_PX) {
+      return;
+    }
+
+    setLeftPanelWidth(
+      clampLeftPanelWidth(dragStart.leftPanelWidth + (movement / width) * 100),
+    );
   }
 
   const splitLayoutStyle = {
@@ -80,23 +95,35 @@ export function PracticeSplitPlainLayout({
           aria-label="Resize question and answer panels"
           aria-orientation="vertical"
           className="relative hidden cursor-col-resize touch-none select-none sm:block before:absolute before:inset-y-0 before:left-1/2 before:w-px before:-translate-x-1/2 before:bg-border hover:before:bg-foreground"
+          onDoubleClick={() => {
+            dragStartRef.current = null;
+            setLeftPanelWidth(DEFAULT_LEFT_PANEL_WIDTH);
+          }}
           onPointerDown={(event) => {
             if (event.pointerType === "mouse" && event.button !== 0) {
               return;
             }
 
             event.currentTarget.setPointerCapture(event.pointerId);
-            updateSplitFromClientX(event.clientX);
+            dragStartRef.current = {
+              clientX: event.clientX,
+              leftPanelWidth,
+            };
           }}
           onPointerMove={(event) => {
             if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-              updateSplitFromClientX(event.clientX);
+              updateSplitFromDrag(event.clientX);
             }
           }}
           onPointerUp={(event) => {
             if (event.currentTarget.hasPointerCapture(event.pointerId)) {
               event.currentTarget.releasePointerCapture(event.pointerId);
             }
+
+            dragStartRef.current = null;
+          }}
+          onPointerCancel={() => {
+            dragStartRef.current = null;
           }}
           role="separator"
         />
