@@ -54,7 +54,7 @@ export function PracticeQuestionGridPanel({
                 {section.cells.map((cell) => (
                   <button
                     className={classNames(
-                      "flex size-10 shrink-0 items-center justify-center rounded-md border text-sm tabular-nums",
+                      "flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-md border text-sm tabular-nums",
                       cell.result === "correct" &&
                         classNames(
                           statusColorClasses.success.border,

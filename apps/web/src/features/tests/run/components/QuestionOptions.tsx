@@ -168,6 +168,7 @@ export function QuestionOptions({
         const className = classNames(
           "flex min-h-10 items-start gap-2 rounded-lg border px-4 py-2 text-left font-inherit select-text",
           locked && "cursor-text",
+          !locked && !isSubmitting && "cursor-pointer",
           isCorrect &&
             classNames(
               statusColorClasses.success.border,
