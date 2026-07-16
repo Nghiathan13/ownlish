@@ -7,6 +7,18 @@ export type SignedMediaUrl = {
   expiresAt: string;
 };
 
+const MAX_SIGNED_URLS_PER_REQUEST = 1000;
+
+function chunkPaths(paths: string[]): string[][] {
+  const chunks: string[][] = [];
+
+  for (let index = 0; index < paths.length; index += MAX_SIGNED_URLS_PER_REQUEST) {
+    chunks.push(paths.slice(index, index + MAX_SIGNED_URLS_PER_REQUEST));
+  }
+
+  return chunks;
+}
+
 @Injectable()
 export class TestsStorageService {
   private readonly logger = new Logger(TestsStorageService.name);
@@ -137,20 +149,28 @@ export class TestsStorageService {
       return new Map(uniquePaths.map((path) => [path, null]));
     }
 
-    const { data, error } = await client.storage
-      .from(env.toeicStorageBucket)
-      .createSignedUrls(uniquePaths, env.toeicSignedUrlTtlSeconds);
+    const batchResults = await Promise.all(
+      chunkPaths(uniquePaths).map(async (paths) => {
+        const { data, error } = await client.storage
+          .from(env.toeicStorageBucket)
+          .createSignedUrls(paths, env.toeicSignedUrlTtlSeconds);
 
-    if (error || !data) {
-      this.logger.warn(
-        `Failed to sign media URLs: ${error?.message ?? 'unknown error'}`,
-      );
-      return new Map(uniquePaths.map((path) => [path, null]));
-    }
+        if (error || !data) {
+          this.logger.warn(
+            `Failed to sign media URLs: ${error?.message ?? 'unknown error'}`,
+          );
+          return new Map(paths.map((path) => [path, null]));
+        }
 
-    const signedUrlByPath = new Map(
-      data.map((item) => [item.path, item.signedUrl]),
+        const signedUrlByPath = new Map(
+          data.map((item) => [item.path, item.signedUrl]),
+        );
+        return new Map(
+          paths.map((path) => [path, signedUrlByPath.get(path) ?? null]),
+        );
+      }),
     );
+    const signedUrlByPath = new Map(batchResults.flatMap((batch) => [...batch]));
     const expiresAt = new Date(
       Date.now() + env.toeicSignedUrlTtlSeconds * 1000,
     ).toISOString();

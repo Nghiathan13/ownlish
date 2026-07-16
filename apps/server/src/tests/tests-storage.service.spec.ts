@@ -64,4 +64,32 @@ describe('TestsStorageService', () => {
       ]),
     );
   });
+
+  it('splits more than 1,000 paths into concurrent batch requests', async () => {
+    createSignedUrls.mockImplementation((paths: string[]) =>
+      Promise.resolve({
+        data: paths.map((path) => ({
+          path,
+          signedUrl: `https://storage/${path}`,
+        })),
+        error: null,
+      }),
+    );
+    const service = new TestsStorageService();
+    const paths = Array.from(
+      { length: 1001 },
+      (_, index) => `audio/part-3-${index}.mp3`,
+    );
+
+    const signed = await service.createSignedUrls(paths);
+
+    expect(createSignedUrls).toHaveBeenCalledTimes(2);
+    expect(createSignedUrls.mock.calls[0]?.[0]).toHaveLength(1000);
+    expect(createSignedUrls.mock.calls[1]?.[0]).toEqual([
+      'audio/part-3-1000.mp3',
+    ]);
+    expect(signed.get('audio/part-3-1000.mp3')?.url).toBe(
+      'https://storage/audio/part-3-1000.mp3',
+    );
+  });
 });
