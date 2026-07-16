@@ -43,30 +43,7 @@ export function TestCard({
   return (
     <article className={testOverviewCardClassName}>
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Test {test.id}</h2>
-          {answeredQuestionCount === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">No practice progress yet</p>
-            ) : (
-              <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-                <span>
-                  {answeredQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <CheckIcon className={classNames("size-4", statusColorClasses.success.text)} />
-                  <span className={statusColorClasses.success.text}>
-                    {testCorrectCount}
-                  </span>
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <CloseIcon className={classNames("size-4", statusColorClasses.danger.text)} />
-                  <span className={statusColorClasses.danger.text}>
-                    {testWrongCount}
-                  </span>
-                </span>
-              </div>
-            )}
-        </div>
+        <h2 className="text-lg font-semibold">Test {test.id}</h2>
         <div className="flex shrink-0 items-center gap-2">
           <button
             aria-label={
@@ -104,6 +81,27 @@ export function TestCard({
           </button>
         </div>
       </div>
+      {answeredQuestionCount === 0 ? (
+        <p className="text-sm text-muted-foreground">No practice progress yet</p>
+      ) : (
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span>
+            {answeredQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <CheckIcon className={classNames("size-4", statusColorClasses.success.text)} />
+            <span className={statusColorClasses.success.text}>
+              {testCorrectCount}
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <CloseIcon className={classNames("size-4", statusColorClasses.danger.text)} />
+            <span className={statusColorClasses.danger.text}>
+              {testWrongCount}
+            </span>
+          </span>
+        </div>
+      )}
       <div className="flex w-full gap-2">
         <button
           className={testOverviewMockButtonClassName}
