@@ -136,7 +136,17 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    return this.rotateSessionAuthResponse(session.id, session.user);
+    const response = await this.rotateSessionAuthResponse(
+      session.id,
+      session.user,
+      refreshTokenHash,
+    );
+
+    if (!response) {
+      throw new ConflictException('Refresh token was rotated. Retry request.');
+    }
+
+    return response;
   }
 
   async logout(dto: RefreshTokenDto): Promise<LogoutResponse> {
@@ -172,15 +182,25 @@ export class AuthService {
   private async rotateSessionAuthResponse(
     sessionId: string,
     user: AuthUser,
-  ): Promise<AuthResponse> {
+    currentTokenHash: string,
+  ): Promise<AuthResponse | null> {
     const refreshToken = this.createRefreshToken();
     const refreshTokenHash = this.hashRefreshToken(refreshToken);
     const refreshTokenExpiresAt = this.createRefreshTokenExpiresAt();
 
-    await this.refreshSessionsService.rotate(sessionId, {
-      tokenHash: refreshTokenHash,
-      expiresAt: refreshTokenExpiresAt,
-    });
+    const didRotate =
+      await this.refreshSessionsService.rotateIfCurrentTokenMatches(
+        sessionId,
+        currentTokenHash,
+        {
+          tokenHash: refreshTokenHash,
+          expiresAt: refreshTokenExpiresAt,
+        },
+      );
+
+    if (!didRotate) {
+      return null;
+    }
 
     return this.buildAuthResponse(user, refreshToken);
   }

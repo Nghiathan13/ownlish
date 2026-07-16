@@ -29,7 +29,7 @@ describe('AuthService', () => {
   const refreshSessionsServiceMock = {
     create: jest.fn(),
     findByTokenHash: jest.fn(),
-    rotate: jest.fn(),
+    rotateIfCurrentTokenMatches: jest.fn(),
     revoke: jest.fn(),
   };
 
@@ -319,6 +319,9 @@ describe('AuthService', () => {
       user,
     });
     jwtServiceMock.signAsync.mockResolvedValue('new-access-token');
+    refreshSessionsServiceMock.rotateIfCurrentTokenMatches.mockResolvedValue(
+      true,
+    );
 
     const result = await service.refresh({ refreshToken: 'refresh-token' });
 
@@ -327,17 +330,25 @@ describe('AuthService', () => {
       refreshSessionsServiceMock.findByTokenHash,
     );
     expect(typeof refreshLookupHash).toBe('string');
-    expect(refreshSessionsServiceMock.rotate).toHaveBeenCalledTimes(1);
+    expect(
+      refreshSessionsServiceMock.rotateIfCurrentTokenMatches,
+    ).toHaveBeenCalledTimes(1);
     const rotatedSessionId = getMockCallArg<string>(
-      refreshSessionsServiceMock.rotate,
+      refreshSessionsServiceMock.rotateIfCurrentTokenMatches,
       0,
       0,
     );
     expect(rotatedSessionId).toBe('session-id');
+    const currentTokenHash = getMockCallArg<string>(
+      refreshSessionsServiceMock.rotateIfCurrentTokenMatches,
+      0,
+      1,
+    );
+    expect(typeof currentTokenHash).toBe('string');
     const rotatePayload = getMockCallArg<{
       tokenHash: string;
       expiresAt: Date;
-    }>(refreshSessionsServiceMock.rotate, 0, 1);
+    }>(refreshSessionsServiceMock.rotateIfCurrentTokenMatches, 0, 2);
     expect(typeof rotatePayload.tokenHash).toBe('string');
     expect(rotatePayload.expiresAt).toBeInstanceOf(Date);
     expect(result).toMatchObject({
@@ -348,6 +359,26 @@ describe('AuthService', () => {
       },
     });
     expect(typeof result.refreshToken).toBe('string');
+  });
+
+  it('returns a retryable conflict when another request rotates the token first', async () => {
+    refreshSessionsServiceMock.findByTokenHash.mockResolvedValue({
+      id: 'session-id',
+      userId: user.id,
+      tokenHash: 'stored-hash',
+      expiresAt: new Date(Date.now() + 60_000),
+      revokedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      user,
+    });
+    refreshSessionsServiceMock.rotateIfCurrentTokenMatches.mockResolvedValue(
+      false,
+    );
+
+    await expect(
+      service.refresh({ refreshToken: 'refresh-token' }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('rejects expired refresh tokens and clears stored token', async () => {

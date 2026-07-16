@@ -35,20 +35,27 @@ export class RefreshSessionsService {
     });
   }
 
-  rotate(
+  async rotateIfCurrentTokenMatches(
     id: string,
+    currentTokenHash: string,
     input: {
       tokenHash: string;
       expiresAt: Date;
     },
-  ): UpdatedRefreshSessionResult {
-    return this.prisma.refreshSession.update({
-      where: { id },
+  ): Promise<boolean> {
+    const { count } = await this.prisma.refreshSession.updateMany({
+      where: {
+        id,
+        tokenHash: currentTokenHash,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
       data: {
         ...input,
-        revokedAt: null,
       },
     });
+
+    return count === 1;
   }
 
   revoke(id: string): UpdatedRefreshSessionResult {
