@@ -42,7 +42,7 @@ export function TestCard({
 
   return (
     <article className={testOverviewCardClassName}>
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3">
         <h2 className="text-lg font-semibold">Test {test.id}</h2>
         <div className="flex shrink-0 items-center gap-2">
           <button
@@ -102,7 +102,7 @@ export function TestCard({
           </span>
         </div>
       )}
-      <div className="flex w-full gap-2">
+      <div className="flex min-w-0 w-full gap-2">
         <button
           className={testOverviewMockButtonClassName}
           onClick={onMock}
