@@ -23,7 +23,7 @@ describe("ProfileModal", () => {
     const onClose = vi.fn();
     updateProfileMock.mockResolvedValue(undefined);
 
-    render(
+    const { container } = render(
       <ProfileModal
         onClose={onClose}
         onSave={updateProfileMock}
@@ -31,6 +31,8 @@ describe("ProfileModal", () => {
       />,
     );
 
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Close" })).toBeNull();
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 

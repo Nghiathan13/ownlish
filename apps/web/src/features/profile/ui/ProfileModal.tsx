@@ -7,6 +7,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import type { AuthUser, UpdateProfileInput } from "@/entities/auth/types";
 import { ApiError } from "@/shared/api/http";
 import { classNames } from "@/shared/lib/classNames";
@@ -112,7 +113,7 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
     }
   }
 
-  return (
+  return createPortal(
     <Modal
       className="max-w-md"
       onClose={onClose}
@@ -186,6 +187,7 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
           </button>
         </div>
       </form>
-    </Modal>
+    </Modal>,
+    document.body,
   );
 }
