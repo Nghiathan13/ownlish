@@ -80,7 +80,7 @@ describe("accessTokenManager", () => {
     setStoredAccessToken(expiredToken);
     refreshSessionMock.mockResolvedValue({
       accessToken: freshToken,
-      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+      user: { id: "user-1", email: "user@example.com", name: null, avatarUrl: null, role: "USER" },
     });
 
     await expect(getValidAccessToken()).resolves.toBe(freshToken);
@@ -97,7 +97,7 @@ describe("accessTokenManager", () => {
       .mockRejectedValueOnce(new ApiError("Refresh conflict", 409))
       .mockResolvedValueOnce({
         accessToken: freshToken,
-        user: { id: "user-1", email: "user@example.com", name: null, role: "USER" as const },
+        user: { id: "user-1", email: "user@example.com", name: null, avatarUrl: null, role: "USER" as const },
       });
 
     await expect(getValidAccessToken()).resolves.toBe(freshToken);
@@ -121,7 +121,7 @@ describe("accessTokenManager", () => {
     discardClientAccessToken();
     resolveRefresh({
       accessToken: freshToken,
-      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+      user: { id: "user-1", email: "user@example.com", name: null, avatarUrl: null, role: "USER" },
     });
 
     await expect(pendingToken).rejects.toThrow("Session changed while refreshing.");
@@ -144,7 +144,7 @@ describe("accessTokenManager", () => {
     establishSession({ accessToken: loginToken });
     resolveRefresh({
       accessToken: refreshedToken,
-      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+      user: { id: "user-1", email: "user@example.com", name: null, avatarUrl: null, role: "USER" },
     });
 
     await expect(pendingToken).rejects.toThrow("Session changed while refreshing.");
@@ -162,7 +162,7 @@ describe("accessTokenManager", () => {
           setTimeout(() => {
             resolve({
               accessToken: freshToken,
-              user: { id: "user-1", email: "user@example.com", name: null, role: "USER" },
+              user: { id: "user-1", email: "user@example.com", name: null, avatarUrl: null, role: "USER" },
             });
           }, 20);
         }),
@@ -193,7 +193,7 @@ describe("accessTokenManager", () => {
     const freshToken = createTestToken(Math.floor(Date.now() / 1000) + 3600);
     const session = {
       accessToken: freshToken,
-      user: { id: "user-1", email: "user@example.com", name: null, role: "USER" as const },
+      user: { id: "user-1", email: "user@example.com", name: null, avatarUrl: null, role: "USER" as const },
     };
 
     refreshSessionMock.mockResolvedValue(session);

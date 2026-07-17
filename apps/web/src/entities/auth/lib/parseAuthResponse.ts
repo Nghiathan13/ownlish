@@ -13,13 +13,18 @@ function parseUserRole(value: unknown): UserRole {
 export function parseAuthUser(body: unknown): AuthUser {
   if (!isRecord(body)) invalidApiResponse();
 
-  const { id, email, name, role } = body;
+  const { id, email, name, avatarUrl, role } = body;
 
-  if (!isString(id) || !isString(email) || !isNullableString(name)) {
+  if (
+    !isString(id) ||
+    !isString(email) ||
+    !isNullableString(name) ||
+    !isNullableString(avatarUrl)
+  ) {
     invalidApiResponse();
   }
 
-  return { id, email, name, role: parseUserRole(role) };
+  return { id, email, name, avatarUrl, role: parseUserRole(role) };
 }
 
 export function parseAuthResponse(body: unknown): AuthResponse {

@@ -28,15 +28,42 @@ function AdminBadge() {
   );
 }
 
+function UserAvatar({
+  avatarUrl,
+  failed,
+  onError,
+}: {
+  avatarUrl: string | null;
+  failed: boolean;
+  onError: () => void;
+}) {
+  if (!avatarUrl || failed) {
+    return <AccountIcon className="size-6 shrink-0" />;
+  }
+
+  return (
+    // Google profile URLs are dynamic and do not use Next image optimization.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      alt=""
+      className="size-6 shrink-0 rounded-full object-cover"
+      onError={onError}
+      src={avatarUrl}
+    />
+  );
+}
+
 export function SidebarUserMenu({
   collapsed,
   onLogout,
   user,
 }: SidebarUserMenuProps) {
   const [open, setOpen] = useState(false);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const displayName = getUserDisplayName(user);
   const isAdmin = isAdminUser(user);
+  const avatarFailed = failedAvatarUrl === user.avatarUrl;
 
   useEffect(() => {
     if (!open) {
@@ -83,7 +110,11 @@ export function SidebarUserMenu({
           collapsed && sidebarLinkGroupClassName,
         )}
       >
-        <AccountIcon className="size-6 shrink-0" />
+        <UserAvatar
+          avatarUrl={user.avatarUrl}
+          failed={avatarFailed}
+          onError={() => setFailedAvatarUrl(user.avatarUrl)}
+        />
         {!collapsed ? (
           <span className="flex min-w-0 items-center gap-2 truncate text-base font-normal">
             <span className="truncate">{displayName}</span>
@@ -109,7 +140,11 @@ export function SidebarUserMenu({
           )}
         >
           <div className="flex items-center gap-2 p-2">
-            <AccountIcon className="size-6 shrink-0" />
+            <UserAvatar
+              avatarUrl={user.avatarUrl}
+              failed={avatarFailed}
+              onError={() => setFailedAvatarUrl(user.avatarUrl)}
+            />
             <div className="min-w-0">
               <p className="flex min-w-0 items-center gap-2 truncate text-base font-normal text-foreground">
                 <span className="truncate">{displayName}</span>

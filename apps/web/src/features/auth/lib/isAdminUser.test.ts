@@ -12,6 +12,7 @@ describe("isAdminUser", () => {
         id: "user-1",
         email: "user@example.com",
         name: null,
+        avatarUrl: null,
         role: "USER",
       }),
     ).toBe(false);
@@ -23,6 +24,7 @@ describe("isAdminUser", () => {
         id: "admin-1",
         email: "admin@example.com",
         name: "Admin",
+        avatarUrl: null,
         role: "ADMIN",
       }),
     ).toBe(true);

@@ -12,13 +12,15 @@ describe("parseAuthResponse", () => {
         id: "user-1",
         email: "user@example.com",
         name: "User",
+        avatarUrl: "https://lh3.googleusercontent.com/avatar",
         role: "USER",
       }),
     ).toEqual({
       id: "user-1",
-      email: "user@example.com",
-      name: "User",
-      role: "USER",
+        email: "user@example.com",
+        name: "User",
+        avatarUrl: "https://lh3.googleusercontent.com/avatar",
+        role: "USER",
     });
   });
 
@@ -28,13 +30,15 @@ describe("parseAuthResponse", () => {
         id: "admin-1",
         email: "admin@example.com",
         name: null,
+        avatarUrl: null,
         role: "ADMIN",
       }),
     ).toEqual({
       id: "admin-1",
-      email: "admin@example.com",
-      name: null,
-      role: "ADMIN",
+        email: "admin@example.com",
+        name: null,
+        avatarUrl: null,
+        role: "ADMIN",
     });
   });
 
@@ -44,6 +48,7 @@ describe("parseAuthResponse", () => {
         id: "user-1",
         email: "user@example.com",
         name: null,
+        avatarUrl: null,
         role: "SUPERADMIN",
       }),
     ).toThrow(ApiError);
@@ -57,6 +62,7 @@ describe("parseAuthResponse", () => {
           id: "user-1",
           email: "user@example.com",
           name: null,
+          avatarUrl: null,
           role: "USER",
         },
       }),
@@ -66,6 +72,7 @@ describe("parseAuthResponse", () => {
         id: "user-1",
         email: "user@example.com",
         name: null,
+        avatarUrl: null,
         role: "USER",
       },
     });

@@ -97,6 +97,7 @@ describe("AuthProvider", () => {
           id: "user-id",
           email: "user@example.com",
           name: null,
+          avatarUrl: null,
           role: "USER",
         },
       });
@@ -130,6 +131,7 @@ describe("AuthProvider", () => {
           id: "user-a",
           email: "a@example.com",
           name: null,
+          avatarUrl: null,
           role: "USER",
         },
       })
@@ -139,6 +141,7 @@ describe("AuthProvider", () => {
           id: "user-b",
           email: "b@example.com",
           name: null,
+          avatarUrl: null,
           role: "USER",
         },
       });
@@ -172,6 +175,7 @@ describe("AuthProvider", () => {
         id: "user-a",
         email: "a@example.com",
         name: null,
+        avatarUrl: null,
         role: "USER",
       },
     });
