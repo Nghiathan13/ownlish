@@ -114,75 +114,77 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
   }
 
   return createPortal(
-    <Modal
-      className="max-w-md border-0 bg-surface"
-      onClose={onClose}
-      showCloseButton={false}
-      title="Edit profile"
-    >
-      <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-        <div className="flex justify-center pt-2">
-          <div className="relative">
-            <ProfileAvatar previewUrl={previewUrl} user={user} />
+    <div onClick={(event) => event.stopPropagation()}>
+      <Modal
+        className="max-w-md border-0 bg-surface"
+        onClose={onClose}
+        showCloseButton={false}
+        title="Edit profile"
+      >
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <div className="flex justify-center pt-2">
+            <div className="relative">
+              <ProfileAvatar previewUrl={previewUrl} user={user} />
+              <input
+                ref={avatarInputRef}
+                accept="image/jpeg,image/png,image/webp"
+                aria-label="Choose profile picture"
+                className="sr-only"
+                onChange={handleAvatarChange}
+                type="file"
+              />
+              <button
+                aria-label="Change profile picture"
+                className="absolute right-[-3.6px] bottom-[-3.6px] inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-sm hover:bg-hover-overlay"
+                onClick={() => avatarInputRef.current?.click()}
+                type="button"
+              >
+                <CameraIcon className="size-5" />
+              </button>
+            </div>
+          </div>
+
+          <label className="grid gap-2 text-[15px] leading-5 text-foreground">
+            <span>Display name</span>
             <input
-              ref={avatarInputRef}
-              accept="image/jpeg,image/png,image/webp"
-              aria-label="Choose profile picture"
-              className="sr-only"
-              onChange={handleAvatarChange}
-              type="file"
+              autoComplete="name"
+              className="w-full rounded-xl border border-border bg-transparent px-4 py-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-foreground"
+              maxLength={80}
+              onChange={(event) => {
+                setName(event.target.value);
+                setError(null);
+              }}
+              required
+              value={name}
             />
+          </label>
+
+          {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+          <div className="flex justify-end gap-3">
             <button
-              aria-label="Change profile picture"
-              className="absolute right-0 bottom-0 inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-transparent text-foreground shadow-sm hover:bg-hover-overlay"
-              onClick={() => avatarInputRef.current?.click()}
+              className={secondaryTextButtonClassName(
+                "hover:border-border hover:bg-hover-overlay",
+              )}
+              onClick={onClose}
               type="button"
             >
-              <CameraIcon className="size-5" />
+              Cancel
+            </button>
+            <button
+              className={classNames(
+                primaryTextButtonClassName(),
+                "min-w-20 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
+              )}
+              disabled={isSaving || !trimmedName || isUnchanged}
+              type="submit"
+            >
+              {isSaving ? "Saving" : "Save"}
             </button>
           </div>
-        </div>
-
-        <label className="grid gap-2 text-base text-foreground">
-          <span>Display name</span>
-          <input
-            autoComplete="name"
-            className="w-full rounded-xl border border-border bg-transparent px-4 py-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:border-foreground"
-            maxLength={80}
-            onChange={(event) => {
-              setName(event.target.value);
-              setError(null);
-            }}
-            required
-            value={name}
-          />
-        </label>
-
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
-
-        <div className="flex justify-end gap-3">
-          <button
-            className={secondaryTextButtonClassName(
-              "hover:border-border hover:bg-hover-overlay",
-            )}
-            onClick={onClose}
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            className={classNames(
-              primaryTextButtonClassName(),
-              "min-w-20 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
-            )}
-            disabled={isSaving || !trimmedName || isUnchanged}
-            type="submit"
-          >
-            {isSaving ? "Saving" : "Save"}
-          </button>
-        </div>
-      </form>
-    </Modal>,
+        </form>
+      </Modal>
+    </div>,
     document.body,
   );
 }

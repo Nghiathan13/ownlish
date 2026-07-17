@@ -49,4 +49,22 @@ describe("ProfileModal", () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
+
+  it("does not bubble modal clicks to its React parent", () => {
+    const onParentClick = vi.fn();
+
+    render(
+      <div onClick={onParentClick}>
+        <ProfileModal
+          onClose={vi.fn()}
+          onSave={updateProfileMock}
+          user={user}
+        />
+      </div>,
+    );
+
+    fireEvent.click(screen.getByRole("heading", { name: "Edit profile" }));
+
+    expect(onParentClick).not.toHaveBeenCalled();
+  });
 });
