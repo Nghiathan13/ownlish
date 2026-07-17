@@ -81,7 +81,15 @@ export class AuthService {
       verified.sub,
     );
     if (userByGoogleSub) {
-      return this.createAuthResponse(userByGoogleSub);
+      const user =
+        verified.avatarUrl && verified.avatarUrl !== userByGoogleSub.avatarUrl
+          ? await this.usersService.updateGoogleAvatar(
+              userByGoogleSub.id,
+              verified.avatarUrl,
+            )
+          : userByGoogleSub;
+
+      return this.createAuthResponse(user);
     }
 
     const userByEmail = await this.usersService.findByEmail(email);
@@ -96,6 +104,7 @@ export class AuthService {
         ? userByEmail
         : await this.usersService.linkGoogleSub(userByEmail.id, verified.sub, {
             name: userByEmail.name ? undefined : (verified.name ?? undefined),
+            avatarUrl: verified.avatarUrl ?? undefined,
           });
 
       return this.createAuthResponse(linkedUser);
@@ -105,6 +114,7 @@ export class AuthService {
       email,
       googleSub: verified.sub,
       name: verified.name ?? undefined,
+      avatarUrl: verified.avatarUrl,
       passwordHash: null,
     });
 
@@ -249,6 +259,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
+      avatarUrl: user.avatarUrl,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

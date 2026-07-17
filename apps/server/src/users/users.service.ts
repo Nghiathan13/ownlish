@@ -9,6 +9,7 @@ type CreateUserInput = {
   passwordHash?: string | null;
   googleSub?: string | null;
   name?: string;
+  avatarUrl?: string | null;
 };
 
 type UserResult = ReturnType<PrismaService['user']['findUnique']>;
@@ -18,6 +19,7 @@ type CreatedUserResult = Promise<{
   passwordHash: string | null;
   googleSub: string | null;
   name: string | null;
+  avatarUrl: string | null;
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;
@@ -53,6 +55,7 @@ export class UsersService {
           passwordHash: input.passwordHash ?? null,
           googleSub: input.googleSub ?? null,
           name: input.name,
+          avatarUrl: input.avatarUrl ?? null,
         },
       });
 
@@ -73,14 +76,22 @@ export class UsersService {
   linkGoogleSub(
     userId: string,
     googleSub: string,
-    options?: { name?: string | null },
+    options?: { name?: string | null; avatarUrl?: string },
   ) {
     return this.prisma.user.update({
       where: { id: userId },
       data: {
         googleSub,
         ...(options?.name ? { name: options.name } : {}),
+        ...(options?.avatarUrl ? { avatarUrl: options.avatarUrl } : {}),
       },
+    });
+  }
+
+  updateGoogleAvatar(userId: string, avatarUrl: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
     });
   }
 }

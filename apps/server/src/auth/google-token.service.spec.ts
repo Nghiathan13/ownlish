@@ -50,6 +50,7 @@ describe('GoogleTokenService', () => {
         email: 'User@Example.com',
         email_verified: true,
         name: ' Google User ',
+        picture: ' https://lh3.googleusercontent.com/avatar ',
       }),
     });
 
@@ -59,6 +60,7 @@ describe('GoogleTokenService', () => {
       sub: 'google-sub',
       email: 'User@Example.com',
       name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/avatar',
     });
     expect(mockGetToken).toHaveBeenCalledWith({
       code: 'authorization-code',
@@ -85,6 +87,7 @@ describe('GoogleTokenService', () => {
         email: 'User@Example.com',
         email_verified: true,
         name: ' Google User ',
+        picture: ' https://lh3.googleusercontent.com/avatar ',
       }),
     });
 
@@ -92,6 +95,7 @@ describe('GoogleTokenService', () => {
       sub: 'google-sub',
       email: 'User@Example.com',
       name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/avatar',
     });
   });
 

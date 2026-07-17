@@ -6,6 +6,7 @@ export type VerifiedGoogleToken = {
   sub: string;
   email: string;
   name: string | null;
+  avatarUrl: string | null;
 };
 
 @Injectable()
@@ -70,6 +71,10 @@ export class GoogleTokenService {
         sub: payload.sub,
         email: payload.email,
         name: payload.name?.trim() || null,
+        avatarUrl:
+          typeof payload.picture === 'string' && payload.picture.trim()
+            ? payload.picture.trim()
+            : null,
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {

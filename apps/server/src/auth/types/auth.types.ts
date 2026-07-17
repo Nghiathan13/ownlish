@@ -7,6 +7,7 @@ export type AuthUser = {
   passwordHash: string | null;
   googleSub: string | null;
   name: string | null;
+  avatarUrl: string | null;
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;
@@ -16,6 +17,7 @@ export type PublicUser = {
   id: string;
   email: string;
   name: string | null;
+  avatarUrl: string | null;
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;

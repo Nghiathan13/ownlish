@@ -24,6 +24,7 @@ describe('AuthService', () => {
     findById: jest.fn(),
     create: jest.fn(),
     linkGoogleSub: jest.fn(),
+    updateGoogleAvatar: jest.fn(),
   };
 
   const refreshSessionsServiceMock = {
@@ -47,6 +48,7 @@ describe('AuthService', () => {
     passwordHash: 'hashed-password',
     googleSub: null,
     name: 'Test User',
+    avatarUrl: null,
     role: UserRole.USER,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -223,12 +225,14 @@ describe('AuthService', () => {
       passwordHash: null,
       googleSub: 'google-sub',
       name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/avatar',
     };
 
     googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
       sub: 'google-sub',
       email: 'test@example.com',
       name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/avatar',
     });
     usersServiceMock.findByGoogleSub.mockResolvedValue(null);
     usersServiceMock.findByEmail.mockResolvedValue(null);
@@ -244,6 +248,7 @@ describe('AuthService', () => {
       email: 'test@example.com',
       googleSub: 'google-sub',
       name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/avatar',
       passwordHash: null,
     });
     expect(result.accessToken).toBe('access-token');
@@ -259,6 +264,7 @@ describe('AuthService', () => {
       sub: 'google-sub',
       email: 'test@example.com',
       name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/avatar',
     });
     usersServiceMock.findByGoogleSub.mockResolvedValue(null);
     usersServiceMock.findByEmail.mockResolvedValue(user);
@@ -272,9 +278,40 @@ describe('AuthService', () => {
       'google-sub',
       {
         name: undefined,
+        avatarUrl: 'https://lh3.googleusercontent.com/avatar',
       },
     );
     expect(result.user.email).toBe('test@example.com');
+  });
+
+  it('refreshes the avatar of an existing Google user', async () => {
+    const googleUser = {
+      ...user,
+      googleSub: 'google-sub',
+      avatarUrl: 'https://lh3.googleusercontent.com/old-avatar',
+    };
+    const updatedGoogleUser = {
+      ...googleUser,
+      avatarUrl: 'https://lh3.googleusercontent.com/new-avatar',
+    };
+
+    googleTokenServiceMock.verifyAuthorizationCode.mockResolvedValue({
+      sub: 'google-sub',
+      email: 'test@example.com',
+      name: 'Google User',
+      avatarUrl: 'https://lh3.googleusercontent.com/new-avatar',
+    });
+    usersServiceMock.findByGoogleSub.mockResolvedValue(googleUser);
+    usersServiceMock.updateGoogleAvatar.mockResolvedValue(updatedGoogleUser);
+    jwtServiceMock.signAsync.mockResolvedValue('access-token');
+
+    const result = await service.googleLogin({ code: 'authorization-code' });
+
+    expect(usersServiceMock.updateGoogleAvatar).toHaveBeenCalledWith(
+      googleUser.id,
+      'https://lh3.googleusercontent.com/new-avatar',
+    );
+    expect(result.user.avatarUrl).toBe(updatedGoogleUser.avatarUrl);
   });
 
   it('throws conflict when email is linked to another Google account', async () => {
@@ -301,6 +338,7 @@ describe('AuthService', () => {
       id: user.id,
       email: user.email,
       name: user.name,
+      avatarUrl: user.avatarUrl,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
