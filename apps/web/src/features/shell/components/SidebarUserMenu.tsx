@@ -160,6 +160,8 @@ export function SidebarUserMenu({
             </div>
           </div>
 
+          <div className="my-2 border-t border-border" />
+
           <button
             type="button"
             role="menuitem"
@@ -173,7 +175,7 @@ export function SidebarUserMenu({
             Profile
           </button>
 
-          <div className="my-1 border-t border-border" />
+          <div className="my-2 border-t border-border" />
 
           <button
             type="button"

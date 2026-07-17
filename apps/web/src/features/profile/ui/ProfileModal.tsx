@@ -135,11 +135,11 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
               />
               <button
                 aria-label="Change profile picture"
-                className="absolute right-[-3.6px] bottom-[-3.6px] inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-sm hover:bg-hover-overlay"
+                className="absolute right-[-3.6px] bottom-[-3.6px] inline-flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-foreground shadow-sm before:pointer-events-none before:absolute before:inset-0 before:rounded-full hover:before:bg-hover-overlay"
                 onClick={() => avatarInputRef.current?.click()}
                 type="button"
               >
-                <CameraIcon className="size-5" />
+                <CameraIcon className="relative z-10 size-5" />
               </button>
             </div>
           </div>
