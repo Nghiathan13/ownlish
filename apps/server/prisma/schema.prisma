@@ -23,6 +23,7 @@ model User {
   googleSub           String?                @unique @map("google_sub")
   name                String?
   avatarUrl           String?                @map("avatar_url")
+  avatarStoragePath   String?                @map("avatar_storage_path")
   role                UserRole               @default(USER)
   createdAt           DateTime               @default(now()) @map("created_at")
   updatedAt           DateTime               @updatedAt @map("updated_at")

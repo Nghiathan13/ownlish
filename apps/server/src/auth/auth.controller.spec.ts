@@ -20,6 +20,7 @@ describe('AuthController', () => {
     refresh: jest.fn(),
     logout: jest.fn(),
     me: jest.fn(),
+    updateProfile: jest.fn(),
   };
 
   const jwtServiceMock = {
@@ -284,5 +285,28 @@ describe('AuthController', () => {
 
     await expect(controller.me(request)).resolves.toBe(response);
     expect(authServiceMock.me).toHaveBeenCalledWith('user-id');
+  });
+
+  it('delegates profile updates to AuthService', async () => {
+    const request = {
+      user: {
+        id: 'user-id',
+        email: 'test@example.com',
+        role: UserRole.USER,
+      },
+    } as AuthRequest;
+    const dto = { name: 'Updated User' };
+    const file = { buffer: Buffer.from('image'), mimetype: 'image/png' };
+    const response = { id: 'user-id', name: dto.name };
+    authServiceMock.updateProfile.mockResolvedValue(response);
+
+    await expect(controller.updateProfile(request, dto, file)).resolves.toBe(
+      response,
+    );
+    expect(authServiceMock.updateProfile).toHaveBeenCalledWith(
+      request.user.id,
+      dto,
+      file,
+    );
   });
 });

@@ -20,6 +20,7 @@ type CreatedUserResult = Promise<{
   googleSub: string | null;
   name: string | null;
   avatarUrl: string | null;
+  avatarStoragePath: string | null;
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;
@@ -92,6 +93,21 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { avatarUrl },
+    });
+  }
+
+  updateProfile(
+    userId: string,
+    input: { name: string; avatarStoragePath?: string },
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: input.name,
+        ...(input.avatarStoragePath
+          ? { avatarStoragePath: input.avatarStoragePath }
+          : {}),
+      },
     });
   }
 }

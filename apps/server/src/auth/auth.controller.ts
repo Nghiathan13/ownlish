@@ -3,12 +3,16 @@ import {
   Controller,
   Get,
   Headers,
+  Patch,
   Post,
   Req,
   Res,
+  UploadedFile,
   UnauthorizedException,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { env } from '../config/env';
@@ -17,6 +21,7 @@ import { GoogleLoginDto } from './dto/google-login.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { AuthRequest, AuthResponse } from './types/auth.types';
 
@@ -137,6 +142,27 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@Req() request: AuthRequest) {
     return this.authService.me(request.user.id);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: { fileSize: 2 * 1024 * 1024 },
+    }),
+  )
+  updateProfile(
+    @Req() request: AuthRequest,
+    @Body() dto: UpdateProfileDto,
+    @UploadedFile()
+    file:
+      | {
+          buffer: Buffer;
+          mimetype: string;
+        }
+      | undefined,
+  ) {
+    return this.authService.updateProfile(request.user.id, dto, file);
   }
 
   private getRefreshToken(

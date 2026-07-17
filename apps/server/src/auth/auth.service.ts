@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -8,10 +9,12 @@ import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'node:crypto';
 import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
+import { ProfileAvatarStorageService } from '../users/profile-avatar-storage.service';
 import { LoginDto } from './dto/login.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GoogleTokenService } from './google-token.service';
 import { RefreshSessionsService } from './refresh-sessions.service';
 import type { AuthResponse, AuthUser, PublicUser } from './types/auth.types';
@@ -27,6 +30,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly refreshSessionsService: RefreshSessionsService,
     private readonly googleTokenService: GoogleTokenService,
+    private readonly profileAvatarStorageService: ProfileAvatarStorageService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -129,6 +133,60 @@ export class AuthService {
     }
 
     return this.toPublicUser(user);
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+    file:
+      | {
+          buffer: Buffer;
+          mimetype: string;
+        }
+      | undefined,
+  ): Promise<PublicUser> {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const name = dto.name.trim();
+    if (!name) {
+      throw new BadRequestException('Display name is required');
+    }
+
+    let uploadedAvatarStoragePath: string | undefined;
+
+    if (file) {
+      uploadedAvatarStoragePath = await this.profileAvatarStorageService.uploadAvatar({
+        body: file.buffer,
+        mimeType: file.mimetype,
+        userId,
+      });
+    }
+
+    try {
+      const updatedUser = await this.usersService.updateProfile(userId, {
+        name,
+        avatarStoragePath: uploadedAvatarStoragePath,
+      });
+
+      if (uploadedAvatarStoragePath && user.avatarStoragePath) {
+        await this.profileAvatarStorageService
+          .removeAvatar(user.avatarStoragePath)
+          .catch(() => undefined);
+      }
+
+      return this.toPublicUser(updatedUser);
+    } catch (error) {
+      if (uploadedAvatarStoragePath) {
+        await this.profileAvatarStorageService
+          .removeAvatar(uploadedAvatarStoragePath)
+          .catch(() => undefined);
+      }
+
+      throw error;
+    }
   }
 
   async refresh(dto: RefreshTokenDto): Promise<AuthResponse> {
@@ -259,7 +317,12 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      avatarUrl: user.avatarUrl,
+      avatarUrl:
+        (user.avatarStoragePath
+          ? this.profileAvatarStorageService.getPublicUrl(
+              user.avatarStoragePath,
+            )
+          : null) ?? user.avatarUrl,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

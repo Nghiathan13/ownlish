@@ -8,6 +8,7 @@ export type AuthUser = {
   googleSub: string | null;
   name: string | null;
   avatarUrl: string | null;
+  avatarStoragePath: string | null;
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;

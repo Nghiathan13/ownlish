@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { env } from '../config/env';
 import { UsersService } from '../users/users.service';
+import { ProfileAvatarStorageService } from '../users/profile-avatar-storage.service';
 import { AuthService } from './auth.service';
 import { GoogleTokenService } from './google-token.service';
 import { RefreshSessionsService } from './refresh-sessions.service';
@@ -24,7 +25,14 @@ describe('AuthService', () => {
     findById: jest.fn(),
     create: jest.fn(),
     linkGoogleSub: jest.fn(),
+    updateProfile: jest.fn(),
     updateGoogleAvatar: jest.fn(),
+  };
+
+  const profileAvatarStorageServiceMock = {
+    getPublicUrl: jest.fn(),
+    removeAvatar: jest.fn(),
+    uploadAvatar: jest.fn(),
   };
 
   const refreshSessionsServiceMock = {
@@ -56,6 +64,8 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    profileAvatarStorageServiceMock.getPublicUrl.mockReturnValue(null);
+    profileAvatarStorageServiceMock.removeAvatar.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -75,6 +85,10 @@ describe('AuthService', () => {
         {
           provide: GoogleTokenService,
           useValue: googleTokenServiceMock,
+        },
+        {
+          provide: ProfileAvatarStorageService,
+          useValue: profileAvatarStorageServiceMock,
         },
       ],
     }).compile();
@@ -343,6 +357,51 @@ describe('AuthService', () => {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     });
+  });
+
+  it('prioritizes a custom profile avatar and removes the previous file after saving', async () => {
+    const userWithCustomAvatar = {
+      ...user,
+      avatarStoragePath: 'users/user-id/previous-avatar.png',
+    };
+    const updatedUser = {
+      ...userWithCustomAvatar,
+      name: 'Updated User',
+      avatarStoragePath: 'users/user-id/new-avatar.png',
+    };
+
+    usersServiceMock.findById.mockResolvedValue(userWithCustomAvatar);
+    profileAvatarStorageServiceMock.uploadAvatar.mockResolvedValue(
+      updatedUser.avatarStoragePath,
+    );
+    usersServiceMock.updateProfile.mockResolvedValue(updatedUser);
+    profileAvatarStorageServiceMock.getPublicUrl.mockReturnValue(
+      'https://example.com/new-avatar.png',
+    );
+
+    await expect(
+      service.updateProfile(
+        user.id,
+        { name: ' Updated User ' },
+        { buffer: Buffer.from('image'), mimetype: 'image/png' },
+      ),
+    ).resolves.toMatchObject({
+      name: 'Updated User',
+      avatarUrl: 'https://example.com/new-avatar.png',
+    });
+
+    expect(profileAvatarStorageServiceMock.uploadAvatar).toHaveBeenCalledWith({
+      body: Buffer.from('image'),
+      mimeType: 'image/png',
+      userId: user.id,
+    });
+    expect(usersServiceMock.updateProfile).toHaveBeenCalledWith(user.id, {
+      name: 'Updated User',
+      avatarStoragePath: updatedUser.avatarStoragePath,
+    });
+    expect(profileAvatarStorageServiceMock.removeAvatar).toHaveBeenCalledWith(
+      userWithCustomAvatar.avatarStoragePath,
+    );
   });
 
   it('refreshes an active session and rotates the refresh token', async () => {
