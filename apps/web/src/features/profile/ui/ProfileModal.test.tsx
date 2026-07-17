@@ -33,6 +33,7 @@ describe("ProfileModal", () => {
 
     expect(container.querySelector('[role="dialog"]')).toBeNull();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByText("Email")).toBeNull();
     expect(screen.queryByRole("button", { name: "Close" })).toBeNull();
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 

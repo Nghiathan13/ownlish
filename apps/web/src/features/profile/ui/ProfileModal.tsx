@@ -115,7 +115,7 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
 
   return createPortal(
     <Modal
-      className="max-w-md"
+      className="max-w-md border-0 bg-surface"
       onClose={onClose}
       showCloseButton={false}
       title="Edit profile"
@@ -134,7 +134,7 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
             />
             <button
               aria-label="Change profile picture"
-              className="absolute right-0 bottom-0 inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-sm hover:bg-hover-overlay"
+              className="absolute right-0 bottom-0 inline-flex size-10 cursor-pointer items-center justify-center rounded-full border border-border bg-transparent text-foreground shadow-sm hover:bg-hover-overlay"
               onClick={() => avatarInputRef.current?.click()}
               type="button"
             >
@@ -158,18 +158,13 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
           />
         </label>
 
-        <div className="grid gap-2 text-base">
-          <span className="text-foreground">Email</span>
-          <p className="rounded-xl border border-border bg-muted px-4 py-3 text-muted-foreground">
-            {user.email}
-          </p>
-        </div>
-
         {error ? <p className="text-sm text-danger">{error}</p> : null}
 
         <div className="flex justify-end gap-3">
           <button
-            className={secondaryTextButtonClassName()}
+            className={secondaryTextButtonClassName(
+              "hover:border-border hover:bg-hover-overlay",
+            )}
             onClick={onClose}
             type="button"
           >
@@ -178,7 +173,7 @@ export function ProfileModal({ onClose, onSave, user }: ProfileModalProps) {
           <button
             className={classNames(
               primaryTextButtonClassName(),
-              "min-w-20",
+              "min-w-20 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
             )}
             disabled={isSaving || !trimmedName || isUnchanged}
             type="submit"
