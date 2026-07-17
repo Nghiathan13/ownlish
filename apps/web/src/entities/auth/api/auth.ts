@@ -1,12 +1,28 @@
-import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import {
+  apiFormRequest,
+  apiRequest,
+  invalidApiResponse,
+} from "@/shared/api/http";
 import {
   parseAuthResponse,
   parseAuthUser,
 } from "@/entities/auth/lib/parseAuthResponse";
 import { isRecord } from "@/shared/lib/parse";
-import type { GoogleLoginInput, LoginInput, RegisterInput } from "@/entities/auth/types";
+import type {
+  GoogleLoginInput,
+  LoginInput,
+  RegisterInput,
+  UpdateProfileInput,
+} from "@/entities/auth/types";
 
-export type { AuthResponse, AuthUser, GoogleLoginInput, LoginInput, RegisterInput } from "@/entities/auth/types";
+export type {
+  AuthResponse,
+  AuthUser,
+  GoogleLoginInput,
+  LoginInput,
+  RegisterInput,
+  UpdateProfileInput,
+} from "@/entities/auth/types";
 
 function parseLogoutResponse(body: unknown): { success: true } {
   if (!isRecord(body) || body.success !== true) {
@@ -54,4 +70,19 @@ export function logoutSession() {
     method: "POST",
     sameOrigin: true,
   }).then(parseLogoutResponse);
+}
+
+export function updateProfile(token: string, input: UpdateProfileInput) {
+  const body = new FormData();
+  body.set("name", input.name);
+
+  if (input.avatar) {
+    body.set("avatar", input.avatar);
+  }
+
+  return apiFormRequest("/auth/profile", {
+    token,
+    method: "PATCH",
+    body,
+  }).then(parseAuthUser);
 }

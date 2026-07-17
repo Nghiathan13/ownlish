@@ -1,7 +1,9 @@
 export { AddIcon } from "./AddIcon";
+export { AccountIcon } from "./AccountIcon";
 export { ArrowBackIcon } from "./ArrowBackIcon";
 export { ArrowForwardIcon } from "./ArrowForwardIcon";
 export { CheckIcon } from "./CheckIcon";
+export { CameraIcon } from "./CameraIcon";
 export { DeleteIcon } from "./DeleteIcon";
 export { EditIcon } from "./EditIcon";
 export { EmailIcon } from "./EmailIcon";

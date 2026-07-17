@@ -18,6 +18,8 @@ import {
   type GoogleLoginInput,
   type LoginInput,
   type RegisterInput,
+  type UpdateProfileInput,
+  updateProfile as updateProfileRequest,
 } from "@/entities/auth/api/auth";
 import type { AuthUser } from "@/entities/auth/types";
 import {
@@ -27,6 +29,7 @@ import {
   discardClientAccessToken,
   setSessionInvalidHandler,
 } from "@/entities/session/model/accessTokenManager";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { isUnauthorizedError } from "@/shared/api/http";
 import type { AuthStatus } from "@/features/auth/lib/authStatus";
 
@@ -39,6 +42,7 @@ type AuthSessionContextValue = {
   logout: () => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   status: AuthStatus;
+  updateProfile: (input: UpdateProfileInput) => Promise<void>;
   user: AuthUser | null;
 };
 
@@ -208,6 +212,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logoutSession().catch(() => undefined);
   }, [clearSession, notifyOtherTabs]);
 
+  const updateProfile = useCallback(
+    async (input: UpdateProfileInput) => {
+      const updatedUser = await runAuthenticatedRequest({
+        request: (accessToken) => updateProfileRequest(accessToken, input),
+      });
+
+      setUser(updatedUser);
+      notifyOtherTabs({ type: "session-changed" });
+    },
+    [notifyOtherTabs],
+  );
+
   const value = useMemo<AuthSessionContextValue>(
     () => ({
       clearSession,
@@ -216,9 +232,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       register,
       status,
+      updateProfile,
       user,
     }),
-    [clearSession, googleLogin, login, logout, register, status, user],
+    [
+      clearSession,
+      googleLogin,
+      login,
+      logout,
+      register,
+      status,
+      updateProfile,
+      user,
+    ],
   );
 
   return (

@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SidebarUserMenu } from "./SidebarUserMenu";
 
@@ -8,6 +8,7 @@ describe("SidebarUserMenu", () => {
       <SidebarUserMenu
         collapsed={false}
         onLogout={vi.fn()}
+        onUpdateProfile={vi.fn()}
         user={{
           id: "user-1",
           email: "user@example.com",
@@ -30,5 +31,30 @@ describe("SidebarUserMenu", () => {
     fireEvent.error(avatar);
 
     expect(document.querySelector("img")).toBeNull();
+  });
+
+  it("opens the profile modal from the account menu", () => {
+    render(
+      <SidebarUserMenu
+        collapsed={false}
+        onLogout={vi.fn()}
+        onUpdateProfile={vi.fn()}
+        user={{
+          id: "user-1",
+          email: "user@example.com",
+          name: "Profile User",
+          avatarUrl: null,
+          role: "USER",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Profile User" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Profile" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Edit profile" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 });

@@ -7,6 +7,7 @@ vi.mock("@/entities/session/model/accessTokenManager", () => ({
   clearClientSession: vi.fn(),
   discardClientAccessToken: vi.fn(),
   establishSession: vi.fn(),
+  getValidAccessToken: vi.fn(),
   setSessionInvalidHandler: vi.fn(),
 }));
 
@@ -15,15 +16,17 @@ vi.mock("@/entities/auth/api/auth", () => ({
   login: vi.fn(),
   logoutSession: vi.fn(),
   register: vi.fn(),
+  updateProfile: vi.fn(),
 }));
 
 import {
   bootstrapClientSession,
   clearClientSession,
   discardClientAccessToken,
+  getValidAccessToken,
   setSessionInvalidHandler,
 } from "@/entities/session/model/accessTokenManager";
-import { logoutSession } from "@/entities/auth/api/auth";
+import { logoutSession, updateProfile } from "@/entities/auth/api/auth";
 import {
   AuthProvider,
   useAuthSessionContext,
@@ -32,17 +35,26 @@ import {
 const bootstrapClientSessionMock = vi.mocked(bootstrapClientSession);
 const clearClientSessionMock = vi.mocked(clearClientSession);
 const discardClientAccessTokenMock = vi.mocked(discardClientAccessToken);
+const getValidAccessTokenMock = vi.mocked(getValidAccessToken);
 const setSessionInvalidHandlerMock = vi.mocked(setSessionInvalidHandler);
 const logoutSessionMock = vi.mocked(logoutSession);
+const updateProfileMock = vi.mocked(updateProfile);
 
 function AuthStatus() {
-  const { logout, status, user } = useAuthSessionContext();
+  const { logout, status, updateProfile, user } = useAuthSessionContext();
 
   return (
     <>
       <p>{`${status}:${user?.id ?? "none"}`}</p>
+      <p>{user?.name ?? "No name"}</p>
       <button type="button" onClick={() => void logout()}>
         Logout
+      </button>
+      <button
+        type="button"
+        onClick={() => void updateProfile({ name: "Updated User" })}
+      >
+        Update profile
       </button>
     </>
   );
@@ -96,7 +108,9 @@ describe("AuthProvider", () => {
     bootstrapClientSessionMock.mockReset();
     clearClientSessionMock.mockReset();
     discardClientAccessTokenMock.mockReset();
+    getValidAccessTokenMock.mockReset();
     logoutSessionMock.mockReset();
+    updateProfileMock.mockReset();
     setSessionInvalidHandlerMock.mockReset();
   });
 
@@ -243,5 +257,47 @@ describe("AuthProvider", () => {
 
     expect(clearClientSessionMock).toHaveBeenCalledTimes(1);
     expect(screen.getByText("guest:none")).toBeInTheDocument();
+  });
+
+  it("updates the local user and synchronizes the other tabs after saving a profile", async () => {
+    bootstrapClientSessionMock.mockResolvedValue({
+      accessToken: "access-token-a",
+      user: {
+        id: "user-a",
+        email: "a@example.com",
+        name: "Original User",
+        avatarUrl: null,
+        role: "USER",
+      },
+    });
+    updateProfileMock.mockResolvedValue({
+      id: "user-a",
+      email: "a@example.com",
+      name: "Updated User",
+      avatarUrl: "https://example.com/avatar.png",
+      role: "USER",
+    });
+    getValidAccessTokenMock.mockResolvedValue("access-token-a");
+
+    render(
+      <AuthProvider>
+        <AuthStatus />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Update profile" }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(updateProfileMock).toHaveBeenCalledWith("access-token-a", {
+      name: "Updated User",
+    });
+    expect(screen.getByText("Updated User")).toBeInTheDocument();
   });
 });

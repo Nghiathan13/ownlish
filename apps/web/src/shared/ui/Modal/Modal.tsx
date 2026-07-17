@@ -1,17 +1,27 @@
 "use client";
 
 import { ReactNode, useEffect, useId } from "react";
+import { classNames } from "@/shared/lib/classNames";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 
 type ModalProps = {
   children: ReactNode;
   description?: string;
+  className?: string;
   onClose: () => void;
+  showCloseButton?: boolean;
   title: string;
 };
 
-export function Modal({ children, description, onClose, title }: ModalProps) {
+export function Modal({
+  children,
+  className,
+  description,
+  onClose,
+  showCloseButton = true,
+  title,
+}: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
 
@@ -37,7 +47,10 @@ export function Modal({ children, description, onClose, title }: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className="flex max-h-[min(720px,calc(100dvh-2rem))] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-background p-8 shadow-2xl"
+        className={classNames(
+          "flex max-h-[min(720px,calc(100dvh-2rem))] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-background p-8 shadow-2xl",
+          className,
+        )}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
@@ -54,16 +67,18 @@ export function Modal({ children, description, onClose, title }: ModalProps) {
               </p>
             ) : null}
           </div>
-          <button
-            aria-label="Close"
-            className={iconOnlyButtonClassName(
-              "border border-border bg-transparent text-foreground hover:border-foreground",
-            )}
-            onClick={onClose}
-            type="button"
-          >
-            <CloseIcon />
-          </button>
+          {showCloseButton ? (
+            <button
+              aria-label="Close"
+              className={iconOnlyButtonClassName(
+                "border border-border bg-transparent text-foreground hover:border-foreground",
+              )}
+              onClick={onClose}
+              type="button"
+            >
+              <CloseIcon />
+            </button>
+          ) : null}
         </div>
 
         {children}

@@ -25,3 +25,8 @@ export type RegisterInput = LoginInput & {
 export type GoogleLoginInput = {
   code: string;
 };
+
+export type UpdateProfileInput = {
+  avatar?: File;
+  name: string;
+};

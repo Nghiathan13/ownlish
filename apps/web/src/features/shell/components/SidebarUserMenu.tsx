@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AuthUser } from "@/entities/auth/types";
+import type { AuthUser, UpdateProfileInput } from "@/entities/auth/types";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import { ProfileModal } from "@/features/profile/ui/ProfileModal";
 import { classNames } from "@/shared/lib/classNames";
 import { AccountIcon } from "@/shared/ui/icons/AccountIcon";
 import { LogoutIcon } from "@/shared/ui/icons/LogoutIcon";
@@ -11,6 +12,7 @@ import { sidebarLinkGroupClassName, Tooltip } from "@/shared/ui/Tooltip";
 type SidebarUserMenuProps = {
   collapsed: boolean;
   onLogout: () => void;
+  onUpdateProfile: (input: UpdateProfileInput) => Promise<void>;
   user: AuthUser;
 };
 
@@ -56,9 +58,11 @@ function UserAvatar({
 export function SidebarUserMenu({
   collapsed,
   onLogout,
+  onUpdateProfile,
   user,
 }: SidebarUserMenuProps) {
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const displayName = getUserDisplayName(user);
@@ -161,6 +165,21 @@ export function SidebarUserMenu({
             role="menuitem"
             onClick={() => {
               setOpen(false);
+              setProfileOpen(true);
+            }}
+            className="flex w-full cursor-pointer items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay"
+          >
+            <AccountIcon className="size-6 shrink-0" />
+            Profile
+          </button>
+
+          <div className="my-1 border-t border-border" />
+
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
               onLogout();
             }}
             className="flex w-full cursor-pointer items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay"
@@ -169,6 +188,14 @@ export function SidebarUserMenu({
             Logout
           </button>
         </div>
+      ) : null}
+
+      {profileOpen ? (
+        <ProfileModal
+          onClose={() => setProfileOpen(false)}
+          onSave={onUpdateProfile}
+          user={user}
+        />
       ) : null}
     </div>
   );

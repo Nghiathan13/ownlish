@@ -139,7 +139,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, status, user } = useAuthSession();
+  const { logout, status, updateProfile, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
   const isLoading = isLoadingStatus(status);
   const isAdmin = isAdminUser(user);
@@ -351,6 +351,7 @@ export function AppSidebar() {
           ) : isAuth && user ? (
             <SidebarUserMenu
               collapsed={collapsed}
+              onUpdateProfile={updateProfile}
               user={user}
               onLogout={() => {
                 void logout();
