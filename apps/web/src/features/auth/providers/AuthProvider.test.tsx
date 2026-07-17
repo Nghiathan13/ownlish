@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/http";
 
@@ -10,12 +10,20 @@ vi.mock("@/entities/session/model/accessTokenManager", () => ({
   setSessionInvalidHandler: vi.fn(),
 }));
 
+vi.mock("@/entities/auth/api/auth", () => ({
+  googleLogin: vi.fn(),
+  login: vi.fn(),
+  logoutSession: vi.fn(),
+  register: vi.fn(),
+}));
+
 import {
   bootstrapClientSession,
   clearClientSession,
   discardClientAccessToken,
   setSessionInvalidHandler,
 } from "@/entities/session/model/accessTokenManager";
+import { logoutSession } from "@/entities/auth/api/auth";
 import {
   AuthProvider,
   useAuthSessionContext,
@@ -25,11 +33,19 @@ const bootstrapClientSessionMock = vi.mocked(bootstrapClientSession);
 const clearClientSessionMock = vi.mocked(clearClientSession);
 const discardClientAccessTokenMock = vi.mocked(discardClientAccessToken);
 const setSessionInvalidHandlerMock = vi.mocked(setSessionInvalidHandler);
+const logoutSessionMock = vi.mocked(logoutSession);
 
 function AuthStatus() {
-  const { status, user } = useAuthSessionContext();
+  const { logout, status, user } = useAuthSessionContext();
 
-  return <p>{`${status}:${user?.id ?? "none"}`}</p>;
+  return (
+    <>
+      <p>{`${status}:${user?.id ?? "none"}`}</p>
+      <button type="button" onClick={() => void logout()}>
+        Logout
+      </button>
+    </>
+  );
 }
 
 type MessageListener = (event: MessageEvent<unknown>) => void;
@@ -80,6 +96,7 @@ describe("AuthProvider", () => {
     bootstrapClientSessionMock.mockReset();
     clearClientSessionMock.mockReset();
     discardClientAccessTokenMock.mockReset();
+    logoutSessionMock.mockReset();
     setSessionInvalidHandlerMock.mockReset();
   });
 
@@ -196,6 +213,35 @@ describe("AuthProvider", () => {
     });
 
     expect(discardClientAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("guest:none")).toBeInTheDocument();
+  });
+
+  it("signs out locally before the logout request finishes", async () => {
+    bootstrapClientSessionMock.mockResolvedValue({
+      accessToken: "access-token-a",
+      user: {
+        id: "user-a",
+        email: "a@example.com",
+        name: null,
+        avatarUrl: null,
+        role: "USER",
+      },
+    });
+    logoutSessionMock.mockReturnValue(new Promise(() => undefined));
+
+    render(
+      <AuthProvider>
+        <AuthStatus />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Logout" }));
+
+    expect(clearClientSessionMock).toHaveBeenCalledTimes(1);
     expect(screen.getByText("guest:none")).toBeInTheDocument();
   });
 });

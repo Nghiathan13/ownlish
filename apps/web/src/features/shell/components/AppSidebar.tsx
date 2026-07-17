@@ -2,7 +2,7 @@
 
 import { Suspense, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useAuthSession,
   isAuthenticatedStatus,
@@ -138,6 +138,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { logout, status, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
   const isLoading = isLoadingStatus(status);
@@ -353,6 +354,7 @@ export function AppSidebar() {
               user={user}
               onLogout={() => {
                 void logout();
+                router.replace("/login");
               }}
             />
           ) : pathname !== "/login" ? (

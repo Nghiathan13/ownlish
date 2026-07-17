@@ -49,4 +49,21 @@ describe("AppShell", () => {
     expect(screen.queryByTestId("app-sidebar")).not.toBeInTheDocument();
     expect(screen.queryByTestId("mobile-top-nav")).not.toBeInTheDocument();
   });
+
+  it("renders the guest navbar instead of a sidebar on protected routes during redirect", () => {
+    mocks.usePathname.mockReturnValue("/tests");
+
+    render(
+      <AppShell>
+        <div>Protected content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/login",
+    );
+    expect(screen.queryByTestId("app-sidebar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mobile-top-nav")).not.toBeInTheDocument();
+  });
 });

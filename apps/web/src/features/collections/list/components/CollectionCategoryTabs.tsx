@@ -4,10 +4,19 @@ import {
   getCollectionsListPath,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
+import { classNames } from "@/shared/lib/classNames";
+
+const categoryButtonClassName =
+  "inline-flex shrink-0 items-center justify-center rounded-lg px-4 py-2 text-[15px] leading-[20px] font-normal";
+
+function getCategoryButtonClassName(isActive: boolean) {
+  return classNames(
+    categoryButtonClassName,
+    isActive
+      ? "bg-foreground text-background"
+      : "bg-transparent text-foreground hover:bg-hover-overlay",
+  );
+}
 
 type CollectionCategoryTabsProps = {
   activeCategory: CollectionCategory;
@@ -17,22 +26,22 @@ export function CollectionCategoryTabs({
   activeCategory,
 }: CollectionCategoryTabsProps) {
   return (
-    <div className="mb-4 flex flex-wrap gap-2 px-4">
-      {collectionCategoryTabs.map((tab) => (
-        <Link
-          aria-current={activeCategory === tab.key ? "page" : undefined}
-          className={
-            activeCategory === tab.key
-              ? primaryTextButtonClassName()
-              : secondaryTextButtonClassName()
-          }
-          href={getCollectionsListPath(tab.key)}
-          key={tab.key}
-          scroll={false}
-        >
-          {tab.label}
-        </Link>
-      ))}
+    <div className="mx-8 mt-8 mb-8 grid w-fit grid-cols-4 gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:mx-16 lg:mt-16 lg:flex lg:flex-wrap">
+      {collectionCategoryTabs.map((tab) => {
+        const isActive = activeCategory === tab.key;
+
+        return (
+          <Link
+            aria-current={isActive ? "page" : undefined}
+            className={getCategoryButtonClassName(isActive)}
+            href={getCollectionsListPath(tab.key)}
+            key={tab.key}
+            scroll={false}
+          >
+            {tab.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }

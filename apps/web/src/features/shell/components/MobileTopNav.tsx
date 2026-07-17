@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useAuthSession,
   isAuthenticatedStatus,
@@ -24,6 +24,7 @@ import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 export function MobileTopNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { logout, status, user } = useAuthSession();
   const isAuth = isAuthenticatedStatus(status);
   const isLoading = isLoadingStatus(status);
@@ -85,6 +86,7 @@ export function MobileTopNav() {
                 type="button"
                 onClick={() => {
                   void logout();
+                  router.replace("/login");
                 }}
                 className={secondaryTextButtonClassName()}
               >

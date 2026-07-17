@@ -201,11 +201,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [notifyOtherTabs]);
 
   const logout = useCallback(async () => {
-    await logoutSession().catch(() => undefined);
     clearSession();
     setUser(null);
     setStatus("guest");
     notifyOtherTabs({ type: "session-signed-out" });
+    await logoutSession().catch(() => undefined);
   }, [clearSession, notifyOtherTabs]);
 
   const value = useMemo<AuthSessionContextValue>(

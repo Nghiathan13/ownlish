@@ -6,10 +6,7 @@ import { ImmersiveToolbar } from "@/features/shell/components/ImmersiveToolbar";
 import { AppSidebar } from "@/features/shell/components/AppSidebar";
 import { GuestTopNav } from "@/features/shell/components/GuestTopNav";
 import { MobileTopNav } from "@/features/shell/components/MobileTopNav";
-import {
-  isAuthenticatedStatus,
-  useAuthSession,
-} from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { getShellLayoutMode } from "@/features/shell/lib/shellRoutes";
 
 type AppShellProps = {
@@ -34,7 +31,7 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  if (pathname === "/" && !isAuthenticatedStatus(status)) {
+  if (status === "guest") {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <GuestTopNav />
