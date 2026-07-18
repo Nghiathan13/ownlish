@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type {
-  PracticeMode,
-  ToeicTestSummary,
-} from "@/features/tests/shared/api/types";
+import type { PracticeMode } from "@/features/tests/shared/api/types";
+import type { CatalogTestSummary } from "@/features/tests/shared/model/catalogTestSummary";
 import { getPartProgress } from "@/features/tests/shared/lib/toeicTestProgress";
 import {
   addPartToSelection,
@@ -22,7 +20,7 @@ type UsePartPickerParams = {
   isStarting: boolean;
   onStart: (partNumbers: number[], mode: PracticeMode) => void;
   onStartMock?: (partNumbers: number[]) => void;
-  test: ToeicTestSummary;
+  test: CatalogTestSummary;
 };
 
 export function useToeicPartPicker({

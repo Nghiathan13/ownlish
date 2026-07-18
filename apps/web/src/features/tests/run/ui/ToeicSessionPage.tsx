@@ -91,7 +91,6 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
     return (
       <MockRunView
         key={sessionId}
-        selectedParts={selectedParts}
         sessionId={sessionId}
       />
     );

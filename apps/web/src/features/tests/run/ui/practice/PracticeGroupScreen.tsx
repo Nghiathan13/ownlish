@@ -14,7 +14,7 @@ import { showsGroupContentTranslation } from "@/features/tests/shared/lib/partTr
 import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
 
 type PracticeGroupScreenProps = {
-  testId: number;
+  testId?: number;
   partNumber: number;
   practiceGroup: PracticeGroup;
   practice: PracticeSessionController;
@@ -33,7 +33,7 @@ export function PracticeGroupScreen({
   const usesSplitPlainLayout = partConfig.contentLayout === "split-plain";
 
   const signedMedia = useSignedMedia({
-    testId,
+    testId: testId ?? null,
     partNumber,
     group: practiceGroup.group,
   });

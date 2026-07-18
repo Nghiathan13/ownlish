@@ -87,7 +87,8 @@ function createMockRunState(isFinishAccepted: boolean) {
     loadError: null,
     retryFailedAnswers: vi.fn(),
     selectAnswer: vi.fn(),
-    testId: 1,
+    series: "ets_26",
+    testNumber: 1,
     totalQuestions: 1,
     wrongCount: 1,
     year: 2024,
@@ -106,7 +107,7 @@ describe("MockRunView", () => {
   it("enters review immediately after Finish is accepted without remounting media", () => {
     mocks.useMockTestRun.mockReturnValue(createMockRunState(false));
     const { container, rerender } = render(
-      <MockRunView selectedParts={[1]} sessionId="mock-1" />,
+      <MockRunView sessionId="mock-1" />,
     );
     const image = screen.getByRole("img", { name: "Question 1" });
 
@@ -117,7 +118,7 @@ describe("MockRunView", () => {
     expect(screen.getByRole("button", { name: /^A\b/i })).toBeEnabled();
 
     mocks.useMockTestRun.mockReturnValue(createMockRunState(true));
-    rerender(<MockRunView selectedParts={[1]} sessionId="mock-1" />);
+    rerender(<MockRunView sessionId="mock-1" />);
 
     expect(container.querySelector("audio")).not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Question 1" })).toBe(image);
@@ -128,7 +129,7 @@ describe("MockRunView", () => {
     });
     expect(mocks.registerExit).toHaveBeenLastCalledWith(
       expect.any(Function),
-      "Test 1",
+      "ETS 2024 · Test 1",
       expect.any(String),
       { showBilingualAction: true },
     );

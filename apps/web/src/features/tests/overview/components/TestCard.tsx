@@ -9,7 +9,10 @@ import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
-import type { ToeicTestSummary } from "@/features/tests/shared/api/types";
+import {
+  formatCatalogTestLabel,
+  type CatalogTestSummary,
+} from "@/features/tests/shared/model/catalogTestSummary";
 import {
   getTestCorrectCount,
   getTestWrongCount,
@@ -18,15 +21,13 @@ import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import { testOverviewCardClassName, testOverviewMockButtonClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
 
 type TestCardProps = {
-  test: ToeicTestSummary;
+  test: CatalogTestSummary;
   isClearingHistory?: boolean;
   onClearHistory: () => void;
   onMock: () => void;
   onPractice: () => void;
   onReviewWrong: () => void;
 };
-
-const TOEIC_TEST_QUESTION_COUNT = 200;
 
 export function TestCard({
   test,
@@ -43,7 +44,7 @@ export function TestCard({
   return (
     <article className={testOverviewCardClassName}>
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">Test {test.id}</h2>
+        <h2 className="text-lg font-semibold">{formatCatalogTestLabel(test)}</h2>
         <div className="flex shrink-0 items-center gap-2">
           <button
             aria-label={
@@ -86,7 +87,7 @@ export function TestCard({
       ) : (
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>
-            {answeredQuestionCount}/{TOEIC_TEST_QUESTION_COUNT}
+            {answeredQuestionCount}/{test.totalQuestions}
           </span>
           <span className="inline-flex items-center gap-1">
             <CheckIcon className={classNames("size-4", statusColorClasses.success.text)} />

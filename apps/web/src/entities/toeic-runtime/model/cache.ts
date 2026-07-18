@@ -26,3 +26,23 @@ export function invalidatePartPracticeOverview(
     queryKey: getPartPracticeOverviewQueryKey(userId),
   });
 }
+
+export function getRuntimeTestSessionQueryKey(
+  sessionId: string,
+  mode: "practice" | "review_wrong" | "mock_test",
+) {
+  return ["runtime-test-session", sessionId, mode] as const;
+}
+
+export function getRuntimeTestPracticeOverviewQueryKey(userId: string | null) {
+  return ["runtime-test-practice-overview", { userId }] as const;
+}
+
+export function invalidateRuntimeTestPracticeOverview(
+  queryClient: QueryClient,
+  userId: string | null,
+) {
+  return queryClient.invalidateQueries({
+    queryKey: getRuntimeTestPracticeOverviewQueryKey(userId),
+  });
+}

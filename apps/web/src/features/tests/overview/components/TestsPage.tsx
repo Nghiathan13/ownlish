@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MockTestsTab } from "@/features/tests/overview/components/MockTestsTab";
 import { PracticeTab } from "@/features/tests/overview/components/PracticeTab";
 import { TestsOverviewPageSkeleton } from "@/features/tests/overview/components/TestsOverviewPageSkeleton";
-import { useAvailableToeicYears } from "@/features/tests/overview/hooks/useAvailableToeicYears";
 import { resolveToeicSelectedYear } from "@/features/tests/overview/lib/toeicTestYears";
 import {
   DEFAULT_TOEIC_YEAR,
@@ -27,18 +26,26 @@ import { useToeicCatalogQuery } from "@/entities/toeic-catalog/model/useToeicCat
 export function TestsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status, user } = useAuthSession();
+  const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  useToeicCatalogQuery(isAuthenticated);
+  const catalog = useToeicCatalogQuery(isAuthenticated);
   const yearParam = searchParams.get("year");
   const requestedYear: ToeicYear =
     parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;
   const selectedTab = parseTestsOverviewTab(searchParams.get("tab"));
   const redirectTarget = getTestsOverviewRedirectTarget(searchParams);
-  const { availableYears, isLoadingYears } = useAvailableToeicYears({
-    isAuthenticated,
-    userId: user?.id ?? null,
-  });
+  const availableYears = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (catalog.data?.manifest.tests ?? [])
+            .filter((test) => test.complete)
+            .map((test) => test.year),
+        ),
+      ).filter((year): year is ToeicYear => parseToeicYearParam(String(year)) !== null),
+    [catalog.data],
+  );
+  const isLoadingYears = catalog.isLoading;
   const selectedYear = useMemo(() => {
     if (selectedTab !== "mock_tests" || isLoadingYears) {
       return requestedYear;
@@ -105,7 +112,15 @@ export function TestsPage() {
       ) : (
         <MockTestsTab
           availableYears={availableYears}
+          catalogError={
+            catalog.error instanceof Error
+              ? catalog.error.message
+              : catalog.error
+                ? "Cannot load TOEIC catalog."
+                : null
+          }
           selectedYear={selectedYear}
+          source={catalog.data}
         />
       )}
     </PageShell>

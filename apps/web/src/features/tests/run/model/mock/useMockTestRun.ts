@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getToeicRunQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -9,11 +8,8 @@ import { useMockRunQuery } from "@/features/tests/run/model/mock/useMockRunQuery
 import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRunSubmission";
 import { readMockFinishCommand } from "@/features/tests/run/model/mock/mockFinishOutbox";
 
-export { getToeicRunQueryKey };
-
 type UseMockTestRunParams = {
   sessionId: string;
-  selectedParts?: number[];
 };
 
 type FinishBootstrapState = {
@@ -23,7 +19,6 @@ type FinishBootstrapState = {
 
 export function useMockTestRun({
   sessionId,
-  selectedParts,
 }: UseMockTestRunParams) {
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
@@ -58,11 +53,10 @@ export function useMockTestRun({
 
   const runQuery = useMockRunQuery({
     sessionId,
-    selectedParts,
     enabled: finishBootstrapStatus === "ready",
   });
   const sessionData = runQuery.data;
-  const isFinished = Boolean(sessionData?.completedAt);
+  const isFinished = Boolean(sessionData?.isFinished);
 
   const handleFinishCompleted = useCallback(() => {
     setFinishBootstrap({ sessionId, status: "ready" });
@@ -76,6 +70,7 @@ export function useMockTestRun({
   const submission = useMockRunSubmission({
     sessionId,
     queryKey: runQuery.queryKey,
+    questionKeyById: sessionData?.questionKeyById,
     isAuthenticated,
     isFinished,
     onFinishCompleted: handleFinishCompleted,
@@ -92,7 +87,8 @@ export function useMockTestRun({
     correctCount: sessionData?.correctCount ?? 0,
     wrongCount: sessionData?.wrongCount ?? 0,
     groups: sessionData?.groups ?? [],
-    testId: sessionData?.testId ?? null,
+    series: sessionData?.series ?? null,
+    testNumber: sessionData?.testNumber ?? null,
     year: sessionData?.year ?? null,
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,

@@ -2,13 +2,13 @@
 
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { submitToeicAnswer } from "@/entities/toeic/api/toeic";
 import type {
   PracticeMode,
   SubmitAnswerResult,
 } from "@/entities/toeic/api/types";
-import { usePracticeRunQuery } from "@/entities/toeic/hooks/usePracticeRunQuery";
-import { getPracticeSessionQueryKey } from "@/entities/toeic/lib/toeicCache";
+import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
+import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
+import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRuntimeTestSessionQuery";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -23,11 +23,8 @@ import {
 } from "./usePracticeAnswerSubmission";
 import { usePracticeLocalGrade } from "./usePracticeLocalGrade";
 
-export { getPracticeSessionQueryKey };
-
 type UsePracticeSessionParams = {
   sessionId: string;
-  selectedParts: number[];
   mode?: PracticeMode;
   enabled: boolean;
 };
@@ -40,17 +37,15 @@ type SelectAnswerOptions = {
 
 export function usePracticeSession({
   sessionId,
-  selectedParts,
   mode = "practice",
   enabled,
 }: UsePracticeSessionParams) {
   const queryClient = useQueryClient();
-  const { status } = useAuthSession();
+  const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
 
-  const runQuery = usePracticeRunQuery({
+  const runQuery = useRuntimeTestSessionQuery({
     sessionId,
-    selectedParts,
     mode,
     enabled,
   });
@@ -72,16 +67,22 @@ export function usePracticeSession({
   });
 
   const submit = useCallback(
-    ({ toeicQuestionId, selectedKey }: PracticeAnswerSubmission) =>
-      runAuthenticatedRequest({
+    ({ toeicQuestionId, selectedKey }: PracticeAnswerSubmission) => {
+      const questionKey = sessionData?.questionKeyById.get(toeicQuestionId);
+      if (!questionKey) {
+        return Promise.reject(new Error("Question is unavailable."));
+      }
+
+      return runAuthenticatedRequest({
         request: (token) =>
-          submitToeicAnswer(token, sessionId, {
-            toeicQuestionId,
+          submitRuntimeAnswer(token, sessionId, {
+            questionKey,
             selectedKey,
-            mode,
+            mode: mode === "review_wrong" ? "review_wrong" : undefined,
           }),
-      }),
-    [mode, sessionId],
+      });
+    },
+    [mode, sessionData?.questionKeyById, sessionId],
   );
 
   const handleSubmissionSuccess = useCallback(
@@ -90,12 +91,9 @@ export function usePracticeSession({
         return;
       }
 
-      return queryClient.invalidateQueries({
-        queryKey: ["tests"],
-        refetchType: "none",
-      });
+      return invalidateRuntimeTestPracticeOverview(queryClient, user?.id ?? null);
     },
-    [queryClient],
+    [queryClient, user?.id],
   );
 
   const {
@@ -170,8 +168,11 @@ export function usePracticeSession({
 
   return {
     sessionId,
-    testId: sessionData?.testId ?? null,
+    testKey: sessionData?.testKey ?? null,
+    series: sessionData?.series ?? null,
+    testNumber: sessionData?.testNumber ?? null,
     year: sessionData?.year ?? null,
+    partNumbers: sessionData?.partNumbers ?? [],
     groups: sessionData?.groups ?? [],
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,

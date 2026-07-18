@@ -4,6 +4,7 @@ import type {
   RuntimeAnswerStatus,
   ToeicRuntimePartPracticeSummary,
   ToeicRuntimeRun,
+  ToeicRuntimeTestPracticeSummary,
 } from "../model/types";
 
 type OptionKey = "A" | "B" | "C" | "D";
@@ -83,6 +84,21 @@ export function createRuntimePartPracticeRun(token: string, partNumber: number) 
   }).then(parseRuntimeRun);
 }
 
+export function createRuntimeTestRun(
+  token: string,
+  input: {
+    testKey: string;
+    partNumbers: number[];
+    mode: "practice" | "mock_test";
+  },
+) {
+  return apiRequest("/tests/runtime/test-runs", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  }).then(parseRuntimeRun);
+}
+
 export function getRuntimeRun(token: string, sessionId: string) {
   return apiRequest(`/tests/runtime/runs/${sessionId}`, { token }).then(
     parseRuntimeRun,
@@ -108,6 +124,72 @@ export function submitRuntimeAnswer(
     }
 
     return { graded: body.graded };
+  });
+}
+
+export function finishRuntimeMockRun(token: string, sessionId: string) {
+  return apiRequest(`/tests/runtime/runs/${sessionId}/finish`, {
+    method: "PATCH",
+    token,
+  }).then((body) => {
+    if (!isRecord(body) || (body.status !== "accepted" && body.status !== "completed")) {
+      invalidApiResponse();
+    }
+
+    return { status: body.status };
+  });
+}
+
+export function listRuntimeTestPracticeRuns(token: string) {
+  return apiRequest("/tests/runtime/test-practice-runs", { token }).then((body) => {
+    if (!isRecord(body) || !Array.isArray(body.items)) {
+      invalidApiResponse();
+    }
+
+    return body.items.map((item): ToeicRuntimeTestPracticeSummary => {
+      if (
+        !isRecord(item) ||
+        !isString(item.testKey) ||
+        !isNumber(item.answeredCount) ||
+        !isNumber(item.correctCount) ||
+        !isNumber(item.wrongCount) ||
+        !Array.isArray(item.parts)
+      ) {
+        invalidApiResponse();
+      }
+
+      const parts = item.parts.map((part) => {
+        if (
+          !isRecord(part) ||
+          !isNumber(part.partNumber) ||
+          !isNumber(part.correctCount) ||
+          !isNumber(part.wrongCount)
+        ) {
+          invalidApiResponse();
+        }
+
+        return {
+          partNumber: part.partNumber,
+          correctCount: part.correctCount,
+          wrongCount: part.wrongCount,
+        };
+      });
+
+      return {
+        testKey: item.testKey,
+        answeredCount: item.answeredCount,
+        correctCount: item.correctCount,
+        wrongCount: item.wrongCount,
+        parts,
+      };
+    });
+  });
+}
+
+export function clearRuntimeTestPracticeRun(token: string, testKey: string) {
+  return apiRequest(`/tests/runtime/test-practice-runs/${testKey}`, {
+    method: "DELETE",
+    token,
   });
 }
 

@@ -31,7 +31,6 @@ import { Panel } from "@/shared/ui/Panel";
 
 type MockRunViewProps = {
   sessionId: string;
-  selectedParts: number[];
 };
 
 type HiddenMockAudioProps = {
@@ -211,9 +210,9 @@ function MockResultModal({
   );
 }
 
-export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
+export function MockRunView({ sessionId }: MockRunViewProps) {
   const router = useRouter();
-  const mock = useMockTestRun({ selectedParts, sessionId });
+  const mock = useMockTestRun({ sessionId });
   const isReviewingResults = mock.isFinished || mock.isFinishAccepted;
   const testsListPath = getTestsListPathFromYearValue(
     mock.year ?? DEFAULT_TOEIC_YEAR,
@@ -320,14 +319,16 @@ export function MockRunView({ sessionId, selectedParts }: MockRunViewProps) {
     await finishRun();
   }, [finishRun]);
 
-  const testLabel = mock.testId ? `Test ${mock.testId}` : null;
+  const testLabel =
+    mock.testNumber != null
+      ? `${mock.series?.match(/[A-Za-z]+/)?.[0]?.toUpperCase() ?? "TOEIC"} ${mock.year ?? ""} · Test ${mock.testNumber}`
+      : null;
 
   useRegisterImmersiveFinish(
     isReviewingResults ? null : handleFinish,
     isReviewingResults ? null : testLabel,
     {
-      disabled:
-        mock.isFinishing || mock.hasPendingAnswers || mock.hasSyncFailures,
+      disabled: mock.isFinishing || mock.hasSyncFailures,
       isPending: mock.isFinishing,
     },
   );

@@ -74,13 +74,15 @@ export function PracticeRunView({
   const practice = usePracticeSession({
     enabled: normalizedSelectedParts.length > 0,
     mode: practiceMode,
-    selectedParts: normalizedSelectedParts,
     sessionId,
   });
   const testsListPath = getTestsListPathFromYearValue(
     practice.year ?? DEFAULT_TOEIC_YEAR,
   );
-  const testId = practice.testId;
+  const sessionSelectedParts =
+    practice.partNumbers.length > 0
+      ? practice.partNumbers
+      : normalizedSelectedParts;
 
   const partGroups = useMemo(() => {
     const groupsByPart: Record<number, ToeicQuestionGroup[]> = {};
@@ -100,13 +102,13 @@ export function PracticeRunView({
   }, [practice.groups]);
 
   const questions = useMemo(
-    () => buildPracticeRunQuestions(partGroups, normalizedSelectedParts),
-    [partGroups, normalizedSelectedParts],
+    () => buildPracticeRunQuestions(partGroups, sessionSelectedParts),
+    [partGroups, sessionSelectedParts],
   );
 
   const steps = useMemo(
-    () => buildPracticeRunSteps(partGroups, normalizedSelectedParts),
-    [partGroups, normalizedSelectedParts],
+    () => buildPracticeRunSteps(partGroups, sessionSelectedParts),
+    [partGroups, sessionSelectedParts],
   );
 
   const storageKey = practice.sessionId
@@ -128,10 +130,10 @@ export function PracticeRunView({
         storageKey,
         steps,
         questions,
-        normalizedSelectedParts,
+        sessionSelectedParts,
       ),
     );
-  }, [normalizedSelectedParts, questions, steps, storageKey]);
+  }, [questions, sessionSelectedParts, steps, storageKey]);
 
   const activeStepIndex =
     steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
@@ -156,7 +158,9 @@ export function PracticeRunView({
 
   useRegisterImmersiveExit(
     practice.sessionId ? () => undefined : null,
-    testId ? `Test ${testId}` : null,
+    practice.testNumber != null
+      ? `${practice.series?.match(/[A-Za-z]+/)?.[0]?.toUpperCase() ?? "TOEIC"} ${practice.year ?? ""} · Test ${practice.testNumber}`
+      : null,
     testsListPath,
     { showBilingualAction: true },
   );
@@ -170,12 +174,12 @@ export function PracticeRunView({
     () =>
       buildPracticeRunGridSections(
         steps,
-        normalizedSelectedParts,
+        sessionSelectedParts,
         activeQuestionIds,
         (questionId) => getQuestionGridResultFromAnswer(practice.getAnswer(questionId)),
         (questionId) => isQuestionGridSelected(practice.getAnswer(questionId)),
       ),
-    [activeQuestionIds, normalizedSelectedParts, practice, steps],
+    [activeQuestionIds, practice, sessionSelectedParts, steps],
   );
 
   const visibleQuestionGroups = useMemo(
@@ -269,7 +273,7 @@ export function PracticeRunView({
     );
   }
 
-  if (!currentStep || !practice.sessionId || testId == null) {
+  if (!currentStep || !practice.sessionId) {
     return (
       <TestRunLoadingSkeleton variant={getPracticeRunLoadingVariant(practiceMode)} />
     );
@@ -281,7 +285,6 @@ export function PracticeRunView({
         practice={practice}
         sessionId={practice.sessionId}
         step={currentStep}
-        testId={testId}
       />
     </PracticeContinuousShell>
   );

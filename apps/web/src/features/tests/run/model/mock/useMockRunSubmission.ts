@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  finishToeicRun,
-  submitToeicAnswer,
-} from "@/entities/toeic/api/toeic";
-import type {
-  ToeicQuestion,
-  ToeicRunResult,
-} from "@/entities/toeic/api/types";
+  finishRuntimeMockRun,
+  submitRuntimeAnswer,
+} from "@/entities/toeic-runtime/api/runtime";
+import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
 import { updateQuestionSelection } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
@@ -20,8 +18,6 @@ import {
 
 const ANSWER_SYNC_ERROR =
   "Some answers could not be saved. Retry them before finishing.";
-const ANSWER_PENDING_ERROR =
-  "Wait for all answers to finish saving before finishing.";
 const FINISH_RETRY_DELAYS = [1_000, 2_000, 5_000] as const;
 
 type QuestionSyncEntry = {
@@ -34,6 +30,7 @@ type UseMockRunSubmissionParams = {
   queryKey: readonly unknown[];
   isAuthenticated: boolean;
   isFinished: boolean;
+  questionKeyById: Map<number, string> | undefined;
   onFinishCompleted?: () => void;
   shouldRecoverFinish?: boolean;
 };
@@ -44,9 +41,9 @@ type OptimisticQuestionGrade = Pick<
 >;
 
 function applyMockFinishSnapshot(
-  current: ToeicRunResult,
-  snapshot: ToeicRunResult,
-): ToeicRunResult {
+  current: RuntimeTestSession,
+  snapshot: RuntimeTestSession,
+): RuntimeTestSession {
   const gradeByQuestionId = new Map<number, OptimisticQuestionGrade>();
   let correctCount = 0;
   let wrongCount = 0;
@@ -110,6 +107,7 @@ export function useMockRunSubmission({
   queryKey,
   isAuthenticated,
   isFinished,
+  questionKeyById,
   onFinishCompleted,
   shouldRecoverFinish = false,
 }: UseMockRunSubmissionParams) {
@@ -123,7 +121,7 @@ export function useMockRunSubmission({
   const hasStartedRecoveryRef = useRef(false);
   const hasNotifiedRecoveryRef = useRef(false);
   const isRecoveryRef = useRef(false);
-  const finishSnapshotRef = useRef<ToeicRunResult | null>(null);
+  const finishSnapshotRef = useRef<RuntimeTestSession | null>(null);
   const hasAppliedSnapshotRef = useRef(false);
   const finishPromiseRef = useRef<Promise<void> | null>(null);
   const finishRunRef = useRef<(() => Promise<void>) | null>(null);
@@ -218,11 +216,17 @@ export function useMockRunSubmission({
 
           try {
             await runAuthenticatedRequest({
-              request: (token) =>
-                submitToeicAnswer(token, sessionId, {
-                  toeicQuestionId,
+              request: (token) => {
+                const questionKey = questionKeyById?.get(toeicQuestionId);
+                if (!questionKey) {
+                  return Promise.reject(new Error("Question is unavailable."));
+                }
+
+                return submitRuntimeAnswer(token, sessionId, {
+                  questionKey,
                   selectedKey: submittedKey,
-                }),
+                });
+              },
             });
           } catch {
             const latestEntry = syncEntriesRef.current.get(toeicQuestionId);
@@ -257,11 +261,19 @@ export function useMockRunSubmission({
             return next;
           });
         }
+
+        if (
+          hasFinishIntentRef.current &&
+          syncEntriesRef.current.size === 0 &&
+          failedQuestionIdsRef.current.size === 0
+        ) {
+          void finishRunRef.current?.();
+        }
       });
 
       return worker;
     },
-    [sessionId, setQuestionFailed],
+    [questionKeyById, sessionId, setQuestionFailed],
   );
 
   const selectAnswer = useCallback(
@@ -270,7 +282,7 @@ export function useMockRunSubmission({
         return;
       }
 
-      queryClient.setQueryData<ToeicRunResult>(queryKey, (current) => {
+      queryClient.setQueryData<RuntimeTestSession>(queryKey, (current) => {
         if (!current) {
           return current;
         }
@@ -341,7 +353,7 @@ export function useMockRunSubmission({
     }
 
     hasAppliedSnapshotRef.current = true;
-    queryClient.setQueryData<ToeicRunResult>(queryKey, (current) =>
+    queryClient.setQueryData<RuntimeTestSession>(queryKey, (current) =>
       current ? applyMockFinishSnapshot(current, snapshot) : current,
     );
 
@@ -381,16 +393,6 @@ export function useMockRunSubmission({
     }
 
     if (!hasFinishIntentRef.current) {
-      if (failedQuestionIdsRef.current.size > 0) {
-        setFinishError(ANSWER_SYNC_ERROR);
-        return Promise.resolve();
-      }
-
-      if (syncEntriesRef.current.size > 0) {
-        setFinishError(ANSWER_PENDING_ERROR);
-        return Promise.resolve();
-      }
-
       try {
         storeMockFinishCommand(sessionId);
       } catch {
@@ -400,8 +402,18 @@ export function useMockRunSubmission({
       }
 
       finishSnapshotRef.current =
-        queryClient.getQueryData<ToeicRunResult>(queryKey) ?? null;
+        queryClient.getQueryData<RuntimeTestSession>(queryKey) ?? null;
       hasFinishIntentRef.current = true;
+
+    }
+
+    if (failedQuestionIdsRef.current.size > 0) {
+      setFinishError(ANSWER_SYNC_ERROR);
+      return Promise.resolve();
+    }
+
+    if (syncEntriesRef.current.size > 0) {
+      return Promise.resolve();
     }
 
     clearRetryTimer();
@@ -416,7 +428,7 @@ export function useMockRunSubmission({
     const finishPromise = (async () => {
       try {
         const acknowledgement = await runAuthenticatedRequest({
-          request: (token) => finishToeicRun(token, sessionId),
+          request: (token) => finishRuntimeMockRun(token, sessionId),
         });
 
         hasServerAcceptedRef.current = true;

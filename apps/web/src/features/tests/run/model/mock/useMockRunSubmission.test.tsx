@@ -18,9 +18,9 @@ import {
 import { mswServer } from "@/shared/lib/testing/mswServer";
 
 const SESSION_ID = "00000000-0000-4000-8000-000000000001";
-const QUERY_KEY = ["toeic-run", SESSION_ID] as const;
-const ANSWER_URL = `http://localhost:3001/tests/runs/${SESSION_ID}/answers`;
-const FINISH_URL = `http://localhost:3001/tests/runs/${SESSION_ID}/finish`;
+const QUERY_KEY = ["runtime-test-session", SESSION_ID, "mock_test"] as const;
+const ANSWER_URL = `http://localhost:3001/tests/runtime/runs/${SESSION_ID}/answers`;
+const FINISH_URL = `http://localhost:3001/tests/runtime/runs/${SESSION_ID}/finish`;
 
 function createAccessToken() {
   const encode = (value: string) =>
@@ -163,6 +163,7 @@ function renderSubmission({
         isFinished: false,
         onFinishCompleted,
         queryKey: QUERY_KEY,
+        questionKeyById: new Map([[101, "ets26-t01-p5-q001"], [102, "ets26-t01-p5-q002"]]),
         sessionId: SESSION_ID,
         shouldRecoverFinish,
       }),
@@ -256,7 +257,7 @@ describe("useMockRunSubmission", () => {
     expect(result.current.hasSyncFailures).toBe(false);
   });
 
-  it("does not create a Finish command while an answer is pending", async () => {
+  it("queues Finish until pending answers are saved", async () => {
     const answerResponse = Promise.withResolvers<void>();
     let finishRequestCount = 0;
 
@@ -279,15 +280,14 @@ describe("useMockRunSubmission", () => {
     await act(async () => result.current.finishRun());
 
     expect(finishRequestCount).toBe(0);
-    expect(readMockFinishCommand(SESSION_ID)).toBeNull();
-    expect(result.current.finishError).toBe(
-      "Wait for all answers to finish saving before finishing.",
-    );
+    expect(readMockFinishCommand(SESSION_ID)).not.toBeNull();
+    expect(result.current.finishError).toBeNull();
 
     answerResponse.resolve();
+    await waitFor(() => expect(finishRequestCount).toBe(1));
   });
 
-  it("blocks Finish after a failed answer until that answer is saved", async () => {
+  it("keeps queued Finish blocked until a failed answer is saved", async () => {
     let answerShouldFail = true;
     let answerRequestCount = 0;
     const getFinishRequestCount = mockFinishStatuses(["accepted"]);
@@ -308,7 +308,7 @@ describe("useMockRunSubmission", () => {
     await act(async () => result.current.finishRun());
 
     expect(getFinishRequestCount()).toBe(0);
-    expect(readMockFinishCommand(SESSION_ID)).toBeNull();
+    expect(readMockFinishCommand(SESSION_ID)).not.toBeNull();
 
     answerShouldFail = false;
     act(() => result.current.retryFailedAnswers());
@@ -316,9 +316,7 @@ describe("useMockRunSubmission", () => {
     await waitFor(() => expect(result.current.hasPendingAnswers).toBe(false));
     expect(answerRequestCount).toBe(2);
 
-    await act(async () => result.current.finishRun());
-
-    expect(getFinishRequestCount()).toBe(1);
+    await waitFor(() => expect(getFinishRequestCount()).toBe(1));
     expect(result.current.isFinishAccepted).toBe(true);
     expect(readMockFinishCommand(SESSION_ID)).not.toBeNull();
   });

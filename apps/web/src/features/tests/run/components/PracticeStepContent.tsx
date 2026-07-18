@@ -5,14 +5,12 @@ import { PracticeGroupScreen } from "@/features/tests/run/ui/practice/PracticeGr
 import type { PracticeRunStep } from "@/features/tests/run/lib/practiceRunSteps";
 
 type PracticeStepContentProps = {
-  testId: number;
   step: PracticeRunStep;
   practice: ReturnType<typeof usePracticeSession>;
   sessionId: string;
 };
 
 export function PracticeStepContent({
-  testId,
   step,
   practice,
   sessionId,
@@ -24,7 +22,6 @@ export function PracticeStepContent({
         partNumber={step.partNumber}
         practice={practice}
         practiceGroup={step.practiceGroup}
-        testId={testId}
       />
     );
   }
@@ -38,7 +35,6 @@ export function PracticeStepContent({
         group: step.item.group,
         questions: [step.item.question],
       }}
-      testId={testId}
     />
   );
 }

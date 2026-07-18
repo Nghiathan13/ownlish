@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
-import type {
-  PracticeMode,
-  ToeicTestSummary,
-} from "@/entities/toeic/api/types";
-import { useTestsList } from "@/features/tests/overview/hooks/useTestsList";
-import { useClearToeicPracticeHistory } from "@/features/tests/overview/mutations/hooks/useClearToeicPracticeHistory";
-import { useStartToeicRun } from "@/features/tests/overview/mutations/hooks/useStartToeicRun";
-import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
+import { clearRuntimeTestPracticeRun } from "@/entities/toeic-runtime/api/runtime";
+import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
+import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+import { useStartRuntimeTestRun } from "@/features/tests/run/model/useStartRuntimeTestRun";
+import {
+  materializeCatalogTestSummary,
+  type CatalogTestSummary,
+} from "@/features/tests/shared/model/catalogTestSummary";
 import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
+import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
+import { useTestPracticeOverviewList } from "./useTestPracticeOverviewList";
 
 type PartPickerIntent = "practice" | "mock";
 
@@ -18,36 +23,48 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-export function useTestsOverview(selectedYear: ToeicYear) {
+export function useTestsOverview(
+  selectedYear: ToeicYear,
+  source: ToeicCatalogSource | undefined,
+  catalogError: string | null,
+) {
+  const queryClient = useQueryClient();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const [selectedTest, setSelectedTest] = useState<ToeicTestSummary | null>(
+  const [selectedTest, setSelectedTest] = useState<CatalogTestSummary | null>(
     null,
   );
   const [partPickerIntent, setPartPickerIntent] =
     useState<PartPickerIntent>("practice");
-
-  const { tests, testsError, isLoadingTests, reloadTests } = useTestsList({
+  const progressQuery = useTestPracticeOverviewList({
     isAuthenticated,
     userId: user?.id ?? null,
-    year: selectedYear,
+    source,
   });
-
-  const {
-    clearHistory: clearHistoryMutation,
-    isClearing,
-    clearingTestId,
-  } = useClearToeicPracticeHistory({
+  const clearMutation = useMutation({
+    mutationFn: (testKey: string) =>
+      runAuthenticatedRequest({
+        request: (token) => clearRuntimeTestPracticeRun(token, testKey),
+      }),
+    onSuccess: () =>
+      invalidateRuntimeTestPracticeOverview(queryClient, user?.id ?? null),
+  });
+  const { startRun, isStarting, startingTestKey } = useStartRuntimeTestRun({
     userId: user?.id ?? null,
-    year: selectedYear,
   });
+  const progressByTestKey = new Map(
+    progressQuery.progress.map((item) => [item.testKey, item]),
+  );
+  const tests = (source?.manifest.tests ?? [])
+    .filter((test) => test.complete && test.year === selectedYear)
+    .map((test) =>
+      materializeCatalogTestSummary(test, progressByTestKey.get(test.id)),
+    );
 
-  const { startRun, isStarting, startingTestId } = useStartToeicRun();
-
-  const clearHistory = async (testId: number) => {
+  const clearHistory = async (testKey: string) => {
     if (
       !isAuthenticated ||
-      !      window.confirm(
+      !window.confirm(
         "Clear all practice answers for this test? This cannot be undone.",
       )
     ) {
@@ -55,26 +72,26 @@ export function useTestsOverview(selectedYear: ToeicYear) {
     }
 
     try {
-      await clearHistoryMutation(testId);
+      await clearMutation.mutateAsync(testKey);
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot clear practice history."));
     }
   };
 
   const startTest = async (
-    testId: number,
+    test: CatalogTestSummary,
     partNumbers: number[],
     mode: PracticeMode,
   ) => {
     const normalizedParts = normalizeSelectedParts(partNumbers);
-
-    if (!isAuthenticated || normalizedParts.length === 0) {
+    if (!isAuthenticated || !source || normalizedParts.length === 0) {
       return;
     }
 
     try {
       await startRun({
-        testId,
+        test: test.catalog,
+        source,
         partNumbers: normalizedParts,
         mode,
       });
@@ -83,16 +100,16 @@ export function useTestsOverview(selectedYear: ToeicYear) {
     }
   };
 
-  const startMock = async (testId: number, partNumbers: number[]) => {
+  const startMock = async (test: CatalogTestSummary, partNumbers: number[]) => {
     const normalizedParts = normalizeSelectedParts(partNumbers);
-
-    if (!isAuthenticated || normalizedParts.length === 0) {
+    if (!isAuthenticated || !source || normalizedParts.length === 0) {
       return;
     }
 
     try {
       await startRun({
-        testId,
+        test: test.catalog,
+        source,
         partNumbers: normalizedParts,
         mode: "mock_test",
       });
@@ -101,28 +118,24 @@ export function useTestsOverview(selectedYear: ToeicYear) {
     }
   };
 
-  const openPartPicker = (test: ToeicTestSummary, intent: PartPickerIntent) => {
+  const openPartPicker = (test: CatalogTestSummary, intent: PartPickerIntent) => {
     setPartPickerIntent(intent);
     setSelectedTest(test);
   };
 
-  const closePartPicker = () => {
-    setSelectedTest(null);
-  };
-
   return {
-    clearingTestId: isClearing ? clearingTestId : null,
+    clearingTestKey: clearMutation.isPending ? clearMutation.variables ?? null : null,
     clearHistory,
-    isLoadingTests,
-    reloadTests,
+    isLoadingTests: (!source && !catalogError) || progressQuery.isLoading,
+    reloadTests: progressQuery.reload,
     openPartPicker,
     partPickerIntent,
     selectedTest,
-    closePartPicker,
+    closePartPicker: () => setSelectedTest(null),
     startMock,
     startTest,
-    startingTestId: isStarting ? startingTestId : null,
+    startingTestKey: isStarting ? startingTestKey : null,
     tests,
-    testsError,
+    testsError: catalogError ?? progressQuery.error,
   };
 }

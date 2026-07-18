@@ -9,10 +9,8 @@ import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 import { classNames } from "@/shared/lib/classNames";
-import type {
-  PracticeMode,
-  ToeicTestSummary,
-} from "@/features/tests/shared/api/types";
+import type { PracticeMode } from "@/features/tests/shared/api/types";
+import type { CatalogTestSummary } from "@/features/tests/shared/model/catalogTestSummary";
 import { useToeicPartPicker } from "@/features/tests/shared/hooks/useToeicPartPicker";
 import { getPartProgress } from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
@@ -25,7 +23,7 @@ import { isPartEnabled } from "@/features/tests/shared/lib/toeicPartPicker";
 type ToeicPartPickerModalProps = {
   intent?: "practice" | "mock";
   testLabel: string;
-  test: ToeicTestSummary;
+  test: CatalogTestSummary;
   isStarting?: boolean;
   onClose: () => void;
   onStart: (partNumbers: number[], mode: PracticeMode) => void;

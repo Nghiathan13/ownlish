@@ -9,17 +9,23 @@ import { testOverviewCardGridClassName } from "@/features/tests/overview/lib/tes
 import { MockTestsTabSkeleton } from "@/features/tests/overview/components/MockTestsTabSkeleton";
 import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTabs";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
+import { formatCatalogTestLabel } from "@/features/tests/shared/model/catalogTestSummary";
 
 type MockTestsTabProps = {
   availableYears: ToeicYear[];
   selectedYear: ToeicYear;
+  source: ToeicCatalogSource | undefined;
+  catalogError: string | null;
 };
 
 export function MockTestsTab({
   availableYears,
   selectedYear,
+  source,
+  catalogError,
 }: MockTestsTabProps) {
-  const overview = useTestsOverview(selectedYear);
+  const overview = useTestsOverview(selectedYear, source, catalogError);
   const selectedTest = overview.selectedTest;
 
   return (
@@ -51,14 +57,14 @@ export function MockTestsTab({
           <div className={testOverviewCardGridClassName}>
             {overview.tests.map((test) => (
               <TestCard
-                isClearingHistory={overview.clearingTestId === test.id}
-                key={test.id}
-                onClearHistory={() => void overview.clearHistory(test.id)}
+                isClearingHistory={overview.clearingTestKey === test.catalog.id}
+                key={test.catalog.id}
+                onClearHistory={() => void overview.clearHistory(test.catalog.id)}
                 onMock={() => overview.openPartPicker(test, "mock")}
                 onPractice={() => overview.openPartPicker(test, "practice")}
                 onReviewWrong={() =>
                   void overview.startTest(
-                    test.id,
+                    test,
                     [...ALL_TOEIC_PART_NUMBERS],
                     "review_wrong",
                   )
@@ -73,16 +79,16 @@ export function MockTestsTab({
       {selectedTest ? (
         <ToeicPartPickerModal
           intent={overview.partPickerIntent}
-          isStarting={overview.startingTestId === selectedTest.id}
+            isStarting={overview.startingTestKey === selectedTest.catalog.id}
           onClose={overview.closePartPicker}
           onStart={(partNumbers, mode) => {
-            void overview.startTest(selectedTest.id, partNumbers, mode);
+            void overview.startTest(selectedTest, partNumbers, mode);
           }}
           onStartMock={(partNumbers) => {
-            void overview.startMock(selectedTest.id, partNumbers);
+            void overview.startMock(selectedTest, partNumbers);
           }}
           test={selectedTest}
-          testLabel={`Test ${selectedTest.id}`}
+          testLabel={formatCatalogTestLabel(selectedTest)}
         />
       ) : null}
     </>

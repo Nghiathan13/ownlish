@@ -16,7 +16,7 @@ type SignedMediaState = {
 };
 
 type UseSignedMediaParams = {
-  testId: number;
+  testId: number | null;
   partNumber: number;
   group: ToeicQuestionGroup | null;
 };
@@ -110,7 +110,7 @@ export function useSignedMedia({
   }, [group, overrides]);
 
   const refresh = useCallback(async (options?: { force?: boolean }) => {
-    if (!group || !isAuthenticated || usesStaticMedia || refreshingRef.current) {
+    if (!group || !testId || !isAuthenticated || usesStaticMedia || refreshingRef.current) {
       return;
     }
 

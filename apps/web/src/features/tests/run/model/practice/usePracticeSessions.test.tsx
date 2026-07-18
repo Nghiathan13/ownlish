@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ToeicQuestion,
   ToeicQuestionGroup,
-  ToeicRunResult,
 } from "@/entities/toeic/api/types";
 import {
   clearStoredAccessToken,
@@ -13,6 +12,7 @@ import {
 import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
 import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
 import type { RuntimePartPracticeSession } from "@/entities/toeic-runtime/model/materializePartPracticeSession";
+import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
@@ -21,11 +21,11 @@ import { mswServer } from "@/shared/lib/testing/mswServer";
 
 const queryMocks = vi.hoisted(() => ({
   useRuntimePartPracticeSessionQuery: vi.fn(),
-  usePracticeRunQuery: vi.fn(),
+  useRuntimeTestSessionQuery: vi.fn(),
 }));
 
-vi.mock("@/entities/toeic/hooks/usePracticeRunQuery", () => ({
-  usePracticeRunQuery: queryMocks.usePracticeRunQuery,
+vi.mock("@/entities/toeic-runtime/model/useRuntimeTestSessionQuery", () => ({
+  useRuntimeTestSessionQuery: queryMocks.useRuntimeTestSessionQuery,
 }));
 
 vi.mock("@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery", () => ({
@@ -42,10 +42,10 @@ vi.mock("@/features/auth/hooks/useAuthSession", () => ({
 }));
 
 const SESSION_ID = "00000000-0000-4000-8000-000000000002";
-const PRACTICE_QUERY_KEY = ["practice-session", SESSION_ID, "3", "practice"];
+const PRACTICE_QUERY_KEY = ["runtime-test-session", SESSION_ID, "practice"];
 const PART_QUERY_KEY = ["part-practice-session", SESSION_ID, "practice"];
 const PRACTICE_ANSWER_URL =
-  `http://localhost:3001/tests/runs/${SESSION_ID}/answers`;
+  `http://localhost:3001/tests/runtime/runs/${SESSION_ID}/answers`;
 const PART_ANSWER_URL = `http://localhost:3001/tests/runtime/runs/${SESSION_ID}/answers`;
 
 function createAccessToken() {
@@ -101,18 +101,21 @@ function createGroup(): ToeicQuestionGroup {
   };
 }
 
-function createPracticeRun(): ToeicRunResult {
+function createPracticeRun(): RuntimeTestSession {
   return {
     sessionId: SESSION_ID,
+    testKey: "ets26-t01",
+    series: "ets_26",
     mode: "practice",
-    testId: 1,
     year: 2026,
     partNumbers: [3],
     totalQuestions: 1,
     correctCount: 0,
     wrongCount: 0,
-    completedAt: null,
+    isFinished: false,
     groups: [createGroup()],
+    questionKeyById: new Map([[101, "ets26-t01-p3-q001"]]),
+    groupKeyById: new Map([[11, "ets26-t01-p3-g001"]]),
   };
 }
 
@@ -154,14 +157,13 @@ describe("practice session submission adapters", () => {
       const queryClient = createTestQueryClient();
       const refetch = vi.fn();
       queryClient.setQueryData(PRACTICE_QUERY_KEY, session);
-      queryMocks.usePracticeRunQuery.mockReturnValue({
+      queryMocks.useRuntimeTestSessionQuery.mockReturnValue({
         data: session,
         error: null,
         isLoading: false,
         queryKey: PRACTICE_QUERY_KEY,
         refetch,
       });
-      const refetchQueries = vi.spyOn(queryClient, "refetchQueries");
       const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
       let submittedBody: unknown;
 
@@ -183,7 +185,6 @@ describe("practice session submission adapters", () => {
           usePracticeSession({
             enabled: true,
             mode,
-            selectedParts: [3],
             sessionId: SESSION_ID,
           }),
         { wrapper: createQueryClientWrapper(queryClient) },
@@ -196,19 +197,17 @@ describe("practice session submission adapters", () => {
       await waitFor(() => expect(result.current.isSubmitting).toBe(false));
 
       expect(submittedBody).toEqual({
-        mode,
+        ...(mode === "review_wrong" ? { mode } : {}),
+        questionKey: "ets26-t01-p3-q001",
         selectedKey: "B",
-        toeicQuestionId: 101,
       });
-      expect(refetchQueries).not.toHaveBeenCalled();
       expect(refetch).not.toHaveBeenCalled();
       expect(invalidateQueries).toHaveBeenCalledTimes(1);
       expect(invalidateQueries).toHaveBeenCalledWith({
-        queryKey: ["tests"],
-        refetchType: "none",
+        queryKey: ["runtime-test-practice-overview", { userId: "user-id" }],
       });
       expect(
-        queryClient.getQueryData<ToeicRunResult>(PRACTICE_QUERY_KEY)?.groups[0]
+        queryClient.getQueryData<RuntimeTestSession>(PRACTICE_QUERY_KEY)?.groups[0]
           ?.questions[0],
       ).toMatchObject({ selectedKey: "B", status: "selected" });
     },

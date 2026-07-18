@@ -25,3 +25,15 @@ export type ToeicRuntimePartPracticeSummary = {
   correctCount: number;
   wrongCount: number;
 };
+
+export type ToeicRuntimeTestPracticeSummary = {
+  testKey: string;
+  answeredCount: number;
+  correctCount: number;
+  wrongCount: number;
+  parts: Array<{
+    partNumber: number;
+    correctCount: number;
+    wrongCount: number;
+  }>;
+};
