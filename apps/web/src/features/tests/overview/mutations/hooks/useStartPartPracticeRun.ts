@@ -2,12 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPartPracticeRun } from "@/entities/toeic/api/partPractice";
+import { createRuntimePartPracticeRun } from "@/entities/toeic-runtime/api/runtime";
 import type { PracticeMode } from "@/entities/toeic/api/types";
-import {
-  getPartPracticeSessionQueryKey,
-  invalidatePartPracticeOverview,
-} from "@/entities/toeic/lib/toeicCache";
+import { invalidatePartPracticeOverview } from "@/entities/toeic/lib/toeicCache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { getPartPracticeRunPath } from "@/features/tests/shared/lib/partPracticePaths";
 import { toQueryErrorMessage } from "@/features/tests/shared/lib/toQueryErrorMessage";
@@ -27,16 +24,9 @@ export function useStartPartPracticeRun() {
     mutationFn: (variables: StartPartPracticeRunVariables) =>
       runAuthenticatedRequest({
         request: (token) =>
-          createPartPracticeRun(token, {
-            partNumber: variables.partNumber,
-            mode: variables.mode,
-          }),
+          createRuntimePartPracticeRun(token, variables.partNumber),
       }),
-    onSuccess: (session) => {
-      queryClient.setQueryData(
-        getPartPracticeSessionQueryKey(session.sessionId, session.mode),
-        session,
-      );
+    onSuccess: () => {
       void invalidatePartPracticeOverview(queryClient, user?.id ?? null);
     },
   });

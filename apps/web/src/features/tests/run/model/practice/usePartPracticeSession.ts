@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { submitPartPracticeAnswer } from "@/entities/toeic/api/partPractice";
+import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
 import type {
   PracticeMode,
   SubmitAnswerResult,
@@ -72,16 +72,22 @@ export function usePartPracticeSession({
   });
 
   const submit = useCallback(
-    ({ toeicQuestionId, selectedKey }: PracticeAnswerSubmission) =>
-      runAuthenticatedRequest({
+    ({ toeicQuestionId, selectedKey }: PracticeAnswerSubmission) => {
+      const questionKey = runQuery.data?.questionKeyById.get(toeicQuestionId);
+      if (!questionKey) {
+        return Promise.reject(new Error("Question is unavailable."));
+      }
+
+      return runAuthenticatedRequest({
         request: (token) =>
-          submitPartPracticeAnswer(token, sessionId, {
-            toeicQuestionId,
+          submitRuntimeAnswer(token, sessionId, {
+            questionKey,
             selectedKey,
-            mode,
+            ...(mode === "review_wrong" ? { mode } : {}),
           }),
-      }),
-    [mode, sessionId],
+      });
+    },
+    [mode, runQuery.data?.questionKeyById, sessionId],
   );
 
   const handleSubmissionSuccess = useCallback(

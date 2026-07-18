@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { clearPartPracticeHistory } from "@/entities/toeic/api/partPractice";
+import { clearRuntimePartPracticeRun } from "@/entities/toeic-runtime/api/runtime";
 import {
   invalidateAllPartPracticeSessions,
   invalidateAllPracticeSessions,
@@ -21,7 +21,7 @@ export function useClearPartPracticeHistory({
   const mutation = useMutation({
     mutationFn: (partNumber: number) =>
       runAuthenticatedRequest({
-        request: (token) => clearPartPracticeHistory(token, partNumber),
+        request: (token) => clearRuntimePartPracticeRun(token, partNumber),
       }),
     onSuccess: async () => {
       await Promise.all([

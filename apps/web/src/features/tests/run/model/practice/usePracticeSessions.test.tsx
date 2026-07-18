@@ -2,7 +2,6 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
-  PartPracticeSessionResult,
   ToeicQuestion,
   ToeicQuestionGroup,
   ToeicRunResult,
@@ -13,6 +12,7 @@ import {
 } from "@/entities/session/model/accessTokenStore";
 import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
 import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
+import type { RuntimePartPracticeSession } from "@/features/tests/part-practice/model/materializeRuntimePartPractice";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
@@ -45,8 +45,7 @@ const PRACTICE_QUERY_KEY = ["practice-session", SESSION_ID, "3", "practice"];
 const PART_QUERY_KEY = ["part-practice-session", SESSION_ID, "practice"];
 const PRACTICE_ANSWER_URL =
   `http://localhost:3001/tests/runs/${SESSION_ID}/answers`;
-const PART_ANSWER_URL =
-  `http://localhost:3001/tests/part-practice/runs/${SESSION_ID}/answers`;
+const PART_ANSWER_URL = `http://localhost:3001/tests/runtime/runs/${SESSION_ID}/answers`;
 
 function createAccessToken() {
   const encode = (value: string) =>
@@ -116,7 +115,7 @@ function createPracticeRun(): ToeicRunResult {
   };
 }
 
-function createPartPracticeRun(): PartPracticeSessionResult {
+function createPartPracticeRun(): RuntimePartPracticeSession {
   return {
     sessionId: SESSION_ID,
     mode: "practice",
@@ -132,6 +131,7 @@ function createPartPracticeRun(): PartPracticeSessionResult {
         testNumber: 1,
       },
     ],
+    questionKeyById: new Map([[101, "ets26-t01-p3-q001"]]),
   };
 }
 
@@ -236,10 +236,6 @@ describe("practice session submission adapters", () => {
           submittedBody = await request.json();
           return HttpResponse.json({
             graded: true,
-            isCorrect: true,
-            answerKey: "A",
-            correctOptionEn: "Alpha",
-            correctOptionVi: null,
           });
         }),
       );
@@ -261,9 +257,9 @@ describe("practice session submission adapters", () => {
       await waitFor(() => expect(result.current.isSubmitting).toBe(false));
 
       expect(submittedBody).toEqual({
-        mode,
+        questionKey: "ets26-t01-p3-q001",
         selectedKey: "A",
-        toeicQuestionId: 101,
+        ...(mode === "review_wrong" ? { mode } : {}),
       });
       expect(refetchQueries).not.toHaveBeenCalled();
       expect(refetch).not.toHaveBeenCalled();

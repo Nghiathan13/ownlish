@@ -91,6 +91,12 @@ export function useSignedMedia({
   );
   const [mediaError, setMediaError] = useState<string | null>(null);
   const refreshingRef = useRef(false);
+  const usesStaticMedia = Boolean(
+    group &&
+      (group.audioUrl || group.imageUrl) &&
+      !group.audioUrlExpiresAt &&
+      !group.imageUrlExpiresAt,
+  );
 
   const media = useMemo(() => {
     if (!group) {
@@ -104,7 +110,7 @@ export function useSignedMedia({
   }, [group, overrides]);
 
   const refresh = useCallback(async (options?: { force?: boolean }) => {
-    if (!group || !isAuthenticated || refreshingRef.current) {
+    if (!group || !isAuthenticated || usesStaticMedia || refreshingRef.current) {
       return;
     }
 
@@ -142,7 +148,7 @@ export function useSignedMedia({
     } finally {
       refreshingRef.current = false;
     }
-  }, [group, isAuthenticated, media, partNumber, testId]);
+  }, [group, isAuthenticated, media, partNumber, testId, usesStaticMedia]);
 
   useEffect(() => {
     if (!group) {
@@ -168,10 +174,15 @@ export function useSignedMedia({
   }, [group, media, refresh]);
 
   const handleMediaError = useCallback(() => {
+    if (usesStaticMedia) {
+      setMediaError("Cannot load media. Please try again.");
+      return;
+    }
+
     void refresh({ force: true }).catch(() => {
       setMediaError("Cannot load media. Please try again.");
     });
-  }, [refresh]);
+  }, [refresh, usesStaticMedia]);
 
   return {
     audioUrl: media.audioUrl,
