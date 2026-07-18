@@ -14,6 +14,7 @@ type CatalogPart = {
   number: number;
   path: string;
   questionCount: number;
+  firstGroupKey: string;
 };
 
 type CatalogGroupMedia = {
@@ -39,6 +40,7 @@ type PartPracticeManifestPart = {
   number: number;
   path: string;
   questionCount: number;
+  firstGroupKey?: string;
   complete: boolean;
 };
 
@@ -572,6 +574,7 @@ export function buildToeicCatalog(
           number: partNumber,
           path: relativePartPath,
           questionCount: part.questionCount,
+          firstGroupKey: part.groupIds[0]!,
         });
         partArtifacts.push({ path: relativePartPath, document: part.document });
         indexParts[String(partNumber)] = { groups: part.groups };
@@ -628,6 +631,9 @@ export function buildToeicCatalog(
     number: part.partNumber,
     path: `part-practice/part_${part.partNumber}.json`,
     questionCount: part.totalQuestions,
+    ...(part.groups[0] && typeof part.groups[0].id === 'string'
+      ? { firstGroupKey: part.groups[0].id }
+      : {}),
     complete: part.complete,
   }));
 

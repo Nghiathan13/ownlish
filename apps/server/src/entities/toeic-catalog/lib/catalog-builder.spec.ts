@@ -61,6 +61,7 @@ describe('buildToeicCatalog', () => {
               number: 1,
               path: 'ets_26/test_01/part_1.json',
               questionCount: 6,
+              firstGroupKey: 'ets26-t01-p1-q001',
             },
           ],
         },
@@ -70,6 +71,7 @@ describe('buildToeicCatalog', () => {
           number: 1,
           path: 'part-practice/part_1.json',
           questionCount: 6,
+          firstGroupKey: 'ets26-t01-p1-q001',
           complete: true,
         },
         {
