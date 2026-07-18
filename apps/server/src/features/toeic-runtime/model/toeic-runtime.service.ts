@@ -147,6 +147,43 @@ export class ToeicRuntimeService {
     return formatRun(run);
   }
 
+  async listPartPracticeRuns(userId: string) {
+    const runs = await this.prisma.toeicLearningRun.findMany({
+      where: {
+        userId,
+        scope: ToeicLearningScope.PART_PRACTICE,
+        mode: ToeicRunMode.PRACTICE,
+      },
+      include: { answers: { select: { status: true } } },
+    });
+
+    return {
+      items: runs.map((run) => ({
+        partNumber: run.partNumber,
+        answeredCount: run.answers.length,
+        correctCount: run.totalRight,
+        wrongCount: run.totalWrong,
+      })),
+    };
+  }
+
+  async clearPartPracticeRun(userId: string, partNumber: number) {
+    if (partNumber < 1 || partNumber > 7) {
+      throw new BadRequestException('Part is unavailable.');
+    }
+
+    const result = await this.prisma.toeicLearningRun.deleteMany({
+      where: {
+        userId,
+        scope: ToeicLearningScope.PART_PRACTICE,
+        partNumber,
+        mode: ToeicRunMode.PRACTICE,
+      },
+    });
+
+    return { resetRunCount: result.count };
+  }
+
   async getRun(userId: string, sessionId: string) {
     const initial = await this.findOwnedRun(userId, sessionId);
     if (

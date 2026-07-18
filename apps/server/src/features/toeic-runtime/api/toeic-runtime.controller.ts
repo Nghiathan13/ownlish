@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -38,6 +40,22 @@ export class ToeicRuntimeController {
     @Body() dto: CreateToeicRuntimePartPracticeRunDto,
   ) {
     return this.runtimeService.createPartPracticeRun(request.user.id, dto);
+  }
+
+  @Get('part-practice-runs')
+  listPartPracticeRuns(@Req() request: AuthRequest) {
+    return this.runtimeService.listPartPracticeRuns(request.user.id);
+  }
+
+  @Delete('part-practice-runs/:partNumber')
+  clearPartPracticeRun(
+    @Req() request: AuthRequest,
+    @Param('partNumber', ParseIntPipe) partNumber: number,
+  ) {
+    return this.runtimeService.clearPartPracticeRun(
+      request.user.id,
+      partNumber,
+    );
   }
 
   @Get('runs/:sessionId')
