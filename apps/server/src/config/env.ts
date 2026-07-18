@@ -103,6 +103,7 @@ export const env = {
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   toeicStorageBucket: process.env.TOEIC_STORAGE_BUCKET ?? 'toeic-media',
+  toeicGradingIndexUrl: process.env.TOEIC_GRADING_INDEX_URL ?? '',
   profileAvatarStorageBucket:
     process.env.PROFILE_AVATAR_STORAGE_BUCKET ?? 'profile-avatars',
   toeicSignedUrlTtlSeconds: optionalNumberEnv(

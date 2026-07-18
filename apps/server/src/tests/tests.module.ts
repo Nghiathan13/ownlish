@@ -14,6 +14,9 @@ import { ToeicRunGrader } from './lib/toeic-run/grader';
 import { ToeicRunMaterializer } from './lib/toeic-run/materializer';
 import { ToeicRunRepository } from './lib/toeic-run/repository';
 import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
+import { ToeicCatalogGradingIndex } from '../entities/toeic-catalog/lib/grading-index';
+import { ToeicRuntimeController } from '../features/toeic-runtime/api/toeic-runtime.controller';
+import { ToeicRuntimeService } from '../features/toeic-runtime/model/toeic-runtime.service';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -25,13 +28,15 @@ import { ToeicRunSessionMapper } from './lib/toeic-run/session.mapper';
     ToeicRunMaterializer,
     ToeicRunGrader,
     ToeicRunService,
+    ToeicCatalogGradingIndex,
+    ToeicRuntimeService,
     ToeicPartPracticeRepository,
     ToeicPartPracticeSessionMapper,
     ToeicPartPracticeMaterializer,
     ToeicPartPracticeGrader,
     PartPracticeService,
   ],
-  controllers: [TestsController],
+  controllers: [TestsController, ToeicRuntimeController],
   exports: [TestsStorageService],
 })
 export class TestsModule {}

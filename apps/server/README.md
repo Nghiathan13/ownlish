@@ -61,6 +61,31 @@ Google login and Supabase Storage are optional locally: leave `GOOGLE_CLIENT_ID`
 empty to disable Google login, and leave `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`
 empty to skip TOEIC media signing/upload (the server logs a warning and continues).
 
+## TOEIC Catalog
+
+Generate the current catalog from the authoring JSON files:
+
+```bash
+pnpm toeic:catalog -- --source /path/to/toeic --out /tmp/toeic-catalog
+```
+
+Preview every object that would be uploaded to the existing public `toeic`
+bucket:
+
+```bash
+pnpm toeic:publish -- --source /path/to/toeic --dry-run
+```
+
+Publish the catalog, its part documents, and `grading-index.json`:
+
+```bash
+pnpm toeic:publish -- --source /path/to/toeic
+```
+
+The script uploads part documents before `catalog.json`, so the manifest only
+becomes visible after its referenced files are present. It does not upload media
+files or create the bucket.
+
 ## Environment Variables
 
 | Name | Required | Default | Purpose |
@@ -82,6 +107,7 @@ empty to skip TOEIC media signing/upload (the server logs a warning and continue
 | `SUPABASE_SERVICE_ROLE_KEY` | No | - | Supabase service role key used for Storage |
 | `TOEIC_STORAGE_BUCKET` | No | `toeic-media` | Supabase Storage bucket for TOEIC audio/images |
 | `TOEIC_SIGNED_URL_TTL_SECONDS` | No | `900` | Lifetime of signed TOEIC media URLs |
+| `TOEIC_GRADING_INDEX_URL` | Runtime API only | - | Public URL of the current `grading-index.json` in Storage |
 
 `NODE_ENV` is also read: when it equals `production`, the refresh cookie defaults
 to `Secure` unless `REFRESH_TOKEN_COOKIE_SECURE` overrides it.
@@ -276,6 +302,7 @@ SUPABASE_URL=<supabase-project-url>
 SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
 TOEIC_STORAGE_BUCKET=toeic-media
 TOEIC_SIGNED_URL_TTL_SECONDS=900
+TOEIC_GRADING_INDEX_URL=https://<project-ref>.supabase.co/storage/v1/object/public/toeic/grading-index.json
 ```
 
 Do not set `PORT` manually on Railway unless needed; Railway provides it.

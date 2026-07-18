@@ -32,6 +32,7 @@ model User {
   vocabWords          VocabWord[]
   toeicRuns              ToeicRun[]
   toeicPartPracticeRuns  ToeicPartPracticeRun[]
+  toeicLearningRuns      ToeicLearningRun[]
 
   @@map("users")
 }
@@ -197,6 +198,49 @@ enum ToeicRunQuestionStatus {
   SELECTED
   RIGHT
   WRONG
+}
+
+enum ToeicLearningScope {
+  TEST
+  PART_PRACTICE
+}
+
+model ToeicLearningRun {
+  id                String                   @id @default(uuid())
+  userId            String                   @map("user_id")
+  scope             ToeicLearningScope
+  testKey           String?                  @map("test_key")
+  partNumber        Int?                     @map("part_number")
+  mode              ToeicRunMode             @default(PRACTICE)
+  selectedParts     Int[]                    @map("selected_parts")
+  totalRight        Int                      @default(0) @map("total_right")
+  totalWrong        Int                      @default(0) @map("total_wrong")
+  finishRequestedAt DateTime?                @map("finish_requested_at")
+  completedAt       DateTime?                @map("completed_at")
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers           ToeicLearningRunAnswer[]
+
+  @@index([userId])
+  @@index([userId, scope, createdAt])
+  @@index([finishRequestedAt, completedAt])
+  @@map("toeic_learning_runs")
+}
+
+model ToeicLearningRunAnswer {
+  id          String                 @id @default(uuid())
+  runId       String                 @map("run_id")
+  questionKey String                 @map("question_key")
+  selectedKey String                 @map("selected_key")
+  status      ToeicRunQuestionStatus
+  answeredAt  DateTime               @map("answered_at")
+  gradedAt    DateTime?              @map("graded_at")
+  run         ToeicLearningRun       @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, questionKey])
+  @@index([runId, status])
+  @@map("toeic_learning_run_answers")
 }
 
 model ToeicTest {

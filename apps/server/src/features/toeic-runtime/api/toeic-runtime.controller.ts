@@ -1,0 +1,75 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import type { Response } from 'express';
+import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
+import type { AuthRequest } from '../../../auth/types/auth.types';
+import { CreateToeicRuntimePartPracticeRunDto } from './dto/create-part-practice-run.dto';
+import { CreateToeicRuntimeTestRunDto } from './dto/create-test-run.dto';
+import { SubmitToeicRuntimeAnswerDto } from './dto/submit-answer.dto';
+import { ToeicRuntimeService } from '../model/toeic-runtime.service';
+
+@Controller('tests/runtime')
+@UseGuards(JwtAuthGuard)
+export class ToeicRuntimeController {
+  constructor(private readonly runtimeService: ToeicRuntimeService) {}
+
+  @Post('test-runs')
+  createTestRun(
+    @Req() request: AuthRequest,
+    @Body() dto: CreateToeicRuntimeTestRunDto,
+  ) {
+    return this.runtimeService.createTestRun(request.user.id, dto);
+  }
+
+  @Post('part-practice-runs')
+  createPartPracticeRun(
+    @Req() request: AuthRequest,
+    @Body() dto: CreateToeicRuntimePartPracticeRunDto,
+  ) {
+    return this.runtimeService.createPartPracticeRun(request.user.id, dto);
+  }
+
+  @Get('runs/:sessionId')
+  getRun(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+  ) {
+    return this.runtimeService.getRun(request.user.id, sessionId);
+  }
+
+  @Post('runs/:sessionId/answers')
+  submitAnswer(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Body() dto: SubmitToeicRuntimeAnswerDto,
+  ) {
+    return this.runtimeService.submitAnswer(request.user.id, sessionId, dto);
+  }
+
+  @Patch('runs/:sessionId/finish')
+  async finishMockRun(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.runtimeService.finishMockRun(
+      request.user.id,
+      sessionId,
+    );
+    response.status(
+      result.status === 'accepted' ? HttpStatus.ACCEPTED : HttpStatus.OK,
+    );
+    return result;
+  }
+}
