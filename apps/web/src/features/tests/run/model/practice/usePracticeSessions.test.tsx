@@ -186,6 +186,7 @@ describe("practice session submission adapters", () => {
             enabled: true,
             mode,
             sessionId: SESSION_ID,
+            selectedParts: [3],
           }),
         { wrapper: createQueryClientWrapper(queryClient) },
       );

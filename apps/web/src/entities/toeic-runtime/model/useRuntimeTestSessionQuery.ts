@@ -17,15 +17,24 @@ import {
 type UseRuntimeTestSessionQueryParams = {
   sessionId: string;
   mode: RuntimeTestSessionMode;
+  partNumbers?: number[];
   enabled: boolean;
 };
+
+function normalizePartNumbers(partNumbers: number[]) {
+  return [...new Set(partNumbers)].sort((left, right) => left - right);
+}
 
 export function useRuntimeTestSessionQuery({
   sessionId,
   mode,
+  partNumbers,
   enabled,
 }: UseRuntimeTestSessionQueryParams) {
-  const queryKey = getRuntimeTestSessionQueryKey(sessionId, mode);
+  const selectedPartNumbers = partNumbers
+    ? normalizePartNumbers(partNumbers)
+    : undefined;
+  const queryKey = getRuntimeTestSessionQueryKey(sessionId, mode, selectedPartNumbers);
   const query = useQuery({
     queryKey,
     queryFn: async () => {
@@ -41,8 +50,16 @@ export function useRuntimeTestSessionQuery({
         throw new Error("Test session is unavailable.");
       }
 
-      const parts = test.parts.filter((part) => run.selectedParts.includes(part.number));
-      if (parts.length !== run.selectedParts.length) {
+      const viewPartNumbers = selectedPartNumbers ?? run.selectedParts;
+      if (
+        viewPartNumbers.length === 0 ||
+        viewPartNumbers.some((partNumber) => !run.selectedParts.includes(partNumber))
+      ) {
+        throw new Error("Selected test parts are unavailable.");
+      }
+
+      const parts = test.parts.filter((part) => viewPartNumbers.includes(part.number));
+      if (parts.length !== viewPartNumbers.length) {
         throw new Error("Selected test parts are unavailable.");
       }
 
@@ -53,7 +70,12 @@ export function useRuntimeTestSessionQuery({
         })),
       );
 
-      return materializeTestSession(documents, source, run, mode);
+      return materializeTestSession(
+        documents,
+        source,
+        { ...run, selectedParts: viewPartNumbers },
+        mode,
+      );
     },
     enabled: enabled && Boolean(sessionId),
     staleTime: Infinity,

@@ -75,6 +75,7 @@ export function PracticeRunView({
     enabled: normalizedSelectedParts.length > 0,
     mode: practiceMode,
     sessionId,
+    selectedParts: normalizedSelectedParts,
   });
   const testsListPath = getTestsListPathFromYearValue(
     practice.year ?? DEFAULT_TOEIC_YEAR,

@@ -60,44 +60,28 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
           document: await getToeicCatalogDocument(variables.source, part.path),
         })),
       );
-      const [run, requestedDocuments] = await Promise.all([
+      const [run, documents] = await Promise.all([
         runPromise,
         documentsPromise,
       ]);
-      const activeParts = variables.test.parts.filter((part) =>
-        run.selectedParts.includes(part.number),
-      );
-      if (activeParts.length !== run.selectedParts.length) {
+      if (partNumbers.some((partNumber) => !run.selectedParts.includes(partNumber))) {
         throw new Error("Test session contains unavailable parts.");
       }
 
-      const requestedDocumentByPart = new Map(
-        requestedDocuments.map((document) => [document.partNumber, document]),
+      return materializeTestSession(
+        documents,
+        variables.source,
+        { ...run, selectedParts: partNumbers },
+        variables.mode,
       );
-      const additionalDocuments = await Promise.all(
-        activeParts
-          .filter((part) => !requestedDocumentByPart.has(part.number))
-          .map(async (part) => ({
-            partNumber: part.number,
-            document: await getToeicCatalogDocument(variables.source, part.path),
-          })),
-      );
-      const documentByPart = new Map(
-        [...requestedDocuments, ...additionalDocuments].map((document) => [
-          document.partNumber,
-          document,
-        ]),
-      );
-      const documents = activeParts.flatMap((part) => {
-        const document = documentByPart.get(part.number);
-        return document ? [document] : [];
-      });
-
-      return materializeTestSession(documents, variables.source, run, variables.mode);
     },
     onSuccess: (session) => {
       queryClient.setQueryData(
-        getRuntimeTestSessionQueryKey(session.sessionId, session.mode),
+        getRuntimeTestSessionQueryKey(
+          session.sessionId,
+          session.mode,
+          session.partNumbers,
+        ),
         session,
       );
       if (session.mode !== "mock_test") {

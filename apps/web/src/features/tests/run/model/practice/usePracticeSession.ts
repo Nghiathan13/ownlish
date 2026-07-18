@@ -25,6 +25,7 @@ import { usePracticeLocalGrade } from "./usePracticeLocalGrade";
 
 type UsePracticeSessionParams = {
   sessionId: string;
+  selectedParts: number[];
   mode?: PracticeMode;
   enabled: boolean;
 };
@@ -37,6 +38,7 @@ type SelectAnswerOptions = {
 
 export function usePracticeSession({
   sessionId,
+  selectedParts,
   mode = "practice",
   enabled,
 }: UsePracticeSessionParams) {
@@ -47,6 +49,7 @@ export function usePracticeSession({
   const runQuery = useRuntimeTestSessionQuery({
     sessionId,
     mode,
+    partNumbers: selectedParts,
     enabled,
   });
 

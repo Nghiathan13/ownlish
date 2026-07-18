@@ -30,7 +30,12 @@ export function invalidatePartPracticeOverview(
 export function getRuntimeTestSessionQueryKey(
   sessionId: string,
   mode: "practice" | "review_wrong" | "mock_test",
+  partNumbers?: number[],
 ) {
+  if (partNumbers) {
+    return ["runtime-test-session", sessionId, mode, partNumbers.join(",")] as const;
+  }
+
   return ["runtime-test-session", sessionId, mode] as const;
 }
 
