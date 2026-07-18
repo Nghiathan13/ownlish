@@ -10,6 +10,7 @@ import {
   invalidatePartPracticeOverview,
 } from "@/entities/toeic-runtime/model/cache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+import { clearPartPracticeGroupKeys } from "@/features/tests/shared/model/partPracticePosition";
 
 type UseClearPartPracticeHistoryParams = {
   userId: string | null;
@@ -25,7 +26,8 @@ export function useClearPartPracticeHistory({
       runAuthenticatedRequest({
         request: (token) => clearRuntimePartPracticeRun(token, partNumber),
       }),
-    onSuccess: async () => {
+    onSuccess: async (_, partNumber) => {
+      clearPartPracticeGroupKeys(partNumber);
       await Promise.all([
         invalidatePartPracticeOverview(queryClient, userId),
         invalidateAllPracticeSessions(queryClient),

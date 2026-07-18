@@ -5,6 +5,7 @@ import {
   getTestsOverviewPath,
   getTestsOverviewRedirectTarget,
   isPartPracticeRunPath,
+  parsePartPracticeRunPartParam,
   parsePartPracticeRunMode,
   parsePracticeOverviewPartParam,
   parseTestsOverviewTab,
@@ -19,6 +20,9 @@ describe("partPracticePaths", () => {
     );
     expect(getPartPracticeRunPath(SESSION_ID, "review_wrong")).toBe(
       `/tests/part-practice/${SESSION_ID}?mode=review_wrong`,
+    );
+    expect(getPartPracticeRunPath(SESSION_ID, "practice", 3)).toBe(
+      `/tests/part-practice/${SESSION_ID}?mode=practice&part=3`,
     );
   });
 
@@ -51,6 +55,7 @@ describe("partPracticePaths", () => {
     expect(parsePracticeOverviewPartParam("4")).toBe(4);
     expect(parsePracticeOverviewPartParam("0")).toBeNull();
     expect(parsePracticeOverviewPartParam("abc")).toBeNull();
+    expect(parsePartPracticeRunPartParam("3")).toBe(3);
   });
 
   it("normalizes overview URLs to canonical tab params", () => {

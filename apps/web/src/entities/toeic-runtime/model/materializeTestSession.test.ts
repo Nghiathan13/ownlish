@@ -27,6 +27,10 @@ const source: ToeicCatalogSource = {
     ],
     partPractice: [],
     mediaByGroupId: {
+      [PART_ONE_QUESTION_KEY]: {
+        audio: "ets_26/test_01/audio/001.mp3",
+        image: "ets_26/test_01/image/001.avif",
+      },
       [PART_THREE_GROUP_KEY]: { audio: "ets_26/test_01/audio/032-034.mp3" },
     },
   },
@@ -128,8 +132,8 @@ describe("materializeTestSession", () => {
     );
     expect(session.groups[0]).toMatchObject({
       partNumber: 1,
-      audioUrl: "https://cdn.example.com/toeic/ets_26/test_01/001.mp3",
-      imageUrl: "https://cdn.example.com/toeic/ets_26/test_01/001.avif",
+      audioUrl: "https://cdn.example.com/toeic/ets_26/test_01/audio/001.mp3",
+      imageUrl: "https://cdn.example.com/toeic/ets_26/test_01/image/001.avif",
       questions: [{ selectedKey: "A", status: "right" }],
     });
     expect(session.groups[1]).toMatchObject({

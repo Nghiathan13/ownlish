@@ -8,10 +8,17 @@ import type {
 } from "@/entities/toeic/api/types";
 import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
 import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
+import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
 import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRuntimeTestSessionQuery";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import {
+  getFirstTestPartGroupKey,
+  preloadCatalogGroupMedia,
+  preloadTestSessionMedia,
+} from "@/features/tests/shared/model/preloadToeicSessionMedia";
 import {
   buildAnswerKeyMap,
   type OptionKey,
@@ -26,6 +33,8 @@ import { usePracticeLocalGrade } from "./usePracticeLocalGrade";
 type UsePracticeSessionParams = {
   sessionId: string;
   selectedParts: number[];
+  testKey?: string | null;
+  initialGroupKey?: string | null;
   mode?: PracticeMode;
   enabled: boolean;
 };
@@ -36,20 +45,43 @@ type SelectAnswerOptions = {
   skipLocalGrade?: boolean;
 };
 
+const EMPTY_GROUP_KEY_BY_ID = new Map<number, string>();
+
 export function usePracticeSession({
   sessionId,
   selectedParts,
+  testKey,
+  initialGroupKey,
   mode = "practice",
   enabled,
 }: UsePracticeSessionParams) {
   const queryClient = useQueryClient();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const handleSessionMaterialized = useCallback(
+    (source: ToeicCatalogSource, session: RuntimeTestSession) => {
+      preloadTestSessionMedia(source, session, initialGroupKey);
+    },
+    [initialGroupKey],
+  );
+  const handleCatalogLoaded = useCallback(
+    (source: ToeicCatalogSource) => {
+      const test = source.manifest.tests.find((candidate) => candidate.id === testKey);
+      preloadCatalogGroupMedia(
+        source,
+        initialGroupKey ?? (test ? getFirstTestPartGroupKey(test, selectedParts) : null),
+      );
+    },
+    [initialGroupKey, selectedParts, testKey],
+  );
 
   const runQuery = useRuntimeTestSessionQuery({
     sessionId,
     mode,
     partNumbers: selectedParts,
+    catalogTestKey: testKey,
+    onCatalogLoaded: handleCatalogLoaded,
+    onSessionMaterialized: handleSessionMaterialized,
     enabled,
   });
 
@@ -177,6 +209,7 @@ export function usePracticeSession({
     year: sessionData?.year ?? null,
     partNumbers: sessionData?.partNumbers ?? [],
     groups: sessionData?.groups ?? [],
+    groupKeyById: sessionData?.groupKeyById ?? EMPTY_GROUP_KEY_BY_ID,
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isStarting: runQuery.isLoading,

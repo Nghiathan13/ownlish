@@ -4,6 +4,7 @@ import {
   getToeicRunApiPath,
   getToeicRunPath,
   parseToeicRunPartsParam,
+  parseToeicRunTestKeyParam,
 } from "./toeicRunPaths";
 
 describe("toeicRunPaths", () => {
@@ -13,6 +14,16 @@ describe("toeicRunPaths", () => {
     expect(
       getToeicRunPath("11111111-1111-4111-8111-111111111111", "mock_test", [3]),
     ).toBe("/tests/11111111-1111-4111-8111-111111111111/mock_test?parts=3");
+    expect(
+      getToeicRunPath(
+        "11111111-1111-4111-8111-111111111111",
+        "practice",
+        [1],
+        "ets26-t01",
+      ),
+    ).toBe(
+      "/tests/11111111-1111-4111-8111-111111111111/practice?parts=1&test=ets26-t01",
+    );
   });
 
   it("builds API paths with parts and mode query params", () => {
@@ -38,5 +49,7 @@ describe("toeicRunPaths", () => {
     expect(parseToeicRunPartsParam("2,1")).toEqual([1, 2]);
     expect(parseToeicRunPartsParam("")).toEqual([]);
     expect(parseToeicRunPartsParam("abc")).toEqual([]);
+    expect(parseToeicRunTestKeyParam("ets26-t01")).toBe("ets26-t01");
+    expect(parseToeicRunTestKeyParam("")).toBeNull();
   });
 });

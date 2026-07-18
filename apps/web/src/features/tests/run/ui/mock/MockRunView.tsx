@@ -31,6 +31,8 @@ import { Panel } from "@/shared/ui/Panel";
 
 type MockRunViewProps = {
   sessionId: string;
+  testKey?: string | null;
+  selectedParts?: number[];
 };
 
 type HiddenMockAudioProps = {
@@ -210,9 +212,13 @@ function MockResultModal({
   );
 }
 
-export function MockRunView({ sessionId }: MockRunViewProps) {
+export function MockRunView({
+  sessionId,
+  testKey,
+  selectedParts,
+}: MockRunViewProps) {
   const router = useRouter();
-  const mock = useMockTestRun({ sessionId });
+  const mock = useMockTestRun({ sessionId, testKey, selectedParts });
   const isReviewingResults = mock.isFinished || mock.isFinishAccepted;
   const testsListPath = getTestsListPathFromYearValue(
     mock.year ?? DEFAULT_TOEIC_YEAR,

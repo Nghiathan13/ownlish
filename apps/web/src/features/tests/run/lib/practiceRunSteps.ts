@@ -1,5 +1,4 @@
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
-import { readPracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/run/lib/practiceGroups";
 
@@ -135,50 +134,6 @@ export function buildPracticeRunSteps(
   return buildStepsFromOrderedQuestions(
     buildPracticeRunQuestions(partGroups, selectedParts),
   );
-}
-
-export function resolveInitialStepIndex(
-  sessionId: string,
-  steps: PracticeRunStep[],
-  questions: PracticeRunQuestionItem[],
-  selectedParts: number[],
-) {
-  if (steps.length === 0) {
-    return 0;
-  }
-
-  const savedIndex = readPracticeRunIndex(sessionId);
-  if (savedIndex > 0) {
-    if (savedIndex < steps.length) {
-      return savedIndex;
-    }
-
-    if (questions.length > 0 && savedIndex < questions.length) {
-      const targetQuestion = questions[savedIndex];
-      const stepIndex = steps.findIndex((step) =>
-        step.kind === "question"
-          ? step.item.question.id === targetQuestion.question.id
-          : step.practiceGroup.questions.some(
-              (question) => question.id === targetQuestion.question.id,
-            ),
-      );
-
-      if (stepIndex >= 0) {
-        return stepIndex;
-      }
-    }
-  }
-
-  const firstSelectedPart = selectedParts[0];
-  if (firstSelectedPart == null) {
-    return 0;
-  }
-
-  const partStartIndex = steps.findIndex(
-    (step) => step.partNumber === firstSelectedPart,
-  );
-
-  return partStartIndex >= 0 ? partStartIndex : 0;
 }
 
 export function findGroupForQuestion(

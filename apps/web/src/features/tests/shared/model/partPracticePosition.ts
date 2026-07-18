@@ -26,3 +26,12 @@ export function writePartPracticeGroupKey(
     groupKey,
   );
 }
+
+export function clearPartPracticeGroupKeys(partNumber: number) {
+  window.localStorage.removeItem(
+    getPartPracticePositionStorageKey(partNumber, "practice"),
+  );
+  window.localStorage.removeItem(
+    getPartPracticePositionStorageKey(partNumber, "review_wrong"),
+  );
+}

@@ -7,6 +7,7 @@ export type ToeicCatalogPart = {
   number: number;
   path: string;
   questionCount: number;
+  firstGroupKey?: string;
 };
 
 export type ToeicCatalogTest = {

@@ -11,8 +11,12 @@ export type TestsOverviewTab = "mock_tests" | "part_practice";
 export function getPartPracticeRunPath(
   sessionId: string,
   mode: PracticeMode = "practice",
+  partNumber?: number,
 ) {
   const params = new URLSearchParams({ mode });
+  if (partNumber != null && isToeicPartNumber(partNumber)) {
+    params.set("part", String(partNumber));
+  }
   return `/tests/part-practice/${sessionId}?${params.toString()}`;
 }
 
@@ -124,6 +128,12 @@ export function parsePartPracticeRunMode(
   value: string | null | undefined,
 ): PracticeMode {
   return value === "review_wrong" ? "review_wrong" : "practice";
+}
+
+export function parsePartPracticeRunPartParam(
+  value: string | null | undefined,
+): number | null {
+  return parsePracticeOverviewPartParam(value);
 }
 
 export function isPartPracticeSessionId(value: string) {

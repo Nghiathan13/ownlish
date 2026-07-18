@@ -13,6 +13,7 @@ import {
 import {
   isToeicSessionId,
   parseToeicRunPartsParam,
+  parseToeicRunTestKeyParam,
 } from "@/features/tests/shared/lib/toeicRunPaths";
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
@@ -82,6 +83,10 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
     () => parseToeicRunPartsParam(searchParams.get("parts")),
     [searchParams],
   );
+  const testKey = useMemo(
+    () => parseToeicRunTestKeyParam(searchParams.get("test")),
+    [searchParams],
+  );
 
   if (selectedParts.length === 0) {
     return <EmptyPartsState copy={copy} />;
@@ -92,6 +97,8 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
       <MockRunView
         key={sessionId}
         sessionId={sessionId}
+        selectedParts={selectedParts}
+        testKey={testKey}
       />
     );
   }
@@ -102,6 +109,7 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
       practiceMode={mode}
       selectedParts={selectedParts}
       sessionId={sessionId}
+      testKey={testKey}
     />
   );
 }

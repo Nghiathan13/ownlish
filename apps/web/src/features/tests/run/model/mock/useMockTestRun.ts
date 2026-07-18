@@ -10,6 +10,8 @@ import { readMockFinishCommand } from "@/features/tests/run/model/mock/mockFinis
 
 type UseMockTestRunParams = {
   sessionId: string;
+  testKey?: string | null;
+  selectedParts?: number[];
 };
 
 type FinishBootstrapState = {
@@ -19,6 +21,8 @@ type FinishBootstrapState = {
 
 export function useMockTestRun({
   sessionId,
+  testKey,
+  selectedParts,
 }: UseMockTestRunParams) {
   const { status } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
@@ -53,6 +57,8 @@ export function useMockTestRun({
 
   const runQuery = useMockRunQuery({
     sessionId,
+    testKey,
+    selectedParts,
     enabled: finishBootstrapStatus === "ready",
   });
   const sessionData = runQuery.data;

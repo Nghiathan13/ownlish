@@ -7,10 +7,12 @@ export function getToeicRunPath(
   sessionId: string,
   mode: ToeicRunPathMode,
   parts: number[],
+  testKey?: string,
 ) {
   const normalizedParts = normalizeSelectedParts(parts);
+  const testParam = testKey ? `&test=${encodeURIComponent(testKey)}` : "";
 
-  return `/tests/${sessionId}/${mode}?parts=${normalizedParts.join(",")}`;
+  return `/tests/${sessionId}/${mode}?parts=${normalizedParts.join(",")}${testParam}`;
 }
 
 export function getToeicRunApiPath(
@@ -54,6 +56,12 @@ export function parseToeicRunPartsParam(
     .filter((part) => Number.isInteger(part) && part > 0);
 
   return normalizeSelectedParts(parsed);
+}
+
+export function parseToeicRunTestKeyParam(
+  value: string | null | undefined,
+) {
+  return value && value.trim().length > 0 ? value : null;
 }
 
 export function isToeicRunMode(value: string): value is ToeicRunMode {

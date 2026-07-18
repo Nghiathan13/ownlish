@@ -11,14 +11,17 @@ import { materializePartPracticeSession } from "@/entities/toeic-runtime/model/m
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
   getToeicCatalogDocument,
-  resolveToeicCatalogMediaUrl,
 } from "@/entities/toeic-catalog/api/catalog";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { getPartPracticeRunPath } from "@/features/tests/shared/lib/partPracticePaths";
 import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
-import { preloadPartPracticeMedia } from "./preloadPartPracticeMedia";
-import { readPartPracticeGroupKey } from "./partPracticePosition";
+import {
+  getFirstPartPracticeGroupKey,
+  preloadCatalogGroupMedia,
+  preloadPartPracticeSessionMedia,
+} from "@/features/tests/shared/model/preloadToeicSessionMedia";
+import { readPartPracticeGroupKey } from "@/features/tests/shared/model/partPracticePosition";
 
 export type StartPartPracticeRunVariables = {
   partNumber: number;
@@ -48,15 +51,13 @@ export function useStartPartPracticeRun({ userId }: UseStartPartPracticeRunParam
           createRuntimePartPracticeRun(token, variables.partNumber),
       });
       const documentPromise = getToeicCatalogDocument(variables.source, part.path);
-      const groupKey = readPartPracticeGroupKey(
+      const savedGroupKey = readPartPracticeGroupKey(
         variables.partNumber,
         variables.mode,
       );
-      const media = variables.source.manifest.mediaByGroupId[groupKey ?? ""];
-      preloadPartPracticeMedia({
-        audioUrl: resolveToeicCatalogMediaUrl(variables.source, media?.audio),
-        imageUrl: resolveToeicCatalogMediaUrl(variables.source, media?.image),
-      });
+      const initialGroupKey = savedGroupKey
+        ?? getFirstPartPracticeGroupKey(variables.source, variables.partNumber);
+      preloadCatalogGroupMedia(variables.source, initialGroupKey);
       const [run, document] = await Promise.all([runPromise, documentPromise]);
       const session = materializePartPracticeSession(
         document,
@@ -64,14 +65,7 @@ export function useStartPartPracticeRun({ userId }: UseStartPartPracticeRunParam
         run,
         variables.mode,
       );
-      const groupId = Array.from(session.groupKeyById.entries()).find(
-        ([, value]) => value === groupKey,
-      )?.[0];
-      const group = session.groups.find((candidate) => candidate.id === groupId)
-        ?? session.groups[0];
-      if (groupKey !== session.groupKeyById.get(group?.id ?? 0)) {
-        preloadPartPracticeMedia(group);
-      }
+      preloadPartPracticeSessionMedia(variables.source, session, initialGroupKey);
       return session;
     },
     onSuccess: (session) => {
@@ -86,7 +80,13 @@ export function useStartPartPracticeRun({ userId }: UseStartPartPracticeRunParam
   const startRun = async (variables: StartPartPracticeRunVariables) => {
     const session = await mutation.mutateAsync(variables);
 
-    router.push(getPartPracticeRunPath(session.sessionId, variables.mode));
+    router.push(
+      getPartPracticeRunPath(
+        session.sessionId,
+        variables.mode,
+        variables.partNumber,
+      ),
+    );
   };
 
   return {

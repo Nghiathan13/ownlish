@@ -13,11 +13,13 @@ import {
 import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
 import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import {
-  buildPracticeRunQuestions,
   buildPracticeRunSteps,
-  resolveInitialStepIndex,
 } from "@/features/tests/run/lib/practiceRunSteps";
-import { writePracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
+import {
+  readTestPracticeGroupKey,
+  writeTestPracticeGroupKey,
+} from "@/features/tests/shared/model/testPracticePosition";
+import { resolveInitialTestPracticeStepIndex } from "@/features/tests/run/model/practice/testPracticeStepPosition";
 import {
   getQuestionGridResultFromAnswer,
   isQuestionGridSelected,
@@ -45,11 +47,8 @@ type PracticeRunViewProps = {
   sessionId: string;
   selectedParts: number[];
   practiceMode?: PracticeMode;
+  testKey: string | null;
 };
-
-function getPracticeStorageKey(sessionId: string) {
-  return `practice-${sessionId}`;
-}
 
 function getPracticeRunLoadingVariant(
   practiceMode: PracticeMode,
@@ -61,6 +60,7 @@ export function PracticeRunView({
   sessionId,
   selectedParts,
   practiceMode = "practice",
+  testKey,
 }: PracticeRunViewProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
@@ -71,11 +71,17 @@ export function PracticeRunView({
     [selectedParts],
   );
   const isWrongMode = practiceMode === "review_wrong";
+  const initialGroupKey = useMemo(
+    () => readTestPracticeGroupKey(testKey, practiceMode, normalizedSelectedParts),
+    [normalizedSelectedParts, practiceMode, testKey],
+  );
   const practice = usePracticeSession({
     enabled: normalizedSelectedParts.length > 0,
+    initialGroupKey,
     mode: practiceMode,
     sessionId,
     selectedParts: normalizedSelectedParts,
+    testKey,
   });
   const testsListPath = getTestsListPathFromYearValue(
     practice.year ?? DEFAULT_TOEIC_YEAR,
@@ -84,6 +90,8 @@ export function PracticeRunView({
     practice.partNumbers.length > 0
       ? practice.partNumbers
       : normalizedSelectedParts;
+  const storageTestKey = testKey ?? practice.testKey;
+  const positionScopeKey = `${storageTestKey ?? ""}:${practiceMode}:${normalizedSelectedParts.join(",")}`;
 
   const partGroups = useMemo(() => {
     const groupsByPart: Record<number, ToeicQuestionGroup[]> = {};
@@ -102,39 +110,51 @@ export function PracticeRunView({
     return groupsByPart;
   }, [practice.groups]);
 
-  const questions = useMemo(
-    () => buildPracticeRunQuestions(partGroups, sessionSelectedParts),
-    [partGroups, sessionSelectedParts],
-  );
-
   const steps = useMemo(
     () => buildPracticeRunSteps(partGroups, sessionSelectedParts),
     [partGroups, sessionSelectedParts],
   );
 
-  const storageKey = practice.sessionId
-    ? getPracticeStorageKey(practice.sessionId)
-    : null;
-
   useEffect(() => {
     if (
-      !storageKey ||
+      !practice.sessionId ||
       steps.length === 0 ||
-      initializedStorageKeyRef.current === storageKey
+      initializedStorageKeyRef.current === positionScopeKey
     ) {
       return;
     }
 
-    initializedStorageKeyRef.current = storageKey;
-    setStepIndex(
-      resolveInitialStepIndex(
-        storageKey,
-        steps,
-        questions,
-        sessionSelectedParts,
-      ),
+    initializedStorageKeyRef.current = positionScopeKey;
+    const initialStepIndex = resolveInitialTestPracticeStepIndex(
+      steps,
+      practice.groupKeyById,
+      initialGroupKey,
+      sessionSelectedParts,
     );
-  }, [questions, sessionSelectedParts, steps, storageKey]);
+    const step = steps[initialStepIndex];
+    const group = step?.kind === "group" ? step.practiceGroup.group : step?.item.group;
+    const groupKey = group ? practice.groupKeyById.get(group.id) : null;
+
+    setStepIndex(initialStepIndex);
+    if (groupKey) {
+      writeTestPracticeGroupKey(
+        storageTestKey,
+        practiceMode,
+        normalizedSelectedParts,
+        groupKey,
+      );
+    }
+  }, [
+    initialGroupKey,
+    normalizedSelectedParts,
+    positionScopeKey,
+    practice.groupKeyById,
+    practiceMode,
+    sessionSelectedParts,
+    steps,
+    storageTestKey,
+    practice.sessionId,
+  ]);
 
   const activeStepIndex =
     steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
@@ -142,7 +162,7 @@ export function PracticeRunView({
 
   const goToStepIndex = useCallback(
     (nextIndex: number) => {
-      if (!storageKey || steps.length === 0) {
+      if (!practice.sessionId || steps.length === 0) {
         return;
       }
 
@@ -152,9 +172,27 @@ export function PracticeRunView({
       }
 
       setStepIndex(boundedIndex);
-      writePracticeRunIndex(storageKey, boundedIndex);
+      const step = steps[boundedIndex];
+      const group = step?.kind === "group" ? step.practiceGroup.group : step?.item.group;
+      const groupKey = group ? practice.groupKeyById.get(group.id) : null;
+      if (groupKey) {
+        writeTestPracticeGroupKey(
+          storageTestKey,
+          practiceMode,
+          normalizedSelectedParts,
+          groupKey,
+        );
+      }
     },
-    [activeStepIndex, steps.length, storageKey],
+    [
+      activeStepIndex,
+      normalizedSelectedParts,
+      practice.groupKeyById,
+      practiceMode,
+      steps,
+      storageTestKey,
+      practice.sessionId,
+    ],
   );
 
   useRegisterImmersiveExit(

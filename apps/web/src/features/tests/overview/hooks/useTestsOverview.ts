@@ -9,6 +9,7 @@ import { clearRuntimeTestPracticeRun } from "@/entities/toeic-runtime/api/runtim
 import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useStartRuntimeTestRun } from "@/features/tests/run/model/useStartRuntimeTestRun";
+import { clearTestPracticeGroupKeys } from "@/features/tests/shared/model/testPracticePosition";
 import {
   materializeCatalogTestSummary,
   type CatalogTestSummary,
@@ -46,8 +47,10 @@ export function useTestsOverview(
       runAuthenticatedRequest({
         request: (token) => clearRuntimeTestPracticeRun(token, testKey),
       }),
-    onSuccess: () =>
-      invalidateRuntimeTestPracticeOverview(queryClient, user?.id ?? null),
+    onSuccess: (_, testKey) => {
+      clearTestPracticeGroupKeys(testKey);
+      return invalidateRuntimeTestPracticeOverview(queryClient, user?.id ?? null);
+    },
   });
   const { startRun, isStarting, startingTestKey } = useStartRuntimeTestRun({
     userId: user?.id ?? null,

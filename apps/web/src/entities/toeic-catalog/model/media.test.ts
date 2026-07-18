@@ -1,5 +1,5 @@
-import { resolveToeicCatalogMediaUrl } from "./catalog";
 import { describe, expect, it } from "vitest";
+import { resolveToeicCatalogMediaUrl } from "./media";
 
 describe("resolveToeicCatalogMediaUrl", () => {
   it("resolves a media path from the bucket root", () => {

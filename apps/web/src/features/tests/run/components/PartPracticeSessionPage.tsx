@@ -7,6 +7,7 @@ import { PartPracticeRunView } from "@/features/tests/run/components/PartPractic
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import {
   isPartPracticeSessionId,
+  parsePartPracticeRunPartParam,
   parsePartPracticeRunMode,
 } from "@/features/tests/shared/lib/partPracticePaths";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -25,11 +26,13 @@ function PartPracticeSessionPageContent({
 }) {
   const searchParams = useSearchParams();
   const mode = parsePartPracticeRunMode(searchParams.get("mode"));
+  const partNumber = parsePartPracticeRunPartParam(searchParams.get("part"));
 
   return (
     <PartPracticeRunView
       key={`${mode}-${sessionId}`}
       practiceMode={mode}
+      partNumber={partNumber}
       sessionId={sessionId}
     />
   );

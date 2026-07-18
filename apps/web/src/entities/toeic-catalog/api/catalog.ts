@@ -75,10 +75,3 @@ export async function getToeicCatalogDocument(
     ),
   );
 }
-
-export function resolveToeicCatalogMediaUrl(
-  source: ToeicCatalogSource,
-  path: string | undefined,
-): string | null {
-  return path ? new URL(path, source.rootUrl).toString() : null;
-}

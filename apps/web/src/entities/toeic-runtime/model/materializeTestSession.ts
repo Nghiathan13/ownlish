@@ -2,7 +2,7 @@ import type {
   ToeicQuestion,
   ToeicQuestionGroup,
 } from "@/entities/toeic/api/types";
-import { resolveToeicCatalogMediaUrl } from "@/entities/toeic-catalog/api/catalog";
+import { resolveToeicCatalogGroupMedia } from "@/entities/toeic-catalog/model/media";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import type { ToeicRuntimeRun } from "./types";
 
@@ -217,7 +217,7 @@ export function materializeTestSession(
       }
 
       groupKeyById.set(nextGroupId, groupKey);
-      const media = source.manifest.mediaByGroupId[groupKey];
+      const media = resolveToeicCatalogGroupMedia(source, groupKey);
       const questionNumbers = materializedQuestions.map((question) => question.questionNumber);
       materializedGroups.push({
         id: nextGroupId,
@@ -233,15 +233,9 @@ export function materializeTestSession(
         accent: null,
         content: getGroupText(group, "en"),
         contentVi: getGroupText(group, "vi"),
-        audioUrl: resolveToeicCatalogMediaUrl(
-          source,
-          media?.audio ?? asString(group.audioUrl) ?? undefined,
-        ),
+        audioUrl: media.audioUrl,
         audioUrlExpiresAt: null,
-        imageUrl: resolveToeicCatalogMediaUrl(
-          source,
-          media?.image ?? asString(group.imageUrl) ?? undefined,
-        ),
+        imageUrl: media.imageUrl,
         imageUrlExpiresAt: null,
         questions: materializedQuestions,
       });

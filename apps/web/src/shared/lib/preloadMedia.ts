@@ -1,9 +1,10 @@
-import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
+type Media = {
+  audioUrl: string | null;
+  imageUrl: string | null;
+};
 
-type PartPracticeMedia = Pick<ToeicQuestionGroup, "audioUrl" | "imageUrl">;
-
-export function preloadPartPracticeMedia(media: PartPracticeMedia | undefined) {
-  if (!media) {
+export function preloadMedia(media: Media | undefined) {
+  if (!media || typeof window === "undefined") {
     return;
   }
 

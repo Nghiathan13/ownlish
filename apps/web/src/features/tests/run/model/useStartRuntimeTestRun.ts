@@ -20,6 +20,16 @@ import type { ToeicCatalogSource, ToeicCatalogTest } from "@/entities/toeic-cata
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { getToeicRunPath } from "@/features/tests/shared/lib/toeicRunPaths";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
+import {
+  getFirstTestPartGroupKey,
+  preloadCatalogGroupMedia,
+  preloadFirstTestPartImage,
+  preloadTestSessionMedia,
+} from "@/features/tests/shared/model/preloadToeicSessionMedia";
+import {
+  readTestPracticeGroupKey,
+  writeTestPracticeGroupKey,
+} from "@/features/tests/shared/model/testPracticePosition";
 import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 
 export type StartRuntimeTestRunVariables = {
@@ -46,6 +56,21 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
         throw new Error("Selected test parts are unavailable.");
       }
 
+      const practiceMode = variables.mode === "mock_test" ? null : variables.mode;
+      const savedGroupKey = practiceMode
+        ? readTestPracticeGroupKey(variables.test.id, practiceMode, partNumbers)
+        : null;
+      const initialGroupKey = savedGroupKey
+        ?? getFirstTestPartGroupKey(variables.test, partNumbers);
+      preloadCatalogGroupMedia(variables.source, initialGroupKey);
+      if (variables.mode === "mock_test") {
+        preloadFirstTestPartImage(
+          variables.source,
+          variables.test,
+          partNumbers,
+        );
+      }
+
       const runPromise = runAuthenticatedRequest({
         request: (token) =>
           createRuntimeTestRun(token, {
@@ -68,12 +93,33 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
         throw new Error("Test session contains unavailable parts.");
       }
 
-      return materializeTestSession(
+      const session = materializeTestSession(
         documents,
         variables.source,
         { ...run, selectedParts: partNumbers },
         variables.mode,
       );
+      if (practiceMode) {
+        const groupKeys = Array.from(session.groupKeyById.values());
+        const resolvedGroupKey = groupKeys.includes(savedGroupKey ?? "")
+          ? savedGroupKey
+          : groupKeys[0];
+        if (resolvedGroupKey) {
+          writeTestPracticeGroupKey(
+            variables.test.id,
+            practiceMode,
+            partNumbers,
+            resolvedGroupKey,
+          );
+          if (resolvedGroupKey !== initialGroupKey) {
+            preloadCatalogGroupMedia(variables.source, resolvedGroupKey);
+          }
+        }
+      } else if (variables.mode === "mock_test") {
+        preloadTestSessionMedia(variables.source, session);
+      }
+
+      return session;
     },
     onSuccess: (session) => {
       queryClient.setQueryData(
@@ -92,7 +138,14 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
 
   const startRun = async (variables: StartRuntimeTestRunVariables) => {
     const session = await mutation.mutateAsync(variables);
-    router.push(getToeicRunPath(session.sessionId, session.mode, session.partNumbers));
+    router.push(
+      getToeicRunPath(
+        session.sessionId,
+        session.mode,
+        session.partNumbers,
+        session.testKey,
+      ),
+    );
   };
 
   return {

@@ -19,8 +19,8 @@ import {
   getPartPracticePositionStorageKey,
   readPartPracticeGroupKey,
   writePartPracticeGroupKey,
-} from "@/features/tests/part-practice/model/partPracticePosition";
-import { preloadPartPracticeMedia } from "@/features/tests/part-practice/model/preloadPartPracticeMedia";
+} from "@/features/tests/shared/model/partPracticePosition";
+import { preloadMedia } from "@/shared/lib/preloadMedia";
 import {
   getQuestionGridResultFromAnswer,
   isQuestionGridSelected,
@@ -42,6 +42,7 @@ import { Panel } from "@/shared/ui/Panel";
 type PartPracticeRunViewProps = {
   sessionId: string;
   practiceMode?: PracticeMode;
+  partNumber: number | null;
 };
 
 function getStepGroup(step: PracticeRunStep) {
@@ -51,15 +52,25 @@ function getStepGroup(step: PracticeRunStep) {
 export function PartPracticeRunView({
   sessionId,
   practiceMode = "practice",
+  partNumber: routePartNumber,
 }: PartPracticeRunViewProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
   const initializedStorageKeyRef = useRef<string | null>(null);
   const isWrongMode = practiceMode === "review_wrong";
+  const initialGroupKey = useMemo(
+    () =>
+      routePartNumber
+        ? readPartPracticeGroupKey(routePartNumber, practiceMode)
+        : null,
+    [practiceMode, routePartNumber],
+  );
   const practice = usePartPracticeSession({
     enabled: true,
+    initialGroupKey,
     mode: practiceMode,
+    partNumber: routePartNumber,
     sessionId,
   });
   const partNumber = practice.partNumber;
@@ -99,7 +110,8 @@ export function PartPracticeRunView({
     }
 
     initializedStorageKeyRef.current = storageKey;
-    const storedGroupKey = readPartPracticeGroupKey(partNumber, practiceMode);
+    const storedGroupKey = initialGroupKey
+      ?? readPartPracticeGroupKey(partNumber, practiceMode);
     const initialIndex = steps.findIndex(
       (step) =>
         practice.groupKeyById.get(getStepGroup(step).id) === storedGroupKey,
@@ -112,8 +124,15 @@ export function PartPracticeRunView({
     if (groupKey) {
       writePartPracticeGroupKey(partNumber, practiceMode, groupKey);
     }
-    preloadPartPracticeMedia(group);
-  }, [partNumber, practice.groupKeyById, practiceMode, steps, storageKey]);
+    preloadMedia(group);
+  }, [
+    initialGroupKey,
+    partNumber,
+    practice.groupKeyById,
+    practiceMode,
+    steps,
+    storageKey,
+  ]);
 
   const activeStepIndex =
     steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
@@ -136,7 +155,7 @@ export function PartPracticeRunView({
       if (groupKey) {
         writePartPracticeGroupKey(partNumber, practiceMode, groupKey);
       }
-      preloadPartPracticeMedia(group);
+      preloadMedia(group);
     },
     [
       activeStepIndex,
