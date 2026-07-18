@@ -1,21 +1,7 @@
 import { resolveToeicCatalogGroupMedia } from "@/entities/toeic-catalog/model/media";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import type { ToeicCatalogTest } from "@/entities/toeic-catalog/model/types";
-import type { RuntimePartPracticeSession } from "@/entities/toeic-runtime/model/materializePartPracticeSession";
-import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
 import { preloadMedia } from "@/shared/lib/preloadMedia";
-
-function resolveSessionGroupKey(
-  groupKeyById: Map<number, string>,
-  groups: Array<{ id: number }>,
-  preferredGroupKey?: string | null,
-) {
-  if (preferredGroupKey && Array.from(groupKeyById.values()).includes(preferredGroupKey)) {
-    return preferredGroupKey;
-  }
-
-  return groupKeyById.get(groups[0]?.id ?? 0) ?? null;
-}
 
 export function preloadCatalogGroupMedia(
   source: ToeicCatalogSource,
@@ -56,32 +42,4 @@ export function preloadFirstTestPartImage(
   partNumbers: number[],
 ) {
   preloadCatalogGroupImage(source, getFirstTestPartGroupKey(test, partNumbers));
-}
-
-export function preloadTestSessionMedia(
-  source: ToeicCatalogSource,
-  session: RuntimeTestSession,
-  preferredGroupKey?: string | null,
-) {
-  const groupKey = resolveSessionGroupKey(
-    session.groupKeyById,
-    session.groups,
-    preferredGroupKey,
-  );
-  preloadCatalogGroupMedia(source, groupKey);
-  return groupKey;
-}
-
-export function preloadPartPracticeSessionMedia(
-  source: ToeicCatalogSource,
-  session: RuntimePartPracticeSession,
-  preferredGroupKey?: string | null,
-) {
-  const groupKey = resolveSessionGroupKey(
-    session.groupKeyById,
-    session.groups,
-    preferredGroupKey,
-  );
-  preloadCatalogGroupMedia(source, groupKey);
-  return groupKey;
 }

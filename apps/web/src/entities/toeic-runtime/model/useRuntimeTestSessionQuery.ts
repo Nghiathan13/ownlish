@@ -16,7 +16,6 @@ import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 import { getRuntimeTestSessionQueryKey } from "./cache";
 import {
   materializeTestSession,
-  type RuntimeTestSession,
   type RuntimeTestSessionMode,
 } from "./materializeTestSession";
 
@@ -30,10 +29,6 @@ type UseRuntimeTestSessionQueryParams = {
     source: ToeicCatalogSource,
     test: ToeicCatalogTest,
     partNumbers: number[],
-  ) => void;
-  onSessionMaterialized?: (
-    source: ToeicCatalogSource,
-    session: RuntimeTestSession,
   ) => void;
   enabled: boolean;
 };
@@ -49,7 +44,6 @@ export function useRuntimeTestSessionQuery({
   catalogTestKey,
   onCatalogLoaded,
   onTestResolved,
-  onSessionMaterialized,
   enabled,
 }: UseRuntimeTestSessionQueryParams) {
   const queryClient = useQueryClient();
@@ -131,8 +125,6 @@ export function useRuntimeTestSessionQuery({
         { ...run, selectedParts: viewPartNumbers },
         mode,
       );
-      onSessionMaterialized?.(source, session);
-
       return session;
     },
     enabled: enabled && Boolean(sessionId),

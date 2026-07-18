@@ -19,7 +19,6 @@ import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 import {
   getFirstPartPracticeGroupKey,
   preloadCatalogGroupMedia,
-  preloadPartPracticeSessionMedia,
 } from "@/features/tests/shared/model/preloadToeicSessionMedia";
 import { readPartPracticeGroupKey } from "@/features/tests/shared/model/partPracticePosition";
 
@@ -65,7 +64,6 @@ export function useStartPartPracticeRun({ userId }: UseStartPartPracticeRunParam
         run,
         variables.mode,
       );
-      preloadPartPracticeSessionMedia(variables.source, session, initialGroupKey);
       return session;
     },
     onSuccess: (session) => {

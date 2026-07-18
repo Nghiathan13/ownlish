@@ -11,7 +11,6 @@ import {
   getPartPracticeSessionQueryKey,
   getPartPracticeOverviewQueryKey,
 } from "@/entities/toeic-runtime/model/cache";
-import type { RuntimePartPracticeSession } from "@/entities/toeic-runtime/model/materializePartPracticeSession";
 import { useRuntimePartPracticeSessionQuery } from "@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
@@ -20,7 +19,6 @@ import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/use
 import {
   getFirstPartPracticeGroupKey,
   preloadCatalogGroupMedia,
-  preloadPartPracticeSessionMedia,
 } from "@/features/tests/shared/model/preloadToeicSessionMedia";
 import {
   buildAnswerKeyMap,
@@ -61,12 +59,6 @@ export function usePartPracticeSession({
   const queryClient = useQueryClient();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const handleSessionMaterialized = useCallback(
-    (source: ToeicCatalogSource, session: RuntimePartPracticeSession) => {
-      preloadPartPracticeSessionMedia(source, session, initialGroupKey);
-    },
-    [initialGroupKey],
-  );
   const handleCatalogLoaded = useCallback(
     (source: ToeicCatalogSource) => {
       preloadCatalogGroupMedia(
@@ -81,7 +73,6 @@ export function usePartPracticeSession({
     sessionId,
     catalogPartNumber: partNumber,
     onCatalogLoaded: handleCatalogLoaded,
-    onSessionMaterialized: handleSessionMaterialized,
     mode,
     enabled: enabled && isAuthenticated,
     userId: user?.id ?? null,

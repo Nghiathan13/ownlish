@@ -5,7 +5,6 @@ import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRu
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import {
   preloadFirstTestPartImage,
-  preloadTestSessionMedia,
 } from "@/features/tests/shared/model/preloadToeicSessionMedia";
 
 export type UseMockRunQueryParams = {
@@ -41,7 +40,6 @@ export function useMockRunQuery({
     partNumbers: resolvedSelectedParts,
     onCatalogLoaded: preloadInitialImage,
     onTestResolved: testKey ? undefined : preloadFirstTestPartImage,
-    onSessionMaterialized: preloadTestSessionMedia,
     enabled,
   });
 }

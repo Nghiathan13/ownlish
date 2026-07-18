@@ -11,7 +11,6 @@ import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedR
 import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 import {
   materializePartPracticeSession,
-  type RuntimePartPracticeSession,
 } from "./materializePartPracticeSession";
 
 export type UseRuntimePartPracticeSessionQueryParams = {
@@ -21,10 +20,6 @@ export type UseRuntimePartPracticeSessionQueryParams = {
   enabled: boolean;
   userId: string | null;
   onCatalogLoaded?: (source: ToeicCatalogSource) => void;
-  onSessionMaterialized?: (
-    source: ToeicCatalogSource,
-    session: RuntimePartPracticeSession,
-  ) => void;
 };
 
 export function useRuntimePartPracticeSessionQuery({
@@ -34,7 +29,6 @@ export function useRuntimePartPracticeSessionQuery({
   enabled,
   userId,
   onCatalogLoaded,
-  onSessionMaterialized,
 }: UseRuntimePartPracticeSessionQueryParams) {
   const queryClient = useQueryClient();
   const queryKey = getPartPracticeSessionQueryKey(sessionId, mode);
@@ -87,8 +81,6 @@ export function useRuntimePartPracticeSessionQuery({
       const document = documentFromCatalog
         ?? await getToeicCatalogDocument(source, part.path);
       const session = materializePartPracticeSession(document, source, run, mode);
-      onSessionMaterialized?.(source, session);
-
       return session;
     },
     enabled: enabled && Boolean(sessionId),

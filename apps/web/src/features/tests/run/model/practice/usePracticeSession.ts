@@ -8,7 +8,6 @@ import type {
 } from "@/entities/toeic/api/types";
 import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
 import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
-import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
 import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRuntimeTestSessionQuery";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
@@ -17,7 +16,6 @@ import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/use
 import {
   getFirstTestPartGroupKey,
   preloadCatalogGroupMedia,
-  preloadTestSessionMedia,
 } from "@/features/tests/shared/model/preloadToeicSessionMedia";
 import {
   buildAnswerKeyMap,
@@ -58,12 +56,6 @@ export function usePracticeSession({
   const queryClient = useQueryClient();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
-  const handleSessionMaterialized = useCallback(
-    (source: ToeicCatalogSource, session: RuntimeTestSession) => {
-      preloadTestSessionMedia(source, session, initialGroupKey);
-    },
-    [initialGroupKey],
-  );
   const handleCatalogLoaded = useCallback(
     (source: ToeicCatalogSource) => {
       const test = source.manifest.tests.find((candidate) => candidate.id === testKey);
@@ -81,7 +73,6 @@ export function usePracticeSession({
     partNumbers: selectedParts,
     catalogTestKey: testKey,
     onCatalogLoaded: handleCatalogLoaded,
-    onSessionMaterialized: handleSessionMaterialized,
     enabled,
   });
 

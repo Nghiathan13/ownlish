@@ -24,7 +24,6 @@ import {
   getFirstTestPartGroupKey,
   preloadCatalogGroupMedia,
   preloadFirstTestPartImage,
-  preloadTestSessionMedia,
 } from "@/features/tests/shared/model/preloadToeicSessionMedia";
 import {
   readTestPracticeGroupKey,
@@ -99,24 +98,13 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
         { ...run, selectedParts: partNumbers },
         variables.mode,
       );
-      if (practiceMode) {
-        const groupKeys = Array.from(session.groupKeyById.values());
-        const resolvedGroupKey = groupKeys.includes(savedGroupKey ?? "")
-          ? savedGroupKey
-          : groupKeys[0];
-        if (resolvedGroupKey) {
-          writeTestPracticeGroupKey(
-            variables.test.id,
-            practiceMode,
-            partNumbers,
-            resolvedGroupKey,
-          );
-          if (resolvedGroupKey !== initialGroupKey) {
-            preloadCatalogGroupMedia(variables.source, resolvedGroupKey);
-          }
-        }
-      } else if (variables.mode === "mock_test") {
-        preloadTestSessionMedia(variables.source, session);
+      if (practiceMode && !savedGroupKey && initialGroupKey) {
+        writeTestPracticeGroupKey(
+          variables.test.id,
+          practiceMode,
+          partNumbers,
+          initialGroupKey,
+        );
       }
 
       return session;
