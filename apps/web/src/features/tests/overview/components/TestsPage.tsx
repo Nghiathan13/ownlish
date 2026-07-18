@@ -22,12 +22,14 @@ import {
   useAuthSession,
 } from "@/features/auth/hooks/useAuthSession";
 import { PageShell } from "@/shared/ui/PageShell";
+import { useToeicCatalogQuery } from "@/entities/toeic-catalog/model/useToeicCatalogQuery";
 
 export function TestsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  useToeicCatalogQuery(isAuthenticated);
   const yearParam = searchParams.get("year");
   const requestedYear: ToeicYear =
     parseToeicYearParam(yearParam) ?? DEFAULT_TOEIC_YEAR;

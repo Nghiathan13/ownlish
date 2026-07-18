@@ -89,6 +89,7 @@ TOEIC media may be unavailable and admin media uploads will fail.
 | Name | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | No | `http://localhost:3001` | Browser-facing API base URL for non-BFF requests |
+| `NEXT_PUBLIC_TOEIC_CATALOG_ROOT` | Runtime Tests only | - | Public root of the current TOEIC catalog in Storage bucket `toeic` |
 | `AUTH_API_BASE_URL` | No | `NEXT_PUBLIC_API_BASE_URL`, then `http://localhost:3001` | Server-only API base URL used by the same-origin auth BFF |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Sign-In only | Empty | Google Identity Services web client ID; an empty value hides Google Sign-In |
 
