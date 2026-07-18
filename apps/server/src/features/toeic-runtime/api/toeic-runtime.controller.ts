@@ -42,6 +42,19 @@ export class ToeicRuntimeController {
     return this.runtimeService.createPartPracticeRun(request.user.id, dto);
   }
 
+  @Get('test-practice-runs')
+  listTestPracticeRuns(@Req() request: AuthRequest) {
+    return this.runtimeService.listTestPracticeRuns(request.user.id);
+  }
+
+  @Delete('test-practice-runs/:testKey')
+  clearTestPracticeRun(
+    @Req() request: AuthRequest,
+    @Param('testKey') testKey: string,
+  ) {
+    return this.runtimeService.clearTestPracticeRun(request.user.id, testKey);
+  }
+
   @Get('part-practice-runs')
   listPartPracticeRuns(@Req() request: AuthRequest) {
     return this.runtimeService.listPartPracticeRuns(request.user.id);

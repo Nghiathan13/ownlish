@@ -147,6 +147,84 @@ export class ToeicRuntimeService {
     return formatRun(run);
   }
 
+  async listTestPracticeRuns(userId: string) {
+    const runs = await this.prisma.toeicLearningRun.findMany({
+      where: {
+        userId,
+        scope: ToeicLearningScope.TEST,
+        mode: ToeicRunMode.PRACTICE,
+      },
+      include: { answers: { select: { questionKey: true, status: true } } },
+    });
+
+    const items = (
+      await Promise.all(
+        runs.map(async (run) => {
+          if (!run.testKey) {
+            return [];
+          }
+
+          const progressByPart = new Map<
+            number,
+            { correctCount: number; wrongCount: number }
+          >();
+          const questions = await Promise.all(
+            run.answers.map(async (answer) => ({
+              answer,
+              question: await this.gradingIndex.getQuestion(answer.questionKey),
+            })),
+          );
+          for (const { answer, question } of questions) {
+            if (!question || question.testKey !== run.testKey) {
+              continue;
+            }
+
+            const progress = progressByPart.get(question.partNumber) ?? {
+              correctCount: 0,
+              wrongCount: 0,
+            };
+            if (answer.status === ToeicRunQuestionStatus.RIGHT) {
+              progress.correctCount += 1;
+            } else if (answer.status === ToeicRunQuestionStatus.WRONG) {
+              progress.wrongCount += 1;
+            }
+            progressByPart.set(question.partNumber, progress);
+          }
+
+          return [
+            {
+              testKey: run.testKey,
+              answeredCount: run.answers.length,
+              correctCount: run.totalRight,
+              wrongCount: run.totalWrong,
+              parts: [...progressByPart.entries()]
+                .sort(([left], [right]) => left - right)
+                .map(([partNumber, progress]) => ({
+                  partNumber,
+                  ...progress,
+                })),
+            },
+          ];
+        }),
+      )
+    ).flat();
+
+    return { items };
+  }
+
+  async clearTestPracticeRun(userId: string, testKey: string) {
+    const result = await this.prisma.toeicLearningRun.deleteMany({
+      where: {
+        userId,
+        scope: ToeicLearningScope.TEST,
+        testKey,
+        mode: ToeicRunMode.PRACTICE,
+      },
+    });
+
+    return { resetRunCount: result.count };
+  }
+
   async listPartPracticeRuns(userId: string) {
     const runs = await this.prisma.toeicLearningRun.findMany({
       where: {
