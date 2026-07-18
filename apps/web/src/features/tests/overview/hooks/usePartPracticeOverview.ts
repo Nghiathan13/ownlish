@@ -7,7 +7,8 @@ import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
 import { parsePracticeOverviewPartParam } from "@/features/tests/shared/lib/partPracticePaths";
 import { usePartPracticeOverviewList } from "@/features/tests/overview/hooks/usePartPracticeOverviewList";
 import { useClearPartPracticeHistory } from "@/features/tests/overview/mutations/hooks/useClearPartPracticeHistory";
-import { useStartPartPracticeRun } from "@/features/tests/overview/mutations/hooks/useStartPartPracticeRun";
+import { useStartPartPracticeRun } from "@/features/tests/part-practice/model/useStartPartPracticeRun";
+import { useToeicCatalogQuery } from "@/entities/toeic-catalog/model/useToeicCatalogQuery";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -20,12 +21,16 @@ export function usePartPracticeOverview() {
   const selectedPartNumber =
     parsePracticeOverviewPartParam(searchParams.get("part")) ?? 1;
 
+  const catalog = useToeicCatalogQuery(isAuthenticated);
   const { summaries, isLoading, error, reload } = usePartPracticeOverviewList({
     isAuthenticated,
     userId: user?.id ?? null,
+    source: catalog.data,
   });
 
-  const { startRun, isStarting, startingPartNumber } = useStartPartPracticeRun();
+  const { startRun, isStarting, startingPartNumber } = useStartPartPracticeRun({
+    userId: user?.id ?? null,
+  });
   const {
     clearHistory: clearHistoryMutation,
     isClearing,
@@ -40,12 +45,12 @@ export function usePartPracticeOverview() {
     null;
 
   const startPartPractice = async (partNumber: number, mode: PracticeMode) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !catalog.data) {
       return;
     }
 
     try {
-      await startRun({ partNumber, mode });
+      await startRun({ partNumber, mode, source: catalog.data });
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot start part practice."));
     }
@@ -73,8 +78,12 @@ export function usePartPracticeOverview() {
     selectedPartNumber,
     selectedSummary,
     summaries,
-    isLoading,
-    error,
+    isLoading: isLoading || catalog.isLoading,
+    error:
+      error ??
+      (catalog.error
+        ? getErrorMessage(catalog.error, "Cannot load TOEIC catalog.")
+        : null),
     reload,
     startPartPractice,
     clearHistory,

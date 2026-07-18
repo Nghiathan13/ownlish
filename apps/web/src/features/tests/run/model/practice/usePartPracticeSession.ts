@@ -7,11 +7,11 @@ import type {
   PracticeMode,
   SubmitAnswerResult,
 } from "@/entities/toeic/api/types";
-import { usePartPracticeRunQuery } from "@/entities/toeic/hooks/usePartPracticeRunQuery";
 import {
   getPartPracticeSessionQueryKey,
   getPartPracticeOverviewQueryKey,
-} from "@/entities/toeic/lib/toeicCache";
+} from "@/entities/toeic-runtime/model/cache";
+import { useRuntimePartPracticeSessionQuery } from "@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery";
 import { toAnswerMap } from "@/entities/toeic/lib/runState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
@@ -40,19 +40,22 @@ type SelectAnswerOptions = {
   skipLocalGrade?: boolean;
 };
 
+const EMPTY_GROUP_KEY_BY_ID = new Map<number, string>();
+
 export function usePartPracticeSession({
   sessionId,
   mode = "practice",
   enabled,
 }: UsePartPracticeSessionParams) {
   const queryClient = useQueryClient();
-  const { status } = useAuthSession();
+  const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
 
-  const runQuery = usePartPracticeRunQuery({
+  const runQuery = useRuntimePartPracticeSessionQuery({
     sessionId,
     mode,
-    enabled,
+    enabled: enabled && isAuthenticated,
+    userId: user?.id ?? null,
   });
 
   const sessionData = runQuery.data;
@@ -178,6 +181,7 @@ export function usePartPracticeSession({
     sessionId,
     partNumber: sessionData?.partNumber ?? 0,
     groups: sessionData?.groups ?? [],
+    groupKeyById: sessionData?.groupKeyById ?? EMPTY_GROUP_KEY_BY_ID,
     totalQuestions: sessionData?.totalQuestions ?? 0,
     getAnswer,
     isStarting: runQuery.isLoading,

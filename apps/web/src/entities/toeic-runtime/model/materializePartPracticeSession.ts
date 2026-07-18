@@ -12,6 +12,7 @@ type OptionKey = "A" | "B" | "C" | "D";
 
 export type RuntimePartPracticeSession = PartPracticeSessionResult & {
   questionKeyById: Map<number, string>;
+  groupKeyById: Map<number, string>;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -107,7 +108,7 @@ function toQuestion(
   };
 }
 
-export function materializeRuntimePartPractice(
+export function materializePartPracticeSession(
   document: unknown,
   source: ToeicCatalogSource,
   run: ToeicRuntimeRun,
@@ -117,6 +118,7 @@ export function materializeRuntimePartPractice(
   const groups = Array.isArray(root?.groups) ? root.groups : [];
   const answersByKey = new Map(run.answers.map((answer) => [answer.questionKey, answer]));
   const questionKeyById = new Map<number, string>();
+  const groupKeyById = new Map<number, string>();
   let groupId = 0;
   let questionId = 0;
 
@@ -162,6 +164,7 @@ export function materializeRuntimePartPractice(
     }
 
     const groupKey = typeof group.id === "string" ? group.id : "";
+    groupKeyById.set(nextGroupId, groupKey);
     const media = source.manifest.mediaByGroupId[groupKey];
     const questionNumbers = materializedQuestions.map((question) => question.questionNumber);
     const materializedGroup: ToeicQuestionGroup = {
@@ -208,5 +211,6 @@ export function materializeRuntimePartPractice(
     wrongCount: run.wrongCount,
     groups: materializedGroups,
     questionKeyById,
+    groupKeyById,
   };
 }

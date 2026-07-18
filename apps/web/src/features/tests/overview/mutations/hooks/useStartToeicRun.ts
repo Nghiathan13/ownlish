@@ -11,7 +11,7 @@ import {
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { getToeicRunPath } from "@/features/tests/shared/lib/toeicRunPaths";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
-import { toQueryErrorMessage } from "@/features/tests/shared/lib/toQueryErrorMessage";
+import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 
 export type StartToeicRunVariables = {
   testId: number;

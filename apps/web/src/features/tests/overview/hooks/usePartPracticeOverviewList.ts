@@ -1,30 +1,33 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getToeicCatalog } from "@/entities/toeic-catalog/api/catalog";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { listRuntimePartPracticeRuns } from "@/entities/toeic-runtime/api/runtime";
-import { getPartPracticeOverviewQueryKey } from "@/entities/toeic/lib/toeicCache";
+import { getPartPracticeOverviewQueryKey } from "@/entities/toeic-runtime/model/cache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { toQueryErrorMessage } from "@/features/tests/shared/lib/toQueryErrorMessage";
+import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 
 type UsePartPracticeOverviewListParams = {
   isAuthenticated: boolean;
   userId: string | null;
+  source: ToeicCatalogSource | undefined;
 };
 
 export function usePartPracticeOverviewList({
   isAuthenticated,
   userId,
+  source,
 }: UsePartPracticeOverviewListParams) {
   const query = useQuery({
     queryKey: getPartPracticeOverviewQueryKey(userId),
     queryFn: async () => {
-      const [source, progress] = await Promise.all([
-        getToeicCatalog(),
-        runAuthenticatedRequest({
-          request: (token) => listRuntimePartPracticeRuns(token),
-        }),
-      ]);
+      if (!source) {
+        throw new Error("TOEIC catalog is unavailable.");
+      }
+
+      const progress = await runAuthenticatedRequest({
+        request: (token) => listRuntimePartPracticeRuns(token),
+      });
       const progressByPart = new Map(
         progress.map((item) => [item.partNumber, item]),
       );
@@ -40,7 +43,7 @@ export function usePartPracticeOverviewList({
         };
       });
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && Boolean(source),
   });
 
   return {

@@ -12,7 +12,7 @@ import {
 } from "@/entities/session/model/accessTokenStore";
 import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
 import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
-import type { RuntimePartPracticeSession } from "@/features/tests/part-practice/model/materializeRuntimePartPractice";
+import type { RuntimePartPracticeSession } from "@/entities/toeic-runtime/model/materializePartPracticeSession";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
@@ -20,7 +20,7 @@ import {
 import { mswServer } from "@/shared/lib/testing/mswServer";
 
 const queryMocks = vi.hoisted(() => ({
-  usePartPracticeRunQuery: vi.fn(),
+  useRuntimePartPracticeSessionQuery: vi.fn(),
   usePracticeRunQuery: vi.fn(),
 }));
 
@@ -28,8 +28,9 @@ vi.mock("@/entities/toeic/hooks/usePracticeRunQuery", () => ({
   usePracticeRunQuery: queryMocks.usePracticeRunQuery,
 }));
 
-vi.mock("@/entities/toeic/hooks/usePartPracticeRunQuery", () => ({
-  usePartPracticeRunQuery: queryMocks.usePartPracticeRunQuery,
+vi.mock("@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery", () => ({
+  useRuntimePartPracticeSessionQuery:
+    queryMocks.useRuntimePartPracticeSessionQuery,
 }));
 
 vi.mock("@/features/auth/hooks/useAuthSession", () => ({
@@ -132,6 +133,7 @@ function createPartPracticeRun(): RuntimePartPracticeSession {
       },
     ],
     questionKeyById: new Map([[101, "ets26-t01-p3-q001"]]),
+    groupKeyById: new Map([[11, "ets26-t01-p3-g001"]]),
   };
 }
 
@@ -219,7 +221,7 @@ describe("practice session submission adapters", () => {
       const queryClient = createTestQueryClient();
       const refetch = vi.fn();
       queryClient.setQueryData(PART_QUERY_KEY, session);
-      queryMocks.usePartPracticeRunQuery.mockReturnValue({
+      queryMocks.useRuntimePartPracticeSessionQuery.mockReturnValue({
         data: session,
         error: null,
         isLoading: false,

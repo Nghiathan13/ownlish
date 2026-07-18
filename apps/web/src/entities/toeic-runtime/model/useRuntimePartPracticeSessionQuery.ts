@@ -4,25 +4,24 @@ import { useQuery } from "@tanstack/react-query";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import { getToeicCatalog, getToeicCatalogDocument } from "@/entities/toeic-catalog/api/catalog";
 import { getRuntimeRun } from "@/entities/toeic-runtime/api/runtime";
-import { getPartPracticeSessionQueryKey } from "@/entities/toeic/lib/toeicCache";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { getPartPracticeSessionQueryKey } from "./cache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { toQueryErrorMessage } from "@/features/tests/shared/lib/toQueryErrorMessage";
-import { materializeRuntimePartPractice } from "@/features/tests/part-practice/model/materializeRuntimePartPractice";
+import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
+import { materializePartPracticeSession } from "./materializePartPracticeSession";
 
-export type UsePartPracticeRunQueryParams = {
+export type UseRuntimePartPracticeSessionQueryParams = {
   sessionId: string;
   mode?: PracticeMode;
   enabled: boolean;
+  userId: string | null;
 };
 
-export function usePartPracticeRunQuery({
+export function useRuntimePartPracticeSessionQuery({
   sessionId,
   mode = "practice",
   enabled,
-}: UsePartPracticeRunQueryParams) {
-  const { status, user } = useAuthSession();
-  const isAuthenticated = isAuthenticatedStatus(status);
+  userId,
+}: UseRuntimePartPracticeSessionQueryParams) {
   const queryKey = getPartPracticeSessionQueryKey(sessionId, mode);
 
   const query = useQuery({
@@ -44,9 +43,9 @@ export function usePartPracticeRunQuery({
       }
 
       const document = await getToeicCatalogDocument(source, part.path);
-      return materializeRuntimePartPractice(document, source, run, mode);
+      return materializePartPracticeSession(document, source, run, mode);
     },
-    enabled: enabled && isAuthenticated && Boolean(sessionId),
+    enabled: enabled && Boolean(sessionId),
     staleTime: Infinity,
     gcTime: mode === "review_wrong" ? 0 : 5 * 60 * 1000,
     refetchOnMount: false,
@@ -58,7 +57,7 @@ export function usePartPracticeRunQuery({
     data: query.data,
     isLoading: query.isLoading,
     error: toQueryErrorMessage(query.error, "Cannot start part practice session."),
-    userId: user?.id ?? null,
+    userId,
     refetch: query.refetch,
   };
 }

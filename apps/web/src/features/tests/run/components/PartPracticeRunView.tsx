@@ -12,11 +12,15 @@ import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunL
 import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
 import {
-  buildAggregatePracticeRunQuestions,
   buildAggregatePracticeRunSteps,
-  resolveInitialStepIndex,
+  type PracticeRunStep,
 } from "@/features/tests/run/lib/practiceRunSteps";
-import { writePracticeRunIndex } from "@/features/tests/run/lib/practiceRunStorage";
+import {
+  getPartPracticePositionStorageKey,
+  readPartPracticeGroupKey,
+  writePartPracticeGroupKey,
+} from "@/features/tests/part-practice/model/partPracticePosition";
+import { preloadPartPracticeMedia } from "@/features/tests/part-practice/model/preloadPartPracticeMedia";
 import {
   getQuestionGridResultFromAnswer,
   isQuestionGridSelected,
@@ -40,8 +44,8 @@ type PartPracticeRunViewProps = {
   practiceMode?: PracticeMode;
 };
 
-function getPartPracticeStorageKey(sessionId: string) {
-  return `part-practice-${sessionId}`;
+function getStepGroup(step: PracticeRunStep) {
+  return step.kind === "group" ? step.practiceGroup.group : step.item.group;
 }
 
 export function PartPracticeRunView({
@@ -73,14 +77,6 @@ export function PartPracticeRunView({
     [practice.groups],
   );
 
-  const questions = useMemo(
-    () =>
-      partNumber > 0
-        ? buildAggregatePracticeRunQuestions(partNumber, practice.groups)
-        : [],
-    [partNumber, practice.groups],
-  );
-
   const steps = useMemo(
     () =>
       partNumber > 0
@@ -89,8 +85,8 @@ export function PartPracticeRunView({
     [partNumber, practice.groups],
   );
 
-  const storageKey = practice.sessionId
-    ? getPartPracticeStorageKey(practice.sessionId)
+  const storageKey = partNumber > 0
+    ? getPartPracticePositionStorageKey(partNumber, practiceMode)
     : null;
 
   useEffect(() => {
@@ -103,15 +99,21 @@ export function PartPracticeRunView({
     }
 
     initializedStorageKeyRef.current = storageKey;
-    setStepIndex(
-      resolveInitialStepIndex(
-        storageKey,
-        steps,
-        questions,
-        selectedParts,
-      ),
+    const storedGroupKey = readPartPracticeGroupKey(partNumber, practiceMode);
+    const initialIndex = steps.findIndex(
+      (step) =>
+        practice.groupKeyById.get(getStepGroup(step).id) === storedGroupKey,
     );
-  }, [questions, selectedParts, steps, storageKey]);
+    const resolvedIndex = initialIndex >= 0 ? initialIndex : 0;
+    const group = getStepGroup(steps[resolvedIndex]);
+    const groupKey = practice.groupKeyById.get(group.id);
+
+    setStepIndex(resolvedIndex);
+    if (groupKey) {
+      writePartPracticeGroupKey(partNumber, practiceMode, groupKey);
+    }
+    preloadPartPracticeMedia(group);
+  }, [partNumber, practice.groupKeyById, practiceMode, steps, storageKey]);
 
   const activeStepIndex =
     steps.length === 0 ? 0 : Math.min(stepIndex, steps.length - 1);
@@ -119,7 +121,7 @@ export function PartPracticeRunView({
 
   const goToStepIndex = useCallback(
     (nextIndex: number) => {
-      if (!storageKey || steps.length === 0) {
+      if (!storageKey || steps.length === 0 || partNumber <= 0) {
         return;
       }
 
@@ -129,9 +131,21 @@ export function PartPracticeRunView({
       }
 
       setStepIndex(boundedIndex);
-      writePracticeRunIndex(storageKey, boundedIndex);
+      const group = getStepGroup(steps[boundedIndex]);
+      const groupKey = practice.groupKeyById.get(group.id);
+      if (groupKey) {
+        writePartPracticeGroupKey(partNumber, practiceMode, groupKey);
+      }
+      preloadPartPracticeMedia(group);
     },
-    [activeStepIndex, steps.length, storageKey],
+    [
+      activeStepIndex,
+      partNumber,
+      practice.groupKeyById,
+      practiceMode,
+      steps,
+      storageKey,
+    ],
   );
 
   useRegisterImmersiveExit(

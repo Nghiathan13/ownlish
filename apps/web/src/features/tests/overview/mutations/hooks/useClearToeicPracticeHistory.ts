@@ -9,7 +9,7 @@ import {
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { clearAllPracticeProgressForTest } from "@/features/tests/run/lib/practiceStorage";
 import type { ToeicYear } from "@/features/tests/shared/constants/toeicYears";
-import { toQueryErrorMessage } from "@/features/tests/shared/lib/toQueryErrorMessage";
+import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 
 type UseClearToeicPracticeHistoryParams = {
   userId: string | null;

@@ -6,7 +6,7 @@ import { getToeicRun } from "@/entities/toeic/api/toeic";
 import { getToeicRunQueryKey } from "@/entities/toeic/lib/toeicCache";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { toQueryErrorMessage } from "@/features/tests/shared/lib/toQueryErrorMessage";
+import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
 
 export type UseMockRunQueryParams = {
   sessionId: string;

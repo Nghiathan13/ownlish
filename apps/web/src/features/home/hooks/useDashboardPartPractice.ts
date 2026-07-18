@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { listPartPracticeSummaries } from "@/entities/toeic/api/partPractice";
-import { getPartPracticeOverviewQueryKey } from "@/entities/toeic/lib/toeicCache";
+import { getPartPracticeOverviewQueryKey } from "@/entities/toeic-runtime/model/cache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
 
