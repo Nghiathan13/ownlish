@@ -162,7 +162,7 @@ function VocabularyOverview({
           onAction={onRetry}
         />
       ) : (
-        <div className="@container grid grid-cols-2 gap-4 lg:gap-8 @[1248px]:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:gap-8 min-[1481px]:grid-cols-4">
           <MetricCard label="Study time" value="-" />
           <MetricCard label="Due for review" value={stats?.due ?? 0} />
           <MetricCard label="Mastered" value={stats?.mastered ?? 0} />
@@ -204,7 +204,7 @@ function PartPracticeOverview({
         />
       ) : (
         <div className="flex flex-col gap-4 lg:gap-8">
-          <div className="@container grid grid-cols-2 gap-4 lg:gap-8 @[1248px]:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:gap-8">
             <MetricCard label="Answered" value={answered} />
             <MetricCard label="Study time" value="-" />
           </div>
