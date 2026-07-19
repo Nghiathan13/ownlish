@@ -116,7 +116,7 @@ export function HomeDashboard() {
         ) : isLoadingVocab || isLoadingPartPractice ? (
           <HomeDashboardSkeleton />
         ) : (
-          <div className="flex flex-col gap-4 lg:gap-8">
+          <div className="flex flex-col gap-8">
             <VocabularyOverview
               error={vocabError}
               onRetry={() => void reloadVocab()}
@@ -145,12 +145,16 @@ function VocabularyOverview({
 }) {
   return (
     <section aria-labelledby="vocabulary-title">
-      <h1
-        className="text-2xl font-semibold tracking-tight sm:text-3xl"
-        id="vocabulary-title"
-      >
-        Vocabulary
-      </h1>
+      <div className="flex items-center gap-4">
+        <span className="h-px flex-1 bg-border" />
+        <h1
+          className="text-2xl font-semibold tracking-tight sm:text-3xl"
+          id="vocabulary-title"
+        >
+          Vocabulary
+        </h1>
+        <span className="h-px flex-1 bg-border" />
+      </div>
       {error ? (
         <InlinePanelState
           actionLabel="Retry vocabulary"
@@ -158,7 +162,7 @@ function VocabularyOverview({
           onAction={onRetry}
         />
       ) : (
-        <div className="grid gap-4 lg:gap-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+        <div className="@container grid grid-cols-2 gap-4 lg:gap-8 @[1248px]:grid-cols-4">
           <MetricCard label="Study time" value="-" />
           <MetricCard label="Due for review" value={stats?.due ?? 0} />
           <MetricCard label="Mastered" value={stats?.mastered ?? 0} />
@@ -182,12 +186,16 @@ function PartPracticeOverview({
 
   return (
     <section aria-labelledby="toeic-title">
-      <h2
-        className="text-2xl font-semibold tracking-tight sm:text-3xl"
-        id="toeic-title"
-      >
-        TOEIC
-      </h2>
+      <div className="flex items-center gap-4">
+        <span className="h-px flex-1 bg-border" />
+        <h2
+          className="text-2xl font-semibold tracking-tight sm:text-3xl"
+          id="toeic-title"
+        >
+          TOEIC
+        </h2>
+        <span className="h-px flex-1 bg-border" />
+      </div>
       {error ? (
         <InlinePanelState
           actionLabel="Retry Part Practice"
@@ -196,7 +204,7 @@ function PartPracticeOverview({
         />
       ) : (
         <div className="flex flex-col gap-4 lg:gap-8">
-          <div className="grid gap-4 lg:gap-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+          <div className="@container grid grid-cols-2 gap-4 lg:gap-8 @[1248px]:grid-cols-4">
             <MetricCard label="Answered" value={answered} />
             <MetricCard label="Study time" value="-" />
           </div>
