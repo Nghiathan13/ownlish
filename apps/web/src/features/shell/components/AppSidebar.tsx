@@ -10,6 +10,7 @@ import {
 } from "@/features/auth/hooks/useAuthSession";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
+import { SidebarThemeToggle } from "@/features/shell/components/SidebarThemeToggle";
 import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
 import { ShellNavSkeleton } from "@/features/shell/components/ShellNavSkeleton";
 import { useSidebarCollapsed } from "@/features/shell/hooks/useSidebarCollapsed";
@@ -349,15 +350,18 @@ export function AppSidebar() {
           {isLoading ? (
             <ShellAuthSlotSkeleton collapsed={collapsed} />
           ) : isAuth && user ? (
-            <SidebarUserMenu
-              collapsed={collapsed}
-              onUpdateProfile={updateProfile}
-              user={user}
-              onLogout={() => {
-                void logout();
-                router.replace("/login");
-              }}
-            />
+            <div className="flex flex-col gap-1">
+              <SidebarThemeToggle collapsed={collapsed} />
+              <SidebarUserMenu
+                collapsed={collapsed}
+                onUpdateProfile={updateProfile}
+                user={user}
+                onLogout={() => {
+                  void logout();
+                  router.replace("/login");
+                }}
+              />
+            </div>
           ) : pathname !== "/login" ? (
             <Link
               href="/login"
