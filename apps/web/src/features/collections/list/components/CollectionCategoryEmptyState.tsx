@@ -6,7 +6,7 @@ export function CollectionCategoryEmptyState({
   categoryLabel,
 }: CollectionCategoryEmptyStateProps) {
   return (
-    <div className="mx-4 rounded-xl border border-border p-6">
+    <div className="mx-16 rounded-xl border border-border p-6">
       <h2 className="mb-2 text-xl font-semibold">
         No {categoryLabel} collections yet.
       </h2>
