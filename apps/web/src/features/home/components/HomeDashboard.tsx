@@ -145,10 +145,10 @@ function VocabularyOverview({
 }) {
   return (
     <section aria-labelledby="vocabulary-title">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center mb-8 gap-4">
         <span className="h-px flex-1 bg-border" />
         <h1
-          className="mb-8 text-2xl font-semibold tracking-tight sm:text-3xl"
+          className="text-2xl font-semibold tracking-tight sm:text-3xl"
           id="vocabulary-title"
         >
           Vocabulary
@@ -189,7 +189,7 @@ function PartPracticeOverview({
       <div className="flex items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <h2
-          className="mb-8 text-2xl font-semibold tracking-tight sm:text-3xl"
+          className="text-2xl font-semibold tracking-tight sm:text-3xl"
           id="toeic-title"
         >
           TOEIC
