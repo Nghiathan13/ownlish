@@ -61,4 +61,24 @@ describe("ImportTargetCollectionSelect", () => {
     expect(onChange).toHaveBeenCalledWith("collection-2");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
+
+  it("uses the same custom dropdown for the vocabulary toolbar", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ImportTargetCollectionSelect
+        ariaLabel="Collection"
+        collections={collections}
+        onChange={vi.fn()}
+        value="collection-1"
+        variant="toolbar"
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Collection: My Vocabulary" }),
+    );
+
+    expect(screen.getByRole("listbox", { name: "Collection" })).toBeInTheDocument();
+  });
 });

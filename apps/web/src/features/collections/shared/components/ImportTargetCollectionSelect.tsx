@@ -3,10 +3,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { classNames } from "@/shared/lib/classNames";
-import {
-  secondaryTextButtonColorsClassName,
-  textButtonLayoutClassName,
-} from "@/shared/ui/button";
 import { ArrowDropDownIcon } from "@/shared/ui/icons/ArrowDropDownIcon";
 import { ArrowDropUpIcon } from "@/shared/ui/icons/ArrowDropUpIcon";
 
@@ -18,22 +14,17 @@ type ImportTargetCollectionSelectProps = {
   variant?: "form" | "review" | "toolbar";
 };
 
-const toolbarSelectClassName = classNames(
-  textButtonLayoutClassName,
-  secondaryTextButtonColorsClassName,
-  "w-fit min-w-[10rem] max-w-[14rem] truncate appearance-none cursor-pointer",
-);
-
 function getCollectionLabel(collection: CollectionSummary) {
   return collection.isDefault ? "My Vocabulary" : collection.name;
 }
 
-function ReviewCollectionSelect({
+function CollectionDropdown({
   ariaLabel,
+  className,
   collections,
   onChange,
   value,
-}: Omit<ImportTargetCollectionSelectProps, "variant">) {
+}: Omit<ImportTargetCollectionSelectProps, "variant"> & { className: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -69,7 +60,7 @@ function ReviewCollectionSelect({
   }, [isOpen]);
 
   return (
-    <div className="relative w-full max-w-72" ref={rootRef}>
+    <div className={classNames("relative", className)} ref={rootRef}>
       <button
         aria-controls={menuId}
         aria-expanded={isOpen}
@@ -131,8 +122,9 @@ export function ImportTargetCollectionSelect({
 }: ImportTargetCollectionSelectProps) {
   if (variant === "review") {
     return (
-      <ReviewCollectionSelect
+      <CollectionDropdown
         ariaLabel={ariaLabel}
+        className="w-full max-w-72"
         collections={collections}
         onChange={onChange}
         value={value}
@@ -142,18 +134,13 @@ export function ImportTargetCollectionSelect({
 
   if (variant === "toolbar") {
     return (
-      <select
-        aria-label={ariaLabel}
-        className={toolbarSelectClassName}
-        onChange={(event) => onChange(event.target.value)}
+      <CollectionDropdown
+        ariaLabel={ariaLabel}
+        className="w-fit min-w-[10rem] max-w-[14rem]"
+        collections={collections}
+        onChange={onChange}
         value={value}
-      >
-        {collections.map((collection) => (
-          <option key={collection.id} value={collection.id}>
-            {collection.isDefault ? "My Vocabulary" : collection.name}
-          </option>
-        ))}
-      </select>
+      />
     );
   }
 
