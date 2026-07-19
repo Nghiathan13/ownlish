@@ -71,7 +71,7 @@ export function HomeDashboard() {
 
   return (
     <PageShell>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-7 sm:px-6 sm:pt-9 lg:px-8 lg:pb-16">
+      <div className="flex flex-col gap-8 px-16 py-8">
         {isLoadingCollections ? (
           <HomeDashboardSkeleton />
         ) : collectionsError ? (
@@ -116,7 +116,7 @@ export function HomeDashboard() {
         ) : isLoadingVocab || isLoadingPartPractice ? (
           <HomeDashboardSkeleton />
         ) : (
-          <div className="flex flex-col gap-9 sm:gap-11">
+          <div className="flex flex-col gap-8">
             <VocabularyOverview
               error={vocabError}
               onRetry={() => void reloadVocab()}
@@ -158,7 +158,7 @@ function VocabularyOverview({
           onAction={onRetry}
         />
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Study time" value="-" />
           <MetricCard label="Due for review" value={stats?.due ?? 0} />
           <MetricCard label="Mastered" value={stats?.mastered ?? 0} />
