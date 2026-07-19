@@ -71,7 +71,7 @@ export function HomeDashboard() {
 
   return (
     <PageShell>
-      <div className="flex flex-col gap-8 px-16 py-8">
+      <div className="flex flex-col gap-4 px-8 py-8 lg:gap-8 lg:px-16">
         {isLoadingCollections ? (
           <HomeDashboardSkeleton />
         ) : collectionsError ? (
@@ -116,7 +116,7 @@ export function HomeDashboard() {
         ) : isLoadingVocab || isLoadingPartPractice ? (
           <HomeDashboardSkeleton />
         ) : (
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4 lg:gap-8">
             <VocabularyOverview
               error={vocabError}
               onRetry={() => void reloadVocab()}
@@ -158,7 +158,7 @@ function VocabularyOverview({
           onAction={onRetry}
         />
       ) : (
-        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 lg:gap-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
           <MetricCard label="Study time" value="-" />
           <MetricCard label="Due for review" value={stats?.due ?? 0} />
           <MetricCard label="Mastered" value={stats?.mastered ?? 0} />
@@ -195,8 +195,8 @@ function PartPracticeOverview({
           onAction={onRetry}
         />
       ) : (
-        <>
-          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="flex flex-col gap-4 lg:gap-8">
+          <div className="grid gap-4 lg:gap-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
             <MetricCard label="Answered" value={answered} />
             <MetricCard label="Study time" value="-" />
           </div>
@@ -213,7 +213,7 @@ function PartPracticeOverview({
               ))}
             </div>
           </div>
-        </>
+        </div>
       )}
     </section>
   );
