@@ -11,10 +11,10 @@ function MetricCardSkeleton() {
 
 export function HomeDashboardSkeleton() {
   return (
-    <div aria-hidden className="flex flex-col gap-9 sm:gap-11">
+    <div aria-hidden className="flex flex-col gap-8">
       <div>
         <Skeleton className="h-8 w-36" />
-        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+        <div className="mt-4 grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
             <MetricCardSkeleton key={index} />
           ))}
@@ -22,7 +22,7 @@ export function HomeDashboardSkeleton() {
       </div>
       <div>
         <Skeleton className="h-8 w-20" />
-        <div className="mt-4 grid grid-cols-2 gap-4 lg:max-w-[calc(50%-0.625rem)] lg:gap-5">
+        <div className="mt-4 grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 2 }, (_, index) => (
             <MetricCardSkeleton key={index} />
           ))}

@@ -196,11 +196,11 @@ function PartPracticeOverview({
         />
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-4 lg:max-w-[calc(50%-0.625rem)] lg:gap-5">
+          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard label="Answered" value={answered} />
             <MetricCard label="Study time" value="-" />
           </div>
-          <div className="mt-5 rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+          <div className="rounded-2xl bg-surface p-5 shadow-card sm:p-6">
             <div className="space-y-5">
               {Array.from({ length: 7 }, (_, index) => (
                 <PartProgress
