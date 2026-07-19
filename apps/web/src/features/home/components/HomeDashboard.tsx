@@ -186,7 +186,7 @@ function PartPracticeOverview({
 
   return (
     <section aria-labelledby="toeic-title">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center mb-8 gap-4">
         <span className="h-px flex-1 bg-border" />
         <h2
           className="text-2xl font-semibold tracking-tight sm:text-3xl"
