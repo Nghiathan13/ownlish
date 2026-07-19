@@ -10,7 +10,6 @@ import {
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
 import { getSafeAuthRedirectPath } from "@/features/auth/lib/authRedirect";
-import { PageShell } from "@/shared/ui/PageShell";
 
 export default function LoginPage() {
   return (
@@ -37,8 +36,18 @@ function LoginPageContent() {
   }
 
   return (
-    <PageShell centered>
-      <AuthForm redirectTo={redirectTo} />
-    </PageShell>
+    <div className="flex min-h-0 flex-1">
+      <div className="flex w-full items-center justify-center p-8 lg:w-[30%]">
+        <AuthForm redirectTo={redirectTo} />
+      </div>
+      <div
+        aria-hidden
+        className="hidden lg:block w-[70%]"
+        style={{
+          background:
+            "linear-gradient(rgb(2, 8, 13) 0%, rgb(25, 29, 193) 24%, rgb(41, 126, 232) 50%, rgb(234, 239, 252) 100%)",
+        }}
+      />
+    </div>
   );
 }
