@@ -200,7 +200,7 @@ function PartPracticeOverview({
             <MetricCard label="Answered" value={answered} />
             <MetricCard label="Study time" value="-" />
           </div>
-          <div className="mt-5 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+          <div className="mt-5 rounded-2xl bg-surface p-5 shadow-card sm:p-6">
             <div className="space-y-5">
               {Array.from({ length: 7 }, (_, index) => (
                 <PartProgress
@@ -221,7 +221,7 @@ function PartPracticeOverview({
 
 function MetricCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <article className="min-h-32 rounded-2xl border border-border bg-surface p-5 sm:p-6">
+    <article className="min-h-32 rounded-2xl bg-surface p-5 shadow-card sm:p-6">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-3 font-mono text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
         {value}
