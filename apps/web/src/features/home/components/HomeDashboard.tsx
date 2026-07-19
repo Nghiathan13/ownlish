@@ -148,7 +148,7 @@ function VocabularyOverview({
       <div className="flex items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <h1
-          className="text-2xl font-semibold tracking-tight sm:text-3xl"
+          className="mb-8 text-2xl font-semibold tracking-tight sm:text-3xl"
           id="vocabulary-title"
         >
           Vocabulary
@@ -189,7 +189,7 @@ function PartPracticeOverview({
       <div className="flex items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <h2
-          className="text-2xl font-semibold tracking-tight sm:text-3xl"
+          className="mb-8 text-2xl font-semibold tracking-tight sm:text-3xl"
           id="toeic-title"
         >
           TOEIC
