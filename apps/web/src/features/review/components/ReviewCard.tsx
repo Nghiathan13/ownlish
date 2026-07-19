@@ -27,7 +27,7 @@ export function ReviewCard({
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-3">
-      <article className="rounded-[1.75rem] border border-border bg-surface p-5 shadow-card sm:p-8">
+      <article className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8">
         <div className="mb-8 grid gap-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span>

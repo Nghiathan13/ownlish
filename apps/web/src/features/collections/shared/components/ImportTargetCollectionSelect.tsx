@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useId, useRef, useState } from "react";
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { classNames } from "@/shared/lib/classNames";
 import {
   secondaryTextButtonColorsClassName,
   textButtonLayoutClassName,
 } from "@/shared/ui/button";
+import { ArrowDropDownIcon } from "@/shared/ui/icons/ArrowDropDownIcon";
+import { ArrowDropUpIcon } from "@/shared/ui/icons/ArrowDropUpIcon";
 
 type ImportTargetCollectionSelectProps = {
   ariaLabel?: string;
@@ -21,10 +24,103 @@ const toolbarSelectClassName = classNames(
   "w-fit min-w-[10rem] max-w-[14rem] truncate appearance-none cursor-pointer",
 );
 
-const reviewSelectClassName = classNames(
-  "h-10 w-full min-w-0 cursor-pointer appearance-none rounded-full border border-border bg-background py-0 pl-4 pr-10 text-sm font-medium text-foreground outline-none",
-  "focus:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
-);
+function getCollectionLabel(collection: CollectionSummary) {
+  return collection.isDefault ? "My Vocabulary" : collection.name;
+}
+
+function ReviewCollectionSelect({
+  ariaLabel,
+  collections,
+  onChange,
+  value,
+}: Omit<ImportTargetCollectionSelectProps, "variant">) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selectedCollection = collections.find((collection) => collection.id === value);
+  const selectedLabel = selectedCollection
+    ? getCollectionLabel(selectedCollection)
+    : "Select collection";
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full max-w-72" ref={rootRef}>
+      <button
+        aria-controls={menuId}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={`${ariaLabel}: ${selectedLabel}`}
+        className="flex h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-lg bg-surface px-4 text-left text-sm font-medium text-foreground shadow-card transition hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+        onClick={() => setIsOpen((current) => !current)}
+        type="button"
+      >
+        <span className="truncate">{selectedLabel}</span>
+        {isOpen ? (
+          <ArrowDropUpIcon className="size-5 shrink-0 text-muted-foreground" />
+        ) : (
+          <ArrowDropDownIcon className="size-5 shrink-0 text-muted-foreground" />
+        )}
+      </button>
+
+      {isOpen ? (
+        <div
+          aria-label={ariaLabel}
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 w-full rounded-lg bg-surface p-1 shadow-card"
+          id={menuId}
+          role="listbox"
+        >
+          {collections.map((collection) => {
+            const isSelected = collection.id === value;
+
+            return (
+              <button
+                aria-selected={isSelected}
+                className={classNames(
+                  "flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-hover-overlay",
+                  isSelected && "bg-muted",
+                )}
+                key={collection.id}
+                onClick={() => {
+                  setIsOpen(false);
+                  onChange(collection.id);
+                }}
+                role="option"
+                type="button"
+              >
+                <span className="truncate">{getCollectionLabel(collection)}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function ImportTargetCollectionSelect({
   ariaLabel = "Import into",
@@ -35,26 +131,12 @@ export function ImportTargetCollectionSelect({
 }: ImportTargetCollectionSelectProps) {
   if (variant === "review") {
     return (
-      <div className="relative w-full max-w-72">
-        <select
-          aria-label={ariaLabel}
-          className={reviewSelectClassName}
-          onChange={(event) => onChange(event.target.value)}
-          value={value}
-        >
-          {collections.map((collection) => (
-            <option key={collection.id} value={collection.id}>
-              {collection.isDefault ? "My Vocabulary" : collection.name}
-            </option>
-          ))}
-        </select>
-        <span
-          aria-hidden
-          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
-        >
-          ▾
-        </span>
-      </div>
+      <ReviewCollectionSelect
+        ariaLabel={ariaLabel}
+        collections={collections}
+        onChange={onChange}
+        value={value}
+      />
     );
   }
 
