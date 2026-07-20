@@ -18,6 +18,7 @@ import { useCollectionsListQuery } from "@/features/collections/shared/data/hook
 import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
 import { useDashboardPartPractice } from "@/features/home/hooks/useDashboardPartPractice";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
+import { GuestLanding } from "@/features/home/components/GuestLanding";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -66,7 +67,7 @@ export function HomeDashboard() {
   }
 
   if (!isAuthenticated) {
-    return <PageShell>{null}</PageShell>;
+    return <GuestLanding />;
   }
 
   return (
