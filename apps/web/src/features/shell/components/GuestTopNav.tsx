@@ -66,7 +66,7 @@ export function GuestTopNav() {
         isAtTop ? "top-4 sm:top-8" : "top-2 sm:top-4",
       )}
     >
-      <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card">
+      <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border">
         <Link
           className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"
           href="/"
