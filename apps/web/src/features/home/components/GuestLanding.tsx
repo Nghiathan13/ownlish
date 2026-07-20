@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
+import { iconTextButtonClassName } from "@/shared/ui/button";
 
 const HERO_GRADIENT_STYLE = {
   background:
@@ -76,16 +73,16 @@ export function GuestLanding() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/login"
-              className={primaryTextButtonClassName(
-                "gap-2 whitespace-nowrap transition-[box-shadow,border-color] duration-200 ease-out hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
+              className={iconTextButtonClassName(
+                "whitespace-nowrap border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
               )}
             >
               Get started
             </Link>
             <Link
               href="#features"
-              className={secondaryTextButtonClassName(
-                "gap-2 whitespace-nowrap transition-[background-color,border-color,box-shadow] duration-200 ease-out hover:bg-hover-overlay",
+              className={iconTextButtonClassName(
+                "whitespace-nowrap border-border bg-transparent text-foreground hover:bg-hover-overlay",
               )}
             >
               See how it works
