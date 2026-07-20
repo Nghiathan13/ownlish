@@ -50,7 +50,7 @@ const SHOWCASE_POINTS = [
 export function GuestLanding() {
   return (
     <div className="flex flex-col pt-24">
-      <section className="relative isolate overflow-hidden">
+      <section className="relative isolate">
         <div
           aria-hidden
           className="pointer-events-none absolute top-0 left-0 aspect-square w-1/2 max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgb(25,29,193)] blur-[10vw]"
