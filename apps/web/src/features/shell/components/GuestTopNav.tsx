@@ -62,8 +62,8 @@ export function GuestTopNav() {
   return (
     <nav
       className={classNames(
-        "pointer-events-none fixed right-16 left-16 z-50 transition-[top] duration-200",
-        isAtTop ? "top-8" : "top-4",
+        "pointer-events-none fixed right-4 left-4 z-50 transition-[top] duration-200 sm:right-16 sm:left-16",
+        isAtTop ? "top-4 sm:top-8" : "top-2 sm:top-4",
       )}
     >
       <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card">
