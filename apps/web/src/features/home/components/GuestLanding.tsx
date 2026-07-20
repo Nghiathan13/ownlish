@@ -50,35 +50,45 @@ const SHOWCASE_POINTS = [
 export function GuestLanding() {
   return (
     <div className="flex flex-col pt-24">
-      <section className="flex flex-col items-center gap-6 px-8 py-16 text-center lg:py-24">
-        <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-card">
-          <LogoIcon className="size-4 shrink-0" />
-          Learn smarter, not harder
-        </div>
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          Master English vocabulary &amp; ace the TOEIC
-        </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl">
-          Learn smarter with spaced repetition, bilingual dictionaries, and
-          realistic TOEIC practice tests — all in one place.
-        </p>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/login"
-            className={primaryTextButtonClassName(
-              "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
-            )}
-          >
-            Get started
-          </Link>
-          <Link
-            href="#features"
-            className={secondaryTextButtonClassName(
-              "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
-            )}
-          >
-            See how it works
-          </Link>
+      <section className="relative isolate overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-0 left-0 aspect-square w-1/2 max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgb(25,29,193)] blur-[10vw]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-[rgb(41,126,232)] opacity-60 blur-[10vw]"
+        />
+        <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center lg:py-24">
+          <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-card">
+            <LogoIcon className="size-4 shrink-0" />
+            Learn smarter, not harder
+          </div>
+          <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            Master English vocabulary &amp; ace the TOEIC
+          </h1>
+          <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl">
+            Learn smarter with spaced repetition, bilingual dictionaries, and
+            realistic TOEIC practice tests — all in one place.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/login"
+              className={primaryTextButtonClassName(
+                "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
+              )}
+            >
+              Get started
+            </Link>
+            <Link
+              href="#features"
+              className={secondaryTextButtonClassName(
+                "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
+              )}
+            >
+              See how it works
+            </Link>
+          </div>
         </div>
       </section>
 
