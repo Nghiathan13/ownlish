@@ -7,8 +7,14 @@ import {
   useAuthSession,
 } from "@/features/auth/hooks/useAuthSession";
 import { classNames } from "@/shared/lib/classNames";
-import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
+
+const signInButtonClassName = classNames(
+  "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg px-4 py-2",
+  "text-[15px] leading-[20px] font-normal",
+  "bg-foreground text-background",
+  "hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
+);
 
 export function GuestTopNav() {
   const { status } = useAuthSession();
@@ -47,12 +53,7 @@ export function GuestTopNav() {
           EngVocab
         </Link>
         {isLoadingStatus(status) ? null : (
-          <Link
-            className={primaryTextButtonClassName(
-              "hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
-            )}
-            href="/login"
-          >
+          <Link className={signInButtonClassName} href="/login">
             Sign in
           </Link>
         )}
