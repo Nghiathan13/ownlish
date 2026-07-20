@@ -20,6 +20,7 @@ import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
+import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 export function MobileTopNav() {
@@ -39,7 +40,11 @@ export function MobileTopNav() {
         )}
       >
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
-          <Link href="/" className="shrink-0 text-base font-bold hover:opacity-80">
+          <Link
+            href="/"
+            className="flex shrink-0 items-center gap-2 text-base font-bold hover:opacity-80"
+          >
+            <LogoIcon className="size-6 shrink-0" />
             EngVocab
           </Link>
         </div>

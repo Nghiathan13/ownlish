@@ -29,6 +29,7 @@ import {
   primaryTextButtonClassName,
 } from "@/shared/ui/button";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
+import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 import { PanelCloseIcon } from "@/shared/ui/icons/PanelCloseIcon";
 import { PanelOpenIcon } from "@/shared/ui/icons/PanelOpenIcon";
 import {
@@ -195,8 +196,9 @@ export function AppSidebar() {
             <div className="flex items-center justify-between gap-2">
               <Link
                 href="/"
-                className="pl-2 text-base font-bold hover:opacity-80"
+                className="flex items-center gap-2 pl-2 text-base font-bold hover:opacity-80"
               >
+                <LogoIcon className="size-6 shrink-0" />
                 EngVocab
               </Link>
               <button
