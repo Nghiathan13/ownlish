@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { AuthForm } from "@/features/auth/components/AuthForm";
@@ -10,6 +11,8 @@ import {
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
 import { getSafeAuthRedirectPath } from "@/features/auth/lib/authRedirect";
+import { iconTextButtonClassName } from "@/shared/ui/button";
+import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 
 export default function LoginPage() {
   return (
@@ -37,7 +40,17 @@ function LoginPageContent() {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <div className="flex w-full items-center justify-center p-8 lg:w-[45%]">
+      <div className="relative flex w-full items-center justify-center p-8 lg:w-[45%]">
+        <Link
+          className={iconTextButtonClassName(
+            "absolute top-16 left-16",
+            "border-border bg-transparent text-foreground hover:bg-hover-overlay",
+          )}
+          href="/"
+        >
+          <ArrowBackIcon />
+          Back to home
+        </Link>
         <AuthForm redirectTo={redirectTo} />
       </div>
       <div
