@@ -64,10 +64,10 @@ export function GuestLanding() {
             <LogoIcon className="size-4 shrink-0" />
             Learn smarter, not harder
           </div>
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Grow your vocabulary.
             <br />
-            Raise your TOEIC readiness.
+            <span className="whitespace-nowrap">Raise your TOEIC readiness.</span>
           </h1>
           <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl">
             Use spaced repetition, bilingual learning content, and complete
@@ -77,7 +77,7 @@ export function GuestLanding() {
             <Link
               href="/login"
               className={primaryTextButtonClassName(
-                "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
+                "gap-2 whitespace-nowrap transition-[box-shadow,border-color] duration-200 ease-out hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
               )}
             >
               Get started
@@ -85,7 +85,7 @@ export function GuestLanding() {
             <Link
               href="#features"
               className={secondaryTextButtonClassName(
-                "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
+                "gap-2 whitespace-nowrap transition-[background-color,border-color,box-shadow] duration-200 ease-out hover:bg-hover-overlay",
               )}
             >
               See how it works
