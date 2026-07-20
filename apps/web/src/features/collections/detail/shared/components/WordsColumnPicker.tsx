@@ -60,7 +60,7 @@ export function WordsColumnPicker<Id extends string>({
         aria-haspopup="menu"
         className={iconTextButtonClassName(
           "w-fit shrink-0",
-          "border-border bg-transparent text-foreground hover:bg-muted",
+          "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
         )}
         onClick={() => setIsOpen((current) => !current)}
       >
@@ -73,7 +73,7 @@ export function WordsColumnPicker<Id extends string>({
           id={menuId}
           role="menu"
           aria-label="Toggle table columns"
-          className="absolute top-[calc(100%+0.25rem)] right-0 z-20 min-w-[12rem] rounded-md border border-border bg-background p-1 shadow-lg"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 min-w-[12rem] rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
         >
           {columns.map((column) => {
             const isVisible = columnVisibility[column.id];
@@ -84,7 +84,7 @@ export function WordsColumnPicker<Id extends string>({
                 type="button"
                 role="menuitemcheckbox"
                 aria-checked={isVisible}
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-muted"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-hover-overlay"
                 onClick={() => onToggleColumn(column.id)}
               >
                 <span className="inline-flex size-4 shrink-0 items-center justify-center">
