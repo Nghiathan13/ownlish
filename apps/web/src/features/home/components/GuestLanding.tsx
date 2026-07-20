@@ -49,7 +49,7 @@ const SHOWCASE_POINTS = [
 
 export function GuestLanding() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex flex-col">
       <section className="flex flex-col items-center gap-6 px-8 py-16 text-center lg:py-24">
         <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-card">
           <LogoIcon className="size-4 shrink-0" />

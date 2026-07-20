@@ -67,7 +67,11 @@ export function HomeDashboard() {
   }
 
   if (!isAuthenticated) {
-    return <GuestLanding />;
+    return (
+      <PageShell>
+        <GuestLanding />
+      </PageShell>
+    );
   }
 
   return (
