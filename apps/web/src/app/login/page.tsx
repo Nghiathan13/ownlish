@@ -43,7 +43,7 @@ function LoginPageContent() {
       <div className="relative flex w-full items-center justify-center p-8 lg:w-[45%]">
         <Link
           className={iconTextButtonClassName(
-            "absolute top-16 left-16",
+            "absolute top-8 left-8",
             "border-border bg-transparent text-foreground hover:bg-hover-overlay",
           )}
           href="/"

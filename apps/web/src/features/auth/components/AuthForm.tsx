@@ -76,7 +76,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
   return (
     <Panel
       aria-labelledby="auth-title"
-      className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)]")}
+      className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)] border-0")}
     >
       <h1 className="text-3xl font-bold leading-tight" id="auth-title">
         Get started with Engvocab
