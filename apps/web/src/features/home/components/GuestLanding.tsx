@@ -57,7 +57,7 @@ export function GuestLanding() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-[rgb(41,126,232)] opacity-60 blur-[10vw]"
+          className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-[rgb(25,29,193)] opacity-60 blur-[10vw]"
         />
         <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center lg:py-24">
           <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-card">
