@@ -25,6 +25,11 @@ vi.mock("@/features/shell/components/MobileTopNav", () => ({
   MobileTopNav: () => <div data-testid="mobile-top-nav" />,
 }));
 
+vi.mock("@/shared/providers/ThemeProvider", () => ({
+  useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
+  useResolvedTheme: () => "light",
+}));
+
 describe("AppShell", () => {
   beforeEach(() => {
     mocks.usePathname.mockReturnValue("/");

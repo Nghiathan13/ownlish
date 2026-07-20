@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   isLoadingStatus,
   useAuthSession,
@@ -40,10 +40,11 @@ function GuestNavThemeToggle() {
 
 export function GuestTopNav() {
   const { status } = useAuthSession();
+  const navRef = useRef<HTMLElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
-    const scroller = document.querySelector("main");
+    const scroller = navRef.current?.parentElement;
     if (!scroller) {
       return;
     }
@@ -61,9 +62,10 @@ export function GuestTopNav() {
 
   return (
     <nav
+      ref={navRef}
       className={classNames(
-        "pointer-events-none fixed right-4 left-4 z-50 transition-[top] duration-200 sm:right-16 sm:left-16",
-        isAtTop ? "top-4 sm:top-8" : "top-2 sm:top-4",
+        "pointer-events-none sticky z-50 mx-4 transition-[top,margin-top] duration-200 sm:mx-16",
+        isAtTop ? "top-4 mt-4 sm:top-8 sm:mt-8" : "top-2 mt-0 sm:top-4",
       )}
     >
       <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border">

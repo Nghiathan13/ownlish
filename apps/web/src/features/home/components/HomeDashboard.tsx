@@ -68,7 +68,7 @@ export function HomeDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <PageShell>
+      <PageShell className="overflow-visible">
         <GuestLanding />
       </PageShell>
     );
