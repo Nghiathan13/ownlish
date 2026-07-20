@@ -29,11 +29,17 @@ function PartPracticeCardSkeleton() {
 export function PracticeTabSkeleton({
   includePartTabs = false,
 }: PracticeTabSkeletonProps) {
+  const cardSkeleton = <PartPracticeCardSkeleton />;
+
+  if (!includePartTabs) {
+    return cardSkeleton;
+  }
+
   return (
     <>
-      {includePartTabs ? <PartPracticeTabsSkeleton /> : null}
+      <PartPracticeTabsSkeleton />
       <div aria-hidden className="mb-4 flex flex-col gap-4 px-8 lg:px-16">
-        <PartPracticeCardSkeleton />
+        {cardSkeleton}
       </div>
     </>
   );

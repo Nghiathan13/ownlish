@@ -81,7 +81,7 @@ function CollectionDropdown({
       {isOpen ? (
         <div
           aria-label={ariaLabel}
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid w-full gap-1 rounded-lg border border-border bg-surface p-1 shadow-card"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid w-full gap-1 rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
           id={menuId}
           role="listbox"
         >
