@@ -7,6 +7,9 @@ import {
   useAuthSession,
 } from "@/features/auth/hooks/useAuthSession";
 import { classNames } from "@/shared/lib/classNames";
+import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
+import { DarkModeIcon } from "@/shared/ui/icons/DarkModeIcon";
+import { LightModeIcon } from "@/shared/ui/icons/LightModeIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 
 const signInButtonClassName = classNames(
@@ -15,6 +18,25 @@ const signInButtonClassName = classNames(
   "bg-foreground text-background",
   "hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
 );
+
+function GuestNavThemeToggle() {
+  const { setTheme } = useTheme();
+  const resolvedTheme = useResolvedTheme();
+  const targetTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const tooltip = `Switch to ${targetTheme} theme`;
+  const Icon = targetTheme === "light" ? LightModeIcon : DarkModeIcon;
+
+  return (
+    <button
+      aria-label={tooltip}
+      className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-foreground hover:bg-hover-overlay"
+      onClick={() => setTheme(targetTheme)}
+      type="button"
+    >
+      <Icon className="size-6 shrink-0" />
+    </button>
+  );
+}
 
 export function GuestTopNav() {
   const { status } = useAuthSession();
@@ -52,11 +74,14 @@ export function GuestTopNav() {
           <LogoIcon className="size-6 shrink-0" />
           EngVocab
         </Link>
-        {isLoadingStatus(status) ? null : (
-          <Link className={signInButtonClassName} href="/login">
-            Sign in
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          <GuestNavThemeToggle />
+          {isLoadingStatus(status) ? null : (
+            <Link className={signInButtonClassName} href="/login">
+              Sign in
+            </Link>
+          )}
+        </div>
       </div>
     </nav>
   );
