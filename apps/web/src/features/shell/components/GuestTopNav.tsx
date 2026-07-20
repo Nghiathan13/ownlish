@@ -12,8 +12,8 @@ export function GuestTopNav() {
   const { status } = useAuthSession();
 
   return (
-    <nav className="mx-16 mt-8 shrink-0">
-      <div className="flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card">
+    <nav className="pointer-events-none fixed top-8 right-16 left-16 z-50">
+      <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card">
         <Link
           className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"
           href="/"
