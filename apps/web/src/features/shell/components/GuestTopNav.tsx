@@ -22,7 +22,12 @@ export function GuestTopNav() {
           EngVocab
         </Link>
         {isLoadingStatus(status) ? null : (
-          <Link className={primaryTextButtonClassName()} href="/login">
+          <Link
+            className={primaryTextButtonClassName(
+              "hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
+            )}
+            href="/login"
+          >
             Sign in
           </Link>
         )}
