@@ -7,16 +7,15 @@ import {
 } from "@/features/auth/hooks/useAuthSession";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
-import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
 
 export function GuestTopNav() {
   const { status } = useAuthSession();
 
   return (
-    <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface">
-      <div className={`${APP_CONTAINER_CLASS} flex items-center justify-between py-3`}>
+    <nav className="mx-16 mt-8 shrink-0">
+      <div className="flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card">
         <Link
-          className="flex items-center gap-2 text-base font-bold hover:opacity-80"
+          className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"
           href="/"
         >
           <LogoIcon className="size-6 shrink-0" />

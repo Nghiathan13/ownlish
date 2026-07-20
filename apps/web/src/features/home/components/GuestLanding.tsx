@@ -69,7 +69,7 @@ export function GuestLanding() {
               "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px",
             )}
           >
-            Get started free
+            Get started
           </Link>
           <Link
             href="#features"
@@ -156,7 +156,7 @@ export function GuestLanding() {
             href="/login"
             className="inline-flex shrink-0 items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-black transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px"
           >
-            Get started free
+            Get started
           </Link>
         </div>
       </section>
