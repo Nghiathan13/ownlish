@@ -5,9 +5,8 @@ export function ReviewCardSkeleton() {
     <div aria-hidden className="mx-auto grid w-full max-w-3xl gap-3">
       <div className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8">
         <div className="mb-8 grid gap-2">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex justify-center">
             <Skeleton className="h-4 w-12" />
-            <Skeleton className="h-4 w-16" />
           </div>
           <Skeleton className="h-1.5 w-full rounded-full" />
         </div>

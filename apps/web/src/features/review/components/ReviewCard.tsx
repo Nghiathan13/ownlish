@@ -29,12 +29,9 @@ export function ReviewCard({
     <div className="mx-auto grid w-full max-w-3xl gap-3">
       <article className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8">
         <div className="mb-8 grid gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-            <span>
-              {completedCount}/{totalWords || remainingWords}
-            </span>
-            <span>{remainingWords} left</span>
-          </div>
+          <p className="text-center text-sm text-muted-foreground">
+            {completedCount}/{totalWords || remainingWords}
+          </p>
           <div
             aria-label={`${completedCount} of ${totalWords} reviewed`}
             aria-valuemax={totalWords}
@@ -62,14 +59,14 @@ export function ReviewCard({
                 ) : null}
               </h2>
               {word.band ? (
-                <span className="rounded-full border border-border bg-muted px-2 py-1 font-semibold text-muted-foreground text-[20px] sm:text-[24px] xl:text-[28px]">
+                <span className="rounded-full border border-border bg-muted px-2 py-1 font-semibold text-muted-foreground text-[12px] sm:text-[14px] xl:text-[16px]">
                   {word.band}
                 </span>
               ) : null}
             </div>
 
             {ipa ? (
-              <p className="mt-2 font-mono text-muted-foreground text-[24px] sm:text-[28px] xl:text-[32px]">
+              <p className="mt-2 font-mono text-muted-foreground text-[16px] sm:text-[20px] xl:text-[24px]">
                 /{ipa.replace(/^\/+|\/+$/g, "")}/
               </p>
             ) : null}
