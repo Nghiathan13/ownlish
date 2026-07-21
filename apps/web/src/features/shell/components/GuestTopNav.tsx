@@ -70,11 +70,12 @@ export function GuestTopNav() {
     >
       <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border">
         <Link
+          aria-label="EngVocab"
           className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"
           href="/"
         >
           <LogoIcon className="size-6 shrink-0" />
-          EngVocab
+          <span className="hidden sm:inline">EngVocab</span>
         </Link>
         <div className="flex items-center gap-2">
           <GuestNavThemeToggle />
