@@ -76,7 +76,7 @@ export const LANDING_PART3_DEMO = {
       type: "evidence",
       questionNumbers: [69],
       value:
-        "So the largest cluster of wind turbines—off the coast of Winston—is already built.",
+        "So the largest cluster of wind turbines – off the coast of Winston – is already built.",
     },
     {
       type: "text",

@@ -15,7 +15,6 @@ import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions
 import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
 import {
   iconTextButtonClassName,
-  secondaryTextButtonClassName,
 } from "@/shared/ui/button";
 
 type Selections = Record<string, LandingOptionKey | null>;
@@ -168,7 +167,9 @@ export function LandingPart3Demo() {
           {revealed ? (
             <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
               <button
-                className={secondaryTextButtonClassName()}
+                className={iconTextButtonClassName(
+                  "border-border bg-transparent text-foreground hover:bg-hover-overlay",
+                )}
                 onClick={handleReset}
                 type="button"
               >
