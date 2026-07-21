@@ -14,6 +14,7 @@ type PassagePanelProps = {
   contentVi?: string | null;
   contentSegments?: ContentEvidenceSegment[] | null;
   contentViSegments?: ContentEvidenceSegment[] | null;
+  cardClassName?: string;
   showRawContentWhenEvidenceOff?: boolean;
   showTitle?: boolean;
   showTranslation: boolean;
@@ -94,6 +95,7 @@ export function PassagePanel({
   contentVi,
   contentSegments = null,
   contentViSegments = null,
+  cardClassName,
   showRawContentWhenEvidenceOff = false,
   showTitle = true,
   showTranslation,
@@ -137,6 +139,7 @@ export function PassagePanel({
     <div className="flex flex-col gap-4">
       {hasContent ? (
         <PracticeTranslationCard
+          className={cardClassName}
           headerAction={
             canToggleContentEvidence ? (
               <EvidenceHighlightSwitch
@@ -158,6 +161,7 @@ export function PassagePanel({
       ) : null}
       {hasTranslation ? (
         <PracticeTranslationCard
+          className={cardClassName}
           headerAction={
             canToggleTranslationEvidence ? (
               <EvidenceHighlightSwitch

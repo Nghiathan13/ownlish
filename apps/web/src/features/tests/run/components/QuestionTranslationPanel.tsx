@@ -16,6 +16,7 @@ type QuestionTranslationPanelProps = {
   variant?: PartTranslationVariant;
   questionVi?: string | null;
   answerKey?: "A" | "B" | "C" | "D" | null;
+  className?: string;
 };
 
 const OPTION_KEYS = ["A", "B", "C", "D"] as const;
@@ -27,6 +28,7 @@ export function QuestionTranslationPanel({
   variant = "options",
   questionVi,
   answerKey = null,
+  className,
 }: QuestionTranslationPanelProps) {
   if (!visible) {
     return null;
@@ -36,8 +38,8 @@ export function QuestionTranslationPanel({
   const showOptions = showsOptionTranslation(variant);
 
   return (
-    <PracticeTranslationCard>
-      <div className="p-4">
+    <PracticeTranslationCard className={className}>
+      <div className="flex flex-col gap-2 p-4">
         {showQuestion && questionVi?.trim() ? (
           <p className="font-semibold whitespace-pre-wrap">{questionVi}</p>
         ) : null}

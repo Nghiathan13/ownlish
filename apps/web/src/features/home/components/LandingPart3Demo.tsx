@@ -59,12 +59,6 @@ export function LandingPart3Demo() {
     [demo.transcriptViSegments],
   );
 
-  const correctCount = revealed
-    ? demo.questions.filter(
-        (question) => selections[question.id] === question.answerKey,
-      ).length
-    : 0;
-
   function handleSelect(questionId: string, key: LandingOptionKey) {
     if (revealed) {
       return;
@@ -96,7 +90,7 @@ export function LandingPart3Demo() {
         </p>
       </div>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-6 rounded-2xl bg-surface p-5 shadow-card lg:grid-cols-2 lg:gap-8 lg:p-8">
+      <div className="mx-auto grid w-full max-w-6xl gap-6 rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border lg:grid-cols-2 lg:gap-8 lg:p-8">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -126,6 +120,7 @@ export function LandingPart3Demo() {
 
           {revealed ? (
             <PassagePanel
+              cardClassName="bg-background"
               content={transcriptEn}
               contentSegments={[...demo.transcriptSegments]}
               contentVi={transcriptVi}
@@ -159,6 +154,7 @@ export function LandingPart3Demo() {
                 />
                 <QuestionTranslationPanel
                   answerKey={revealed ? question.answerKey : null}
+                  className="bg-background"
                   optionCount={4}
                   options={options}
                   questionVi={question.promptVi}
@@ -171,9 +167,6 @@ export function LandingPart3Demo() {
 
           {revealed ? (
             <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
-              <p className="text-sm font-medium">
-                {correctCount}/{demo.questions.length} correct
-              </p>
               <button
                 className={secondaryTextButtonClassName()}
                 onClick={handleReset}
