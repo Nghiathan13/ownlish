@@ -28,6 +28,11 @@ vi.mock("@/features/home/hooks/useVocabStats", () => ({
   useVocabStats: mocks.useVocabStats,
 }));
 
+vi.mock("@/shared/providers/ThemeProvider", () => ({
+  useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
+  useResolvedTheme: () => "light",
+}));
+
 const defaultCollection = {
   id: "collection-1",
   name: "Daily vocabulary",
