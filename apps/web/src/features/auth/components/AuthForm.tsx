@@ -77,7 +77,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
       className="w-[min(420px,100%)]"
     >
       <h1 className="text-3xl font-bold leading-tight" id="auth-title">
-        Get started with Engvocab
+        {mode === "register" ? "Create your Engvocab account" : "Get started with Engvocab"}
       </h1>
 
       {isGoogleSignInConfigured ? (

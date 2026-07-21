@@ -12,9 +12,9 @@ export const LANDING_VOCAB_DEMO_WORD = {
 } as const;
 
 export const LANDING_VOCAB_DEMO_METRICS = {
-  due: 12,
-  mastered: 48,
-  difficult: 5,
+  due: 1,
+  mastered: 0,
+  difficult: 0,
 } as const;
 
 export type LandingOptionKey = "A" | "B" | "C" | "D";

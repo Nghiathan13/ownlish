@@ -10,7 +10,7 @@ import { ProgressNavIcon } from "@/shared/ui/icons/ProgressNavIcon";
 import { ReviewNavIcon } from "@/shared/ui/icons/ReviewNavIcon";
 
 const vocabCardClassName =
-  "group flex flex-col rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border sm:p-6";
+  "group flex min-w-[300px] flex-col rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border sm:p-6";
 
 export function LandingVocabSection() {
   return (
@@ -64,7 +64,7 @@ function LandingReviewCard() {
     <article className={vocabCardClassName}>
       <VocabCardHeader
         Icon={ReviewNavIcon}
-        description="Click the card to reveal meaning and example."
+        description="Click to reveal meaning"
         title="Review"
       />
 

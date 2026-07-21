@@ -10,6 +10,10 @@ import {
   joinContentEvidenceSegments,
   transcriptToContentEvidenceSegments,
 } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
+import {
+  groupHasWrongAnswer,
+  maskReviewWrongQuestion,
+} from "@/entities/toeic-runtime/model/reviewWrongMaterialize";
 import type { ToeicRuntimeRun } from "@/entities/toeic-runtime/model/types";
 
 type OptionKey = "A" | "B" | "C" | "D";
@@ -149,15 +153,17 @@ export function materializePartPracticeSession(
     const questions = rawQuestions
       .map(asRecord)
       .filter((question): question is Record<string, unknown> => question !== null)
-      .filter((question) => {
-        const questionKey = question.id;
-        return (
-          typeof questionKey === "string" &&
-          (mode !== "review_wrong" || answersByKey.get(questionKey)?.status === "wrong")
-        );
-      });
+      .filter((question) => typeof question.id === "string");
 
-    if (!group || questions.length === 0) {
+    const questionKeys = questions
+      .map((question) => question.id)
+      .filter((questionKey): questionKey is string => typeof questionKey === "string");
+
+    if (
+      !group ||
+      questions.length === 0 ||
+      (mode === "review_wrong" && !groupHasWrongAnswer(questionKeys, answersByKey))
+    ) {
       return [];
     }
 
@@ -177,7 +183,11 @@ export function materializePartPracticeSession(
         return [];
       }
       questionKeyById.set(nextQuestionId, questionKey);
-      return [materialized];
+      return [
+        mode === "review_wrong"
+          ? maskReviewWrongQuestion(materialized)
+          : materialized,
+      ];
     });
 
     if (materializedQuestions.length === 0) {

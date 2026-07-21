@@ -8,6 +8,10 @@ import {
   joinContentEvidenceSegments,
   transcriptToContentEvidenceSegments,
 } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
+import {
+  groupHasWrongAnswer,
+  maskReviewWrongQuestion,
+} from "./reviewWrongMaterialize";
 import type { ToeicRuntimeRun } from "./types";
 
 type OptionKey = "A" | "B" | "C" | "D";
@@ -202,14 +206,17 @@ export function materializeTestSession(
       const questions = rawQuestions
         .map(asRecord)
         .filter((question): question is Record<string, unknown> => question !== null)
-        .filter((question) => {
-          const questionKey = asString(question.id);
-          return questionKey !== null && (
-            mode !== "review_wrong" || answersByKey.get(questionKey)?.status === "wrong"
-          );
-        });
+        .filter((question) => asString(question.id) !== null);
 
-      if (!groupKey || questions.length === 0) {
+      const questionKeys = questions
+        .map((question) => asString(question.id))
+        .filter((questionKey): questionKey is string => questionKey !== null);
+
+      if (
+        !groupKey ||
+        questions.length === 0 ||
+        (mode === "review_wrong" && !groupHasWrongAnswer(questionKeys, answersByKey))
+      ) {
         continue;
       }
 
@@ -231,7 +238,11 @@ export function materializeTestSession(
         }
 
         questionKeyById.set(nextQuestionId, questionKey);
-        return [materialized];
+        return [
+          mode === "review_wrong"
+            ? maskReviewWrongQuestion(materialized)
+            : materialized,
+        ];
       });
 
       if (materializedQuestions.length === 0) {
