@@ -33,7 +33,6 @@ import type {
   AdminToeicTestRawGroup,
   AdminToeicTestRawResponse,
 } from "@/features/admin/toeic/api/types";
-import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
 import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
@@ -357,15 +356,10 @@ function AdminToeicCurrentStepDetail({
     "/admin/toeic",
   );
 
-  useRegisterImmersiveQuestionNav({
-    currentQuestionNumber: currentQuestionPosition,
-    enabled: steps.length > 0,
-    totalQuestions,
-  });
-
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
     <PracticeNavigationButtons
+      currentQuestionNumber={currentQuestionPosition}
       isQuestionGridOpen={isQuestionGridOpen}
       leftSlot={
         isEditing ? (
@@ -425,6 +419,7 @@ function AdminToeicCurrentStepDetail({
       }}
       previousDisabled={activeStepIndex === 0}
       questionGridSections={questionGridSections}
+      totalQuestions={totalQuestions}
     />
   );
 

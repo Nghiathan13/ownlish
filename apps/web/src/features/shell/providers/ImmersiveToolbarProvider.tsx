@@ -19,11 +19,6 @@ import {
 type ExitHandler = () => boolean | void | Promise<boolean | void>;
 type FinishHandler = () => void | Promise<void>;
 
-export type ImmersiveQuestionNavState = {
-  currentQuestionNumber: number;
-  totalQuestions: number;
-};
-
 type RegisterExitOptions = {
   showBilingualAction?: boolean;
 };
@@ -43,11 +38,6 @@ type ImmersiveExitContextValue = {
     backHref?: string | null,
     options?: RegisterExitOptions,
   ) => void;
-};
-
-type ImmersiveQuestionNavContextValue = {
-  questionNav: ImmersiveQuestionNavState | null;
-  registerQuestionNav: (state: ImmersiveQuestionNavState | null) => void;
 };
 
 type ImmersiveFinishContextValue = {
@@ -71,9 +61,6 @@ const ImmersiveExitContext = createContext<ImmersiveExitContextValue | null>(
   null,
 );
 
-const ImmersiveQuestionNavContext =
-  createContext<ImmersiveQuestionNavContextValue | null>(null);
-
 const ImmersiveFinishContext = createContext<ImmersiveFinishContextValue | null>(
   null,
 );
@@ -92,8 +79,6 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
   const [isFinishDisabled, setIsFinishDisabled] = useState(false);
   const [isFinishPending, setIsFinishPending] = useState(false);
   const [showBilingualAction, setShowBilingualAction] = useState(false);
-  const [questionNav, setQuestionNav] =
-    useState<ImmersiveQuestionNavState | null>(null);
   const [isBilingual, setIsBilingual] = useState(() => readBilingualEnabled());
 
   const registerExitHandler = useCallback(
@@ -109,13 +94,6 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
       if (backHref) {
         backHrefRef.current = backHref;
       }
-    },
-    [],
-  );
-
-  const registerQuestionNav = useCallback(
-    (state: ImmersiveQuestionNavState | null) => {
-      setQuestionNav(state);
     },
     [],
   );
@@ -179,14 +157,6 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
     [exit, exitTitle, registerExitHandler, showBilingualAction],
   );
 
-  const questionNavValue = useMemo(
-    () => ({
-      questionNav,
-      registerQuestionNav,
-    }),
-    [questionNav, registerQuestionNav],
-  );
-
   const finishValue = useMemo(
     () => ({
       disabled: isFinishDisabled,
@@ -214,23 +184,17 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
 
   return (
     <ImmersiveExitContext.Provider value={exitValue}>
-      <ImmersiveQuestionNavContext.Provider value={questionNavValue}>
-        <ImmersiveFinishContext.Provider value={finishValue}>
-          <ImmersiveBilingualContext.Provider value={bilingualValue}>
-            {children}
-          </ImmersiveBilingualContext.Provider>
-        </ImmersiveFinishContext.Provider>
-      </ImmersiveQuestionNavContext.Provider>
+      <ImmersiveFinishContext.Provider value={finishValue}>
+        <ImmersiveBilingualContext.Provider value={bilingualValue}>
+          {children}
+        </ImmersiveBilingualContext.Provider>
+      </ImmersiveFinishContext.Provider>
     </ImmersiveExitContext.Provider>
   );
 }
 
 export function useImmersiveExit() {
   return useContext(ImmersiveExitContext);
-}
-
-export function useImmersiveQuestionNav() {
-  return useContext(ImmersiveQuestionNavContext);
 }
 
 export function useImmersiveBilingual() {

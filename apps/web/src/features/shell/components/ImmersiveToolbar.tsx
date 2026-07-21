@@ -5,7 +5,6 @@ import {
   useImmersiveBilingual,
   useImmersiveExit,
   useImmersiveFinish,
-  useImmersiveQuestionNav,
 } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { classNames } from "@/shared/lib/classNames";
 import {
@@ -20,10 +19,8 @@ export function ImmersiveToolbar() {
   const router = useRouter();
   const exitContext = useImmersiveExit();
   const finishContext = useImmersiveFinish();
-  const questionNavContext = useImmersiveQuestionNav();
   const bilingualContext = useImmersiveBilingual();
   const isBilingual = bilingualContext?.isBilingual ?? false;
-  const questionNav = questionNavContext?.questionNav ?? null;
   const exitTitle = exitContext?.title ?? null;
   const finishTitle = finishContext?.title ?? null;
   const title = exitTitle ?? finishTitle;
@@ -37,7 +34,7 @@ export function ImmersiveToolbar() {
       <div
         className={classNames(
           APP_CONTAINER_CLASS,
-          "flex items-center justify-between gap-4 py-4",
+          "flex items-center gap-4 py-4",
         )}
       >
         <div className="flex items-center gap-4">
@@ -91,13 +88,6 @@ export function ImmersiveToolbar() {
             </div>
           ) : null}
         </div>
-
-        {questionNav ? (
-          <span className="rounded-lg border border-border px-4 py-2 text-base font-normal">
-            Question {questionNav.currentQuestionNumber}/
-            {questionNav.totalQuestions}
-          </span>
-        ) : null}
       </div>
     </nav>
   );

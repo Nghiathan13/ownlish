@@ -20,6 +20,8 @@ type PracticeNavigationButtonsProps = {
   isQuestionGridOpen?: boolean;
   leftSlot?: ReactNode;
   onQuestionGridOpenChange?: (open: boolean) => void;
+  currentQuestionNumber?: number;
+  totalQuestions?: number;
 };
 
 export function PracticeNavigationButtons({
@@ -33,6 +35,8 @@ export function PracticeNavigationButtons({
   isQuestionGridOpen,
   leftSlot,
   onQuestionGridOpenChange,
+  currentQuestionNumber,
+  totalQuestions,
 }: PracticeNavigationButtonsProps) {
   const [internalGridOpen, setInternalGridOpen] = useState(false);
   const isGridOpen = isQuestionGridOpen ?? internalGridOpen;
@@ -41,6 +45,10 @@ export function PracticeNavigationButtons({
     questionGridSections != null &&
     questionGridSections.some((section) => section.cells.length > 0) &&
     onQuestionGridSelect != null;
+  const showQuestionPosition =
+    currentQuestionNumber != null &&
+    totalQuestions != null &&
+    totalQuestions > 0;
 
   return (
     <>
@@ -69,15 +77,31 @@ export function PracticeNavigationButtons({
           </button>
           {showQuestionGrid ? (
             <button
-              aria-label="Question list"
+              aria-label={
+                showQuestionPosition
+                  ? `Question list, question ${currentQuestionNumber} of ${totalQuestions}`
+                  : "Question list"
+              }
               className={iconOnlyButtonClassName(
-                "border border-border bg-transparent text-foreground hover:border-foreground",
+                "w-auto gap-1.5 border border-border bg-transparent px-2 text-foreground hover:border-foreground",
               )}
               onClick={() => setIsGridOpen(true)}
               type="button"
             >
               <GridViewIcon />
+              {showQuestionPosition ? (
+                <span className="tabular-nums text-sm font-normal">
+                  {currentQuestionNumber}/{totalQuestions}
+                </span>
+              ) : null}
             </button>
+          ) : showQuestionPosition ? (
+            <span
+              aria-label={`Question ${currentQuestionNumber} of ${totalQuestions}`}
+              className="tabular-nums text-sm text-foreground"
+            >
+              {currentQuestionNumber}/{totalQuestions}
+            </span>
           ) : null}
           <button
             aria-label={nextAriaLabel}

@@ -33,7 +33,6 @@ import {
   getSessionQuestionNumber,
 } from "@/features/tests/run/lib/sessionQuestionPosition";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
-import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
 import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import {
   DEFAULT_TOEIC_YEAR,
@@ -241,15 +240,10 @@ export function PracticeRunView({
     currentStepQuestionId,
   );
 
-  useRegisterImmersiveQuestionNav({
-    currentQuestionNumber,
-    enabled: practice.sessionId != null && steps.length > 0,
-    totalQuestions,
-  });
-
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
     <PracticeNavigationButtons
+      currentQuestionNumber={currentQuestionNumber}
       isQuestionGridOpen={isQuestionGridOpen}
       nextAriaLabel="Next"
       nextDisabled={isLastStep}
@@ -268,6 +262,7 @@ export function PracticeRunView({
       }}
       previousDisabled={activeStepIndex === 0}
       questionGridSections={questionGridSections}
+      totalQuestions={totalQuestions}
     />
   );
 

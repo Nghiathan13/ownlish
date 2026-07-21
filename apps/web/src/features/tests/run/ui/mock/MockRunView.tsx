@@ -8,7 +8,6 @@ import { MockSubmissionAlert } from "@/features/tests/run/ui/mock/MockSubmission
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { useMockTestRun } from "@/features/tests/run/model/mock/useMockTestRun";
-import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
 import {
   useRegisterImmersiveExit,
   useRegisterImmersiveFinish,
@@ -356,12 +355,6 @@ export function MockRunView({
     activeGroup?.questions[0]?.id,
   );
 
-  useRegisterImmersiveQuestionNav({
-    currentQuestionNumber,
-    enabled: groups.length > 0,
-    totalQuestions,
-  });
-
   const finishFailureModal = mock.isFinishFailureOpen ? (
     <MockFinishFailureModal
       error={mock.finishError ?? "Cannot finish mock test."}
@@ -412,6 +405,7 @@ export function MockRunView({
   const navigation = canNavigate ? (
     <div className="shrink-0 border-t border-border p-4">
       <PracticeNavigationButtons
+        currentQuestionNumber={currentQuestionNumber}
         nextDisabled={activeGroupIndex >= groups.length - 1}
         onNext={() => goToGroupIndex(activeGroupIndex + 1)}
         onPrevious={() => goToGroupIndex(activeGroupIndex - 1)}
@@ -423,6 +417,7 @@ export function MockRunView({
         }}
         previousDisabled={activeGroupIndex === 0}
         questionGridSections={questionGridSections}
+        totalQuestions={totalQuestions}
       />
     </div>
   ) : null;

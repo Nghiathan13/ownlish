@@ -17,10 +17,6 @@ vi.mock("@/features/tests/run/model/mock/useMockTestRun", () => ({
   useMockTestRun: mocks.useMockTestRun,
 }));
 
-vi.mock("@/features/shell/hooks/useRegisterImmersiveQuestionNav", () => ({
-  useRegisterImmersiveQuestionNav: vi.fn(),
-}));
-
 vi.mock("@/features/shell/providers/ImmersiveToolbarProvider", () => ({
   useImmersiveBilingual: () => null,
   useRegisterImmersiveExit: mocks.registerExit,

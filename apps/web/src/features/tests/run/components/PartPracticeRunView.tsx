@@ -32,7 +32,6 @@ import {
   getAggregateQuestionGridDisplayNumber,
 } from "@/features/tests/run/lib/practiceQuestionGrid";
 import { getSessionQuestionNumber } from "@/features/tests/run/lib/sessionQuestionPosition";
-import { useRegisterImmersiveQuestionNav } from "@/features/shell/hooks/useRegisterImmersiveQuestionNav";
 import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePaths";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
@@ -214,15 +213,10 @@ export function PartPracticeRunView({
     currentStepQuestionId,
   );
 
-  useRegisterImmersiveQuestionNav({
-    currentQuestionNumber,
-    enabled: practice.sessionId != null && steps.length > 0,
-    totalQuestions,
-  });
-
   const isLastStep = activeStepIndex >= steps.length - 1;
   const navigationBar = (
     <PracticeNavigationButtons
+      currentQuestionNumber={currentQuestionNumber}
       isQuestionGridOpen={isQuestionGridOpen}
       nextAriaLabel="Next"
       nextDisabled={isLastStep}
@@ -241,6 +235,7 @@ export function PartPracticeRunView({
       }}
       previousDisabled={activeStepIndex === 0}
       questionGridSections={questionGridSections}
+      totalQuestions={totalQuestions}
     />
   );
 
