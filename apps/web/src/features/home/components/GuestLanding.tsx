@@ -2,8 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { ComponentType, SVGProps } from "react";
+import { useResolvedTheme } from "@/shared/providers/ThemeProvider";
+import { FacebookIcon } from "@/shared/ui/icons/FacebookIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
+import { TikTokIcon } from "@/shared/ui/icons/TikTokIcon";
+import { YouTubeIcon } from "@/shared/ui/icons/YouTubeIcon";
 import { iconTextButtonClassName } from "@/shared/ui/button";
+import { classNames } from "@/shared/lib/classNames";
 
 const FEATURES = [
   {
@@ -39,7 +45,42 @@ const SHOWCASE_POINTS = [
   "Review wrong answers and retake until you master them",
 ] as const;
 
+const socialIconButtonClassName = classNames(
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+  "text-foreground hover:bg-hover-overlay",
+);
+
+type SocialIconProps = SVGProps<SVGSVGElement> & {
+  variant?: "light" | "dark";
+};
+
+const SOCIAL_LINKS: {
+  href: string;
+  label: string;
+  Icon: ComponentType<SocialIconProps>;
+  themed?: boolean;
+}[] = [
+  {
+    href: "#",
+    label: "TikTok",
+    Icon: TikTokIcon,
+    themed: true,
+  },
+  {
+    href: "#",
+    label: "Facebook",
+    Icon: FacebookIcon,
+  },
+  {
+    href: "#",
+    label: "YouTube",
+    Icon: YouTubeIcon,
+  },
+];
+
 export function GuestLanding() {
+  const resolvedTheme = useResolvedTheme();
+
   return (
     <div className="flex flex-col">
       <section className="relative isolate">
@@ -181,7 +222,7 @@ export function GuestLanding() {
             <div className="relative flex min-h-64 items-center justify-center [perspective:1000px] lg:min-h-[22rem]">
               <Image
                 alt="EngVocab collections page with vocabulary table"
-                className="w-full max-w-xl rounded-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] [transform:translateY(40px)_scaleY(0.94)_skewX(-4deg)_rotate(6deg)] lg:absolute lg:right-[-10%] lg:w-[118%] lg:max-w-none lg:[transform:translateY(40px)_scaleY(0.86)_skewX(-8deg)_rotate(11deg)]"
+                className="w-full max-w-xl rounded-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] brightness-90 [transform:translateY(40px)_scaleY(0.94)_skewX(-4deg)_rotate(6deg)] lg:absolute lg:right-[-10%] lg:w-[118%] lg:max-w-none lg:[transform:translateY(40px)_scaleY(0.86)_skewX(-8deg)_rotate(11deg)]"
                 height={1481}
                 src="/collection_page.png"
                 sizes="(min-width: 1024px) 50vw, 90vw"
@@ -194,13 +235,31 @@ export function GuestLanding() {
 
       <footer className="mt-auto border-t border-border px-8 py-10 sm:px-16">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <Link
-            className="flex items-center gap-2 text-base font-bold hover:opacity-80"
-            href="/"
-          >
-            <LogoIcon className="size-6 shrink-0" />
-            EngVocab
-          </Link>
+          <div className="flex flex-col items-center gap-3 sm:items-start">
+            <Link
+              className="flex items-center gap-2 text-base font-bold hover:opacity-80"
+              href="/"
+            >
+              <LogoIcon className="size-6 shrink-0" />
+              EngVocab
+            </Link>
+            <div className="flex items-center gap-2">
+              {SOCIAL_LINKS.map(({ href, label, Icon, themed }) => (
+                <a
+                  aria-label={label}
+                  className={socialIconButtonClassName}
+                  href={href}
+                  key={label}
+                  rel="noopener noreferrer"
+                >
+                  <Icon
+                    className="size-5"
+                    {...(themed ? { variant: resolvedTheme } : {})}
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} EngVocab. All rights reserved.
           </p>
