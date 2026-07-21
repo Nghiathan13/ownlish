@@ -11,7 +11,7 @@ export function StructuredEvidenceText({
   segments,
 }: StructuredEvidenceTextProps) {
   return (
-    <div className="whitespace-pre-wrap text-base">
+    <div className="p-4 whitespace-pre-wrap text-base">
       <PassageInlines
         highlightEvidence={highlightEvidence}
         inlines={segments}

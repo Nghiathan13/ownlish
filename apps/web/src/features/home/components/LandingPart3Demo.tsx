@@ -91,23 +91,17 @@ export function LandingPart3Demo() {
             <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {demo.label}
             </span>
-            <span className="text-sm text-muted-foreground">{demo.hint}</span>
-            <span className="text-sm text-muted-foreground">· {demo.source}</span>
+            <span className="text-sm text-muted-foreground">{demo.source}</span>
           </div>
 
-          <div className="rounded-xl border border-border bg-background p-4">
-            <p className="mb-3 text-sm font-medium text-muted-foreground">
-              Audio
-            </p>
-            <audio
-              className="w-full"
-              controls
-              preload="metadata"
-              src={demo.audioSrc}
-            >
-              Your browser does not support the audio element.
-            </audio>
-          </div>
+          <audio
+            className="w-full"
+            controls
+            preload="metadata"
+            src={demo.audioSrc}
+          >
+            Your browser does not support the audio element.
+          </audio>
 
           <div className="overflow-hidden rounded-xl border border-border bg-background">
             <Image
@@ -138,21 +132,14 @@ export function LandingPart3Demo() {
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Answer all three questions to reveal the transcript and
-              translation.
-            </div>
-          )}
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-5">
           {demo.questions.map((question) => (
             <div className="grid gap-3" key={question.id}>
               <p className="text-base font-medium leading-snug">
-                <span className="mr-2 text-muted-foreground">
-                  {question.number}.
-                </span>
+                <span className="mr-2">{question.number}.</span>
                 {question.prompt}
               </p>
               <QuestionOptions

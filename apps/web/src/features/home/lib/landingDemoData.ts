@@ -53,8 +53,7 @@ export const LANDING_PART3_DEMO = {
   source: "ETS 2024 · Test 1 · Q68–70",
   audioSrc: "/landing/part3-sample.mp3",
   imageSrc: "/landing/part3-sample.avif",
-  label: "Part 3 · Conversations",
-  hint: "3 questions share one audio",
+  label: "Part 3",
   // From Documents/toeic/ets_24/test_01/part_3.json (group ets24-t01-p3-g068-070)
   transcriptEn:
     "M: I'm glad we were assigned to cover the press conference earlier today. I counted seven other major media networks there, in addition to ours.\n\nW: Well, the offshore wind industry is going to transform the way this region gets its power.\n\nM: Agreed. Let's compare our facts before we start writing.\n\nW: So the largest cluster of wind turbines—off the coast of Winston—is already built. The other sites are at different stages of construction, though Lanchester is also close to being done.\n\nM: Right. And I think it's crucial for us to focus on how many new jobs related to assembling and maintaining the turbines are opening up in the area as a result of this.",
