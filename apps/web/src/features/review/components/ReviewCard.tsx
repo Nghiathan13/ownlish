@@ -53,7 +53,7 @@ export function ReviewCard({
         <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
           <div>
             <div className="flex flex-wrap items-start justify-center gap-x-3 gap-y-2">
-              <h2 className="break-words text-[clamp(2.5rem,8vw,5.5rem)] font-black leading-[0.95] tracking-tighter">
+              <h2 className="break-words text-[24px] font-black sm:text-[32px] xl:text-[40px]">
                 {word.vocabWord.word}
                 {word.type ? (
                   <span className="ml-2 align-middle text-base font-medium tracking-normal text-muted-foreground sm:text-xl">
