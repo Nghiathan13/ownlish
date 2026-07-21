@@ -165,7 +165,9 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
         ) : null}
 
         <button
-          className={primaryTextButtonClassName()}
+          className={primaryTextButtonClassName(
+            "border-[#1F48DA] bg-[#1F48DA] text-white hover:[box-shadow:inset_0_0_0_9999px_rgba(255,255,255,0.12)]",
+          )}
           disabled={isSubmitting || email.trim().length === 0 || password.length === 0}
           type="submit"
         >

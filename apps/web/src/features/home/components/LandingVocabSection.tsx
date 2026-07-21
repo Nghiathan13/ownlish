@@ -59,12 +59,26 @@ function VocabCardHeader({
 
 function LandingReviewCard() {
   const [showMeaning, setShowMeaning] = useState(false);
+  const [reviewedCount, setReviewedCount] = useState(0);
   const [graded, setGraded] = useState<"forgot" | "remember" | null>(null);
   const word = LANDING_VOCAB_DEMO_WORD;
+  const totalWords = 1;
+  const progressPercent = totalWords > 0 ? (reviewedCount / totalWords) * 100 : 0;
+  const canGrade = showMeaning && !graded;
 
   function reset() {
     setShowMeaning(false);
+    setReviewedCount(0);
     setGraded(null);
+  }
+
+  function handleGrade(grade: "forgot" | "remember") {
+    if (!canGrade) {
+      return;
+    }
+
+    setGraded(grade);
+    setReviewedCount(1);
   }
 
   return (
@@ -74,98 +88,120 @@ function LandingReviewCard() {
         description="Reveal, then grade Forgot or Remember."
         title="Review"
       />
-      <div className="mt-5 flex flex-1 flex-col">
-        <div className="flex flex-wrap items-start gap-x-2 gap-y-2">
-          <p className="text-3xl font-black tracking-tight">
-            {word.word}
-            <span className="ml-2 align-middle text-sm font-medium tracking-normal text-muted-foreground">
-              ({word.type})
-            </span>
-          </p>
-          <span className="mt-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-            {word.band}
-          </span>
-        </div>
-        <p className="mt-2 font-mono text-sm text-muted-foreground">
-          /{word.ipaUk}/
-        </p>
 
-        {showMeaning ? (
-          <div className="mt-5 grid gap-3 rounded-2xl border border-border bg-background p-4 text-left">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Meaning
-              </p>
-              <p className="mt-1 text-xl font-bold leading-tight">
-                {word.meaningVi}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Definition
-              </p>
-              <p className="mt-1 text-sm leading-6 text-foreground">
-                {word.definition}
-              </p>
-            </div>
-            <div className="border-t border-border pt-3">
-              <p className="text-sm leading-6">{word.example}</p>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                {word.exampleVi}
-              </p>
+      <div className="mt-5 flex flex-1 flex-col gap-3">
+        <div
+          aria-label={showMeaning ? "Hide meaning" : "Reveal meaning"}
+          className="flex flex-1 cursor-pointer flex-col"
+          onClick={() => setShowMeaning((current) => !current)}
+        >
+          <div className="mb-6 grid gap-2">
+            <p className="text-center text-sm text-muted-foreground">
+              {reviewedCount}/{totalWords}
+            </p>
+            <div
+              aria-label={`${reviewedCount} of ${totalWords} reviewed`}
+              aria-valuemax={totalWords}
+              aria-valuemin={0}
+              aria-valuenow={reviewedCount}
+              className="h-1.5 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+            >
+              <div
+                className="h-full rounded-full bg-foreground"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
           </div>
-        ) : (
-          <button
-            className="mt-5 min-h-24 w-full rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-sm font-medium text-muted-foreground"
-            onClick={() => setShowMeaning(true)}
-            type="button"
-          >
-            Click to reveal
-          </button>
-        )}
 
-        {showMeaning ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-            {graded ? (
-              <>
-                <span className="font-medium text-foreground">
-                  {graded === "remember"
-                    ? "Nice — scheduled for later review."
-                    : "Noted — this word will come back sooner."}
+          <div className="grid min-h-[16rem] flex-1 content-center gap-6 text-center">
+            <div>
+              <div className="flex flex-wrap items-start justify-center gap-2">
+                <p className="break-words text-[32px] font-black sm:text-[40px]">
+                  {word.word}
+                  <span className="ml-2 font-medium text-muted-foreground text-[16px] sm:text-[18px]">
+                    ({word.type})
+                  </span>
+                </p>
+                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
+                  {word.band}
                 </span>
-                <button
-                  className={iconTextButtonClassName(
-                    "border-border bg-transparent text-sm text-foreground hover:bg-hover-overlay",
-                  )}
-                  onClick={reset}
-                  type="button"
-                >
-                  Try again
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                  onClick={() => setGraded("forgot")}
-                  type="button"
-                >
-                  <Kbd>1</Kbd>
-                  Forgot
-                </button>
-                <button
-                  className="inline-flex items-center gap-1 font-semibold text-foreground"
-                  onClick={() => setGraded("remember")}
-                  type="button"
-                >
-                  <Kbd>2</Kbd>
-                  Remember
-                </button>
-              </>
-            )}
+              </div>
+              <p className="text-muted-foreground text-[16px] sm:text-[18px]">
+                /{word.ipaUk}/
+              </p>
+            </div>
+
+            {showMeaning ? (
+              <div className="mx-auto grid w-full max-w-xl gap-4 text-center">
+                <p className="text-2xl font-bold leading-tight">
+                  {word.meaningVi}
+                </p>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Definition
+                  </p>
+                  <p className="mt-2 leading-7">{word.definition}</p>
+                </div>
+                <div className="mx-auto w-full text-center">
+                  <p className="leading-7 text-foreground">{word.example}</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {word.exampleVi}
+                  </p>
+                </div>
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          {graded ? (
+            <>
+              <span className="font-medium text-foreground">
+                {graded === "remember"
+                  ? "Nice — scheduled for later review."
+                  : "Noted — this word will come back sooner."}
+              </span>
+              <button
+                className={iconTextButtonClassName(
+                  "border-border bg-transparent text-sm text-foreground hover:bg-hover-overlay",
+                )}
+                onClick={reset}
+                type="button"
+              >
+                Try again
+              </button>
+            </>
+          ) : !showMeaning ? (
+            <span className="inline-flex items-center gap-1">
+              <Kbd>Space</Kbd>
+              <span>Reveal</span>
+            </span>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>Space</Kbd>
+                <span>Hide</span>
+              </span>
+              <button
+                className="inline-flex items-center gap-1 text-muted-foreground"
+                onClick={() => handleGrade("forgot")}
+                type="button"
+              >
+                <Kbd>1</Kbd>
+                <span>Forgot</span>
+              </button>
+              <button
+                className="inline-flex items-center gap-1 font-semibold text-foreground"
+                onClick={() => handleGrade("remember")}
+                type="button"
+              >
+                <Kbd>2</Kbd>
+                <span>Remember</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </article>
   );

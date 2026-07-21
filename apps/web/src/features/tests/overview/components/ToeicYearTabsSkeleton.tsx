@@ -8,7 +8,7 @@ export function ToeicYearTabsSkeleton({
 }) {
   return (
     <SkeletonTabPills
-      className="mx-8 mt-8 mb-8 flex w-fit flex-wrap gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:mx-16 lg:mt-16"
+      className="mx-8 mt-8 mb-8 flex w-fit gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:mx-16 lg:mt-16"
       count={count}
       pillClassName="h-9 w-24 rounded-lg"
     />
