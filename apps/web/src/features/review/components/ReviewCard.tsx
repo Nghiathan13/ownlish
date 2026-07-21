@@ -53,7 +53,7 @@ export function ReviewCard({
               <h2 className="break-words text-[40px] font-black sm:text-[48px] xl:text-[56px]">
                 {word.vocabWord.word}
                 {word.type ? (
-                  <span className="ml-2 font-medium text-muted-foreground text-[24px] sm:text-[28px] xl:text-[32px]">
+                  <span className="ml-2 font-medium text-muted-foreground text-[20px] sm:text-[24px] xl:text-[28px]">
                     ({word.type})
                   </span>
                 ) : null}
