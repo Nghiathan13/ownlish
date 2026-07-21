@@ -56,20 +56,20 @@ export function ReviewCard({
               <h2 className="break-words text-[40px] font-black sm:text-[48px] xl:text-[56px]">
                 {word.vocabWord.word}
                 {word.type ? (
-                  <span className="ml-2 align-middle text-base font-medium tracking-normal text-muted-foreground sm:text-xl">
+                  <span className="ml-2 font-medium text-muted-foreground text-[24px] sm:text-[28px] xl:text-[32px]">
                     ({word.type})
                   </span>
                 ) : null}
               </h2>
               {word.band ? (
-                <span className="mt-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground sm:mt-2">
+                <span className="rounded-full border border-border bg-muted px-2 py-1 font-semibold text-muted-foreground text-[20px] sm:text-[24px] xl:text-[28px]">
                   {word.band}
                 </span>
               ) : null}
             </div>
 
             {ipa ? (
-              <p className="mt-3 font-mono text-sm text-muted-foreground sm:text-base">
+              <p className="mt-2 font-mono text-muted-foreground text-[24px] sm:text-[28px] xl:text-[32px]">
                 /{ipa.replace(/^\/+|\/+$/g, "")}/
               </p>
             ) : null}
