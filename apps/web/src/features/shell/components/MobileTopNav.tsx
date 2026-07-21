@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import {
+  ADMIN_NAV_LINKS,
+  APP_NAV_LINKS,
+  getAppSidebarLinkClass,
+  isAppNavLinkActive,
+} from "@/features/shell/lib/appNavLinks";
 import { classNames } from "@/shared/lib/classNames";
 import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
@@ -30,6 +39,9 @@ function MobileNavThemeToggle() {
 }
 
 export function MobileTopNav() {
+  const pathname = usePathname();
+  const { user } = useAuthSession();
+  const isAdmin = isAdminUser(user);
   const navRef = useRef<HTMLElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -56,7 +68,9 @@ export function MobileTopNav() {
       return;
     }
 
-    const scroller = navRef.current?.parentElement;
+    const scroller = document.querySelector<HTMLElement>(
+      "[data-mobile-shell-scroll]",
+    );
     const previousOverflow = scroller?.style.overflow;
 
     if (scroller) {
@@ -119,9 +133,57 @@ export function MobileTopNav() {
         <div
           aria-label="Menu"
           aria-modal="true"
-          className="fixed inset-0 z-40 bg-surface sm:hidden"
+          className="fixed inset-0 z-40 overflow-y-auto bg-surface sm:hidden"
           role="dialog"
-        />
+        >
+          <div className="flex flex-col gap-1 px-4 pt-24 pb-8">
+            {APP_NAV_LINKS.map((link) => {
+              const isActive = isAppNavLinkActive(pathname, link);
+              const Icon = isActive ? link.activeIcon : link.icon;
+
+              return (
+                <Link
+                  aria-current={isActive ? "page" : undefined}
+                  className={classNames(
+                    getAppSidebarLinkClass(pathname, link),
+                    "flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+                  )}
+                  href={link.href}
+                  key={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  scroll={false}
+                >
+                  <Icon className="size-6 shrink-0" />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+
+            {isAdmin
+              ? ADMIN_NAV_LINKS.map((link) => {
+                  const isActive = isAppNavLinkActive(pathname, link);
+                  const Icon = isActive ? link.activeIcon : link.icon;
+
+                  return (
+                    <Link
+                      aria-current={isActive ? "page" : undefined}
+                      className={classNames(
+                        getAppSidebarLinkClass(pathname, link),
+                        "flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+                      )}
+                      href={link.href}
+                      key={link.href}
+                      onClick={() => setMenuOpen(false)}
+                      scroll={false}
+                    >
+                      <Icon className="size-6 shrink-0" />
+                      <span>Admin {link.label}</span>
+                    </Link>
+                  );
+                })
+              : null}
+          </div>
+        </div>
       ) : null}
     </>
   );

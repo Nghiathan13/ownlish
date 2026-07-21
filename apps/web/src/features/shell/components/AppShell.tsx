@@ -45,7 +45,10 @@ export function AppShell({ children }: AppShellProps) {
       <div className="hidden sm:flex">
         <AppSidebar />
       </div>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto sm:overflow-y-hidden">
+      <div
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto sm:overflow-y-hidden"
+        data-mobile-shell-scroll
+      >
         <MobileTopNav />
         {children}
       </div>
