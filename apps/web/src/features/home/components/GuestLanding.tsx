@@ -146,8 +146,22 @@ export function GuestLanding() {
 
       <section className="px-8 py-16 sm:px-16 lg:py-24">
         <div className="relative overflow-hidden rounded-3xl bg-[#191DC1]">
-          <div className="grid items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-8 lg:px-12 lg:py-16">
-            <div className="relative z-10 flex flex-col items-start gap-6">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.32) 1px, transparent 0)",
+              backgroundPosition: "center top",
+              backgroundSize: "16px 16px",
+              maskImage:
+                "radial-gradient(60% 60%, #000 0%, transparent 90%)",
+              WebkitMaskImage:
+                "radial-gradient(60% 60%, #000 0%, transparent 90%)",
+            }}
+          />
+          <div className="relative z-10 grid items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-8 lg:px-12 lg:py-16">
+            <div className="flex flex-col items-start gap-6">
               <h2 className="max-w-md text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 Organize your vocabulary.
               </h2>
