@@ -35,7 +35,7 @@ export function MockTestsTab({
         selectedYear={selectedYear}
       />
 
-      <div className="mb-4 flex flex-col gap-4 px-8 lg:px-16">
+      <div className="mb-4 flex flex-col gap-4 px-4 lg:px-16">
         {overview.isLoadingTests ? (
           <MockTestsTabSkeleton />
         ) : overview.testsError ? (

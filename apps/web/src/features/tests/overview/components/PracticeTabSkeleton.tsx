@@ -38,7 +38,7 @@ export function PracticeTabSkeleton({
   return (
     <>
       <PartPracticeTabsSkeleton />
-      <div aria-hidden className="mb-4 flex flex-col gap-4 px-8 lg:px-16">
+      <div aria-hidden className="mb-4 flex flex-col gap-4 px-4 lg:px-16">
         {cardSkeleton}
       </div>
     </>

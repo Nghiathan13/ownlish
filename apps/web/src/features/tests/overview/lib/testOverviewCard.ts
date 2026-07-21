@@ -1,7 +1,7 @@
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 export const testOverviewCardClassName =
-  "flex min-w-[300px] flex-col gap-4 rounded-[16px] bg-surface p-4 shadow-card";
+  "flex min-w-[300px] flex-col gap-4 rounded-[16px] bg-surface p-4 shadow-card dark:border dark:border-border";
 
 export const testOverviewCardGridClassName =
   "grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]";
