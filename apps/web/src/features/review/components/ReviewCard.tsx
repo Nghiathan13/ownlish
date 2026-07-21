@@ -53,13 +53,13 @@ export function ReviewCard({
               <h2 className="break-words text-[40px] font-black sm:text-[48px] xl:text-[56px]">
                 {word.vocabWord.word}
                 {word.type ? (
-                  <span className="ml-2 font-medium text-muted-foreground text-[16px] sm:text-[20px] xl:text-[24px]">
+                  <span className="ml-2 font-medium text-muted-foreground text-[16px] sm:text-[18px] xl:text-[20px]">
                     ({word.type})
                   </span>
                 ) : null}
               </h2>
               {word.band ? (
-                <span className="rounded-full border border-border bg-muted px-2 py-1 font-semibold text-muted-foreground text-[10px] sm:text-[12px] xl:text-[14px]">
+                <span className="rounded-full border border-border bg-muted px-2 py-1 font-semibold text-muted-foreground text-[8px] sm:text-[10px] xl:text-[12px]">
                   {word.band}
                 </span>
               ) : null}
