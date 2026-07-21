@@ -64,14 +64,14 @@ export function ReviewCard({
                 ) : null}
               </h2>
               {word.band ? (
-                <span className="rounded-full border border-border bg-muted px-3 py-1 font-semibold text-muted-foreground text-[12px]">
+                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
                   {word.band}
                 </span>
               ) : null}
             </div>
 
             {ipa ? (
-              <p className="mt-2 font-mono text-muted-foreground text-[16px] sm:text-[18px]">
+              <p className="text-muted-foreground text-[16px] sm:text-[18px]">
                 /{ipa.replace(/^\/+|\/+$/g, "")}/
               </p>
             ) : null}

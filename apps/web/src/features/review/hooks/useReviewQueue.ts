@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listDueReviewWords,
@@ -31,10 +31,12 @@ export function useReviewQueue({
 }: UseReviewQueueParams) {
   const queryClient = useQueryClient();
   const [reviewedCount, setReviewedCount] = useState(0);
+  const [trackedCollectionId, setTrackedCollectionId] = useState(collectionId);
 
-  useEffect(() => {
+  if (trackedCollectionId !== collectionId) {
+    setTrackedCollectionId(collectionId);
     setReviewedCount(0);
-  }, [collectionId]);
+  }
 
   const { data, isLoading, error: queryError } = useQuery({
     queryKey: getReviewQueueQueryKey(userId, collectionId),
