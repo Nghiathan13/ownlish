@@ -47,7 +47,7 @@ const SHOWCASE_POINTS = [
 
 const socialIconButtonClassName = classNames(
   "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-  "text-foreground hover:bg-hover-overlay",
+  "border border-border text-foreground hover:bg-hover-overlay",
 );
 
 type SocialIconProps = SVGProps<SVGSVGElement> & {
