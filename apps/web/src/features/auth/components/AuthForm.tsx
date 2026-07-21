@@ -110,7 +110,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
 
           <div className="my-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="text-sm text-muted-foreground">or</span>
+            <span className="text-sm text-muted-foreground">OR</span>
             <div className="h-px flex-1 bg-border" />
           </div>
         </>

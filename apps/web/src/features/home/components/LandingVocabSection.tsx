@@ -1,11 +1,14 @@
 "use client";
 
+import type { ComponentType, SVGProps } from "react";
 import { useState } from "react";
 import {
   LANDING_VOCAB_DEMO_METRICS,
   LANDING_VOCAB_DEMO_WORD,
 } from "@/features/home/lib/landingDemoData";
 import { iconTextButtonClassName } from "@/shared/ui/button";
+import { ProgressNavIcon } from "@/shared/ui/icons/ProgressNavIcon";
+import { ReviewNavIcon } from "@/shared/ui/icons/ReviewNavIcon";
 
 const vocabCardClassName =
   "flex flex-col rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border sm:p-6";
@@ -32,6 +35,28 @@ export function LandingVocabSection() {
   );
 }
 
+function VocabCardHeader({
+  Icon,
+  title,
+  description,
+}: {
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border p-1.5 text-foreground">
+        <Icon className="size-8" />
+      </span>
+      <div className="min-w-0">
+        <h3 className="text-base font-semibold leading-tight">{title}</h3>
+        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 function LandingReviewCard() {
   const [showMeaning, setShowMeaning] = useState(false);
   const [graded, setGraded] = useState<"forgot" | "remember" | null>(null);
@@ -44,15 +69,19 @@ function LandingReviewCard() {
 
   return (
     <article className={vocabCardClassName}>
-      <p className="text-sm font-medium text-muted-foreground">Review</p>
-      <div className="mt-4 flex flex-1 flex-col">
+      <VocabCardHeader
+        Icon={ReviewNavIcon}
+        description="Reveal, then grade Forgot or Remember."
+        title="Review"
+      />
+      <div className="mt-5 flex flex-1 flex-col">
         <div className="flex flex-wrap items-start gap-x-2 gap-y-2">
-          <h3 className="text-3xl font-black tracking-tight">
+          <p className="text-3xl font-black tracking-tight">
             {word.word}
             <span className="ml-2 align-middle text-sm font-medium tracking-normal text-muted-foreground">
               ({word.type})
             </span>
-          </h3>
+          </p>
           <span className="mt-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
             {word.band}
           </span>
@@ -151,12 +180,11 @@ function LandingProgressCard() {
 
   return (
     <article className={vocabCardClassName}>
-      <p className="text-sm font-medium text-muted-foreground">Progress</p>
-      <h3 className="mt-2 text-xl font-semibold">See what needs attention</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Track due words, mastered items, and difficult vocabulary from your
-        dashboard.
-      </p>
+      <VocabCardHeader
+        Icon={ProgressNavIcon}
+        description="Due, mastered, and difficult words."
+        title="Progress"
+      />
       <div className="mt-5 grid flex-1 grid-cols-1 gap-3">
         {metrics.map((metric) => (
           <div
