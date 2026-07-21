@@ -30,6 +30,10 @@ export type ToeicQuestion = {
   isCorrect: boolean | null;
 };
 
+export type ContentEvidenceSegment =
+  | { type: "text"; value: string }
+  | { type: "evidence"; questionNumbers: number[]; value: string };
+
 export type ToeicQuestionGroup = {
   id: number;
   partNumber: number | null;
@@ -40,6 +44,9 @@ export type ToeicQuestionGroup = {
   accent: string | null;
   content: string | null;
   contentVi: string | null;
+  /** Structured transcript evidence from catalog `questionIds` (Part 3/4). */
+  contentSegments?: ContentEvidenceSegment[] | null;
+  contentViSegments?: ContentEvidenceSegment[] | null;
   audioUrl: string | null;
   audioUrlExpiresAt: string | null;
   imageUrl: string | null;

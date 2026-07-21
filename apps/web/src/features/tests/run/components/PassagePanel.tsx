@@ -1,7 +1,10 @@
 "use client";
 
+import type { ContentEvidenceSegment } from "@/entities/toeic/api/types";
+import { contentEvidenceSegmentsHaveEvidence } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
 import { PassageContent } from "@/features/tests/run/components/PassageContent";
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
+import { StructuredEvidenceText } from "@/features/tests/run/components/StructuredEvidenceText";
 import { useEvidenceHighlightPreference } from "@/features/tests/run/hooks/useEvidenceHighlightPreference";
 import { passageContentHasEvidence } from "@/features/tests/run/lib/parsePassageContent";
 import { classNames } from "@/shared/lib/classNames";
@@ -9,6 +12,8 @@ import { classNames } from "@/shared/lib/classNames";
 type PassagePanelProps = {
   content: string | null;
   contentVi?: string | null;
+  contentSegments?: ContentEvidenceSegment[] | null;
+  contentViSegments?: ContentEvidenceSegment[] | null;
   showRawContentWhenEvidenceOff?: boolean;
   showTitle?: boolean;
   showTranslation: boolean;
@@ -50,16 +55,31 @@ function EvidenceHighlightSwitch({
 }
 
 type PassageBodyProps = {
-  content: string;
+  content: string | null;
+  segments: ContentEvidenceSegment[] | null | undefined;
   highlightEvidence: boolean;
   showRawEvidenceWhenOff: boolean;
 };
 
 function PassageBody({
   content,
+  segments,
   highlightEvidence,
   showRawEvidenceWhenOff,
 }: PassageBodyProps) {
+  if (segments && segments.length > 0) {
+    return (
+      <StructuredEvidenceText
+        highlightEvidence={highlightEvidence}
+        segments={segments}
+      />
+    );
+  }
+
+  if (!content) {
+    return null;
+  }
+
   return (
     <PassageContent
       content={content}
@@ -72,19 +92,34 @@ function PassageBody({
 export function PassagePanel({
   content,
   contentVi,
+  contentSegments = null,
+  contentViSegments = null,
   showRawContentWhenEvidenceOff = false,
   showTitle = true,
   showTranslation,
   title = "Passage",
   showEvidenceToggle = false,
 }: PassagePanelProps) {
-  const hasContent = Boolean(content?.trim());
-  const hasTranslation = Boolean(showTranslation && contentVi?.trim());
-  const contentHasEvidence = hasContent && passageContentHasEvidence(content!);
-  const translationHasEvidence =
-    hasTranslation && passageContentHasEvidence(contentVi!);
-  const canToggleContentEvidence =
-    showEvidenceToggle && contentHasEvidence;
+  const hasStructuredContent = Boolean(contentSegments?.length);
+  const hasStructuredTranslation = Boolean(
+    showTranslation && contentViSegments?.length,
+  );
+  const hasContent = hasStructuredContent || Boolean(content?.trim());
+  const hasTranslation =
+    hasStructuredTranslation || Boolean(showTranslation && contentVi?.trim());
+
+  const contentHasEvidence = hasStructuredContent
+    ? contentEvidenceSegmentsHaveEvidence(contentSegments)
+    : hasContent && content
+      ? passageContentHasEvidence(content)
+      : false;
+  const translationHasEvidence = hasStructuredTranslation
+    ? contentEvidenceSegmentsHaveEvidence(contentViSegments)
+    : hasTranslation && contentVi
+      ? passageContentHasEvidence(contentVi)
+      : false;
+
+  const canToggleContentEvidence = showEvidenceToggle && contentHasEvidence;
   const canToggleTranslationEvidence = translationHasEvidence;
   const { enabled: isEvidenceHighlighted, setEnabled: setIsEvidenceHighlighted } =
     useEvidenceHighlightPreference();
@@ -114,8 +149,9 @@ export function PassagePanel({
           title={title}
         >
           <PassageBody
-            content={content!}
+            content={content}
             highlightEvidence={shouldHighlightContentEvidence}
+            segments={contentSegments}
             showRawEvidenceWhenOff={showRawContentWhenEvidenceOff}
           />
         </PracticeTranslationCard>
@@ -133,8 +169,9 @@ export function PassagePanel({
           title={hasContent ? "Translation" : title}
         >
           <PassageBody
-            content={contentVi!}
+            content={contentVi ?? null}
             highlightEvidence={shouldHighlightTranslationEvidence}
+            segments={contentViSegments}
             showRawEvidenceWhenOff={showRawContentWhenEvidenceOff}
           />
         </PracticeTranslationCard>

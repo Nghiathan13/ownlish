@@ -6,6 +6,10 @@ import type {
 } from "@/entities/toeic/api/types";
 import { resolveToeicCatalogGroupMedia } from "@/entities/toeic-catalog/model/media";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
+import {
+  joinContentEvidenceSegments,
+  transcriptToContentEvidenceSegments,
+} from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
 import type { ToeicRuntimeRun } from "@/entities/toeic-runtime/model/types";
 
 type OptionKey = "A" | "B" | "C" | "D";
@@ -34,19 +38,6 @@ function contentText(value: unknown, language: "en" | "vi"): string | null {
   return typeof text === "string" ? text : null;
 }
 
-function transcriptText(value: unknown, language: "en" | "vi"): string | null {
-  const transcript = asRecord(value)?.[language];
-  if (!Array.isArray(transcript)) {
-    return null;
-  }
-
-  const text = transcript
-    .map((segment) => asRecord(segment)?.text)
-    .filter((segment): segment is string => typeof segment === "string")
-    .join("");
-  return text || null;
-}
-
 function documentText(value: unknown, language: "en" | "vi"): string | null {
   if (!Array.isArray(value)) {
     return null;
@@ -59,11 +50,41 @@ function documentText(value: unknown, language: "en" | "vi"): string | null {
   return text || null;
 }
 
-function getGroupText(group: Record<string, unknown>, language: "en" | "vi") {
-  return (
-    contentText(group.content, language) ??
-    transcriptText(group.transcript, language) ??
-    documentText(group.documents, language)
+function getGroupText(
+  group: Record<string, unknown>,
+  language: "en" | "vi",
+  questions: unknown[],
+) {
+  const content = contentText(group.content, language);
+  if (content) {
+    return content;
+  }
+
+  const transcriptSegments = transcriptToContentEvidenceSegments(
+    group.transcript,
+    language,
+    questions,
+  );
+  if (transcriptSegments) {
+    return joinContentEvidenceSegments(transcriptSegments);
+  }
+
+  return documentText(group.documents, language);
+}
+
+function getGroupSegments(
+  group: Record<string, unknown>,
+  language: "en" | "vi",
+  questions: unknown[],
+) {
+  if (contentText(group.content, language)) {
+    return null;
+  }
+
+  return transcriptToContentEvidenceSegments(
+    group.transcript,
+    language,
+    questions,
   );
 }
 
@@ -167,6 +188,8 @@ export function materializePartPracticeSession(
     groupKeyById.set(nextGroupId, groupKey);
     const media = resolveToeicCatalogGroupMedia(source, groupKey);
     const questionNumbers = materializedQuestions.map((question) => question.questionNumber);
+    const contentSegments = getGroupSegments(group, "en", questions);
+    const contentViSegments = getGroupSegments(group, "vi", questions);
     const materializedGroup: ToeicQuestionGroup = {
       id: nextGroupId,
       partNumber: run.partNumber,
@@ -179,8 +202,10 @@ export function materializePartPracticeSession(
         : null,
       groupType: typeof group.kind === "string" ? group.kind : null,
       accent: null,
-      content: getGroupText(group, "en"),
-      contentVi: getGroupText(group, "vi"),
+      content: getGroupText(group, "en", questions),
+      contentVi: getGroupText(group, "vi", questions),
+      contentSegments,
+      contentViSegments,
       audioUrl: media.audioUrl,
       audioUrlExpiresAt: null,
       imageUrl: media.imageUrl,

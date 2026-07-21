@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { ToeicQuestionOptions } from "@/entities/toeic/api/types";
@@ -36,14 +37,17 @@ function toToeicOptions(
   };
 }
 
+function isComplete(selections: Selections) {
+  return LANDING_PART3_DEMO.questions.every(
+    (question) => selections[question.id] != null,
+  );
+}
+
 export function LandingPart3Demo() {
   const demo = LANDING_PART3_DEMO;
   const [selections, setSelections] = useState<Selections>(createEmptySelections);
   const [revealed, setRevealed] = useState(false);
 
-  const allAnswered = demo.questions.every(
-    (question) => selections[question.id] != null,
-  );
   const correctCount = revealed
     ? demo.questions.filter(
         (question) => selections[question.id] === question.answerKey,
@@ -54,14 +58,12 @@ export function LandingPart3Demo() {
     if (revealed) {
       return;
     }
-    setSelections((current) => ({ ...current, [questionId]: key }));
-  }
 
-  function handleCheck() {
-    if (!allAnswered) {
-      return;
+    const nextSelections = { ...selections, [questionId]: key };
+    setSelections(nextSelections);
+    if (isComplete(nextSelections)) {
+      setRevealed(true);
     }
-    setRevealed(true);
   }
 
   function handleReset() {
@@ -97,26 +99,49 @@ export function LandingPart3Demo() {
             <p className="mb-3 text-sm font-medium text-muted-foreground">
               Audio
             </p>
-            <audio className="w-full" controls preload="metadata" src={demo.audioSrc}>
+            <audio
+              className="w-full"
+              controls
+              preload="metadata"
+              src={demo.audioSrc}
+            >
               Your browser does not support the audio element.
             </audio>
           </div>
 
+          <div className="overflow-hidden rounded-xl border border-border bg-background">
+            <Image
+              alt="Part 3 graphic for questions 68 to 70"
+              className="h-auto w-full"
+              height={720}
+              src={demo.imageSrc}
+              width={960}
+            />
+          </div>
+
           {revealed ? (
-            <div className="rounded-xl border border-border bg-background p-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Transcript
-              </p>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
-                {demo.transcriptEn}
-              </p>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                {demo.transcriptVi}
-              </p>
+            <div className="grid gap-4">
+              <div className="rounded-xl border border-border bg-background p-4">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Transcript
+                </p>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
+                  {demo.transcriptEn}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-background p-4">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Translation
+                </p>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                  {demo.transcriptVi}
+                </p>
+              </div>
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Answer all three questions to reveal the transcript.
+              Answer all three questions to reveal the transcript and
+              translation.
             </div>
           )}
         </div>
@@ -143,42 +168,28 @@ export function LandingPart3Demo() {
             </div>
           ))}
 
-          <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
-            {!revealed ? (
+          {revealed ? (
+            <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
+              <p className="text-sm font-medium">
+                {correctCount}/{demo.questions.length} correct
+              </p>
               <button
-                className={iconTextButtonClassName(
-                  "border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
-                  !allAnswered && "opacity-50",
-                )}
-                disabled={!allAnswered}
-                onClick={handleCheck}
+                className={secondaryTextButtonClassName()}
+                onClick={handleReset}
                 type="button"
               >
-                Check answers
+                Try again
               </button>
-            ) : (
-              <>
-                <p className="text-sm font-medium">
-                  {correctCount}/{demo.questions.length} correct
-                </p>
-                <button
-                  className={secondaryTextButtonClassName()}
-                  onClick={handleReset}
-                  type="button"
-                >
-                  Try again
-                </button>
-                <Link
-                  className={iconTextButtonClassName(
-                    "border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
-                  )}
-                  href="/login"
-                >
-                  Get started
-                </Link>
-              </>
-            )}
-          </div>
+              <Link
+                className={iconTextButtonClassName(
+                  "border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
+                )}
+                href="/login"
+              >
+                Get started
+              </Link>
+            </div>
+          ) : null}
         </div>
       </div>
 

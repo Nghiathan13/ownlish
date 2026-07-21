@@ -86,7 +86,21 @@ describe("materializeTestSession", () => {
               {
                 id: PART_THREE_GROUP_KEY,
                 kind: "conversation",
-                transcript: { en: [{ text: "Listen carefully." }] },
+                transcript: {
+                  en: [
+                    { text: "Listen carefully. ", questionIds: [] },
+                    {
+                      text: "What happened next?",
+                      questionIds: [PART_THREE_QUESTION_KEY],
+                    },
+                  ],
+                  vi: [
+                    {
+                      text: "Điều gì xảy ra tiếp theo?",
+                      questionIds: [PART_THREE_QUESTION_KEY],
+                    },
+                  ],
+                },
                 questions: [
                   {
                     id: PART_THREE_QUESTION_KEY,
@@ -139,7 +153,23 @@ describe("materializeTestSession", () => {
     expect(session.groups[1]).toMatchObject({
       partNumber: 3,
       audioUrl: "https://cdn.example.com/toeic/ets_26/test_01/audio/032-034.mp3",
-      content: "Listen carefully.",
+      content: "Listen carefully. What happened next?",
+      contentVi: "Điều gì xảy ra tiếp theo?",
     });
+    expect(session.groups[1]?.contentSegments).toEqual([
+      { type: "text", value: "Listen carefully. " },
+      {
+        type: "evidence",
+        questionNumbers: [32],
+        value: "What happened next?",
+      },
+    ]);
+    expect(session.groups[1]?.contentViSegments).toEqual([
+      {
+        type: "evidence",
+        questionNumbers: [32],
+        value: "Điều gì xảy ra tiếp theo?",
+      },
+    ]);
   });
 });

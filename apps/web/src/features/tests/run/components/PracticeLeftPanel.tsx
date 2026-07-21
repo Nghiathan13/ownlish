@@ -94,7 +94,9 @@ export function PracticeLeftPanel({
       {partConfig.leftPanel === "listening-group" && showContext ? (
         <PassagePanel
           content={group.content}
+          contentSegments={group.contentSegments}
           contentVi={group.contentVi}
+          contentViSegments={group.contentViSegments}
           showEvidenceToggle
           showTranslation={showContextTranslation}
           title="Transcript"
@@ -113,7 +115,9 @@ export function PracticeLeftPanel({
       {partConfig.leftPanel === "passage" ? (
         <PassagePanel
           content={group.content}
+          contentSegments={group.contentSegments}
           contentVi={group.contentVi}
+          contentViSegments={group.contentViSegments}
           showTitle={partNumber !== 6 && partNumber !== 7}
           showTranslation={showContextTranslation}
         />

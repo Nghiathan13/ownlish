@@ -50,51 +50,52 @@ export type LandingPart3Question = {
 };
 
 export const LANDING_PART3_DEMO = {
-  source: "ETS 2024 · Test 1 · Q32–34",
+  source: "ETS 2024 · Test 1 · Q68–70",
   audioSrc: "/landing/part3-sample.mp3",
+  imageSrc: "/landing/part3-sample.avif",
   label: "Part 3 · Conversations",
   hint: "3 questions share one audio",
-  // From Documents/toeic/ets_24/test_01/part_3.json (group ets24-t01-p3-g032-034)
+  // From Documents/toeic/ets_24/test_01/part_3.json (group ets24-t01-p3-g068-070)
   transcriptEn:
-    "W: Thank you so much for organizing the annual company picnic, Jingdao. Everybody seemed to enjoy it.\n\nM: Well, we deserved it after working so hard this year.\n\nW: I agree. The food was great, by the way. Especially the peach pie you made. Would you mind sharing the recipe? It was delicious.\n\nM: I found the recipe online. I'll send you a link to the Web page. There's a really helpful video that walks you through all the steps. I recommend you watch it first.\n\nW: All right, thanks.",
+    "M: I'm glad we were assigned to cover the press conference earlier today. I counted seven other major media networks there, in addition to ours.\n\nW: Well, the offshore wind industry is going to transform the way this region gets its power.\n\nM: Agreed. Let's compare our facts before we start writing.\n\nW: So the largest cluster of wind turbines—off the coast of Winston—is already built. The other sites are at different stages of construction, though Lanchester is also close to being done.\n\nM: Right. And I think it's crucial for us to focus on how many new jobs related to assembling and maintaining the turbines are opening up in the area as a result of this.",
   transcriptVi:
-    "Nữ: Cảm ơn Jingdao rất nhiều vì đã tổ chức buổi dã ngoại thường niên của công ty, Mọi người dường như đều rất thích.\n\nNam: Ừ, chúng ta xứng đáng có buổi đó sau khi làm việc vất vả cả năm nay.\n\nNữ: Tôi đồng ý. Nhân tiện, đồ ăn rất ngon. Đặc biệt là cái bánh đào bạn làm. Bạn có phiền chia sẻ công thức không? Nó ngon lắm.\n\nNam: Tôi tìm thấy công thức đó trên mạng. Tôi sẽ gửi cho bạn một đường link đến trang Web. Có một video hướng dẫn rất hữu ích dẫn bạn qua tất cả các bước. Tôi khuyên bạn nên xem video đó trước.\n\nNữ: Được rồi, cảm ơn nhé.",
+    "Nam: Tôi mừng là chúng ta được phân công đưa tin về buổi họp báo sớm hôm nay. Tôi đếm được bảy mạng lưới truyền thông lớn khác ở đó, ngoài mạng của chúng ta.\n\nNữ: À, ngành công nghiệp điện gió ngoài khơi sẽ thay đổi cách khu vực này lấy năng lượng.\n\nNam: Đồng ý. Hãy so sánh các dữ kiện của chúng ta trước khi bắt đầu viết.\n\nNữ: Vậy cụm tuabin gió lớn nhất – ngoài khơi bờ biển Winston – đã được xây dựng xong. Các địa điểm khác đang ở các giai đoạn xây dựng khác nhau, mặc dù Lanchester cũng sắp hoàn thành.\n\nNam: Đúng vậy. Và tôi nghĩ điều quan trọng là chúng ta tập trung vào việc có bao nhiêu công việc mới liên quan đến lắp ráp và bảo trì các tuabin đang mở ra trong khu vực nhờ vào điều này.",
   questions: [
     {
-      id: "ets24-t01-p3-q032",
-      number: 32,
-      prompt: "What event does the woman mention?",
+      id: "ets24-t01-p3-q068",
+      number: 68,
+      prompt: "Who most likely are the speakers?",
       options: {
-        A: "A job fair",
-        B: "A cooking class",
-        C: "A fund-raiser",
-        D: "A company picnic",
+        A: "Urban planners",
+        B: "Journalists",
+        C: "Engineers",
+        D: "Environmental scientists",
+      },
+      answerKey: "B",
+    },
+    {
+      id: "ets24-t01-p3-q069",
+      number: 69,
+      prompt: "Look at the graphic. Which site has already been completed?",
+      options: {
+        A: "Site A",
+        B: "Site B",
+        C: "Site C",
+        D: "Site D",
       },
       answerKey: "D",
     },
     {
-      id: "ets24-t01-p3-q033",
-      number: 33,
-      prompt: "What does the woman ask for?",
+      id: "ets24-t01-p3-q070",
+      number: 70,
+      prompt: "What does the man suggest focusing on?",
       options: {
-        A: "A guest list",
-        B: "A dessert recipe",
-        C: "A business card",
-        D: "A promotional code",
+        A: "Work opportunities",
+        B: "Wind turbine costs",
+        C: "Supply chain issues",
+        D: "Power capacity",
       },
-      answerKey: "B",
-    },
-    {
-      id: "ets24-t01-p3-q034",
-      number: 34,
-      prompt: "What does the man recommend doing?",
-      options: {
-        A: "Returning some merchandise",
-        B: "Watching a video",
-        C: "Creating an account",
-        D: "Reading a review",
-      },
-      answerKey: "B",
+      answerKey: "A",
     },
   ] satisfies LandingPart3Question[],
 } as const;
