@@ -24,7 +24,7 @@ export function LandingVocabSection() {
           Bilingual cards and spaced review in one place.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <LandingReviewCard />
         <LandingProgressCard />
       </div>
@@ -44,7 +44,7 @@ function LandingReviewCard() {
 
   return (
     <article className={vocabCardClassName}>
-      <p className="text-sm font-medium text-muted-foreground">Spaced review</p>
+      <p className="text-sm font-medium text-muted-foreground">Review</p>
       <div className="mt-4 flex flex-1 flex-col">
         <div className="flex flex-wrap items-start gap-x-2 gap-y-2">
           <h3 className="text-3xl font-black tracking-tight">
@@ -96,47 +96,47 @@ function LandingReviewCard() {
           </button>
         )}
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-          {!showMeaning ? (
-            <span className="text-muted-foreground">Reveal the meaning first</span>
-          ) : graded ? (
-            <>
-              <span className="font-medium text-foreground">
-                {graded === "remember"
-                  ? "Nice — scheduled for later review."
-                  : "Noted — this word will come back sooner."}
-              </span>
-              <button
-                className={iconTextButtonClassName(
-                  "border-border bg-transparent text-sm text-foreground hover:bg-hover-overlay",
-                )}
-                onClick={reset}
-                type="button"
-              >
-                Try again
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                onClick={() => setGraded("forgot")}
-                type="button"
-              >
-                <Kbd>1</Kbd>
-                Forgot
-              </button>
-              <button
-                className="inline-flex items-center gap-1 font-semibold text-foreground"
-                onClick={() => setGraded("remember")}
-                type="button"
-              >
-                <Kbd>2</Kbd>
-                Remember
-              </button>
-            </>
-          )}
-        </div>
+        {showMeaning ? (
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+            {graded ? (
+              <>
+                <span className="font-medium text-foreground">
+                  {graded === "remember"
+                    ? "Nice — scheduled for later review."
+                    : "Noted — this word will come back sooner."}
+                </span>
+                <button
+                  className={iconTextButtonClassName(
+                    "border-border bg-transparent text-sm text-foreground hover:bg-hover-overlay",
+                  )}
+                  onClick={reset}
+                  type="button"
+                >
+                  Try again
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                  onClick={() => setGraded("forgot")}
+                  type="button"
+                >
+                  <Kbd>1</Kbd>
+                  Forgot
+                </button>
+                <button
+                  className="inline-flex items-center gap-1 font-semibold text-foreground"
+                  onClick={() => setGraded("remember")}
+                  type="button"
+                >
+                  <Kbd>2</Kbd>
+                  Remember
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
     </article>
   );
