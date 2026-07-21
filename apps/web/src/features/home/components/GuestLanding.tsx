@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
+import { LandingPart3Demo } from "@/features/home/components/LandingPart3Demo";
+import { LandingVocabSection } from "@/features/home/components/LandingVocabSection";
 import { useResolvedTheme } from "@/shared/providers/ThemeProvider";
 import { FacebookIcon } from "@/shared/ui/icons/FacebookIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
@@ -10,40 +12,6 @@ import { TikTokIcon } from "@/shared/ui/icons/TikTokIcon";
 import { YouTubeIcon } from "@/shared/ui/icons/YouTubeIcon";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
-
-const FEATURES = [
-  {
-    icon: "📚",
-    title: "Spaced Repetition",
-    description:
-      "Review vocabulary on an optimized schedule that adapts to your progress and helps words stick long-term.",
-  },
-  {
-    icon: "🌐",
-    title: "Bilingual Dictionary",
-    description:
-      "Every word comes with Vietnamese meanings, IPA pronunciation, examples, and CEFR levels.",
-  },
-  {
-    icon: "📝",
-    title: "TOEIC Practice",
-    description:
-      "Practice all 7 TOEIC parts across 80+ real exams from 8 years, with mock tests and answer review.",
-  },
-  {
-    icon: "📊",
-    title: "Progress Tracking",
-    description:
-      "See your accuracy, study streaks, and per-part progress on a clean dashboard that keeps you motivated.",
-  },
-] as const;
-
-const SHOWCASE_POINTS = [
-  "80+ real TOEIC exams across 8 years (ETS & YBM)",
-  "All 7 parts — Listening (1-4) and Reading (5-7)",
-  "Mock tests with timed sessions and instant grading",
-  "Review wrong answers and retake until you master them",
-] as const;
 
 const socialIconButtonClassName = classNames(
   "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
@@ -119,63 +87,8 @@ export function GuestLanding() {
         </div>
       </section>
 
-      <section
-        className="flex flex-col gap-8 px-8 py-16 sm:px-16 lg:py-24"
-        id="features"
-      >
-        <div className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Everything you need to learn
-          </h2>
-          <p className="max-w-xl text-lg text-muted-foreground">
-            Four pillars that take you from your first word to a confident TOEIC
-            score.
-          </p>
-        </div>
-        <div className="@container grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-8 @[1024px]:grid-cols-4">
-          {FEATURES.map((feature) => (
-            <article
-              className="flex flex-col gap-4 rounded-2xl bg-surface p-6 shadow-card"
-              key={feature.title}
-            >
-              <span className="text-3xl" aria-hidden>
-                {feature.icon}
-              </span>
-              <h3 className="text-xl font-semibold">{feature.title}</h3>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                {feature.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-8 px-8 py-16 sm:px-16 lg:py-24">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Real TOEIC practice, built in
-          </h2>
-          <p className="max-w-xl text-lg text-muted-foreground">
-            Practice with authentic-style TOEIC exams and track every answer.
-          </p>
-        </div>
-        <ul className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-          {SHOWCASE_POINTS.map((point) => (
-            <li
-              className="flex items-start gap-3 rounded-2xl bg-surface p-5 shadow-card"
-              key={point}
-            >
-              <span
-                aria-hidden
-                className="mt-1 flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background"
-              >
-                ✓
-              </span>
-              <span className="text-base leading-relaxed">{point}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <LandingVocabSection />
+      <LandingPart3Demo />
 
       <section className="px-2 py-16 lg:py-24">
         <div className="relative overflow-hidden rounded-3xl bg-[#1418A8]">
