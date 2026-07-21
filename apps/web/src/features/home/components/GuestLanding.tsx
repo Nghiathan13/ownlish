@@ -115,14 +115,6 @@ export function GuestLanding() {
             >
               Get started
             </Link>
-            <Link
-              href="#features"
-              className={iconTextButtonClassName(
-                "whitespace-nowrap border-border bg-transparent text-foreground hover:bg-hover-overlay",
-              )}
-            >
-              See how it works
-            </Link>
           </div>
         </div>
       </section>
@@ -233,37 +225,39 @@ export function GuestLanding() {
         </div>
       </section>
 
-      <footer className="mt-auto border-t border-border px-8 py-10 sm:px-16">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex flex-col items-center gap-3 sm:items-start">
-            <Link
-              className="flex items-center gap-2 text-base font-bold hover:opacity-80"
-              href="/"
-            >
-              <LogoIcon className="size-6 shrink-0" />
-              EngVocab
-            </Link>
-            <div className="flex items-center gap-2">
-              {SOCIAL_LINKS.map(({ href, label, Icon, themed }) => (
-                <a
-                  aria-label={label}
-                  className={socialIconButtonClassName}
-                  href={href}
-                  key={label}
-                  rel="noopener noreferrer"
-                >
-                  <Icon
-                    className="size-5"
-                    {...(themed ? { variant: resolvedTheme } : {})}
-                  />
-                </a>
-              ))}
-            </div>
+      <footer className="mt-auto py-10">
+        <div className="flex flex-col items-center gap-3 px-8 sm:items-start sm:px-16">
+          <Link
+            className="flex items-center gap-2 text-base font-bold hover:opacity-80"
+            href="/"
+          >
+            <LogoIcon className="size-6 shrink-0" />
+            EngVocab
+          </Link>
+          <div className="flex items-center gap-2">
+            {SOCIAL_LINKS.map(({ href, label, Icon, themed }) => (
+              <a
+                aria-label={label}
+                className={socialIconButtonClassName}
+                href={href}
+                key={label}
+                rel="noopener noreferrer"
+              >
+                <Icon
+                  className="size-5"
+                  {...(themed ? { variant: resolvedTheme } : {})}
+                />
+              </a>
+            ))}
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} EngVocab. All rights reserved.
-          </p>
         </div>
+        <div
+          aria-hidden
+          className="mx-4 mt-6 border-t border-border sm:mx-16"
+        />
+        <p className="mt-4 px-8 text-center text-sm text-muted-foreground sm:px-16 sm:text-left">
+          © {new Date().getFullYear()} EngVocab
+        </p>
       </footer>
     </div>
   );
