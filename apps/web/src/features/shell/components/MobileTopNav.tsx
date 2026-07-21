@@ -1,110 +1,79 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  useAuthSession,
-  isAuthenticatedStatus,
-  isLoadingStatus,
-} from "@/features/auth/hooks/useAuthSession";
-import { isAdminUser } from "@/features/auth/lib/isAdminUser";
-import {
-  ADMIN_NAV_LINKS,
-  APP_NAV_LINKS,
-  getAppNavLinkClass,
-} from "@/features/shell/lib/appNavLinks";
-import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
-import { ShellNavSkeleton } from "@/features/shell/components/ShellNavSkeleton";
+import { useEffect, useRef, useState } from "react";
 import { classNames } from "@/shared/lib/classNames";
-import {
-  primaryTextButtonClassName,
-  secondaryTextButtonClassName,
-} from "@/shared/ui/button";
+import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
+import { DarkModeIcon } from "@/shared/ui/icons/DarkModeIcon";
+import { LightModeIcon } from "@/shared/ui/icons/LightModeIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
-import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
+import { MenuIcon } from "@/shared/ui/icons/MenuIcon";
 
-export function MobileTopNav() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { logout, status, user } = useAuthSession();
-  const isAuth = isAuthenticatedStatus(status);
-  const isLoading = isLoadingStatus(status);
-  const isAdmin = isAdminUser(user);
+function MobileNavThemeToggle() {
+  const { setTheme } = useTheme();
+  const resolvedTheme = useResolvedTheme();
+  const targetTheme = resolvedTheme === "dark" ? "light" : "dark";
+  const tooltip = `Switch to ${targetTheme} theme`;
+  const Icon = targetTheme === "light" ? LightModeIcon : DarkModeIcon;
 
   return (
-    <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface backdrop-blur-md">
-      <div
-        className={classNames(
-          APP_CONTAINER_CLASS,
-          "flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-3 sm:flex-nowrap",
-        )}
-      >
-        <div className="flex min-w-0 flex-1 items-center gap-3 sm:flex-none">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2 text-base font-bold hover:opacity-80"
+    <button
+      aria-label={tooltip}
+      className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-foreground hover:bg-hover-overlay"
+      onClick={() => setTheme(targetTheme)}
+      type="button"
+    >
+      <Icon className="size-6 shrink-0" />
+    </button>
+  );
+}
+
+export function MobileTopNav() {
+  const navRef = useRef<HTMLElement>(null);
+  const [isAtTop, setIsAtTop] = useState(true);
+
+  useEffect(() => {
+    const scroller = navRef.current?.parentElement;
+    if (!scroller) {
+      return;
+    }
+
+    const updatePosition = () => {
+      setIsAtTop(scroller.scrollTop <= 0);
+    };
+
+    updatePosition();
+    scroller.addEventListener("scroll", updatePosition, { passive: true });
+    return () => {
+      scroller.removeEventListener("scroll", updatePosition);
+    };
+  }, []);
+
+  return (
+    <nav
+      ref={navRef}
+      className={classNames(
+        "pointer-events-none sticky z-50 mx-4 transition-[top,margin-top] duration-200 sm:hidden",
+        isAtTop ? "top-4 mt-4" : "top-2 mt-0",
+      )}
+    >
+      <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border">
+        <Link
+          className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"
+          href="/"
+        >
+          <LogoIcon className="size-6 shrink-0" />
+          EngVocab
+        </Link>
+        <div className="flex items-center gap-2">
+          <MobileNavThemeToggle />
+          <button
+            aria-label="Open menu"
+            className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-foreground hover:bg-hover-overlay"
+            type="button"
           >
-            <LogoIcon className="size-6 shrink-0" />
-            EngVocab
-          </Link>
-        </div>
-
-        {isLoading ? (
-          <ShellNavSkeleton variant="mobile" />
-        ) : isAuth ? (
-          <div className="order-3 flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap sm:order-none sm:w-auto sm:gap-6 sm:overflow-visible">
-            {APP_NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={getAppNavLinkClass(pathname, link)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {isAdmin ? (
-              <span className="h-5 border-l border-border" aria-hidden />
-            ) : null}
-            {isAdmin
-              ? ADMIN_NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={getAppNavLinkClass(pathname, link)}
-                  >
-                    Admin {link.label}
-                  </Link>
-                ))
-              : null}
-          </div>
-        ) : null}
-
-        <div className="order-2 flex shrink-0 items-center gap-3 sm:order-none sm:gap-4">
-          {isLoading ? (
-            <ShellAuthSlotSkeleton variant="mobile" />
-          ) : isAuth ? (
-            <>
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                {user?.email}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  void logout();
-                  router.replace("/login");
-                }}
-                className={secondaryTextButtonClassName()}
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            pathname !== "/login" && (
-              <Link href="/login" className={primaryTextButtonClassName()}>
-                Sign in
-              </Link>
-            )
-          )}
+            <MenuIcon className="size-6 shrink-0" />
+          </button>
         </div>
       </div>
     </nav>
