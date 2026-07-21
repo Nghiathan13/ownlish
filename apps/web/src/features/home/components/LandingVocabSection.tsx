@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import {
-  LANDING_CATALOG_COLLECTIONS,
   LANDING_VOCAB_DEMO_METRICS,
   LANDING_VOCAB_DEMO_WORD,
 } from "@/features/home/lib/landingDemoData";
-import { classNames } from "@/shared/lib/classNames";
-import { secondaryTextButtonClassName } from "@/shared/ui/button";
+import { iconTextButtonClassName } from "@/shared/ui/button";
+
+const vocabCardClassName =
+  "flex flex-col rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border sm:p-6";
 
 export function LandingVocabSection() {
   return (
@@ -20,12 +21,11 @@ export function LandingVocabSection() {
           Build vocabulary that sticks.
         </h2>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Collections, bilingual cards, and spaced review in one place.
+          Bilingual cards and spaced review in one place.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <LandingReviewCard />
-        <LandingCollectionsCard />
         <LandingProgressCard />
       </div>
     </section>
@@ -43,7 +43,7 @@ function LandingReviewCard() {
   }
 
   return (
-    <article className="flex flex-col rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+    <article className={vocabCardClassName}>
       <p className="text-sm font-medium text-muted-foreground">Spaced review</p>
       <div className="mt-4 flex flex-1 flex-col">
         <div className="flex flex-wrap items-start gap-x-2 gap-y-2">
@@ -107,7 +107,9 @@ function LandingReviewCard() {
                   : "Noted — this word will come back sooner."}
               </span>
               <button
-                className={secondaryTextButtonClassName("text-sm")}
+                className={iconTextButtonClassName(
+                  "border-border bg-transparent text-sm text-foreground hover:bg-hover-overlay",
+                )}
                 onClick={reset}
                 type="button"
               >
@@ -140,79 +142,6 @@ function LandingReviewCard() {
   );
 }
 
-function LandingCollectionsCard() {
-  const [activeId, setActiveId] = useState<string>(
-    LANDING_CATALOG_COLLECTIONS[0].id,
-  );
-  const [importedId, setImportedId] = useState<string | null>(null);
-  const active =
-    LANDING_CATALOG_COLLECTIONS.find((item) => item.id === activeId) ??
-    LANDING_CATALOG_COLLECTIONS[0];
-
-  return (
-    <article className="flex flex-col rounded-2xl bg-surface p-5 shadow-card sm:p-6">
-      <p className="text-sm font-medium text-muted-foreground">Collections</p>
-      <h3 className="mt-2 text-xl font-semibold">My Vocabulary + catalogs</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Keep your words in one place, then import curated sets when you need
-        more coverage.
-      </p>
-
-      <div className="mt-5 rounded-xl border border-border p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-semibold">My Vocabulary</p>
-            <p className="mt-1 text-sm text-muted-foreground">Your default collection</p>
-          </div>
-          <span className="text-sm text-muted-foreground">128 words</span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {LANDING_CATALOG_COLLECTIONS.map((collection) => (
-          <button
-            className={classNames(
-              "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-              activeId === collection.id
-                ? "border-foreground bg-foreground text-background"
-                : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
-            )}
-            key={collection.id}
-            onClick={() => setActiveId(collection.id)}
-            type="button"
-          >
-            {collection.title}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-4 flex flex-1 flex-col rounded-xl border border-border p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-semibold">{active.title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {active.description}
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
-            {active.cefr}
-          </span>
-        </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="text-sm text-muted-foreground">{active.wordCount}</span>
-          <button
-            className={secondaryTextButtonClassName("text-sm")}
-            onClick={() => setImportedId(active.id)}
-            type="button"
-          >
-            {importedId === active.id ? "Imported" : "Import"}
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
 function LandingProgressCard() {
   const metrics = [
     { label: "Due for review", value: LANDING_VOCAB_DEMO_METRICS.due },
@@ -221,7 +150,7 @@ function LandingProgressCard() {
   ];
 
   return (
-    <article className="flex flex-col rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+    <article className={vocabCardClassName}>
       <p className="text-sm font-medium text-muted-foreground">Progress</p>
       <h3 className="mt-2 text-xl font-semibold">See what needs attention</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

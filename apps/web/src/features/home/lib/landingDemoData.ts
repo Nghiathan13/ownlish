@@ -17,30 +17,6 @@ export const LANDING_VOCAB_DEMO_METRICS = {
   difficult: 5,
 } as const;
 
-export const LANDING_CATALOG_COLLECTIONS = [
-  {
-    id: "oxford",
-    title: "Oxford 3000",
-    description: "Essential words for everyday English.",
-    cefr: "A1–B2",
-    wordCount: "3,000 words",
-  },
-  {
-    id: "toeic",
-    title: "TOEIC Core",
-    description: "High-frequency business and workplace vocabulary.",
-    cefr: "B1–C1",
-    wordCount: "1,200 words",
-  },
-  {
-    id: "ielts",
-    title: "IELTS Academic",
-    description: "Academic words for reading and writing tasks.",
-    cefr: "B2–C1",
-    wordCount: "800 words",
-  },
-] as const;
-
 export type LandingOptionKey = "A" | "B" | "C" | "D";
 
 export type LandingPart3Question = {

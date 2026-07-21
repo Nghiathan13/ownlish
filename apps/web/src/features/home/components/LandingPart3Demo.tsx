@@ -131,7 +131,7 @@ export function LandingPart3Demo() {
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           {demo.questions.map((question) => {
             const options = toToeicOptions(question);
 
