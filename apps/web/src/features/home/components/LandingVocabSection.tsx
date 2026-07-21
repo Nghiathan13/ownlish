@@ -16,7 +16,7 @@ const vocabCardClassName =
 export function LandingVocabSection() {
   return (
     <section
-      className="flex flex-col gap-8 px-8 py-16 sm:px-16 lg:py-24"
+      className="flex flex-col gap-8 px-4 py-16 sm:px-16 lg:py-24"
       id="vocabulary"
     >
       <div className="flex flex-col items-center gap-3 text-center">
