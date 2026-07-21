@@ -2,13 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ToeicQuestionOptions } from "@/entities/toeic/api/types";
+import { joinContentEvidenceSegments } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
 import {
   LANDING_PART3_DEMO,
   type LandingOptionKey,
+  type LandingPart3Question,
 } from "@/features/home/lib/landingDemoData";
+import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
+import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
 import {
   iconTextButtonClassName,
   secondaryTextButtonClassName,
@@ -22,18 +26,16 @@ function createEmptySelections(): Selections {
   ) as Selections;
 }
 
-function toToeicOptions(
-  options: Record<LandingOptionKey, string>,
-): ToeicQuestionOptions {
+function toToeicOptions(question: LandingPart3Question): ToeicQuestionOptions {
   return {
-    A: options.A,
-    B: options.B,
-    C: options.C,
-    D: options.D,
-    A_vi: null,
-    B_vi: null,
-    C_vi: null,
-    D_vi: null,
+    A: question.options.A,
+    B: question.options.B,
+    C: question.options.C,
+    D: question.options.D,
+    A_vi: question.optionsVi.A,
+    B_vi: question.optionsVi.B,
+    C_vi: question.optionsVi.C,
+    D_vi: question.optionsVi.D,
   };
 }
 
@@ -47,6 +49,15 @@ export function LandingPart3Demo() {
   const demo = LANDING_PART3_DEMO;
   const [selections, setSelections] = useState<Selections>(createEmptySelections);
   const [revealed, setRevealed] = useState(false);
+
+  const transcriptEn = useMemo(
+    () => joinContentEvidenceSegments([...demo.transcriptSegments]),
+    [demo.transcriptSegments],
+  );
+  const transcriptVi = useMemo(
+    () => joinContentEvidenceSegments([...demo.transcriptViSegments]),
+    [demo.transcriptViSegments],
+  );
 
   const correctCount = revealed
     ? demo.questions.filter(
@@ -114,46 +125,49 @@ export function LandingPart3Demo() {
           </div>
 
           {revealed ? (
-            <div className="grid gap-4">
-              <div className="rounded-xl border border-border bg-background p-4">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Transcript
-                </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
-                  {demo.transcriptEn}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border bg-background p-4">
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Translation
-                </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                  {demo.transcriptVi}
-                </p>
-              </div>
-            </div>
+            <PassagePanel
+              content={transcriptEn}
+              contentSegments={[...demo.transcriptSegments]}
+              contentVi={transcriptVi}
+              contentViSegments={[...demo.transcriptViSegments]}
+              showEvidenceToggle
+              showTranslation
+              title="Transcript"
+            />
           ) : null}
         </div>
 
         <div className="flex flex-col gap-5">
-          {demo.questions.map((question) => (
-            <div className="grid gap-3" key={question.id}>
-              <p className="text-base font-medium leading-snug">
-                <span className="mr-2">{question.number}.</span>
-                {question.prompt}
-              </p>
-              <QuestionOptions
-                answerKey={question.answerKey}
-                isLocked={revealed}
-                onSelect={(key) => handleSelect(question.id, key)}
-                optionCount={4}
-                options={toToeicOptions(question.options)}
-                selectedKey={selections[question.id]}
-                showEnglishTextBeforeAnswer
-                showResult={revealed}
-              />
-            </div>
-          ))}
+          {demo.questions.map((question) => {
+            const options = toToeicOptions(question);
+
+            return (
+              <div className="flex flex-col gap-4" key={question.id}>
+                <p className="text-base font-medium leading-snug">
+                  <span className="mr-2">{question.number}.</span>
+                  {question.prompt}
+                </p>
+                <QuestionOptions
+                  answerKey={question.answerKey}
+                  isLocked={revealed}
+                  onSelect={(key) => handleSelect(question.id, key)}
+                  optionCount={4}
+                  options={options}
+                  selectedKey={selections[question.id]}
+                  showEnglishTextBeforeAnswer
+                  showResult={revealed}
+                />
+                <QuestionTranslationPanel
+                  answerKey={revealed ? question.answerKey : null}
+                  optionCount={4}
+                  options={options}
+                  questionVi={question.promptVi}
+                  variant="content-question-options"
+                  visible={revealed}
+                />
+              </div>
+            );
+          })}
 
           {revealed ? (
             <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">

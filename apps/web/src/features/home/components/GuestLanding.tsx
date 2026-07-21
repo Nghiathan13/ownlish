@@ -109,7 +109,7 @@ export function GuestLanding() {
           <div className="relative z-10 grid items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-8 lg:px-12 lg:py-16">
             <div className="flex flex-col items-start gap-6">
               <h2 className="max-w-md text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Organize your vocabulary.
+                Organize your vocabulary
               </h2>
               <p className="max-w-md text-lg text-white/80 sm:text-xl">
                 Build collections, track reviews, and keep every word in one
