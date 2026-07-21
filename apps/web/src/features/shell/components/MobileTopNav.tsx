@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
 import {
   ADMIN_NAV_LINKS,
   APP_NAV_LINKS,
@@ -40,7 +41,8 @@ function MobileNavThemeToggle() {
 
 export function MobileTopNav() {
   const pathname = usePathname();
-  const { user } = useAuthSession();
+  const router = useRouter();
+  const { logout, updateProfile, user } = useAuthSession();
   const isAdmin = isAdminUser(user);
   const navRef = useRef<HTMLElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
@@ -133,10 +135,10 @@ export function MobileTopNav() {
         <div
           aria-label="Menu"
           aria-modal="true"
-          className="fixed inset-0 z-40 overflow-y-auto bg-surface sm:hidden"
+          className="fixed inset-0 z-40 flex flex-col bg-surface sm:hidden"
           role="dialog"
         >
-          <div className="flex flex-col gap-1 px-4 pt-24 pb-8">
+          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4 pt-24">
             {APP_NAV_LINKS.map((link) => {
               const isActive = isAppNavLinkActive(pathname, link);
               const Icon = isActive ? link.activeIcon : link.icon;
@@ -183,6 +185,20 @@ export function MobileTopNav() {
                 })
               : null}
           </div>
+
+          {user ? (
+            <div className="shrink-0 px-4 pt-2 pb-8">
+              <SidebarUserMenu
+                collapsed={false}
+                onLogout={() => {
+                  void logout();
+                  router.replace("/login");
+                }}
+                onUpdateProfile={updateProfile}
+                user={user}
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>
