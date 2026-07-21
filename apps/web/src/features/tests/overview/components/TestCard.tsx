@@ -10,7 +10,6 @@ import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
 import {
-  formatCatalogTestLabel,
   type CatalogTestSummary,
 } from "@/features/tests/shared/model/catalogTestSummary";
 import {
@@ -44,7 +43,7 @@ export function TestCard({
   return (
     <article className={testOverviewCardClassName}>
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">{formatCatalogTestLabel(test)}</h2>
+        <h2 className="text-lg font-semibold">Test {test.catalog.testNumber}</h2>
         <div className="flex shrink-0 items-center gap-2">
           <button
             aria-label={

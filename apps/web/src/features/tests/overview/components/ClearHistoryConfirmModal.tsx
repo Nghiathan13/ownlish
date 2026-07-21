@@ -1,10 +1,7 @@
 "use client";
 
 import { Modal } from "@/shared/ui/Modal";
-import {
-  secondaryTextButtonClassName,
-  textButtonClassName,
-} from "@/shared/ui/button";
+import { textButtonClassName } from "@/shared/ui/button";
 
 type ClearHistoryConfirmModalProps = {
   title: string;
@@ -27,33 +24,34 @@ export function ClearHistoryConfirmModal({
 }: ClearHistoryConfirmModalProps) {
   return (
     <Modal
-      className="max-w-md"
+      className="max-w-md gap-0 rounded-[16px] bg-surface p-0 shadow-card dark:border dark:border-border [&>div:first-child]:px-6 [&>div:first-child]:pb-4 [&>div:first-child]:pt-6"
       description={subtitle}
       onClose={isConfirming ? () => undefined : onClose}
       showCloseButton={false}
       title={title}
     >
-      <div className="flex flex-col gap-4 border-t border-border pt-4">
-        <div className="flex justify-end gap-2">
-          <button
-            className={secondaryTextButtonClassName()}
-            disabled={isConfirming}
-            onClick={onClose}
-            type="button"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            className={textButtonClassName(
-              "border-red-700 bg-red-700 text-white hover:border-red-800 hover:bg-red-800 dark:border-red-500 dark:bg-red-500 dark:text-white dark:hover:border-red-400 dark:hover:bg-red-400",
-            )}
-            disabled={isConfirming}
-            onClick={onConfirm}
-            type="button"
-          >
-            {isConfirming ? "Clearing..." : confirmLabel}
-          </button>
-        </div>
+      <div className="border-t border-border" />
+      <div className="flex gap-2 p-6">
+        <button
+          className={textButtonClassName(
+            "flex-1 border-border bg-transparent text-foreground hover:border-border hover:bg-hover-overlay",
+          )}
+          disabled={isConfirming}
+          onClick={onClose}
+          type="button"
+        >
+          {cancelLabel}
+        </button>
+        <button
+          className={textButtonClassName(
+            "flex-1 border-red-700 bg-red-700 text-white hover:border-red-700 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)] dark:border-red-500 dark:bg-red-500 dark:hover:border-red-500",
+          )}
+          disabled={isConfirming}
+          onClick={onConfirm}
+          type="button"
+        >
+          {isConfirming ? "Clearing..." : confirmLabel}
+        </button>
       </div>
     </Modal>
   );

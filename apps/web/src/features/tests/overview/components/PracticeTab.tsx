@@ -88,7 +88,7 @@ export function PracticeTab() {
           isConfirming={overview.isClearing}
           onClose={overview.cancelClearHistory}
           onConfirm={() => void overview.confirmClearHistory()}
-          subtitle={`This will remove all practice answers for Part ${overview.pendingClearPartNumber}. This cannot be undone.`}
+          subtitle="This cannot be undone."
           title="Clear practice history"
         />
       ) : null}

@@ -100,7 +100,7 @@ export function MockTestsTab({
           isConfirming={overview.isClearingHistory}
           onClose={overview.cancelClearHistory}
           onConfirm={() => void overview.confirmClearHistory()}
-          subtitle="This will remove all practice answers for this test. This cannot be undone."
+          subtitle="This cannot be undone."
           title="Clear practice history"
         />
       ) : null}
