@@ -127,7 +127,7 @@ export function GoogleSignInButton({
       />
       <button
         className={secondaryTextButtonClassName(
-          "w-full gap-3 hover:bg-hover-overlay active:translate-y-px",
+          "w-full gap-3 hover:border-border hover:bg-hover-overlay active:translate-y-px",
         )}
         disabled={isDisabled}
         onClick={() => codeClientRef.current?.requestCode()}

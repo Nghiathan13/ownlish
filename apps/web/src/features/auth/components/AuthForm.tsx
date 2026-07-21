@@ -3,10 +3,8 @@
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/shared/api/http";
-import { classNames } from "@/shared/lib/classNames";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { Panel } from "@/shared/ui/Panel";
-import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
 import { TextInput } from "@/shared/ui/TextInput";
 import { EmailIcon, PasswordIcon } from "@/shared/ui/icons";
 import {
@@ -76,7 +74,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
   return (
     <Panel
       aria-labelledby="auth-title"
-      className={classNames(PANEL_CARD_CLASS, "w-[min(420px,100%)] border-0")}
+      className="w-[min(420px,100%)]"
     >
       <h1 className="text-3xl font-bold leading-tight" id="auth-title">
         Get started with Engvocab
@@ -125,7 +123,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           <TextInput
             aria-label="Email"
             autoComplete="email"
-            className="w-full rounded-md px-4 py-2 pl-11 pr-4"
+            className="w-full rounded-md px-4 py-2 pl-11 pr-4 focus:border-[#1F48DA]"
             onChange={(event) => {
               setEmail(event.target.value);
               clearError();
@@ -145,7 +143,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           <TextInput
             aria-label="Password"
             autoComplete={mode === "register" ? "new-password" : "current-password"}
-            className="w-full rounded-md px-4 py-2 pl-11 pr-4"
+            className="w-full rounded-md px-4 py-2 pl-11 pr-4 focus:border-[#1F48DA]"
             minLength={mode === "register" ? 8 : undefined}
             onChange={(event) => {
               setPassword(event.target.value);
@@ -178,7 +176,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             New to Engvocab?{" "}
             <button
-              className="cursor-pointer font-medium text-foreground underline underline-offset-4"
+              className="cursor-pointer font-medium text-foreground underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground"
               disabled={isSubmitting}
               onClick={() => switchMode("register")}
               type="button"
@@ -190,7 +188,7 @@ export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <button
-              className="cursor-pointer font-medium text-foreground underline underline-offset-4"
+              className="cursor-pointer font-medium text-foreground underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground"
               disabled={isSubmitting}
               onClick={() => switchMode("login")}
               type="button"
