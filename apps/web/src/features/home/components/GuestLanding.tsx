@@ -181,7 +181,7 @@ export function GuestLanding() {
             <div className="relative flex min-h-64 items-center justify-center [perspective:1000px] lg:min-h-[22rem]">
               <Image
                 alt="EngVocab collections page with vocabulary table"
-                className="w-full max-w-xl rounded-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] [transform:scaleY(0.94)_skewX(-4deg)_rotate(6deg)] lg:absolute lg:right-[-10%] lg:w-[118%] lg:max-w-none lg:[transform:scaleY(0.86)_skewX(-8deg)_rotate(11deg)]"
+                className="w-full max-w-xl rounded-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] [transform:translateY(40px)_scaleY(0.94)_skewX(-4deg)_rotate(6deg)] lg:absolute lg:right-[-10%] lg:w-[118%] lg:max-w-none lg:[transform:translateY(40px)_scaleY(0.86)_skewX(-8deg)_rotate(11deg)]"
                 height={1481}
                 src="/collection_page.png"
                 sizes="(min-width: 1024px) 50vw, 90vw"
