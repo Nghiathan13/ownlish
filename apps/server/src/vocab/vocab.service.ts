@@ -117,7 +117,7 @@ export class VocabService {
   ): Promise<ReviewDefinitionListResponse> {
     await this.assertOwnedCollection(userId, query.collectionId);
 
-    const limit = query.limit ?? 500;
+    const limit = query.limit ?? 1000;
     const offset = query.offset ?? 0;
     const where = {
       deletedAt: null,
