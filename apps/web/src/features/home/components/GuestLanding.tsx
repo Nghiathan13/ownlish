@@ -1,13 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 import { iconTextButtonClassName } from "@/shared/ui/button";
-
-const HERO_GRADIENT_STYLE = {
-  background:
-    "linear-gradient(rgb(2, 8, 13) 0%, rgb(25, 29, 193) 24%, rgb(41, 126, 232) 50%, rgb(234, 239, 252) 100%)",
-} as const;
 
 const FEATURES = [
   {
@@ -43,7 +39,6 @@ const SHOWCASE_POINTS = [
   "Review wrong answers and retake until you master them",
 ] as const;
 
-
 export function GuestLanding() {
   return (
     <div className="flex flex-col">
@@ -57,7 +52,7 @@ export function GuestLanding() {
           className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-[#1F48DA] blur-[10vw]"
         />
         <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center sm:px-16 lg:py-24">
-          <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium uppercase text-muted-foreground shadow-card">
+          <div className="flex items-center gap-3 rounded-full border-0 border-border bg-surface px-4 py-1.5 text-sm font-medium uppercase text-muted-foreground shadow-card dark:border">
             <LogoIcon className="size-4 shrink-0" />
             Learn smarter, not harder
           </div>
@@ -150,23 +145,36 @@ export function GuestLanding() {
       </section>
 
       <section className="px-8 py-16 sm:px-16 lg:py-24">
-        <div
-          className="flex flex-col items-center gap-6 rounded-3xl px-6 py-12 text-center lg:py-16"
-          style={HERO_GRADIENT_STYLE}
-        >
-          <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            Start learning today
-          </h2>
-          <p className="max-w-xl text-lg text-white/80 sm:text-xl">
-            Create a free account and take your first TOEIC practice test in
-            minutes.
-          </p>
-          <Link
-            href="/login"
-            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-black transition duration-200 ease-out hover:-translate-y-0.5 active:translate-y-px"
-          >
-            Get started
-          </Link>
+        <div className="relative overflow-hidden rounded-3xl bg-[#191DC1]">
+          <div className="grid items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-8 lg:px-12 lg:py-16">
+            <div className="relative z-10 flex flex-col items-start gap-6">
+              <h2 className="max-w-md text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                Organize your vocabulary.
+              </h2>
+              <p className="max-w-md text-lg text-white/80 sm:text-xl">
+                Build collections, track reviews, and keep every word in one
+                place.
+              </p>
+              <Link
+                href="/login"
+                className={iconTextButtonClassName(
+                  "border-[#1F48DA] bg-[#1F48DA] text-white hover:[box-shadow:inset_0_0_0_9999px_rgba(255,255,255,0.12)]",
+                )}
+              >
+                Get started
+              </Link>
+            </div>
+            <div className="relative flex min-h-64 items-center justify-center [perspective:1000px] lg:min-h-[22rem]">
+              <Image
+                alt="EngVocab collections page with vocabulary table"
+                className="w-full max-w-xl rounded-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] [transform:scaleY(0.94)_skewX(-4deg)_rotate(6deg)] lg:absolute lg:right-[-10%] lg:w-[118%] lg:max-w-none lg:[transform:scaleY(0.86)_skewX(-8deg)_rotate(11deg)]"
+                height={1481}
+                src="/collection_page.png"
+                sizes="(min-width: 1024px) 50vw, 90vw"
+                width={2491}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
