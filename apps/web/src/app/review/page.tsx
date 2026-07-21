@@ -62,8 +62,8 @@ function ReviewPageContent() {
     isEmpty,
     isLoading,
     isSubmittingGrade,
-    remainingWords,
     reload,
+    reviewedCount,
     totalWords,
   } = useReviewQueue({
     collectionId: resolvedCollectionId,
@@ -150,7 +150,7 @@ function ReviewPageContent() {
             isSubmitting={isSubmittingGrade}
             onGrade={handleGrade}
             onToggleMeaning={() => setShowMeaning((current) => !current)}
-            remainingWords={remainingWords}
+            reviewedCount={reviewedCount}
             showMeaning={showMeaning}
             totalWords={totalWords}
             word={currentWord}

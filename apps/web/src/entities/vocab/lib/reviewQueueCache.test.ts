@@ -56,7 +56,7 @@ function makeQueue(items: VocabReviewItem[]): VocabReviewListResponse {
   return {
     items,
     meta: {
-      limit: 500,
+      limit: 1000,
       offset: 0,
       total: items.length,
       hasMore: false,

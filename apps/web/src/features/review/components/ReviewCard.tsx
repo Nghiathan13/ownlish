@@ -5,7 +5,7 @@ type ReviewCardProps = {
   isSubmitting: boolean;
   onGrade: (grade: ReviewGrade) => void;
   onToggleMeaning: () => void;
-  remainingWords: number;
+  reviewedCount: number;
   showMeaning: boolean;
   totalWords: number;
   word: VocabReviewItem;
@@ -15,28 +15,33 @@ export function ReviewCard({
   isSubmitting,
   onGrade,
   onToggleMeaning,
-  remainingWords,
+  reviewedCount,
   showMeaning,
   totalWords,
   word,
 }: ReviewCardProps) {
   const canGrade = showMeaning && !isSubmitting;
   const ipa = word.ipaUk ?? word.ipaUs;
-  const completedCount = Math.max(totalWords - remainingWords, 0);
-  const progressPercent = totalWords > 0 ? (completedCount / totalWords) * 100 : 0;
+  const progressPercent = totalWords > 0 ? (reviewedCount / totalWords) * 100 : 0;
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-3">
-      <article className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8">
+      <article
+        aria-label={
+          showMeaning ? "Hide meaning" : "Reveal meaning"
+        }
+        className="cursor-pointer rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8"
+        onClick={onToggleMeaning}
+      >
         <div className="mb-8 grid gap-2">
           <p className="text-center text-sm text-muted-foreground">
-            {completedCount}/{totalWords || remainingWords}
+            {reviewedCount}/{totalWords}
           </p>
           <div
-            aria-label={`${completedCount} of ${totalWords} reviewed`}
+            aria-label={`${reviewedCount} of ${totalWords} reviewed`}
             aria-valuemax={totalWords}
             aria-valuemin={0}
-            aria-valuenow={completedCount}
+            aria-valuenow={reviewedCount}
             className="h-1.5 overflow-hidden rounded-full bg-muted"
             role="progressbar"
           >
@@ -59,7 +64,7 @@ export function ReviewCard({
                 ) : null}
               </h2>
               {word.band ? (
-                <span className="rounded-full border border-border bg-muted px-2 py-1 font-semibold text-muted-foreground text-[12px]">
+                <span className="rounded-full border border-border bg-muted px-3 py-1 font-semibold text-muted-foreground text-[12px]">
                   {word.band}
                 </span>
               ) : null}
@@ -72,17 +77,7 @@ export function ReviewCard({
             ) : null}
           </div>
 
-          {showMeaning ? (
-            <ReviewMeaning word={word} />
-          ) : (
-            <button
-              className="mx-auto min-h-24 w-full max-w-xl rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-sm font-medium text-muted-foreground"
-              onClick={onToggleMeaning}
-              type="button"
-            >
-              Press Space or click to reveal
-            </button>
-          )}
+          {showMeaning ? <ReviewMeaning word={word} /> : null}
         </div>
       </article>
 
@@ -119,15 +114,10 @@ export function ReviewCard({
 
 function ReviewMeaning({ word }: { word: VocabReviewItem }) {
   return (
-    <section className="mx-auto grid w-full max-w-xl gap-4 rounded-2xl border border-border bg-surface p-5 text-left">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Meaning
-        </p>
-        <p className="mt-2 text-2xl font-bold leading-tight">
-          {word.meaningVi || word.definition || "No meaning added."}
-        </p>
-      </div>
+    <section className="mx-auto grid w-full max-w-xl gap-4 text-center">
+      <p className="text-2xl font-bold leading-tight">
+        {word.meaningVi || word.definition || "No meaning added."}
+      </p>
 
       {word.definition && word.meaningVi ? (
         <div>
@@ -139,7 +129,7 @@ function ReviewMeaning({ word }: { word: VocabReviewItem }) {
       ) : null}
 
       {word.example ? (
-        <div className="border-t border-border pt-4">
+        <div className="mx-auto w-full text-center">
           <p className="leading-7 text-foreground">{word.example}</p>
           {word.exampleVi ? (
             <p className="mt-2 text-sm leading-6 text-muted-foreground">

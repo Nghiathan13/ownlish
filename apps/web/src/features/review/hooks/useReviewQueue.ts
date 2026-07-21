@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listDueReviewWords,
@@ -30,6 +30,11 @@ export function useReviewQueue({
   userId,
 }: UseReviewQueueParams) {
   const queryClient = useQueryClient();
+  const [reviewedCount, setReviewedCount] = useState(0);
+
+  useEffect(() => {
+    setReviewedCount(0);
+  }, [collectionId]);
 
   const { data, isLoading, error: queryError } = useQuery({
     queryKey: getReviewQueueQueryKey(userId, collectionId),
@@ -68,6 +73,8 @@ export function useReviewQueue({
       });
     },
     onMutate: async ({ word }) => {
+      setReviewedCount((current) => current + 1);
+
       const previousQueue = await optimisticallyRemoveFromReviewQueue(
         queryClient,
         userId,
@@ -79,6 +86,7 @@ export function useReviewQueue({
       return { previousQueue };
     },
     onError: (error, variables, context) => {
+      setReviewedCount((current) => Math.max(0, current - 1));
       restoreReviewQueue(
         queryClient,
         userId,
@@ -95,6 +103,7 @@ export function useReviewQueue({
   });
 
   const reload = useCallback(() => {
+    setReviewedCount(0);
     queryClient.invalidateQueries({
       queryKey: getReviewQueueQueryKey(userId, collectionId),
     });
@@ -121,8 +130,8 @@ export function useReviewQueue({
     isEmpty: (reviewItems?.length ?? 0) === 0,
     isLoading,
     isSubmittingGrade,
-    remainingWords: reviewItems?.length ?? 0,
     reload,
+    reviewedCount,
     totalWords,
   };
 }

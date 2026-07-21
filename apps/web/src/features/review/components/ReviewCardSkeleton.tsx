@@ -19,7 +19,6 @@ export function ReviewCardSkeleton() {
               <Skeleton className="h-6 w-14 rounded-full" />
             </div>
           </div>
-          <Skeleton className="mx-auto min-h-24 w-full max-w-xl rounded-2xl" />
         </div>
       </div>
       <Skeleton className="mx-auto h-6 w-48" />
