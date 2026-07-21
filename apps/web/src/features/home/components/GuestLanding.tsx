@@ -144,8 +144,8 @@ export function GuestLanding() {
         </ul>
       </section>
 
-      <section className="px-8 py-16 sm:px-16 lg:py-24">
-        <div className="relative overflow-hidden rounded-3xl bg-[#191DC1]">
+      <section className="px-2 py-16 lg:py-24">
+        <div className="relative overflow-hidden rounded-3xl bg-[#1418A8]">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 z-0"
