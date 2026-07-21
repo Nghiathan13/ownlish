@@ -1,5 +1,6 @@
 "use client";
 
+import { ClearHistoryConfirmModal } from "@/features/tests/overview/components/ClearHistoryConfirmModal";
 import { PartPracticeCard } from "@/features/tests/overview/components/PartPracticeCard";
 import { PartPracticeTabs } from "@/features/tests/overview/components/PartPracticeTabs";
 import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
@@ -62,7 +63,7 @@ export function PracticeTab() {
                 overview.startingPartNumber === overview.selectedPartNumber
               }
               onClearHistory={() =>
-                void overview.clearHistory(overview.selectedPartNumber)
+                overview.requestClearHistory(overview.selectedPartNumber)
               }
               onPractice={() =>
                 void overview.startPartPractice(
@@ -81,6 +82,16 @@ export function PracticeTab() {
           </div>
         )}
       </div>
+
+      {overview.pendingClearPartNumber != null ? (
+        <ClearHistoryConfirmModal
+          isConfirming={overview.isClearing}
+          onClose={overview.cancelClearHistory}
+          onConfirm={() => void overview.confirmClearHistory()}
+          subtitle={`This will remove all practice answers for Part ${overview.pendingClearPartNumber}. This cannot be undone.`}
+          title="Clear practice history"
+        />
+      ) : null}
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import type { PracticeMode } from "@/entities/toeic/api/types";
@@ -18,6 +19,9 @@ export function usePartPracticeOverview() {
   const searchParams = useSearchParams();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const [pendingClearPartNumber, setPendingClearPartNumber] = useState<
+    number | null
+  >(null);
   const selectedPartNumber =
     parsePracticeOverviewPartParam(searchParams.get("part")) ?? 1;
 
@@ -56,18 +60,30 @@ export function usePartPracticeOverview() {
     }
   };
 
-  const clearHistory = async (partNumber: number) => {
-    if (
-      !isAuthenticated ||
-      !window.confirm(
-        `Clear all aggregate practice answers for Part ${partNumber}? This cannot be undone.`,
-      )
-    ) {
+  const requestClearHistory = (partNumber: number) => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    setPendingClearPartNumber(partNumber);
+  };
+
+  const cancelClearHistory = () => {
+    if (isClearing) {
+      return;
+    }
+
+    setPendingClearPartNumber(null);
+  };
+
+  const confirmClearHistory = async () => {
+    if (pendingClearPartNumber == null) {
       return;
     }
 
     try {
-      await clearHistoryMutation(partNumber);
+      await clearHistoryMutation(pendingClearPartNumber);
+      setPendingClearPartNumber(null);
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot clear part practice history."));
     }
@@ -86,7 +102,10 @@ export function usePartPracticeOverview() {
         : null),
     reload,
     startPartPractice,
-    clearHistory,
+    pendingClearPartNumber,
+    requestClearHistory,
+    cancelClearHistory,
+    confirmClearHistory,
     isStarting,
     startingPartNumber,
     isClearing,

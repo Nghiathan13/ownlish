@@ -35,6 +35,9 @@ export function useTestsOverview(
   const [selectedTest, setSelectedTest] = useState<CatalogTestSummary | null>(
     null,
   );
+  const [pendingClearTestKey, setPendingClearTestKey] = useState<string | null>(
+    null,
+  );
   const [partPickerIntent, setPartPickerIntent] =
     useState<PartPickerIntent>("practice");
   const progressQuery = useTestPracticeOverviewList({
@@ -64,18 +67,30 @@ export function useTestsOverview(
       materializeCatalogTestSummary(test, progressByTestKey.get(test.id)),
     );
 
-  const clearHistory = async (testKey: string) => {
-    if (
-      !isAuthenticated ||
-      !window.confirm(
-        "Clear all practice answers for this test? This cannot be undone.",
-      )
-    ) {
+  const requestClearHistory = (testKey: string) => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    setPendingClearTestKey(testKey);
+  };
+
+  const cancelClearHistory = () => {
+    if (clearMutation.isPending) {
+      return;
+    }
+
+    setPendingClearTestKey(null);
+  };
+
+  const confirmClearHistory = async () => {
+    if (!pendingClearTestKey) {
       return;
     }
 
     try {
-      await clearMutation.mutateAsync(testKey);
+      await clearMutation.mutateAsync(pendingClearTestKey);
+      setPendingClearTestKey(null);
     } catch (error) {
       window.alert(getErrorMessage(error, "Cannot clear practice history."));
     }
@@ -128,7 +143,11 @@ export function useTestsOverview(
 
   return {
     clearingTestKey: clearMutation.isPending ? clearMutation.variables ?? null : null,
-    clearHistory,
+    pendingClearTestKey,
+    requestClearHistory,
+    cancelClearHistory,
+    confirmClearHistory,
+    isClearingHistory: clearMutation.isPending,
     isLoadingTests: (!source && !catalogError) || progressQuery.isLoading,
     reloadTests: progressQuery.reload,
     openPartPicker,

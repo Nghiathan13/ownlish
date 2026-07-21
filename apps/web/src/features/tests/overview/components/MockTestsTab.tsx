@@ -1,6 +1,7 @@
 "use client";
 
 import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPartPickerModal";
+import { ClearHistoryConfirmModal } from "@/features/tests/overview/components/ClearHistoryConfirmModal";
 import { TestCard } from "@/features/tests/overview/components/TestCard";
 import { useTestsOverview } from "@/features/tests/overview/hooks/useTestsOverview";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
@@ -59,7 +60,9 @@ export function MockTestsTab({
               <TestCard
                 isClearingHistory={overview.clearingTestKey === test.catalog.id}
                 key={test.catalog.id}
-                onClearHistory={() => void overview.clearHistory(test.catalog.id)}
+                onClearHistory={() =>
+                  overview.requestClearHistory(test.catalog.id)
+                }
                 onMock={() => overview.openPartPicker(test, "mock")}
                 onPractice={() => overview.openPartPicker(test, "practice")}
                 onReviewWrong={() =>
@@ -79,7 +82,7 @@ export function MockTestsTab({
       {selectedTest ? (
         <ToeicPartPickerModal
           intent={overview.partPickerIntent}
-            isStarting={overview.startingTestKey === selectedTest.catalog.id}
+          isStarting={overview.startingTestKey === selectedTest.catalog.id}
           onClose={overview.closePartPicker}
           onStart={(partNumbers, mode) => {
             void overview.startTest(selectedTest, partNumbers, mode);
@@ -89,6 +92,16 @@ export function MockTestsTab({
           }}
           test={selectedTest}
           testLabel={formatCatalogTestLabel(selectedTest)}
+        />
+      ) : null}
+
+      {overview.pendingClearTestKey ? (
+        <ClearHistoryConfirmModal
+          isConfirming={overview.isClearingHistory}
+          onClose={overview.cancelClearHistory}
+          onConfirm={() => void overview.confirmClearHistory()}
+          subtitle="This will remove all practice answers for this test. This cannot be undone."
+          title="Clear practice history"
         />
       ) : null}
     </>
