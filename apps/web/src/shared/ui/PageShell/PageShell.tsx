@@ -18,7 +18,9 @@ export function PageShell({
     <main
       className={classNames(
         "flex min-h-0 flex-1 flex-col",
-        fillViewport ? "overflow-hidden" : "overflow-x-hidden overflow-y-auto",
+        fillViewport
+          ? "overflow-hidden"
+          : "overflow-visible sm:overflow-x-hidden sm:overflow-y-auto",
         centered && "grid place-items-center",
         className,
       )}

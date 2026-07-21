@@ -53,7 +53,7 @@ export function MobileTopNav() {
     <nav
       ref={navRef}
       className={classNames(
-        "pointer-events-none sticky z-50 mx-4 transition-[top,margin-top] duration-200 sm:hidden",
+        "pointer-events-none sticky z-50 mx-4 shrink-0 transition-[top,margin-top] duration-200 sm:hidden",
         isAtTop ? "top-4 mt-4" : "top-2 mt-0",
       )}
     >
