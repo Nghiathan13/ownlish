@@ -26,7 +26,7 @@ export function CollectionCategoryTabs({
   activeCategory,
 }: CollectionCategoryTabsProps) {
   return (
-    <div className="mx-8 mt-8 mb-8 grid w-fit grid-cols-4 gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:mx-16 lg:mt-16 lg:flex lg:flex-wrap">
+    <div className="m-8 w-fit gap-2 rounded-[16px] bg-surface p-2 shadow-card lg:m-16 lg:flex lg:flex-wrap">
       {collectionCategoryTabs.map((tab) => {
         const isActive = activeCategory === tab.key;
 
