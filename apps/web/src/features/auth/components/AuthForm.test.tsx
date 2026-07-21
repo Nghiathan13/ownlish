@@ -40,7 +40,7 @@ describe("AuthForm", () => {
     expect(
       screen.getByRole("button", { name: "Continue with Google" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("or")).toBeInTheDocument();
+    expect(screen.getByText("OR")).toBeInTheDocument();
     expect(screen.getByTestId("email-icon")).toBeInTheDocument();
     expect(screen.getByTestId("password-icon")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create account" })).toBeInTheDocument();
