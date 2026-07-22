@@ -10,18 +10,19 @@ type ReviewModeToggleProps = {
 export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) {
   return (
     <div
-      className="relative grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-muted p-1"
+      className="relative mx-auto grid w-fit grid-cols-2 gap-0.5 rounded-lg border border-border bg-muted p-0.5"
+      onClick={(event) => event.stopPropagation()}
       role="tablist"
     >
       <span
         aria-hidden
-        className={`pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.75rem)/2)] rounded-lg bg-surface shadow-card transition-transform duration-200 ease-out dark:border dark:border-border ${
-          mode === "typing" ? "translate-x-[calc(100%+0.25rem)]" : "translate-x-0"
+        className={`pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-0.5rem)/2)] rounded-md bg-surface shadow-card transition-transform duration-200 ease-out dark:border dark:border-border ${
+          mode === "typing" ? "translate-x-[calc(100%+0.125rem)]" : "translate-x-0"
         }`}
       />
       <button
         aria-selected={mode === "flashcard"}
-        className={`relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-sm font-medium hover:bg-hover-overlay ${
+        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium hover:bg-hover-overlay ${
           mode === "flashcard" ? "text-foreground" : "text-muted-foreground"
         }`}
         onClick={() => onModeChange("flashcard")}
@@ -32,7 +33,7 @@ export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) 
       </button>
       <button
         aria-selected={mode === "typing"}
-        className={`relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-sm font-medium hover:bg-hover-overlay ${
+        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium hover:bg-hover-overlay ${
           mode === "typing" ? "text-foreground" : "text-muted-foreground"
         }`}
         onClick={() => onModeChange("typing")}

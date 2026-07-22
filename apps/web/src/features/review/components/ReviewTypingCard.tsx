@@ -1,7 +1,11 @@
 "use client";
 
-import type { CSSProperties, RefObject } from "react";
+import type { RefObject } from "react";
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
+import {
+  ReviewModeToggle,
+  type ReviewMode,
+} from "@/features/review/components/ReviewModeToggle";
 import { ReviewProgress } from "@/features/review/components/ReviewProgress";
 import { getTypingAnswer } from "@/features/review/lib/typing";
 import { classNames } from "@/shared/lib/classNames";
@@ -13,11 +17,13 @@ export type TypingResult = {
 };
 
 type ReviewTypingCardProps = {
+  mode: ReviewMode;
+  onModeChange: (mode: ReviewMode) => void;
   onTypedAnswerChange: (value: string) => void;
   reviewedCount: number;
   totalWords: number;
   typedAnswer: string;
-  typingFieldStyle: CSSProperties;
+  typingFieldRef: RefObject<HTMLDivElement | null>;
   typingFieldText: string;
   typingInputRef: RefObject<HTMLInputElement | null>;
   typingMeasureRef: RefObject<HTMLSpanElement | null>;
@@ -26,11 +32,13 @@ type ReviewTypingCardProps = {
 };
 
 export function ReviewTypingCard({
+  mode,
+  onModeChange,
   onTypedAnswerChange,
   reviewedCount,
   totalWords,
   typedAnswer,
-  typingFieldStyle,
+  typingFieldRef,
   typingFieldText,
   typingInputRef,
   typingMeasureRef,
@@ -39,7 +47,8 @@ export function ReviewTypingCard({
 }: ReviewTypingCardProps) {
   return (
     <article className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border">
-      <div className="mb-8">
+      <div className="mb-8 grid gap-3">
+        <ReviewModeToggle mode={mode} onModeChange={onModeChange} />
         <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
       </div>
 
@@ -60,32 +69,31 @@ export function ReviewTypingCard({
         ) : null}
 
         <div
-          className="relative mx-auto w-[min(var(--typing-field-width),388px,calc(100vw-6rem))] transition-[width] duration-300"
-          style={typingFieldStyle}
+          className={classNames(
+            "relative mx-auto w-[156px] max-w-[min(388px,calc(100vw-6rem))]",
+            "transition-[width] duration-[320ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:rounded-full",
+            "after:transition-[background-color] after:duration-[220ms] after:ease-out",
+            typedAnswer ? "after:bg-foreground" : "after:bg-muted",
+          )}
+          ref={typingFieldRef}
         >
           <span
             aria-hidden
-            className="invisible absolute whitespace-pre text-xl leading-none"
+            className="invisible absolute whitespace-pre font-[inherit] text-[20px] leading-none"
             ref={typingMeasureRef}
           >
             {typingFieldText}
           </span>
           <input
             autoComplete="off"
-            className="mx-auto block h-10 w-[calc(100%-28px)] max-w-[360px] border-0 bg-transparent px-0 py-2 text-center text-xl text-foreground outline-none placeholder:text-muted-foreground/50 read-only:text-muted-foreground"
+            className="mx-auto block h-[38px] w-[calc(100%-28px)] max-w-[360px] border-0 bg-transparent px-0 py-2 text-center font-[inherit] text-[20px] leading-none text-foreground outline-none placeholder:text-muted-foreground/50 read-only:text-muted-foreground"
             onChange={(event) => onTypedAnswerChange(event.target.value)}
             placeholder="Type the word"
             readOnly={Boolean(typingResult)}
             ref={typingInputRef}
             spellCheck={false}
             value={typedAnswer}
-          />
-          <span
-            aria-hidden
-            className={classNames(
-              "pointer-events-none absolute inset-x-0 bottom-0 h-px rounded-full transition-colors",
-              typedAnswer ? "bg-foreground" : "bg-muted",
-            )}
           />
         </div>
 

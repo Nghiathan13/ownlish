@@ -2,6 +2,8 @@ import type { UpdateCollectionInput } from "@/entities/collection/api/collection
 
 export type ImportCollectionVariables = {
   catalogDefinitionIds?: string[];
+  limit?: number;
+  offset?: number;
   systemCollectionId: string;
   targetCollectionId?: string;
 };

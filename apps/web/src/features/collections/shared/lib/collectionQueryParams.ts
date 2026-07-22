@@ -8,6 +8,12 @@ export type CollectionDetailQueryParams = CollectionAuthParams & {
   enabled?: boolean;
 };
 
+export type CollectionCatalogWordsQueryParams = CollectionAuthParams & {
+  collectionId: string | null;
+  limit: number;
+  offset: number;
+};
+
 export type CollectionMutationParams = {
   userId: string | null;
 };

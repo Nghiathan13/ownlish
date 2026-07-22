@@ -47,8 +47,17 @@ export type CollectionDetail = CollectionSummary & {
   catalogWords: CatalogWord[];
 };
 
+export type CatalogWordsPage = {
+  items: CatalogWord[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
 export type ImportCollectionInput = {
   catalogDefinitionIds?: string[];
+  limit?: number;
+  offset?: number;
   targetCollectionId?: string;
 };
 
@@ -198,6 +207,25 @@ function parseCollectionDetail(body: unknown): CollectionDetail {
   };
 }
 
+function parseCatalogWordsPage(body: unknown): CatalogWordsPage {
+  if (!isRecord(body) || !Array.isArray(body.items)) {
+    invalidApiResponse();
+  }
+
+  const { items, total, offset, limit } = body;
+
+  if (!isNumber(total) || !isNumber(offset) || !isNumber(limit)) {
+    invalidApiResponse();
+  }
+
+  return {
+    items: items.map(parseCatalogWord),
+    total,
+    offset,
+    limit,
+  };
+}
+
 function parseImportCollectionResult(body: unknown): ImportCollectionResult {
   if (!isRecord(body)) invalidApiResponse();
 
@@ -238,6 +266,23 @@ export function getCollection(
     signal: options.signal,
     token,
   }).then(parseCollectionDetail);
+}
+
+export function getCollectionCatalogWords(
+  token: string,
+  id: string,
+  input: { offset: number; limit: number },
+  options: { signal?: AbortSignal } = {},
+) {
+  const params = new URLSearchParams({
+    limit: String(input.limit),
+    offset: String(input.offset),
+  });
+
+  return apiRequest(`/collections/${id}/catalog-words?${params}`, {
+    signal: options.signal,
+    token,
+  }).then(parseCatalogWordsPage);
 }
 
 export function createCollection(token: string, input: CreateCollectionInput) {

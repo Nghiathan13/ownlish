@@ -12,7 +12,6 @@ import { ImportTargetCollectionSelect } from "@/features/collections/shared/comp
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import {
   ReviewCard,
-  ReviewModeToggle,
   ReviewStateBlock,
   ReviewTypingCard,
   type ReviewMode,
@@ -108,8 +107,8 @@ function ReviewPageContent() {
   const {
     typingInputRef,
     typingMeasureRef,
+    typingFieldRef,
     typingFieldText,
-    typingFieldStyle,
   } = useTypingField({
     typedAnswer,
     enabled: isTypingMode && Boolean(currentWord),
@@ -249,16 +248,16 @@ function ReviewPageContent() {
 
         {showReviewSession && currentWord ? (
           <div className="mx-auto grid w-full max-w-3xl gap-3">
-            <ReviewModeToggle mode={reviewMode} onModeChange={handleModeChange} />
-
             {isTypingMode ? (
               <>
                 <ReviewTypingCard
+                  mode={reviewMode}
+                  onModeChange={handleModeChange}
                   onTypedAnswerChange={setTypedAnswer}
                   reviewedCount={reviewedCount}
                   totalWords={totalWords}
                   typedAnswer={typedAnswer}
-                  typingFieldStyle={typingFieldStyle}
+                  typingFieldRef={typingFieldRef}
                   typingFieldText={typingFieldText}
                   typingInputRef={typingInputRef}
                   typingMeasureRef={typingMeasureRef}
@@ -296,7 +295,9 @@ function ReviewPageContent() {
               <ReviewCard
                 key={resolvedCollectionId}
                 isSubmitting={isSubmittingGrade}
+                mode={reviewMode}
                 onGrade={handleGrade}
+                onModeChange={handleModeChange}
                 onToggleMeaning={() => setShowMeaning((current) => !current)}
                 reviewedCount={reviewedCount}
                 showMeaning={showMeaning}

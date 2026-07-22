@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 const TYPING_INPUT_MAX_WIDTH = 360;
 const TYPING_UNDERLINE_EXTRA_WIDTH = 28;
@@ -12,14 +12,11 @@ type UseTypingFieldParams = {
 };
 
 export function useTypingField({ typedAnswer, enabled }: UseTypingFieldParams) {
-  const [typingFieldWidth, setTypingFieldWidth] = useState(0);
   const typingInputRef = useRef<HTMLInputElement>(null);
   const typingMeasureRef = useRef<HTMLSpanElement>(null);
+  const typingFieldRef = useRef<HTMLDivElement>(null);
 
   const typingFieldText = typedAnswer || "Type the word";
-  const typingFieldStyle = {
-    "--typing-field-width": `${typingFieldWidth || 156}px`,
-  } as CSSProperties;
 
   useLayoutEffect(() => {
     if (!enabled) {
@@ -27,34 +24,38 @@ export function useTypingField({ typedAnswer, enabled }: UseTypingFieldParams) {
     }
 
     const measure = typingMeasureRef.current;
-    if (!measure) {
+    const field = typingFieldRef.current;
+    if (!measure || !field) {
       return;
     }
 
-    const width =
+    const measuredWidth =
       Math.ceil(measure.getBoundingClientRect().width) +
       TYPING_UNDERLINE_EXTRA_WIDTH +
       16;
-    setTypingFieldWidth(width);
+    const maxFieldWidth = Math.min(
+      TYPING_INPUT_MAX_WIDTH + TYPING_UNDERLINE_EXTRA_WIDTH,
+      window.innerWidth - TYPING_FIELD_VIEWPORT_MARGIN,
+    );
+    const nextWidth = Math.min(measuredWidth, maxFieldWidth);
+
+    // Set width on the element directly so CSS can interpolate without a
+    // second React render interrupting the transition.
+    field.style.width = `${nextWidth}px`;
 
     const animationFrame = window.requestAnimationFrame(() => {
-      const maxFieldWidth = Math.min(
-        TYPING_INPUT_MAX_WIDTH + TYPING_UNDERLINE_EXTRA_WIDTH,
-        window.innerWidth - TYPING_FIELD_VIEWPORT_MARGIN,
-      );
-
-      if (width <= maxFieldWidth) {
+      if (measuredWidth <= maxFieldWidth) {
         typingInputRef.current?.scrollTo({ left: 0 });
       }
     });
 
     return () => window.cancelAnimationFrame(animationFrame);
-  }, [enabled, typedAnswer, typingFieldText]);
+  }, [enabled, typingFieldText]);
 
   return {
     typingInputRef,
     typingMeasureRef,
+    typingFieldRef,
     typingFieldText,
-    typingFieldStyle,
   };
 }

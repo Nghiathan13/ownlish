@@ -16,6 +16,8 @@ export function useImportCollection({ userId }: CollectionMutationParams) {
   const importMutation = useMutation({
     mutationFn: ({
       catalogDefinitionIds,
+      limit,
+      offset,
       systemCollectionId,
       targetCollectionId,
     }: ImportCollectionVariables) =>
@@ -29,6 +31,11 @@ export function useImportCollection({ userId }: CollectionMutationParams) {
 
           if (catalogDefinitionIds?.length) {
             input.catalogDefinitionIds = catalogDefinitionIds;
+          }
+
+          if (offset !== undefined && limit !== undefined) {
+            input.offset = offset;
+            input.limit = limit;
           }
 
           return importCollection(token, systemCollectionId, input);

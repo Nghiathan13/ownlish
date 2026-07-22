@@ -14,6 +14,15 @@ export function getCollectionDetailQueryKey(
   return ["collection", { userId, collectionId }] as const;
 }
 
+export function getCollectionCatalogWordsQueryKey(
+  userId: string | null,
+  collectionId: string | null,
+  offset: number,
+  limit: number,
+) {
+  return ["collection-catalog-words", { userId, collectionId, offset, limit }] as const;
+}
+
 export function invalidateCollectionsList(
   queryClient: QueryClient,
   userId: string | null,

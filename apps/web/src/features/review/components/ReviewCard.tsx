@@ -1,10 +1,16 @@
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
+import {
+  ReviewModeToggle,
+  type ReviewMode,
+} from "@/features/review/components/ReviewModeToggle";
 import { ReviewProgress } from "@/features/review/components/ReviewProgress";
 import type { ReviewGrade } from "../lib/reviewSchedule";
 
 type ReviewCardProps = {
   isSubmitting: boolean;
+  mode: ReviewMode;
   onGrade: (grade: ReviewGrade) => void;
+  onModeChange: (mode: ReviewMode) => void;
   onToggleMeaning: () => void;
   reviewedCount: number;
   showMeaning: boolean;
@@ -14,7 +20,9 @@ type ReviewCardProps = {
 
 export function ReviewCard({
   isSubmitting,
+  mode,
   onGrade,
+  onModeChange,
   onToggleMeaning,
   reviewedCount,
   showMeaning,
@@ -31,7 +39,8 @@ export function ReviewCard({
         className="cursor-pointer rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
         onClick={onToggleMeaning}
       >
-        <div className="mb-8">
+        <div className="mb-8 grid gap-3">
+          <ReviewModeToggle mode={mode} onModeChange={onModeChange} />
           <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
         </div>
 
