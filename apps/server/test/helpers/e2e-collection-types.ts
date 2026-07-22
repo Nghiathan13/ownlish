@@ -12,6 +12,13 @@ export type CollectionCatalogBody = {
   catalogWords: VocabWordBody[];
 };
 
+export type CollectionCatalogPageBody = {
+  items: VocabWordBody[];
+  limit: number;
+  offset: number;
+  total: number;
+};
+
 export type CollectionImportBody = {
   imported: number;
   updated: number;

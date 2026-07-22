@@ -12,6 +12,7 @@ import {
 } from './helpers/e2e-collections';
 import type {
   CollectionCatalogBody,
+  CollectionCatalogPageBody,
   CollectionImportBody,
   CollectionSummaryBody,
 } from './helpers/e2e-collection-types';
@@ -197,6 +198,28 @@ describe('CollectionsController (e2e)', () => {
           ],
         });
       });
+
+    await request(app.getHttpServer())
+      .get(`/collections/${collectionId}/catalog-words?offset=0&limit=20`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+      .expect((response) => {
+        const page = parseResponseBody<CollectionCatalogPageBody>(response);
+        expect(page).toMatchObject({
+          limit: 20,
+          offset: 0,
+          total: 1,
+        });
+        expect(page.items).toHaveLength(1);
+        expect(page.items[0]).toMatchObject({
+          word: 'e2e catalog word',
+        });
+      });
+
+    await request(app.getHttpServer())
+      .get(`/collections/${collectionId}/catalog-words?offset=0&limit=21`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(400);
 
     await request(app.getHttpServer())
       .post(`/collections/${collectionId}/import`)

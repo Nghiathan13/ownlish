@@ -7,12 +7,14 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthRequest } from '../auth/types/auth.types';
 import { CollectionsService } from './collections.service';
+import { CatalogWordsQueryDto } from './dto/catalog-words-query.dto';
 import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 import { ImportCollectionDto } from './dto/import-collection.dto';
 import { UpdateUserCollectionDto } from './dto/update-user-collection.dto';
@@ -35,6 +37,18 @@ export class CollectionsController {
     return this.collectionsService.createUserCollection(request.user.id, body);
   }
 
+  @Get(':id/catalog-words')
+  getCatalogWords(
+    @Req() request: AuthRequest,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Query() query: CatalogWordsQueryDto,
+  ): ReturnType<CollectionsService['getCatalogWordsPage']> {
+    return this.collectionsService.getCatalogWordsPage(request.user.id, id, {
+      limit: query.limit,
+      offset: query.offset,
+    });
+  }
+
   @Get(':id')
   get(
     @Req() request: AuthRequest,
@@ -52,6 +66,8 @@ export class CollectionsController {
     return this.collectionsService.importToVocabulary(request.user.id, id, {
       targetCollectionId: body.targetCollectionId,
       catalogDefinitionIds: body.catalogDefinitionIds,
+      limit: body.limit,
+      offset: body.offset,
     });
   }
 

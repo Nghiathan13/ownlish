@@ -30,6 +30,7 @@ describe('CollectionsService', () => {
   };
   const prisma = {
     collectionCatalogItem: {
+      count: jest.fn(),
       findMany: jest.fn(),
     },
     vocabWord: {
@@ -84,6 +85,72 @@ describe('CollectionsService', () => {
               ownerUserId: 'user-id',
             },
           ],
+        },
+      }),
+    );
+  });
+
+  it('loads a stable catalog page scoped to the requested range', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValue(collection);
+    prisma.collectionCatalogItem.count.mockResolvedValue(957);
+    prisma.collectionCatalogItem.findMany.mockResolvedValue([
+      {
+        catalogWord: {
+          id: 'catalog-word-id',
+          word: 'about',
+          normalizedWord: 'about',
+          definitions: [
+            {
+              id: 'definition-id',
+              sourceDefinitionId: 1001,
+              sourceWordId: 101,
+              type: 'adverb',
+              meaningVi: 'khoảng',
+              definition: null,
+              example: null,
+              exampleVi: null,
+              ipaUk: null,
+              ipaUs: null,
+              band: 'A1',
+              source: 'oxford_3000',
+            },
+          ],
+        },
+      },
+    ]);
+
+    await expect(
+      service.getCatalogWordsPage('user-id', 'collection-id', {
+        limit: 20,
+        offset: 20,
+      }),
+    ).resolves.toEqual({
+      items: [
+        {
+          id: 'catalog-word-id',
+          word: 'about',
+          normalizedWord: 'about',
+          definitions: [expect.objectContaining({ id: 'definition-id' })],
+        },
+      ],
+      limit: 20,
+      offset: 20,
+      total: 957,
+    });
+    expect(prisma.collectionCatalogItem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 20,
+        take: 20,
+        where: {
+          collectionId: 'collection-id',
+          catalogWord: {
+            definitions: {
+              some: {
+                band: 'A1',
+                source: { in: ['oxford_3000', 'oxford_5000'] },
+              },
+            },
+          },
         },
       }),
     );

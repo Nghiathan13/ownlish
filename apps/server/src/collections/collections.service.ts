@@ -64,6 +64,13 @@ type CollectionDetail = CollectionSummary & {
   vocabWords: Awaited<ReturnType<PrismaService['vocabWord']['findMany']>>;
 };
 
+type CatalogWordsPage = {
+  items: CatalogWordResult[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
 type ImportCollectionResult = {
   imported: number;
   updated: number;
@@ -241,9 +248,18 @@ export class CollectionsService {
     options: {
       targetCollectionId?: string;
       catalogDefinitionIds?: string[];
+      offset?: number;
+      limit?: number;
     } = {},
   ): Promise<ImportCollectionResult> {
-    const { targetCollectionId, catalogDefinitionIds } = options;
+    const { targetCollectionId, catalogDefinitionIds, offset, limit } = options;
+    const hasCatalogPage = offset !== undefined || limit !== undefined;
+
+    if (hasCatalogPage && (offset === undefined || limit === undefined)) {
+      throw new BadRequestException(
+        'Catalog page offset and limit are required',
+      );
+    }
     const collection = await this.findVisibleCollection(userId, id);
 
     if (!collection) {
@@ -265,6 +281,9 @@ export class CollectionsService {
     let catalogWords = await this.getCatalogWords(
       collection.id,
       collection.cefrLevel,
+      hasCatalogPage
+        ? { offset: offset as number, limit: limit as number }
+        : undefined,
     );
 
     if (catalogDefinitionIds?.length) {
@@ -407,6 +426,40 @@ export class CollectionsService {
     };
   }
 
+  async getCatalogWordsPage(
+    userId: string,
+    id: string,
+    options: { offset?: number; limit?: number } = {},
+  ): Promise<CatalogWordsPage> {
+    const collection = await this.findVisibleCollection(userId, id);
+
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
+
+    if (collection.kind !== WordCollectionKind.SYSTEM) {
+      throw new BadRequestException(
+        'Only system collections have catalog words',
+      );
+    }
+
+    const offset = options.offset ?? 0;
+    const limit = options.limit ?? 20;
+    const where = this.getCatalogWordsWhere(
+      collection.id,
+      collection.cefrLevel,
+    );
+    const [items, total] = await Promise.all([
+      this.getCatalogWords(collection.id, collection.cefrLevel, {
+        offset,
+        limit,
+      }),
+      this.prisma.collectionCatalogItem.count({ where }),
+    ]);
+
+    return { items, total, offset, limit };
+  }
+
   private visibleCollectionWhere(userId: string) {
     return {
       OR: [
@@ -452,11 +505,10 @@ export class CollectionsService {
   private async getCatalogWords(
     collectionId: string,
     cefrLevel: string | null,
+    page?: { offset: number; limit: number },
   ): Promise<CatalogWordResult[]> {
     const items = await this.prisma.collectionCatalogItem.findMany({
-      where: {
-        collectionId,
-      },
+      where: this.getCatalogWordsWhere(collectionId, cefrLevel),
       include: {
         catalogWord: {
           include: {
@@ -489,9 +541,27 @@ export class CollectionsService {
           },
         },
       ],
+      skip: page?.offset,
+      take: page?.limit,
     });
 
     return items.map((item) => item.catalogWord);
+  }
+
+  private getCatalogWordsWhere(collectionId: string, cefrLevel: string | null) {
+    return {
+      collectionId,
+      catalogWord: {
+        definitions: {
+          some: {
+            ...(cefrLevel ? { band: cefrLevel } : {}),
+            source: {
+              in: OXFORD_DEFINITION_SOURCES,
+            },
+          },
+        },
+      },
+    };
   }
 
   private getUserVocabWords(collectionId: string) {
