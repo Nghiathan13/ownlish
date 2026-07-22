@@ -39,8 +39,11 @@ export function useAutoplayMediaAudio({
     playedSrcRef.current = src;
     audio.currentTime = 0;
 
-    void audio.play().catch(() => {
-      onBlockedRef.current?.();
-    });
+    const playPromise = audio.play();
+    if (playPromise) {
+      void playPromise.catch(() => {
+        onBlockedRef.current?.();
+      });
+    }
   }, [audioRef, enabled, src]);
 }

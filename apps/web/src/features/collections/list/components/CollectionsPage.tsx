@@ -24,7 +24,10 @@ function CollectionsPageContent({
 
   return (
     <PageShell>
-      <CollectionCategoryTabs activeCategory={activeCategory} />
+      <CollectionCategoryTabs
+        activeCategory={activeCategory}
+        collections={page.collections}
+      />
       <CollectionsListBody
         activeCollections={page.activeCollections}
         activeTabLabel={page.activeTabLabel}
