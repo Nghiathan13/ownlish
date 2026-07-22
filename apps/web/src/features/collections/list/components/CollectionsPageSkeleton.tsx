@@ -19,7 +19,7 @@ export function CollectionsGridSkeleton() {
 
 function CollectionCategorySelectSkeleton() {
   return (
-    <div className="mt-8 mb-4 px-4 lg:mt-16 lg:px-16">
+    <div className="my-4 px-4 lg:my-8 lg:px-16">
       <Skeleton className="h-10 w-40 rounded-lg" />
     </div>
   );
