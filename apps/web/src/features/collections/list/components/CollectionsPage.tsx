@@ -12,7 +12,9 @@ import { EditCollectionModal } from "@/features/collections/shared/components/Ed
 import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
 import { CollectionsPageSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
+import { OxfordBandTabs } from "@/features/collections/oxford/components/OxfordBandTabs";
 import { OxfordCollections } from "@/features/collections/oxford/components/OxfordCollections";
+import { parseOxfordBand } from "@/features/collections/oxford/lib/oxfordNavigation";
 import { useCollectionsListPage } from "@/features/collections/list/hooks/useCollectionsListPage";
 import { PageShell } from "@/shared/ui/PageShell";
 
@@ -26,10 +28,21 @@ function CollectionsPageContent({
   groupParam: string | null;
 }) {
   const page = useCollectionsListPage(activeCategory);
+  const oxfordBand = parseOxfordBand(bandParam) ?? "A1";
 
   return (
     <PageShell>
-      <CollectionCategorySelect activeCategory={activeCategory} />
+      {activeCategory === "oxford" ? (
+        <div className="my-4 flex flex-wrap items-center gap-2 px-4 lg:my-8 lg:px-16">
+          <CollectionCategorySelect
+            activeCategory={activeCategory}
+            wrapperClassName="m-0 shrink-0 p-0"
+          />
+          <OxfordBandTabs activeBand={oxfordBand} />
+        </div>
+      ) : (
+        <CollectionCategorySelect activeCategory={activeCategory} />
+      )}
       {activeCategory === "oxford" ? (
         <OxfordCollections
           bandParam={bandParam}

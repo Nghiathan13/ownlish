@@ -22,12 +22,14 @@ describe("OxfordWordGroupGrid", () => {
     render(<OxfordWordGroupGrid band="A1" collection={collection} />);
 
     expect(screen.getAllByRole("link")).toHaveLength(48);
-    expect(screen.getByRole("link", { name: /Words 1–20/ })).toHaveAttribute(
+    expect(screen.getAllByRole("button", { name: "Review" })).toHaveLength(48);
+    expect(screen.getByRole("heading", { name: "A1 - Part 1" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open A1 - Part 1" })).toHaveAttribute(
       "href",
       "/collections?band=A1&tab=oxford&group=1",
     );
-    expect(screen.getByRole("link", { name: /Words 941–957/ })).toHaveTextContent(
-      "17 words",
-    );
+    expect(screen.getByRole("heading", { name: "A1 - Part 48" }))
+      .toHaveTextContent("A1 - Part 48");
+    expect(screen.getByText("17 words")).toBeInTheDocument();
   });
 });

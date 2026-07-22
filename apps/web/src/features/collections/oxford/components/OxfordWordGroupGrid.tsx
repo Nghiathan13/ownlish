@@ -6,6 +6,8 @@ import {
   OXFORD_GROUP_SIZE,
   type OxfordBand,
 } from "@/features/collections/oxford/lib/oxfordNavigation";
+import { iconTextButtonClassName } from "@/shared/ui/button";
+import { StartIcon } from "@/shared/ui/icons/StartIcon";
 
 type OxfordWordGroupGridProps = {
   band: OxfordBand;
@@ -25,17 +27,33 @@ export function OxfordWordGroupGrid({
         const range = getOxfordGroupRange(group, collection.itemCount);
 
         return (
-          <Link
-            className="group rounded-xl bg-surface p-4 shadow-card transition hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border"
-            href={getOxfordPath(band, group)}
+          <article
+            className="relative flex min-w-[300px] flex-col gap-4 rounded-[16px] bg-surface p-4 shadow-card dark:border dark:border-border"
             key={group}
           >
-            <p className="text-sm text-muted-foreground">Oxford {band}</p>
-            <h2 className="mt-2 text-xl font-semibold">Words {range.label}</h2>
-            <p className="mt-4 text-sm text-muted-foreground">
-              {range.wordCount} words
-            </p>
-          </Link>
+            <Link
+              aria-label={`Open ${band} - Part ${group}`}
+              className="absolute inset-0 rounded-[16px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+              href={getOxfordPath(band, group)}
+            />
+            <div className="pointer-events-none relative">
+              <h2 className="text-lg font-semibold">
+                {band} - Part {group}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {range.wordCount} words
+              </p>
+            </div>
+            <button
+              className={iconTextButtonClassName(
+                "relative z-10 w-full border-border bg-transparent text-foreground hover:bg-hover-overlay",
+              )}
+              type="button"
+            >
+              <StartIcon />
+              Review
+            </button>
+          </article>
         );
       })}
     </div>

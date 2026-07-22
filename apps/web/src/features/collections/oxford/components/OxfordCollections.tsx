@@ -12,7 +12,6 @@ import {
   parseOxfordBand,
   parseOxfordGroup,
 } from "@/features/collections/oxford/lib/oxfordNavigation";
-import { OxfordBandTabs } from "./OxfordBandTabs";
 import { OxfordGroupWordsPanel } from "./OxfordGroupWordsPanel";
 import { OxfordWordGroupGrid } from "./OxfordWordGroupGrid";
 
@@ -70,9 +69,6 @@ export function OxfordCollections({
 
   return (
     <>
-      <div className="mb-4 px-4 sm:px-16">
-        <OxfordBandTabs activeBand={band} />
-      </div>
       {group ? (
         <OxfordGroupWordsPanel
           band={band}

@@ -14,7 +14,7 @@ export function OxfordBandTabs({ activeBand }: OxfordBandTabsProps) {
   return (
     <nav
       aria-label="Oxford CEFR levels"
-      className="flex w-fit gap-2 rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border"
+      className="flex w-fit gap-1 rounded-[16px] bg-surface p-1 shadow-card dark:border dark:border-border"
     >
       {OXFORD_BANDS.map((band) => {
         const isActive = band === activeBand;
@@ -23,7 +23,7 @@ export function OxfordBandTabs({ activeBand }: OxfordBandTabsProps) {
           <Link
             aria-current={isActive ? "page" : undefined}
             className={classNames(
-              "inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-[15px] leading-[20px] font-normal",
+              "inline-flex cursor-pointer items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal",
               isActive
                 ? "bg-foreground text-background"
                 : "text-foreground hover:bg-hover-overlay",
