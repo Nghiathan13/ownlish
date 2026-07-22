@@ -32,7 +32,7 @@ export function ToeicYearTabs({
   }
 
   return (
-    <div className="mx-4 mt-8 mb-4 flex w-fit gap-2 rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border lg:mx-16 lg:mt-16">
+    <div className="mx-4 my-4 flex w-fit gap-2 rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border lg:mx-16 lg:my-8">
       {availableYears.map((year) => {
         const isActive = selectedYear === year;
 
