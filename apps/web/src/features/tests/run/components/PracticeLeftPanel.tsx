@@ -1,6 +1,10 @@
+"use client";
+
+import { useRef } from "react";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
+import { useAutoplayMediaAudio } from "@/features/tests/run/hooks/useAutoplayMediaAudio";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
 
@@ -44,6 +48,15 @@ export function PracticeLeftPanel({
     (partConfig.leftPanel === "audio-image" ||
       partConfig.leftPanel === "listening-group");
 
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useAutoplayMediaAudio({
+    audioRef,
+    src: audioUrl,
+    enabled: showAudio && Boolean(audioUrl),
+    onBlocked: onMediaError,
+  });
+
   const mediaSection =
     instruction ||
     showAudio ||
@@ -63,6 +76,7 @@ export function PracticeLeftPanel({
           {showAudio ? (
             audioUrl ? (
               <audio
+                ref={audioRef}
                 controls
                 className="w-full"
                 key={`audio-${group.id}`}

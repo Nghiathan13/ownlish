@@ -3,7 +3,7 @@ import { Skeleton } from "@/shared/ui/Skeleton";
 export function ReviewCardSkeleton() {
   return (
     <div aria-hidden className="mx-auto grid w-full max-w-3xl gap-3">
-      <div className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8">
+      <div className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border">
         <div className="mb-8 grid gap-2">
           <div className="flex justify-center">
             <Skeleton className="h-4 w-12" />

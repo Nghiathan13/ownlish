@@ -66,7 +66,7 @@ function CollectionDropdown({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`${ariaLabel}: ${selectedLabel}`}
-        className="flex h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-lg bg-surface px-4 text-left text-sm font-medium text-foreground shadow-card transition hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+        className="flex h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-lg bg-surface px-4 text-left text-sm font-medium text-foreground shadow-card transition hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground dark:border dark:border-border"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >

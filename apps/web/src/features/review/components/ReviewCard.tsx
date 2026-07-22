@@ -30,7 +30,7 @@ export function ReviewCard({
         aria-label={
           showMeaning ? "Hide meaning" : "Reveal meaning"
         }
-        className="cursor-pointer rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8"
+        className="cursor-pointer rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
         onClick={onToggleMeaning}
       >
         <div className="mb-8 grid gap-2">
