@@ -21,7 +21,7 @@ export function OxfordWordGroupGrid({
   const groupCount = Math.ceil(collection.itemCount / OXFORD_GROUP_SIZE);
 
   return (
-    <div className="mb-8 grid gap-4 px-4 sm:grid-cols-2 sm:px-16 xl:grid-cols-4">
+    <div className="mb-8 grid gap-4 px-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] sm:px-16">
       {Array.from({ length: groupCount }, (_, index) => {
         const group = index + 1;
         const range = getOxfordGroupRange(group, collection.itemCount);

@@ -23,7 +23,7 @@ export function OxfordBandTabs({ activeBand }: OxfordBandTabsProps) {
           <Link
             aria-current={isActive ? "page" : undefined}
             className={classNames(
-              "inline-flex cursor-pointer items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal",
+              "inline-flex cursor-pointer items-center justify-center rounded-md px-3 py-1.5 text-[15px] leading-[20px] font-normal",
               isActive
                 ? "bg-foreground text-background"
                 : "text-foreground hover:bg-hover-overlay",

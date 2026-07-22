@@ -147,7 +147,7 @@ export function OxfordGroupWordsPanel({
         <Link
           className={iconTextButtonClassName(
             "w-fit shrink-0",
-            "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border",
+            "border-0 bg-surface shadow-card hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border",
           )}
           href={getOxfordPath(band)}
         >
