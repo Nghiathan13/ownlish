@@ -8,6 +8,8 @@
   --surface: #ffffff;
   --foreground: rgba(0, 0, 0, 0.87);
   --muted-foreground: rgba(0, 0, 0, 0.6);
+  --primary: #1f48da;
+  --primary-foreground: #ffffff;
   --danger: #d92d20;
   --border: rgba(0, 0, 0, 0.24);
   --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
@@ -23,6 +25,8 @@
   --surface: #1c1c1e;
   --foreground: rgba(255, 255, 255, 0.87);
   --muted-foreground: rgba(255, 255, 255, 0.6);
+  --primary: #1f48da;
+  --primary-foreground: #ffffff;
   --danger: #ff6b6b;
   --border: rgba(255, 255, 255, 0.24);
   --hover-overlay: rgba(255, 255, 255, 0.08);
@@ -38,6 +42,8 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-surface: var(--surface);
   --color-hover-overlay: var(--hover-overlay);
   --color-hover-overlay-solid: var(--hover-overlay-solid);
