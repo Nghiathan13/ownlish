@@ -143,7 +143,7 @@ export function OxfordGroupWordsPanel({
 
   return (
     <>
-      <div className="mb-4 flex flex-col gap-3 px-4 sm:flex-row sm:items-center sm:px-16">
+      <div className="m-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <Link
           className={iconTextButtonClassName(
             "w-fit shrink-0",
