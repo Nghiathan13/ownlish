@@ -55,9 +55,10 @@ function ReviewPageContent() {
     null,
   );
   const [showMeaning, setShowMeaning] = useState(false);
-  const [reviewMode, setReviewMode] = useState<ReviewMode>("flashcard");
+  const [reviewMode, setReviewMode] = useState<ReviewMode>(readStoredReviewMode);
   const [typedAnswer, setTypedAnswer] = useState("");
   const [typingResult, setTypingResult] = useState<TypingResult | null>(null);
+  const [cardWordId, setCardWordId] = useState<string | null>(null);
   const { collections, isLoadingCollections } = useCollectionsListQuery({
     isAuthenticated,
     userId: user?.id ?? null,
@@ -94,6 +95,15 @@ function ReviewPageContent() {
     isAuthenticated,
     userId: user?.id ?? null,
   });
+  const currentWordId = currentWord?.id ?? null;
+
+  if (currentWordId !== cardWordId) {
+    setCardWordId(currentWordId);
+    setShowMeaning(false);
+    setTypedAnswer("");
+    setTypingResult(null);
+  }
+
   const isTypingMode = reviewMode === "typing";
   const {
     typingInputRef,
@@ -106,20 +116,10 @@ function ReviewPageContent() {
   });
 
   useEffect(() => {
-    setReviewMode(readStoredReviewMode());
-  }, []);
-
-  useEffect(() => {
-    setShowMeaning(false);
-    setTypedAnswer("");
-    setTypingResult(null);
-  }, [currentWord?.id]);
-
-  useEffect(() => {
     if (isTypingMode && !typingResult) {
       typingInputRef.current?.focus();
     }
-  }, [currentWord?.id, isTypingMode, typingInputRef, typingResult]);
+  }, [currentWordId, isTypingMode, typingInputRef, typingResult]);
 
   const resetCardState = useCallback(() => {
     setShowMeaning(false);
