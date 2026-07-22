@@ -2,8 +2,8 @@
 
 import type { CSSProperties, RefObject } from "react";
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
+import { ReviewProgress } from "@/features/review/components/ReviewProgress";
 import { getTypingAnswer } from "@/features/review/lib/typing";
-import { VolumeIcon } from "@/shared/ui/icons/VolumeIcon";
 import { classNames } from "@/shared/lib/classNames";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
@@ -13,9 +13,9 @@ export type TypingResult = {
 };
 
 type ReviewTypingCardProps = {
-  canSpeak: boolean;
-  onPronounce: () => void;
   onTypedAnswerChange: (value: string) => void;
+  reviewedCount: number;
+  totalWords: number;
   typedAnswer: string;
   typingFieldStyle: CSSProperties;
   typingFieldText: string;
@@ -26,9 +26,9 @@ type ReviewTypingCardProps = {
 };
 
 export function ReviewTypingCard({
-  canSpeak,
-  onPronounce,
   onTypedAnswerChange,
+  reviewedCount,
+  totalWords,
   typedAnswer,
   typingFieldStyle,
   typingFieldText,
@@ -39,33 +39,25 @@ export function ReviewTypingCard({
 }: ReviewTypingCardProps) {
   return (
     <article className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border">
+      <div className="mb-8">
+        <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
+      </div>
+
       <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <button
-            aria-label={canSpeak ? "Pronunciation" : "Pronunciation unavailable"}
-            className={classNames(
-              "inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors",
-              canSpeak
-                ? "hover:bg-hover-overlay hover:text-foreground"
-                : "cursor-not-allowed opacity-30",
-            )}
-            disabled={!canSpeak}
-            onClick={canSpeak ? onPronounce : undefined}
-            type="button"
-          >
-            <VolumeIcon className="size-6" />
-          </button>
-          {word.type ? (
-            <span className="font-medium text-muted-foreground text-[16px] sm:text-[18px]">
-              ({word.type})
-            </span>
-          ) : null}
-          {word.band ? (
-            <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
-              {word.band}
-            </span>
-          ) : null}
-        </div>
+        {(word.type || word.band) ? (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {word.type ? (
+              <span className="font-medium text-muted-foreground text-[16px] sm:text-[18px]">
+                ({word.type})
+              </span>
+            ) : null}
+            {word.band ? (
+              <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
+                {word.band}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         <div
           className="relative mx-auto w-[min(var(--typing-field-width),388px,calc(100vw-6rem))] transition-[width] duration-300"

@@ -13,7 +13,6 @@ import { useCollectionsListQuery } from "@/features/collections/shared/data/hook
 import {
   ReviewCard,
   ReviewModeToggle,
-  ReviewProgress,
   ReviewStateBlock,
   ReviewTypingCard,
   type ReviewMode,
@@ -23,7 +22,6 @@ import { ReviewCollectionToolbarSkeleton } from "@/features/review/components/Re
 import { useReviewQueue } from "@/features/review/hooks/useReviewQueue";
 import { useTypingField } from "@/features/review/hooks/useTypingField";
 import type { ReviewGrade } from "@/features/review/lib/reviewSchedule";
-import { canSpeakWord, speakWord } from "@/features/review/lib/speakWord";
 import { compareTypingAnswer } from "@/features/review/lib/typing";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -60,7 +58,6 @@ function ReviewPageContent() {
   const [reviewMode, setReviewMode] = useState<ReviewMode>("flashcard");
   const [typedAnswer, setTypedAnswer] = useState("");
   const [typingResult, setTypingResult] = useState<TypingResult | null>(null);
-  const [canSpeak, setCanSpeak] = useState(false);
   const { collections, isLoadingCollections } = useCollectionsListQuery({
     isAuthenticated,
     userId: user?.id ?? null,
@@ -110,7 +107,6 @@ function ReviewPageContent() {
 
   useEffect(() => {
     setReviewMode(readStoredReviewMode());
-    setCanSpeak(canSpeakWord());
   }, []);
 
   useEffect(() => {
@@ -164,37 +160,16 @@ function ReviewPageContent() {
     });
   }, [currentWord, typedAnswer, typingResult]);
 
-  const handlePronounce = useCallback(() => {
-    if (!currentWord) {
-      return;
-    }
-
-    speakWord(currentWord.vocabWord.word);
-  }, [currentWord]);
-
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (!currentWord || isSubmittingGrade) {
         return;
       }
 
-      const target = event.target;
-      const isTypingInput =
-        target instanceof HTMLElement &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable);
-
       if (isTypingMode) {
         if (event.key === "Enter") {
           event.preventDefault();
           handleTypingSubmit();
-          return;
-        }
-
-        if (event.key.toLowerCase() === "a" && !isTypingInput) {
-          event.preventDefault();
-          handlePronounce();
           return;
         }
 
@@ -245,7 +220,6 @@ function ReviewPageContent() {
   }, [
     currentWord,
     handleGrade,
-    handlePronounce,
     handleTypingSubmit,
     isSubmittingGrade,
     isTypingMode,
@@ -276,17 +250,13 @@ function ReviewPageContent() {
         {showReviewSession && currentWord ? (
           <div className="mx-auto grid w-full max-w-3xl gap-3">
             <ReviewModeToggle mode={reviewMode} onModeChange={handleModeChange} />
-            <ReviewProgress
-              reviewedCount={reviewedCount}
-              totalWords={totalWords}
-            />
 
             {isTypingMode ? (
               <>
                 <ReviewTypingCard
-                  canSpeak={canSpeak}
-                  onPronounce={handlePronounce}
                   onTypedAnswerChange={setTypedAnswer}
+                  reviewedCount={reviewedCount}
+                  totalWords={totalWords}
                   typedAnswer={typedAnswer}
                   typingFieldStyle={typingFieldStyle}
                   typingFieldText={typingFieldText}
@@ -328,7 +298,9 @@ function ReviewPageContent() {
                 isSubmitting={isSubmittingGrade}
                 onGrade={handleGrade}
                 onToggleMeaning={() => setShowMeaning((current) => !current)}
+                reviewedCount={reviewedCount}
                 showMeaning={showMeaning}
+                totalWords={totalWords}
                 word={currentWord}
               />
             )}

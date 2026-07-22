@@ -21,10 +21,8 @@ export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) 
       />
       <button
         aria-selected={mode === "flashcard"}
-        className={`relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors ${
-          mode === "flashcard"
-            ? "text-foreground"
-            : "text-muted-foreground hover:text-foreground"
+        className={`relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-sm font-medium hover:bg-hover-overlay ${
+          mode === "flashcard" ? "text-foreground" : "text-muted-foreground"
         }`}
         onClick={() => onModeChange("flashcard")}
         role="tab"
@@ -34,10 +32,8 @@ export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) 
       </button>
       <button
         aria-selected={mode === "typing"}
-        className={`relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors ${
-          mode === "typing"
-            ? "text-foreground"
-            : "text-muted-foreground hover:text-foreground"
+        className={`relative z-10 inline-flex h-8 items-center justify-center gap-1.5 rounded-lg text-sm font-medium hover:bg-hover-overlay ${
+          mode === "typing" ? "text-foreground" : "text-muted-foreground"
         }`}
         onClick={() => onModeChange("typing")}
         role="tab"

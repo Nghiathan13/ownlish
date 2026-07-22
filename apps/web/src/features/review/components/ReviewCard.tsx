@@ -1,11 +1,14 @@
 import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
+import { ReviewProgress } from "@/features/review/components/ReviewProgress";
 import type { ReviewGrade } from "../lib/reviewSchedule";
 
 type ReviewCardProps = {
   isSubmitting: boolean;
   onGrade: (grade: ReviewGrade) => void;
   onToggleMeaning: () => void;
+  reviewedCount: number;
   showMeaning: boolean;
+  totalWords: number;
   word: VocabReviewItem;
 };
 
@@ -13,7 +16,9 @@ export function ReviewCard({
   isSubmitting,
   onGrade,
   onToggleMeaning,
+  reviewedCount,
   showMeaning,
+  totalWords,
   word,
 }: ReviewCardProps) {
   const canGrade = showMeaning && !isSubmitting;
@@ -26,6 +31,10 @@ export function ReviewCard({
         className="cursor-pointer rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
         onClick={onToggleMeaning}
       >
+        <div className="mb-8">
+          <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
+        </div>
+
         <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
           <div>
             <div className="flex flex-wrap items-start justify-center gap-2">
