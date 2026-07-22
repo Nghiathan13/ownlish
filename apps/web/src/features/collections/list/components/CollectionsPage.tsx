@@ -33,11 +33,8 @@ function CollectionsPageContent({
   return (
     <PageShell>
       {activeCategory === "oxford" ? (
-        <div className="my-4 flex flex-wrap items-center gap-2 px-4 lg:my-8 lg:px-16">
-          <CollectionCategorySelect
-            activeCategory={activeCategory}
-            wrapperClassName="m-0 shrink-0 p-0"
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          <CollectionCategorySelect activeCategory={activeCategory} />
           <OxfordBandTabs activeBand={oxfordBand} />
         </div>
       ) : (

@@ -6,27 +6,19 @@ import {
   getCollectionsListPath,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
-import { classNames } from "@/shared/lib/classNames";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 type CollectionCategorySelectProps = {
   activeCategory: CollectionCategory;
-  wrapperClassName?: string;
 };
 
 export function CollectionCategorySelect({
   activeCategory,
-  wrapperClassName,
 }: CollectionCategorySelectProps) {
   const router = useRouter();
 
   return (
-    <div
-      className={classNames(
-        "my-4 px-4 lg:my-8 lg:px-16",
-        wrapperClassName,
-      )}
-    >
+    <div className="my-4 px-4 lg:my-8 lg:px-16">
       <SelectDropdown
         ariaLabel="Collection category"
         className="w-fit min-w-[10rem] max-w-[14rem]"
