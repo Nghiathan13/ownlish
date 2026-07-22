@@ -119,7 +119,6 @@ export function useCollectionsListPage(activeCategory: CollectionCategory) {
     canImportSystemCollections,
     closeCreateCollection,
     closeEditCollection,
-    collections,
     collectionsError,
     defaultCollection,
     deleteError,

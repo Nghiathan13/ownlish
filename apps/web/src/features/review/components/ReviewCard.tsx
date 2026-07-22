@@ -5,9 +5,7 @@ type ReviewCardProps = {
   isSubmitting: boolean;
   onGrade: (grade: ReviewGrade) => void;
   onToggleMeaning: () => void;
-  reviewedCount: number;
   showMeaning: boolean;
-  totalWords: number;
   word: VocabReviewItem;
 };
 
@@ -15,43 +13,19 @@ export function ReviewCard({
   isSubmitting,
   onGrade,
   onToggleMeaning,
-  reviewedCount,
   showMeaning,
-  totalWords,
   word,
 }: ReviewCardProps) {
   const canGrade = showMeaning && !isSubmitting;
   const ipa = word.ipaUk ?? word.ipaUs;
-  const progressPercent = totalWords > 0 ? (reviewedCount / totalWords) * 100 : 0;
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-3">
+    <div className="grid w-full gap-3">
       <article
-        aria-label={
-          showMeaning ? "Hide meaning" : "Reveal meaning"
-        }
+        aria-label={showMeaning ? "Hide meaning" : "Reveal meaning"}
         className="cursor-pointer rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
         onClick={onToggleMeaning}
       >
-        <div className="mb-8 grid gap-2">
-          <p className="text-center text-sm text-muted-foreground">
-            {reviewedCount}/{totalWords}
-          </p>
-          <div
-            aria-label={`${reviewedCount} of ${totalWords} reviewed`}
-            aria-valuemax={totalWords}
-            aria-valuemin={0}
-            aria-valuenow={reviewedCount}
-            className="h-1.5 overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-          >
-            <div
-              className="h-full rounded-full bg-foreground"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-
         <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
           <div>
             <div className="flex flex-wrap items-start justify-center gap-2">

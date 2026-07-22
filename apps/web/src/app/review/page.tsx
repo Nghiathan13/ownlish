@@ -10,12 +10,35 @@ import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
-import { ReviewCard, ReviewStateBlock } from "@/features/review/components";
+import {
+  ReviewCard,
+  ReviewModeToggle,
+  ReviewProgress,
+  ReviewStateBlock,
+  ReviewTypingCard,
+  type ReviewMode,
+  type TypingResult,
+} from "@/features/review/components";
 import { ReviewCollectionToolbarSkeleton } from "@/features/review/components/ReviewCollectionToolbarSkeleton";
 import { useReviewQueue } from "@/features/review/hooks/useReviewQueue";
+import { useTypingField } from "@/features/review/hooks/useTypingField";
 import type { ReviewGrade } from "@/features/review/lib/reviewSchedule";
+import { canSpeakWord, speakWord } from "@/features/review/lib/speakWord";
+import { compareTypingAnswer } from "@/features/review/lib/typing";
 import { Panel } from "@/shared/ui/Panel";
 import { PageShell } from "@/shared/ui/PageShell";
+
+const REVIEW_MODE_STORAGE_KEY = "engvocab.reviewMode";
+
+function readStoredReviewMode(): ReviewMode {
+  if (typeof window === "undefined") {
+    return "flashcard";
+  }
+
+  return window.localStorage.getItem(REVIEW_MODE_STORAGE_KEY) === "typing"
+    ? "typing"
+    : "flashcard";
+}
 
 export default function ReviewPage() {
   return (
@@ -34,6 +57,10 @@ function ReviewPageContent() {
     null,
   );
   const [showMeaning, setShowMeaning] = useState(false);
+  const [reviewMode, setReviewMode] = useState<ReviewMode>("flashcard");
+  const [typedAnswer, setTypedAnswer] = useState("");
+  const [typingResult, setTypingResult] = useState<TypingResult | null>(null);
+  const [canSpeak, setCanSpeak] = useState(false);
   const { collections, isLoadingCollections } = useCollectionsListQuery({
     isAuthenticated,
     userId: user?.id ?? null,
@@ -70,24 +97,121 @@ function ReviewPageContent() {
     isAuthenticated,
     userId: user?.id ?? null,
   });
+  const isTypingMode = reviewMode === "typing";
+  const {
+    typingInputRef,
+    typingMeasureRef,
+    typingFieldText,
+    typingFieldStyle,
+  } = useTypingField({
+    typedAnswer,
+    enabled: isTypingMode && Boolean(currentWord),
+  });
+
+  useEffect(() => {
+    setReviewMode(readStoredReviewMode());
+    setCanSpeak(canSpeakWord());
+  }, []);
+
+  useEffect(() => {
+    setShowMeaning(false);
+    setTypedAnswer("");
+    setTypingResult(null);
+  }, [currentWord?.id]);
+
+  useEffect(() => {
+    if (isTypingMode && !typingResult) {
+      typingInputRef.current?.focus();
+    }
+  }, [currentWord?.id, isTypingMode, typingInputRef, typingResult]);
+
+  const resetCardState = useCallback(() => {
+    setShowMeaning(false);
+    setTypedAnswer("");
+    setTypingResult(null);
+  }, []);
 
   const handleCollectionChange = useCallback((collectionId: string) => {
     setSelectedCollectionId(collectionId);
-    setShowMeaning(false);
-  }, []);
+    resetCardState();
+  }, [resetCardState]);
+
+  const handleModeChange = useCallback((mode: ReviewMode) => {
+    setReviewMode(mode);
+    window.localStorage.setItem(REVIEW_MODE_STORAGE_KEY, mode);
+    resetCardState();
+  }, [resetCardState]);
 
   const handleGrade = useCallback(async (grade: ReviewGrade) => {
-    if (!showMeaning) {
+    const canGrade = isTypingMode ? Boolean(typingResult) : showMeaning;
+    if (!canGrade) {
       return;
     }
 
     await gradeCurrentWord(grade);
-    setShowMeaning(false);
-  }, [gradeCurrentWord, showMeaning]);
+    resetCardState();
+  }, [gradeCurrentWord, isTypingMode, resetCardState, showMeaning, typingResult]);
+
+  const handleTypingSubmit = useCallback(() => {
+    if (!currentWord || typingResult) {
+      return;
+    }
+
+    const submittedAnswer = typedAnswer.trim();
+    setTypingResult({
+      isCorrect: compareTypingAnswer(currentWord.vocabWord.word, submittedAnswer),
+      submittedAnswer,
+    });
+  }, [currentWord, typedAnswer, typingResult]);
+
+  const handlePronounce = useCallback(() => {
+    if (!currentWord) {
+      return;
+    }
+
+    speakWord(currentWord.vocabWord.word);
+  }, [currentWord]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (!currentWord || isSubmittingGrade) {
+        return;
+      }
+
+      const target = event.target;
+      const isTypingInput =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTypingMode) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleTypingSubmit();
+          return;
+        }
+
+        if (event.key.toLowerCase() === "a" && !isTypingInput) {
+          event.preventDefault();
+          handlePronounce();
+          return;
+        }
+
+        if (!typingResult) {
+          return;
+        }
+
+        if (event.key === "1") {
+          event.preventDefault();
+          void handleGrade("forgot");
+          return;
+        }
+
+        if (event.key === "2") {
+          event.preventDefault();
+          void handleGrade("remember");
+        }
         return;
       }
 
@@ -118,7 +242,19 @@ function ReviewPageContent() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [currentWord, handleGrade, isSubmittingGrade, showMeaning]);
+  }, [
+    currentWord,
+    handleGrade,
+    handlePronounce,
+    handleTypingSubmit,
+    isSubmittingGrade,
+    isTypingMode,
+    showMeaning,
+    typingResult,
+  ]);
+
+  const showReviewSession =
+    !isLoading && !error && !isEmpty && Boolean(currentWord);
 
   return (
     <PageShell>
@@ -137,26 +273,92 @@ function ReviewPageContent() {
           ) : null}
         </div>
 
-        {isLoading || error || isEmpty || !currentWord ? (
+        {showReviewSession && currentWord ? (
+          <div className="mx-auto grid w-full max-w-3xl gap-3">
+            <ReviewModeToggle mode={reviewMode} onModeChange={handleModeChange} />
+            <ReviewProgress
+              reviewedCount={reviewedCount}
+              totalWords={totalWords}
+            />
+
+            {isTypingMode ? (
+              <>
+                <ReviewTypingCard
+                  canSpeak={canSpeak}
+                  onPronounce={handlePronounce}
+                  onTypedAnswerChange={setTypedAnswer}
+                  typedAnswer={typedAnswer}
+                  typingFieldStyle={typingFieldStyle}
+                  typingFieldText={typingFieldText}
+                  typingInputRef={typingInputRef}
+                  typingMeasureRef={typingMeasureRef}
+                  typingResult={typingResult}
+                  word={currentWord}
+                />
+                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                  {!typingResult ? (
+                    <Shortcut command="Enter" label="Check" />
+                  ) : (
+                    <>
+                      <button
+                        className="inline-flex items-center gap-1 text-muted-foreground disabled:opacity-50"
+                        disabled={isSubmittingGrade}
+                        onClick={() => void handleGrade("forgot")}
+                        type="button"
+                      >
+                        <Key>1</Key>
+                        <span>Forgot</span>
+                      </button>
+                      <button
+                        className="inline-flex items-center gap-1 font-semibold text-foreground disabled:opacity-50"
+                        disabled={isSubmittingGrade}
+                        onClick={() => void handleGrade("remember")}
+                        type="button"
+                      >
+                        <Key>2</Key>
+                        <span>Remember</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <ReviewCard
+                key={resolvedCollectionId}
+                isSubmitting={isSubmittingGrade}
+                onGrade={handleGrade}
+                onToggleMeaning={() => setShowMeaning((current) => !current)}
+                showMeaning={showMeaning}
+                word={currentWord}
+              />
+            )}
+          </div>
+        ) : (
           <ReviewStateBlock
             error={error}
             isEmpty={isEmpty}
             isLoading={isLoading || isLoadingCollections || !resolvedCollectionId}
             onRetry={reload}
           />
-        ) : (
-          <ReviewCard
-            key={resolvedCollectionId}
-            isSubmitting={isSubmittingGrade}
-            onGrade={handleGrade}
-            onToggleMeaning={() => setShowMeaning((current) => !current)}
-            reviewedCount={reviewedCount}
-            showMeaning={showMeaning}
-            totalWords={totalWords}
-            word={currentWord}
-          />
         )}
       </Panel>
     </PageShell>
+  );
+}
+
+function Shortcut({ command, label }: { command: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Key>{command}</Key>
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function Key({ children }: { children: string }) {
+  return (
+    <kbd className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground">
+      {children}
+    </kbd>
   );
 }

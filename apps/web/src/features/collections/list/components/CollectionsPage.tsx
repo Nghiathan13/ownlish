@@ -9,7 +9,7 @@ import {
 } from "@/entities/collection/lib/collectionDisplay";
 import { CreateCollectionModal } from "@/features/collections/shared/components/CreateCollectionModal";
 import { EditCollectionModal } from "@/features/collections/shared/components/EditCollectionModal";
-import { CollectionCategoryTabs } from "@/features/collections/list/components/CollectionCategoryTabs";
+import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
 import { CollectionsPageSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
 import { useCollectionsListPage } from "@/features/collections/list/hooks/useCollectionsListPage";
@@ -24,10 +24,7 @@ function CollectionsPageContent({
 
   return (
     <PageShell>
-      <CollectionCategoryTabs
-        activeCategory={activeCategory}
-        collections={page.collections}
-      />
+      <CollectionCategorySelect activeCategory={activeCategory} />
       <CollectionsListBody
         activeCollections={page.activeCollections}
         activeTabLabel={page.activeTabLabel}
