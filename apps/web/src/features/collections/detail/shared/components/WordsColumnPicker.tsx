@@ -60,7 +60,7 @@ export function WordsColumnPicker<Id extends string>({
         aria-haspopup="menu"
         className={iconTextButtonClassName(
           "w-fit shrink-0",
-          "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+          "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border",
         )}
         onClick={() => setIsOpen((current) => !current)}
       >

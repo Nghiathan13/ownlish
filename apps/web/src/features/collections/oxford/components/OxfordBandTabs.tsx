@@ -14,7 +14,7 @@ export function OxfordBandTabs({ activeBand }: OxfordBandTabsProps) {
   return (
     <nav
       aria-label="Oxford CEFR levels"
-      className="flex w-fit gap-1 rounded-[16px] bg-surface p-1 shadow-card dark:border dark:border-border"
+      className="flex w-fit gap-1 rounded-lg bg-surface p-1 shadow-card dark:border dark:border-border"
     >
       {OXFORD_BANDS.map((band) => {
         const isActive = band === activeBand;

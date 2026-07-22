@@ -105,7 +105,7 @@ export function OxfordGroupWordsPanel({
   }, [selectableDefinitions]);
 
   const handleImport = useCallback(
-    async (catalogDefinitionIds?: string[]) => {
+    async (catalogDefinitionIds: string[]) => {
       if (!targetCollectionId) {
         return;
       }
@@ -139,9 +139,7 @@ export function OxfordGroupWordsPanel({
   const selectedCount = selectedDefinitions.length;
   const importLabel = isImporting
     ? "Importing..."
-    : selectedCount > 0
-      ? `Import (${selectedCount})`
-      : "Import all";
+    : `Import (${selectedCount})`;
 
   return (
     <>
@@ -149,13 +147,13 @@ export function OxfordGroupWordsPanel({
         <Link
           className={iconTextButtonClassName(
             "w-fit shrink-0",
-            "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+            "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border",
           )}
           href={getOxfordPath(band)}
         >
           Back to {band}
         </Link>
-        {canImport ? (
+        {canImport && selectedCount > 0 ? (
           <button
             className={iconTextButtonClassName(
               "w-fit shrink-0",
@@ -164,9 +162,7 @@ export function OxfordGroupWordsPanel({
             disabled={isImporting || query.isLoading || words.length === 0}
             onClick={() => {
               void handleImport(
-                selectedCount > 0
-                  ? selectedDefinitions.map((item) => item.definition.id)
-                  : undefined,
+                selectedDefinitions.map((item) => item.definition.id),
               );
             }}
             type="button"
