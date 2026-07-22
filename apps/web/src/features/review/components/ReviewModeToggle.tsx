@@ -1,5 +1,7 @@
 "use client";
 
+import { classNames } from "@/shared/lib/classNames";
+
 export type ReviewMode = "flashcard" | "typing";
 
 type ReviewModeToggleProps = {
@@ -7,24 +9,28 @@ type ReviewModeToggleProps = {
   onModeChange: (mode: ReviewMode) => void;
 };
 
+const modeButtonClassName =
+  "inline-flex cursor-pointer items-center justify-center rounded-lg px-3 py-1.5 text-[13px] leading-5 font-normal";
+
+function getModeButtonClassName(isActive: boolean) {
+  return classNames(
+    modeButtonClassName,
+    isActive
+      ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
+      : "bg-transparent text-foreground hover:bg-hover-overlay",
+  );
+}
+
 export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) {
   return (
     <div
-      className="relative mx-auto grid w-fit grid-cols-2 gap-2 rounded-lg border border-border bg-muted p-2"
+      className="mx-auto flex w-fit gap-1 rounded-xl bg-muted p-1 dark:border dark:border-border"
       onClick={(event) => event.stopPropagation()}
       role="tablist"
     >
-      <span
-        aria-hidden
-        className={`pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc((100%-0.5rem)/2)] rounded-md bg-surface shadow-card transition-transform duration-200 ease-out dark:border dark:border-border ${
-          mode === "typing" ? "translate-x-[calc(100%+0.125rem)]" : "translate-x-0"
-        }`}
-      />
       <button
         aria-selected={mode === "flashcard"}
-        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-4 py-2 text-xs font-medium hover:bg-hover-overlay ${
-          mode === "flashcard" ? "text-foreground" : "text-muted-foreground"
-        }`}
+        className={getModeButtonClassName(mode === "flashcard")}
         onClick={() => onModeChange("flashcard")}
         role="tab"
         type="button"
@@ -33,9 +39,7 @@ export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) 
       </button>
       <button
         aria-selected={mode === "typing"}
-        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-4 py-2 text-xs font-medium hover:bg-hover-overlay ${
-          mode === "typing" ? "text-foreground" : "text-muted-foreground"
-        }`}
+        className={getModeButtonClassName(mode === "typing")}
         onClick={() => onModeChange("typing")}
         role="tab"
         type="button"
