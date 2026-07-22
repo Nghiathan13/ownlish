@@ -10,7 +10,7 @@ type ReviewModeToggleProps = {
 export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) {
   return (
     <div
-      className="relative mx-auto grid w-fit grid-cols-2 gap-0.5 rounded-lg border border-border bg-muted p-0.5"
+      className="relative mx-auto grid w-fit grid-cols-2 gap-2 rounded-lg border border-border bg-muted p-2"
       onClick={(event) => event.stopPropagation()}
       role="tablist"
     >
@@ -22,7 +22,7 @@ export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) 
       />
       <button
         aria-selected={mode === "flashcard"}
-        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium hover:bg-hover-overlay ${
+        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-4 py-2 text-xs font-medium hover:bg-hover-overlay ${
           mode === "flashcard" ? "text-foreground" : "text-muted-foreground"
         }`}
         onClick={() => onModeChange("flashcard")}
@@ -33,7 +33,7 @@ export function ReviewModeToggle({ mode, onModeChange }: ReviewModeToggleProps) 
       </button>
       <button
         aria-selected={mode === "typing"}
-        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium hover:bg-hover-overlay ${
+        className={`relative z-10 inline-flex h-6 cursor-pointer items-center justify-center rounded-md px-4 py-2 text-xs font-medium hover:bg-hover-overlay ${
           mode === "typing" ? "text-foreground" : "text-muted-foreground"
         }`}
         onClick={() => onModeChange("typing")}
