@@ -62,7 +62,7 @@ export function useTestsOverview(
     progressQuery.progress.map((item) => [item.testKey, item]),
   );
   const tests = (source?.manifest.tests ?? [])
-    .filter((test) => test.complete && test.year === selectedYear)
+    .filter((test) => test.year === selectedYear)
     .map((test) =>
       materializeCatalogTestSummary(test, progressByTestKey.get(test.id)),
     );

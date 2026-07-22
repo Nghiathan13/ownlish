@@ -38,9 +38,7 @@ export function TestsPage() {
     () =>
       Array.from(
         new Set(
-          (catalog.data?.manifest.tests ?? [])
-            .filter((test) => test.complete)
-            .map((test) => test.year),
+          (catalog.data?.manifest.tests ?? []).map((test) => test.year),
         ),
       ).filter((year): year is ToeicYear => parseToeicYearParam(String(year)) !== null),
     [catalog.data],
