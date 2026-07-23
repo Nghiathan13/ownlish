@@ -22,7 +22,13 @@ export function CollectionCategorySelect({
       ariaLabel="Collection category"
       className="w-fit min-w-[10rem] max-w-[14rem]"
       onChange={(category) => {
-        router.push(getCollectionsListPath(category));
+        const path = getCollectionsListPath(category);
+
+        if (window.location.pathname !== path) {
+          window.history.pushState(null, "", path);
+        }
+
+        router.push(path);
       }}
       options={collectionCategoryTabs.map((category) => ({
         label: category.label,

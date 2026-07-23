@@ -105,6 +105,10 @@ export function useOxfordNavigation({
       pendingPathRef.current = nextPath;
       setLocation(nextLocation);
 
+      if (window.location.pathname !== nextPath) {
+        window.history.pushState(null, "", nextPath);
+      }
+
       if (isAuthenticated) {
         if (nextLocation.group === null) {
           void queryClient.prefetchQuery(
