@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { ToeicQuestionOptions } from "@/entities/toeic/api/types";
 import { joinContentEvidenceSegments } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
 import {
@@ -46,6 +46,7 @@ function isComplete(selections: Selections) {
 
 export function LandingPart3Demo() {
   const demo = LANDING_PART3_DEMO;
+  const sectionRef = useRef<HTMLElement>(null);
   const [selections, setSelections] = useState<Selections>(createEmptySelections);
   const [revealed, setRevealed] = useState(false);
 
@@ -73,12 +74,16 @@ export function LandingPart3Demo() {
   function handleReset() {
     setSelections(createEmptySelections());
     setRevealed(false);
+    window.requestAnimationFrame(() => {
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   return (
     <section
-      className="flex flex-col gap-8 px-4 py-16 sm:px-16 lg:py-24"
+      className="flex scroll-mt-24 flex-col gap-8 px-4 py-16 sm:scroll-mt-28 sm:px-16 lg:py-24"
       id="toeic"
+      ref={sectionRef}
     >
       <div className="flex flex-col items-center gap-3 text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">

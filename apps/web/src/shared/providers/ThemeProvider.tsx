@@ -7,11 +7,13 @@ import {
   type ReactNode,
 } from "react";
 import {
+  getResolvedThemeServerSnapshot,
+  getResolvedThemeSnapshot,
   getThemeServerSnapshot,
   getThemeSnapshot,
-  resolveTheme,
   setThemePreference,
   subscribeTheme,
+  type ResolvedTheme,
   type Theme,
 } from "@/shared/ui/theme/theme";
 
@@ -46,6 +48,10 @@ export function useTheme() {
   return context;
 }
 
-export function useResolvedTheme() {
-  return resolveTheme(useTheme().theme);
+export function useResolvedTheme(): ResolvedTheme {
+  return useSyncExternalStore(
+    subscribeTheme,
+    getResolvedThemeSnapshot,
+    getResolvedThemeServerSnapshot,
+  );
 }

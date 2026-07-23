@@ -61,6 +61,15 @@ export function getThemeSnapshot(): Theme {
   return readThemePreference();
 }
 
+/** Stable SSR/hydration value — never read matchMedia here. */
+export function getResolvedThemeServerSnapshot(): ResolvedTheme {
+  return "light";
+}
+
+export function getResolvedThemeSnapshot(): ResolvedTheme {
+  return resolveTheme(readThemePreference());
+}
+
 export function subscribeTheme(onStoreChange: () => void) {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const onSystemChange = () => {
