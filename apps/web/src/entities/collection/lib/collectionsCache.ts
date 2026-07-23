@@ -23,6 +23,21 @@ export function getCollectionCatalogWordsQueryKey(
   return ["collection-catalog-words", { userId, collectionId, offset, limit }] as const;
 }
 
+export function getOxfordCollectionMetaQueryKey(
+  userId: string | null,
+  band: string,
+) {
+  return ["oxford-collection-meta", { userId, band }] as const;
+}
+
+export function getOxfordPartQueryKey(
+  userId: string | null,
+  band: string,
+  part: number,
+) {
+  return ["oxford-part", { userId, band, part }] as const;
+}
+
 export function invalidateCollectionsList(
   queryClient: QueryClient,
   userId: string | null,
@@ -42,11 +57,10 @@ export function invalidateCollectionDetail(
   });
 }
 
-export function invalidateCollectionMutationQueries(
+export function invalidateImportedVocabulary(
   queryClient: QueryClient,
   userId: string | null,
 ) {
-  invalidateCollectionsList(queryClient, userId);
   void queryClient.invalidateQueries({
     queryKey: getVocabUserQueryKey(userId),
   });
@@ -56,4 +70,12 @@ export function invalidateCollectionMutationQueries(
   void queryClient.invalidateQueries({
     queryKey: getVocabStatsQueryKey(userId),
   });
+}
+
+export function invalidateCollectionMutationQueries(
+  queryClient: QueryClient,
+  userId: string | null,
+) {
+  invalidateCollectionsList(queryClient, userId);
+  invalidateImportedVocabulary(queryClient, userId);
 }

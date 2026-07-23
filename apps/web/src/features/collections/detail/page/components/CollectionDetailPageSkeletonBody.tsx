@@ -1,19 +1,9 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { parseCollectionKindHint } from "@/entities/collection/lib/collectionDisplay";
 import { BackToCollectionsLink } from "@/features/collections/detail/page/components/BackToCollectionsLink";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
-import {
-  getCatalogWordsTableHeadColumns,
-  getVocabularyWordsTableHeadColumns,
-} from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
-import {
-  CATALOG_COLUMN_VISIBILITY_STORAGE_KEY,
-  createDefaultCatalogColumnVisibility,
-  parseCatalogColumnVisibility,
-} from "@/features/collections/detail/system/panel/lib/catalogTableColumns";
+import { getVocabularyWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
 import {
   createDefaultColumnVisibility,
   parseColumnVisibility,
@@ -31,40 +21,21 @@ function readVocabularyColumnVisibilityFromStorage() {
   );
 }
 
-function readCatalogColumnVisibilityFromStorage() {
-  if (typeof window === "undefined") {
-    return createDefaultCatalogColumnVisibility();
-  }
-
-  return parseCatalogColumnVisibility(
-    localStorage.getItem(CATALOG_COLUMN_VISIBILITY_STORAGE_KEY),
-  );
-}
-
 export function CollectionDetailPageSkeletonBody() {
-  const params = useParams<{ collectionId: string }>();
-  const collectionId = params.collectionId;
-  const searchParams = useSearchParams();
-  const isSystemCollection =
-    parseCollectionKindHint(searchParams.get("kind")) === "SYSTEM";
-
-  const tableColumns = useMemo(() => {
-    if (isSystemCollection) {
-      return getCatalogWordsTableHeadColumns(
-        readCatalogColumnVisibilityFromStorage(),
-      );
-    }
-
-    return getVocabularyWordsTableHeadColumns(
-      readVocabularyColumnVisibilityFromStorage(),
-    );
-  }, [isSystemCollection]);
+  const tableColumns = useMemo(
+    () =>
+      getVocabularyWordsTableHeadColumns(
+        readVocabularyColumnVisibilityFromStorage(),
+      ),
+    [],
+  );
 
   return (
     <>
       <div className="my-4 grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4">
-        <BackToCollectionsLink collectionId={collectionId} />
+        <BackToCollectionsLink />
         <Skeleton className="h-10 min-w-[10rem] max-w-[14rem] shrink-0" />
+        <div />
       </div>
 
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
@@ -73,10 +44,7 @@ export function CollectionDetailPageSkeletonBody() {
         <Skeleton className="h-10 w-24 shrink-0" />
       </div>
 
-      <WordsTableSkeleton
-        columns={tableColumns}
-        showActions={!isSystemCollection}
-      />
+      <WordsTableSkeleton columns={tableColumns} showActions />
     </>
   );
 }

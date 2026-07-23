@@ -54,6 +54,17 @@ export type CatalogWordsPage = {
   limit: number;
 };
 
+export type OxfordCollectionMeta = {
+  band: string;
+  itemCount: number;
+};
+
+export type OxfordPart = {
+  items: CatalogWord[];
+  offset: number;
+  limit: number;
+};
+
 export type ImportCollectionInput = {
   catalogDefinitionIds?: string[];
   limit?: number;
@@ -226,6 +237,36 @@ function parseCatalogWordsPage(body: unknown): CatalogWordsPage {
   };
 }
 
+function parseOxfordCollectionMeta(body: unknown): OxfordCollectionMeta {
+  if (!isRecord(body)) invalidApiResponse();
+
+  const { band, itemCount } = body;
+
+  if (!isString(band) || !isNumber(itemCount)) {
+    invalidApiResponse();
+  }
+
+  return { band, itemCount };
+}
+
+function parseOxfordPart(body: unknown): OxfordPart {
+  if (!isRecord(body) || !Array.isArray(body.items)) {
+    invalidApiResponse();
+  }
+
+  const { items, offset, limit } = body;
+
+  if (!isNumber(offset) || !isNumber(limit)) {
+    invalidApiResponse();
+  }
+
+  return {
+    items: items.map(parseCatalogWord),
+    offset,
+    limit,
+  };
+}
+
 function parseImportCollectionResult(body: unknown): ImportCollectionResult {
   if (!isRecord(body)) invalidApiResponse();
 
@@ -283,6 +324,42 @@ export function getCollectionCatalogWords(
     signal: options.signal,
     token,
   }).then(parseCatalogWordsPage);
+}
+
+export function getOxfordCollectionMeta(
+  token: string,
+  band: string,
+  options: { signal?: AbortSignal } = {},
+) {
+  return apiRequest(`/collections/oxford/${band}/meta`, {
+    signal: options.signal,
+    token,
+  }).then(parseOxfordCollectionMeta);
+}
+
+export function getOxfordPart(
+  token: string,
+  band: string,
+  part: number,
+  options: { signal?: AbortSignal } = {},
+) {
+  return apiRequest(`/collections/oxford/${band}/parts/${part}`, {
+    signal: options.signal,
+    token,
+  }).then(parseOxfordPart);
+}
+
+export function importOxfordPart(
+  token: string,
+  band: string,
+  part: number,
+  catalogDefinitionIds: string[],
+) {
+  return apiRequest(`/collections/oxford/${band}/parts/${part}/import`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({ catalogDefinitionIds }),
+  }).then(parseImportCollectionResult);
 }
 
 export function createCollection(token: string, input: CreateCollectionInput) {

@@ -1,6 +1,6 @@
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 
-export type CollectionCategory = "user" | "oxford" | "toeic" | "ielts";
+export type CollectionCategory = "user" | "oxford";
 
 export const collectionCategoryTabs: Array<{
   key: CollectionCategory;
@@ -8,8 +8,6 @@ export const collectionCategoryTabs: Array<{
 }> = [
   { key: "user", label: "My Collections" },
   { key: "oxford", label: "Oxford" },
-  { key: "toeic", label: "TOEIC" },
-  { key: "ielts", label: "IELTS" },
 ];
 
 export function getCollectionCategory(
@@ -19,8 +17,6 @@ export function getCollectionCategory(
   const name = collection.name.toLowerCase();
   const text = `${source} ${name}`;
 
-  if (text.includes("toeic")) return "toeic";
-  if (text.includes("ielts")) return "ielts";
   if (text.includes("oxford")) return "oxford";
 
   return null;
@@ -59,37 +55,8 @@ export function getUserOwnedCollections(collections: CollectionSummary[]) {
     });
 }
 
-export function getSystemCollectionsInSameCategory(
-  collections: CollectionSummary[],
-  currentCollection: CollectionSummary,
-) {
-  const category = getCollectionCategory(currentCollection);
-
-  return collections
-    .filter((collection) => {
-      if (collection.kind !== "SYSTEM") {
-        return false;
-      }
-
-      if (category == null) {
-        return true;
-      }
-
-      return getCollectionCategory(collection) === category;
-    })
-    .sort((left, right) => left.name.localeCompare(right.name));
-}
-
-export type CollectionKindHint = "system" | "user";
-
-export function getCollectionKindHint(
-  collection: CollectionSummary,
-): CollectionKindHint {
-  return collection.kind === "SYSTEM" ? "system" : "user";
-}
-
 export function getCollectionPath(collection: CollectionSummary) {
-  return `/collections/${collection.id}?kind=${getCollectionKindHint(collection)}`;
+  return `/collections/user/${collection.id}`;
 }
 
 export function getCollectionsListCategory(
@@ -130,6 +97,11 @@ export function getCollectionsLegacyRedirectPath(
     return null;
   }
 
+  // Retired collection tabs redirect to My Collections.
+  if (tabParam === "toeic" || tabParam === "ielts") {
+    return getCollectionsListPath("user");
+  }
+
   const category = parseCollectionCategoryTab(tabParam) ?? "user";
 
   if (category !== "oxford") {
@@ -148,20 +120,6 @@ export function getCollectionsLegacyRedirectPath(
   }
 
   return `/collections/oxford/${resolvedBand}`;
-}
-
-export function parseCollectionKindHint(
-  value: string | null,
-): CollectionSummary["kind"] | null {
-  if (value === "system") {
-    return "SYSTEM";
-  }
-
-  if (value === "user") {
-    return "USER";
-  }
-
-  return null;
 }
 
 export function findCollectionById(

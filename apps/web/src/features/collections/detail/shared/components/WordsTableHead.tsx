@@ -17,9 +17,9 @@ type WordsTableHeadProps = {
 };
 
 const headerCellClassName =
-  "sticky top-0 z-10 bg-surface px-2 py-2 align-middle font-semibold shadow-[inset_0_-1px_0_0_var(--border)]";
+  "sticky top-0 z-10 bg-surface px-2 py-2 align-middle font-semibold shadow-[inset_0_-0.6px_0_0_var(--border)]";
 const checkboxHeaderClassName =
-  "sticky top-0 z-10 bg-surface w-10 px-3 py-2 align-middle shadow-[inset_0_-1px_0_0_var(--border)]";
+  "sticky top-0 z-10 bg-surface w-10 px-3 py-2 align-middle shadow-[inset_0_-0.6px_0_0_var(--border)]";
 
 export function WordsTableHead({
   columns,

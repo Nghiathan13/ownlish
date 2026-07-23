@@ -32,34 +32,26 @@ function makeCollection(
 }
 
 describe("collection display helpers", () => {
-  it("detects known collection categories", () => {
+  it("detects oxford collection category", () => {
     expect(getCollectionCategory(makeCollection())).toBe("oxford");
     expect(
       getCollectionCategory(
         makeCollection({ name: "TOEIC Essential", source: "toeic" }),
       ),
-    ).toBe("toeic");
-    expect(
-      getCollectionCategory(
-        makeCollection({ name: "IELTS Academic", source: "ielts" }),
-      ),
-    ).toBe("ielts");
+    ).toBeNull();
   });
 
-  it("builds a collection path from id and kind", () => {
-    expect(getCollectionPath(makeCollection())).toBe(
-      "/collections/collection-id?kind=system",
-    );
+  it("builds a user collection path from id", () => {
     expect(
       getCollectionPath(makeCollection({ kind: "USER", isDefault: true })),
-    ).toBe("/collections/collection-id?kind=user");
+    ).toBe("/collections/user/collection-id");
   });
 
   it("builds collections list paths from category", () => {
     expect(getCollectionsListPath("user")).toBe("/collections/user");
     expect(getCollectionsListPath("oxford")).toBe("/collections/oxford/A1");
-    expect(getCollectionsListPath("toeic")).toBe("/collections/toeic");
-    expect(parseCollectionCategoryTab("toeic")).toBe("toeic");
+    expect(parseCollectionCategoryTab("oxford")).toBe("oxford");
+    expect(parseCollectionCategoryTab("toeic")).toBeNull();
     expect(parseCollectionCategoryTab("invalid")).toBeNull();
   });
 
@@ -74,7 +66,10 @@ describe("collection display helpers", () => {
     ).toBe("/collections/oxford/A1");
     expect(
       getCollectionsLegacyRedirectPath(new URLSearchParams("tab=toeic")),
-    ).toBe("/collections/toeic");
+    ).toBe("/collections/user");
+    expect(
+      getCollectionsLegacyRedirectPath(new URLSearchParams("tab=ielts")),
+    ).toBe("/collections/user");
     expect(getCollectionsLegacyRedirectPath(new URLSearchParams())).toBeNull();
   });
 
@@ -85,11 +80,6 @@ describe("collection display helpers", () => {
       ),
     ).toBe("user");
     expect(getCollectionsListCategory(makeCollection())).toBe("oxford");
-    expect(
-      getCollectionsListCategory(
-        makeCollection({ name: "TOEIC Essential", source: "toeic" }),
-      ),
-    ).toBe("toeic");
   });
 
   it("finds a collection by id", () => {
@@ -180,10 +170,10 @@ describe("collection display helpers", () => {
     });
 
     expect(getCollectionPath(firstStudyList)).toBe(
-      "/collections/study-list-1?kind=user",
+      "/collections/user/study-list-1",
     );
     expect(getCollectionPath(secondStudyList)).toBe(
-      "/collections/study-list-2?kind=user",
+      "/collections/user/study-list-2",
     );
     expect(findCollectionById([firstStudyList, secondStudyList], "study-list-2"))
       .toBe(secondStudyList);

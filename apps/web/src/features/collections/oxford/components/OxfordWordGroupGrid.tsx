@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { CollectionSummary } from "@/entities/collection/api/collections";
 import {
   getOxfordGroupRange,
   getOxfordPath,
@@ -11,20 +10,20 @@ import { StartIcon } from "@/shared/ui/icons/StartIcon";
 
 type OxfordWordGroupGridProps = {
   band: OxfordBand;
-  collection: CollectionSummary;
+  itemCount: number;
 };
 
 export function OxfordWordGroupGrid({
   band,
-  collection,
+  itemCount,
 }: OxfordWordGroupGridProps) {
-  const groupCount = Math.ceil(collection.itemCount / OXFORD_GROUP_SIZE);
+  const groupCount = Math.ceil(itemCount / OXFORD_GROUP_SIZE);
 
   return (
     <div className="mb-8 grid gap-4 px-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] lg:px-16">
       {Array.from({ length: groupCount }, (_, index) => {
         const group = index + 1;
-        const range = getOxfordGroupRange(group, collection.itemCount);
+        const range = getOxfordGroupRange(group, itemCount);
 
         return (
           <article

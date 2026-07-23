@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
-import type {
-  CatalogWord,
-  CollectionSummary,
-} from "@/entities/collection/api/collections";
-import { useCollectionCatalogWordsQuery } from "@/features/collections/shared/data/hooks";
-import { useImportCollection } from "@/features/collections/shared/mutations/hooks";
+import type { CatalogWord } from "@/entities/collection/api/collections";
 import { CatalogWordsTable } from "@/features/collections/detail/system/panel/components/CatalogWordsTable";
 import { useCatalogTableColumnVisibility } from "@/features/collections/detail/system/panel/hooks/useCatalogTableColumnVisibility";
 import {
@@ -16,20 +11,18 @@ import {
 } from "@/features/collections/detail/system/panel/lib/catalogSelection";
 import { CATALOG_TOGGLEABLE_COLUMNS } from "@/features/collections/detail/system/panel/lib/catalogTableColumns";
 import {
-  getOxfordGroupRange,
   getOxfordPath,
-  OXFORD_GROUP_SIZE,
   type OxfordBand,
 } from "@/features/collections/oxford/lib/oxfordNavigation";
+import { useImportOxfordPart } from "@/features/collections/oxford/model/useImportOxfordPart";
+import { useOxfordPartQuery } from "@/features/collections/oxford/model/useOxfordPartQuery";
 import { WordsColumnPicker } from "@/features/collections/detail/shared/components";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type OxfordGroupWordsPanelProps = {
   band: OxfordBand;
-  collection: CollectionSummary;
   group: number;
   isAuthenticated: boolean;
-  targetCollectionId: string | null;
   userId: string | null;
 };
 
@@ -37,18 +30,14 @@ const EMPTY_CATALOG_WORDS: CatalogWord[] = [];
 
 export function OxfordGroupWordsPanel({
   band,
-  collection,
   group,
   isAuthenticated,
-  targetCollectionId,
   userId,
 }: OxfordGroupWordsPanelProps) {
-  const range = getOxfordGroupRange(group, collection.itemCount);
-  const query = useCollectionCatalogWordsQuery({
-    collectionId: collection.id,
+  const query = useOxfordPartQuery({
+    band,
     isAuthenticated,
-    limit: OXFORD_GROUP_SIZE,
-    offset: range.offset,
+    part: group,
     userId,
   });
   const { columnVisibility, toggleColumn } = useCatalogTableColumnVisibility();
@@ -56,9 +45,9 @@ export function OxfordGroupWordsPanel({
     ReadonlySet<string>
   >(new Set());
   const [resultMessage, setResultMessage] = useState<string | null>(null);
-  const { importCollection, importError, isImporting, resetImportState } =
-    useImportCollection({ userId });
-  const words = query.page?.items ?? EMPTY_CATALOG_WORDS;
+  const { importError, importPart, isImporting, resetImportState } =
+    useImportOxfordPart(userId);
+  const words = query.part?.items ?? EMPTY_CATALOG_WORDS;
   const selectableDefinitions = useMemo(
     () => getSelectableCatalogDefinitions(words),
     [words],
@@ -75,7 +64,7 @@ export function OxfordGroupWordsPanel({
   const someDefinitionsSelected = selectableDefinitions.some((item) =>
     selectedDefinitionIds.has(item.definition.id),
   );
-  const canImport = isAuthenticated && Boolean(targetCollectionId);
+  const canImport = isAuthenticated;
 
   const toggleDefinition = useCallback((definitionId: string) => {
     setSelectedDefinitionIds((current) => {
@@ -106,20 +95,14 @@ export function OxfordGroupWordsPanel({
 
   const handleImport = useCallback(
     async (catalogDefinitionIds: string[]) => {
-      if (!targetCollectionId) {
-        return;
-      }
-
       setResultMessage(null);
       resetImportState();
 
       try {
-        const result = await importCollection({
+        const result = await importPart({
+          band,
           catalogDefinitionIds,
-          limit: OXFORD_GROUP_SIZE,
-          offset: range.offset,
-          systemCollectionId: collection.id,
-          targetCollectionId,
+          part: group,
         });
         setSelectedDefinitionIds(new Set());
         setResultMessage(
@@ -129,11 +112,10 @@ export function OxfordGroupWordsPanel({
         // The mutation error is rendered below.
       }
     }, [
-      collection.id,
-      importCollection,
-      range.offset,
+      band,
+      group,
+      importPart,
       resetImportState,
-      targetCollectionId,
     ],
   );
   const selectedCount = selectedDefinitions.length;

@@ -20,8 +20,8 @@ describe("CollectionCategorySelect", () => {
         name: "Collection category: My Collections",
       }),
     );
-    await user.click(screen.getByRole("option", { name: "TOEIC" }));
+    await user.click(screen.getByRole("option", { name: "Oxford" }));
 
-    expect(mocks.push).toHaveBeenCalledWith("/collections/toeic");
+    expect(mocks.push).toHaveBeenCalledWith("/collections/oxford/A1");
   });
 });
