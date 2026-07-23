@@ -30,7 +30,7 @@
   --primary-foreground: #ffffff;
   --danger: #ff6b6b;
   --border: rgba(255, 255, 255, 0.24);
-  --hover-overlay: rgba(255, 255, 255, 0.05);
+  --hover-overlay: rgba(255, 255, 255, 0.06);
   --hover-overlay-solid: rgba(0, 0, 0, 0.09);
   --hover-on-surface: color-mix(in srgb, white 9%, var(--surface));
   --shadow-card: none;
