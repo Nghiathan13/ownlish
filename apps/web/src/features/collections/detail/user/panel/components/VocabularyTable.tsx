@@ -1,3 +1,5 @@
+"use client";
+
 import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
 import {
   expandWordsToDefinitionRows,
@@ -22,6 +24,7 @@ import { TableBodyState, TableMobileState } from "@/features/collections/detail/
 import { WordsTableDesktopLayout } from "@/features/collections/detail/shared/components/WordsTableDesktopLayout";
 import { WordsTableHead } from "@/features/collections/detail/shared/components/WordsTableHead";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
+import { useWordRowHover } from "@/features/collections/detail/shared/hooks/useWordRowHover";
 import { getVocabularyWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
@@ -60,6 +63,8 @@ export function VocabularyTable({
   someDefinitionsSelected,
   words,
 }: VocabularyTableProps) {
+  const { hoveredWordId, onWordRowMouseEnter, onWordRowMouseLeave } =
+    useWordRowHover();
   const rows = expandWordsToDefinitionRows(words);
   const showColumn = (columnId: VocabularyToggleableColumnId) =>
     isColumnVisible(columnVisibility, columnId);
@@ -104,7 +109,7 @@ export function VocabularyTable({
               <article
                 key={getDefinitionRowKey(row)}
                 className={classNames(
-                  "min-w-0 rounded-xl border border-surface bg-surface p-4 shadow-card dark:border-border",
+                  "flex min-w-0 flex-col gap-3 rounded-xl border border-surface bg-surface p-4 shadow-card dark:border-border",
                   definition && "cursor-pointer",
                 )}
                 onClick={
@@ -113,7 +118,7 @@ export function VocabularyTable({
                     : undefined
                 }
               >
-                <div className="mb-3 flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <h2 className="min-w-0 truncate text-base font-semibold">
                     {word.word}
                   </h2>
@@ -159,7 +164,7 @@ export function VocabularyTable({
                 {(showColumn("ipaUk") || showColumn("ipaUs")) &&
                 (getIpaFieldValue(definition, "uk") ||
                   getIpaFieldValue(definition, "us")) ? (
-                  <div className="mb-3 flex flex-wrap gap-x-3 gap-y-0.5 text-base text-muted-foreground">
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-base text-muted-foreground">
                     {showColumn("ipaUk") ? (
                       <span className="inline-flex items-baseline gap-1">
                         <span>UK:</span>
@@ -179,43 +184,37 @@ export function VocabularyTable({
                   </div>
                 ) : null}
 
-                <div className="grid gap-3 text-base">
-                  <dl className="grid grid-cols-2 gap-3">
-                    {showColumn("meaning") ? (
-                      <div>
-                        <DefinitionMeaningCell
-                          definition={definition}
-                          showBand={false}
-                        />
-                      </div>
-                    ) : null}
-                    {showColumn("level") ? (
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Level
-                        </dt>
-                        <dd className="mt-1">
-                          <DefinitionLevelCell definition={definition} />
-                        </dd>
-                      </div>
-                    ) : null}
-                    {showColumn("example") ? (
-                      <div className="col-span-2 text-muted-foreground">
-                        <DefinitionExampleCell definition={definition} />
-                      </div>
-                    ) : null}
-                    {showColumn("nextReview") ? (
-                      <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Next review
-                        </dt>
-                        <dd className="mt-1 text-muted-foreground">
-                          <DefinitionNextReviewCell definition={definition} />
-                        </dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                </div>
+                {showColumn("meaning") ? (
+                  <DefinitionMeaningCell
+                    definition={definition}
+                    showBand={false}
+                  />
+                ) : null}
+                {showColumn("level") ? (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Level
+                    </dt>
+                    <dd className="mt-1">
+                      <DefinitionLevelCell definition={definition} />
+                    </dd>
+                  </div>
+                ) : null}
+                {showColumn("example") ? (
+                  <div className="text-muted-foreground">
+                    <DefinitionExampleCell definition={definition} />
+                  </div>
+                ) : null}
+                {showColumn("nextReview") ? (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Next review
+                    </dt>
+                    <dd className="mt-1 text-muted-foreground">
+                      <DefinitionNextReviewCell definition={definition} />
+                    </dd>
+                  </div>
+                ) : null}
               </article>
             );
           })
@@ -257,7 +256,15 @@ export function VocabularyTable({
             return (
               <tr
                 key={getDefinitionRowKey(row)}
-                className={showRowBorder ? "border-b border-border" : undefined}
+                data-word-id={row.word.id}
+                className={classNames(
+                  hoveredWordId === row.word.id && "bg-hover-overlay",
+                  showRowBorder && "border-b border-border",
+                )}
+                onMouseEnter={() => onWordRowMouseEnter(row.word.id)}
+                onMouseLeave={(event) =>
+                  onWordRowMouseLeave(event, row.word.id)
+                }
               >
                 <td
                   className={classNames(

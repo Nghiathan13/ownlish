@@ -151,7 +151,7 @@ export function OxfordGroupWordsPanel({
             )}
             href={getOxfordPath(band)}
           >
-            Back to {band}
+            Back
           </Link>
           {canImport && selectedCount > 0 ? (
             <button

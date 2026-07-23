@@ -2,6 +2,7 @@ export const CATALOG_TOGGLEABLE_COLUMNS = [
   { id: "ipaUk", label: "IPA UK" },
   { id: "ipaUs", label: "IPA US" },
   { id: "type", label: "Type" },
+  { id: "band", label: "Band" },
   { id: "meaning", label: "Meaning" },
   { id: "example", label: "Example" },
 ] as const;

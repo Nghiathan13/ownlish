@@ -13,7 +13,10 @@ export {
 
 export function createDefaultCatalogColumnVisibility(): CatalogColumnVisibility {
   return Object.fromEntries(
-    CATALOG_TOGGLEABLE_COLUMNS.map((column) => [column.id, true]),
+    CATALOG_TOGGLEABLE_COLUMNS.map((column) => [
+      column.id,
+      column.id !== "band" && column.id !== "ipaUs",
+    ]),
   ) as CatalogColumnVisibility;
 }
 

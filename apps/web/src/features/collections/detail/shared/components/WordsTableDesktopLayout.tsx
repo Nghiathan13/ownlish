@@ -22,13 +22,11 @@ export function WordsTableDesktopLayout({
         className,
       )}
     >
-      <div className="flex min-h-0 flex-1 flex-col overflow-x-auto">
-        <table className={TABLE_CLASS_NAME}>{head}</table>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <table className={TABLE_CLASS_NAME}>
-            <tbody>{body}</tbody>
-          </table>
-        </div>
+      <div className="min-h-0 flex-1 overflow-auto">
+        <table className={TABLE_CLASS_NAME}>
+          {head}
+          <tbody>{body}</tbody>
+        </table>
       </div>
     </div>
   );

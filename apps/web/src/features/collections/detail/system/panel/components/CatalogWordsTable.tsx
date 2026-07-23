@@ -1,3 +1,5 @@
+"use client";
+
 import type { CatalogDefinition, CatalogWord } from "@/entities/collection/api/collections";
 import {
   expandCatalogWordsToDefinitionRows,
@@ -22,6 +24,7 @@ import { TableBodyState, TableMobileState } from "@/features/collections/detail/
 import { WordsTableDesktopLayout } from "@/features/collections/detail/shared/components/WordsTableDesktopLayout";
 import { WordsTableHead } from "@/features/collections/detail/shared/components/WordsTableHead";
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
+import { useWordRowHover } from "@/features/collections/detail/shared/hooks/useWordRowHover";
 import { getCatalogWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
 import { classNames } from "@/shared/lib/classNames";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
@@ -55,6 +58,8 @@ export function CatalogWordsTable({
   someDefinitionsSelected,
   words,
 }: CatalogWordsTableProps) {
+  const { hoveredWordId, onWordRowMouseEnter, onWordRowMouseLeave } =
+    useWordRowHover();
   const rows = expandCatalogWordsToDefinitionRows(words);
   const showColumn = (columnId: CatalogToggleableColumnId) =>
     isCatalogColumnVisible(columnVisibility, columnId);
@@ -99,7 +104,7 @@ export function CatalogWordsTable({
               <article
                 key={getDefinitionRowKey(row)}
                 className={classNames(
-                  "min-w-0 rounded-xl border border-surface bg-surface p-4 shadow-card dark:border-border",
+                  "flex min-w-0 flex-col gap-3 rounded-xl border border-surface bg-surface p-4 shadow-card dark:border-border",
                   definition && "cursor-pointer",
                 )}
                 onClick={
@@ -108,7 +113,7 @@ export function CatalogWordsTable({
                     : undefined
                 }
               >
-                <div className="mb-3 flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <h2 className="min-w-0 truncate text-base font-semibold">
                     {word.word}
                   </h2>
@@ -116,7 +121,7 @@ export function CatalogWordsTable({
                     <DefinitionTypeCell definition={definition} />
                   ) : null}
                   <div className="ml-auto flex shrink-0 items-center gap-2">
-                    {definition?.band ? (
+                    {showColumn("band") && definition?.band ? (
                       <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-sm text-muted-foreground">
                         {definition.band}
                       </span>
@@ -140,7 +145,7 @@ export function CatalogWordsTable({
                 {(showColumn("ipaUk") || showColumn("ipaUs")) &&
                 (getIpaFieldValue(definition, "uk") ||
                   getIpaFieldValue(definition, "us")) ? (
-                  <div className="mb-3 flex flex-wrap gap-x-3 gap-y-0.5 text-base text-muted-foreground">
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-base text-muted-foreground">
                     {showColumn("ipaUk") ? (
                       <span className="inline-flex items-baseline gap-1">
                         <span>UK:</span>
@@ -160,23 +165,14 @@ export function CatalogWordsTable({
                   </div>
                 ) : null}
 
-                <div className="grid gap-3 text-base">
-                  <dl className="grid grid-cols-2 gap-3">
-                    {showColumn("meaning") ? (
-                      <div>
-                        <DefinitionMeaningCell
-                          definition={definition}
-                          showBand={false}
-                        />
-                      </div>
-                    ) : null}
-                    {showColumn("example") ? (
-                      <div className="col-span-2 text-muted-foreground">
-                        <DefinitionExampleCell definition={definition} />
-                      </div>
-                    ) : null}
-                  </dl>
-                </div>
+                {showColumn("meaning") ? (
+                  <DefinitionMeaningCell definition={definition} />
+                ) : null}
+                {showColumn("example") ? (
+                  <div className="text-muted-foreground">
+                    <DefinitionExampleCell definition={definition} />
+                  </div>
+                ) : null}
               </article>
             );
           })
@@ -217,7 +213,15 @@ export function CatalogWordsTable({
             return (
               <tr
                 key={getDefinitionRowKey(row)}
-                className={showRowBorder ? "border-b border-border" : undefined}
+                data-word-id={row.word.id}
+                className={classNames(
+                  hoveredWordId === row.word.id && "bg-hover-overlay",
+                  showRowBorder && "border-b border-border",
+                )}
+                onMouseEnter={() => onWordRowMouseEnter(row.word.id)}
+                onMouseLeave={(event) =>
+                  onWordRowMouseLeave(event, row.word.id)
+                }
               >
                 <td
                   className={classNames(
@@ -309,6 +313,17 @@ export function CatalogWordsTable({
                   <DefinitionTypeCell definition={row.definition} />
                 </td>
                 ) : null}
+                {showColumn("band") ? (
+                <td
+                  className={classNames(
+                    "px-2 align-middle",
+                    TABLE_COLUMN_WIDTH.band,
+                    getDefinitionRowPadding(row),
+                  )}
+                >
+                  <DefinitionBandCell definition={row.definition} />
+                </td>
+                ) : null}
                 {showColumn("meaning") ? (
                 <td
                   className={classNames(
@@ -383,12 +398,26 @@ function DefinitionTypeCell({
   );
 }
 
-function DefinitionMeaningCell({
+function DefinitionBandCell({
   definition,
-  showBand = true,
 }: {
   definition: CatalogDefinition | null;
-  showBand?: boolean;
+}) {
+  if (!definition?.band) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  return (
+    <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-sm text-muted-foreground">
+      {definition.band}
+    </span>
+  );
+}
+
+function DefinitionMeaningCell({
+  definition,
+}: {
+  definition: CatalogDefinition | null;
 }) {
   if (!definition) {
     return <span className="text-muted-foreground">-</span>;
@@ -396,16 +425,7 @@ function DefinitionMeaningCell({
 
   const meaning = definition.meaningVi || definition.definition || "-";
 
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <p className="min-w-0 flex-1 break-words">{meaning}</p>
-      {showBand && definition.band ? (
-        <span className="inline-flex shrink-0 rounded-full border border-border px-2 py-0.5 text-sm text-muted-foreground">
-          {definition.band}
-        </span>
-      ) : null}
-    </div>
-  );
+  return <p className="min-w-0 break-words">{meaning}</p>;
 }
 
 function DefinitionExampleCell({
