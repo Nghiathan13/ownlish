@@ -57,8 +57,7 @@ test("persists a protected vocabulary session and clears it on logout", async ({
     .click();
   await expect(page).toHaveURL(
     (url) =>
-      /^\/collections\/[0-9a-f-]+$/.test(url.pathname) &&
-      url.searchParams.get("kind") === "user",
+      /^\/collections\/user\/[0-9a-f-]+$/.test(url.pathname),
   );
 
   const collectionUrl = page.url();
