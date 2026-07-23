@@ -574,7 +574,7 @@ export function buildToeicCatalog(
           number: partNumber,
           path: relativePartPath,
           questionCount: part.questionCount,
-          firstGroupKey: part.groupIds[0]!,
+          firstGroupKey: part.groupIds[0],
         });
         partArtifacts.push({ path: relativePartPath, document: part.document });
         indexParts[String(partNumber)] = { groups: part.groups };

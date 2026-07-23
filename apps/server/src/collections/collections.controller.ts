@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -17,6 +18,7 @@ import { CollectionsService } from './collections.service';
 import { CatalogWordsQueryDto } from './dto/catalog-words-query.dto';
 import { CreateUserCollectionDto } from './dto/create-user-collection.dto';
 import { ImportCollectionDto } from './dto/import-collection.dto';
+import { ImportOxfordPartDto } from './dto/import-oxford-part.dto';
 import { UpdateUserCollectionDto } from './dto/update-user-collection.dto';
 
 @Controller('collections')
@@ -35,6 +37,36 @@ export class CollectionsController {
     @Body() body: CreateUserCollectionDto,
   ): ReturnType<CollectionsService['createUserCollection']> {
     return this.collectionsService.createUserCollection(request.user.id, body);
+  }
+
+  @Get('oxford/:band/meta')
+  getOxfordMeta(
+    @Param('band') band: string,
+  ): ReturnType<CollectionsService['getOxfordMeta']> {
+    return this.collectionsService.getOxfordMeta(band);
+  }
+
+  @Get('oxford/:band/parts/:part')
+  getOxfordPart(
+    @Param('band') band: string,
+    @Param('part', ParseIntPipe) part: number,
+  ): ReturnType<CollectionsService['getOxfordPart']> {
+    return this.collectionsService.getOxfordPart(band, part);
+  }
+
+  @Post('oxford/:band/parts/:part/import')
+  importOxfordPart(
+    @Req() request: AuthRequest,
+    @Param('band') band: string,
+    @Param('part', ParseIntPipe) part: number,
+    @Body() body: ImportOxfordPartDto,
+  ): ReturnType<CollectionsService['importOxfordPart']> {
+    return this.collectionsService.importOxfordPart(
+      request.user.id,
+      band,
+      part,
+      body.catalogDefinitionIds,
+    );
   }
 
   @Get(':id/catalog-words')

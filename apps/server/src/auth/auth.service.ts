@@ -158,11 +158,12 @@ export class AuthService {
     let uploadedAvatarStoragePath: string | undefined;
 
     if (file) {
-      uploadedAvatarStoragePath = await this.profileAvatarStorageService.uploadAvatar({
-        body: file.buffer,
-        mimeType: file.mimetype,
-        userId,
-      });
+      uploadedAvatarStoragePath =
+        await this.profileAvatarStorageService.uploadAvatar({
+          body: file.buffer,
+          mimeType: file.mimetype,
+          userId,
+        });
     }
 
     try {

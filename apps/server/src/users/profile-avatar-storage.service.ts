@@ -49,7 +49,9 @@ export class ProfileAvatarStorageService {
 
     const client = this.getClient();
     if (!client) {
-      throw new InternalServerErrorException('Profile images are not configured');
+      throw new InternalServerErrorException(
+        'Profile images are not configured',
+      );
     }
 
     const storagePath = `users/${input.userId}/${randomUUID()}.${AVATAR_EXTENSION_BY_MIME_TYPE[input.mimeType]}`;

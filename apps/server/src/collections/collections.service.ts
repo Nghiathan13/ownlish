@@ -6,7 +6,11 @@ import {
 import { WordCollectionKind } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeWord } from '../vocab/lib/normalize-word';
-import { OXFORD_DEFINITION_SOURCES } from './collections.constants';
+import {
+  OXFORD_CEFR_LEVELS,
+  OXFORD_COLLECTION_SOURCE,
+  OXFORD_DEFINITION_SOURCES,
+} from './collections.constants';
 
 type CollectionSummary = {
   id: string;
@@ -69,6 +73,17 @@ type CatalogWordsPage = {
   total: number;
   offset: number;
   limit: number;
+};
+
+type OxfordCollectionMeta = {
+  band: string;
+  itemCount: number;
+};
+
+type OxfordPart = {
+  items: CatalogWordResult[];
+  limit: number;
+  offset: number;
 };
 
 type ImportCollectionResult = {
@@ -460,6 +475,116 @@ export class CollectionsService {
     return { items, total, offset, limit };
   }
 
+  async getOxfordMeta(band: string): Promise<OxfordCollectionMeta> {
+    this.assertOxfordBand(band);
+
+    const collection = await this.prisma.wordCollection.findFirst({
+      where: this.oxfordCollectionWhere(band),
+      include: {
+        _count: {
+          select: {
+            catalogItems: true,
+          },
+        },
+      },
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Oxford collection not found');
+    }
+
+    return {
+      band,
+      itemCount: collection._count.catalogItems,
+    };
+  }
+
+  async getOxfordPart(band: string, part: number): Promise<OxfordPart> {
+    this.assertOxfordBand(band);
+    const offset = this.getOxfordPartOffset(part);
+    const items = await this.prisma.collectionCatalogItem.findMany({
+      where: {
+        collection: this.oxfordCollectionWhere(band),
+        catalogWord: {
+          definitions: {
+            some: {
+              band,
+              source: {
+                in: OXFORD_DEFINITION_SOURCES,
+              },
+            },
+          },
+        },
+      },
+      include: {
+        catalogWord: {
+          include: {
+            definitions: {
+              where: {
+                band,
+                source: {
+                  in: OXFORD_DEFINITION_SOURCES,
+                },
+              },
+              orderBy: [
+                {
+                  source: 'asc',
+                },
+                {
+                  type: 'asc',
+                },
+              ],
+            },
+          },
+        },
+      },
+      orderBy: [
+        {
+          sortOrder: 'asc',
+        },
+        {
+          catalogWord: {
+            word: 'asc',
+          },
+        },
+      ],
+      skip: offset,
+      take: 20,
+    });
+
+    if (items.length === 0) {
+      throw new NotFoundException('Oxford part not found');
+    }
+
+    return {
+      items: items.map((item) => item.catalogWord),
+      limit: 20,
+      offset,
+    };
+  }
+
+  async importOxfordPart(
+    userId: string,
+    band: string,
+    part: number,
+    catalogDefinitionIds: string[],
+  ): Promise<ImportCollectionResult> {
+    this.assertOxfordBand(band);
+    const collection = await this.prisma.wordCollection.findFirst({
+      where: this.oxfordCollectionWhere(band),
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Oxford collection not found');
+    }
+
+    return this.importToVocabulary(userId, collection.id, {
+      catalogDefinitionIds,
+      limit: 20,
+      offset: this.getOxfordPartOffset(part),
+    });
+  }
+
   private visibleCollectionWhere(userId: string) {
     return {
       OR: [
@@ -471,6 +596,29 @@ export class CollectionsService {
           ownerUserId: userId,
         },
       ],
+    };
+  }
+
+  private assertOxfordBand(band: string) {
+    if (!OXFORD_CEFR_LEVELS.includes(band)) {
+      throw new BadRequestException('Unsupported Oxford band');
+    }
+  }
+
+  private getOxfordPartOffset(part: number) {
+    if (!Number.isSafeInteger(part) || part < 1) {
+      throw new BadRequestException('Oxford part must be positive');
+    }
+
+    return (part - 1) * 20;
+  }
+
+  private oxfordCollectionWhere(band: string) {
+    return {
+      cefrLevel: band,
+      isPublic: true,
+      kind: WordCollectionKind.SYSTEM,
+      source: OXFORD_COLLECTION_SOURCE,
     };
   }
 

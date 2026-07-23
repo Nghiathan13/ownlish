@@ -156,6 +156,68 @@ describe('CollectionsService', () => {
     );
   });
 
+  it('loads Oxford metadata by CEFR band without listing collections', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValue({
+      ...collection,
+      _count: {
+        catalogItems: 957,
+      },
+    });
+
+    await expect(service.getOxfordMeta('A1')).resolves.toEqual({
+      band: 'A1',
+      itemCount: 957,
+    });
+    expect(prisma.wordCollection.findFirst).toHaveBeenCalledWith({
+      where: {
+        cefrLevel: 'A1',
+        isPublic: true,
+        kind: WordCollectionKind.SYSTEM,
+        source: 'oxford',
+      },
+      include: {
+        _count: {
+          select: {
+            catalogItems: true,
+          },
+        },
+      },
+    });
+    expect(prisma.wordCollection.findMany).not.toHaveBeenCalled();
+  });
+
+  it('loads exactly one Oxford part by its band and part number', async () => {
+    prisma.collectionCatalogItem.findMany.mockResolvedValue([
+      {
+        catalogWord: {
+          id: 'catalog-word-id',
+          word: 'about',
+          normalizedWord: 'about',
+          definitions: [],
+        },
+      },
+    ]);
+
+    await expect(service.getOxfordPart('A1', 2)).resolves.toEqual({
+      items: [
+        {
+          id: 'catalog-word-id',
+          word: 'about',
+          normalizedWord: 'about',
+          definitions: [],
+        },
+      ],
+      limit: 20,
+      offset: 20,
+    });
+    expect(prisma.collectionCatalogItem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 20,
+        take: 20,
+      }),
+    );
+  });
+
   it('creates a user-owned collection', async () => {
     prisma.wordCollection.create.mockResolvedValue({
       ...collection,
@@ -504,5 +566,25 @@ describe('CollectionsService', () => {
     await expect(
       service.importToVocabulary('user-id', 'collection-id'),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('imports an Oxford part through its semantic band and part number', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValue(collection);
+    const importToVocabulary = jest
+      .spyOn(service, 'importToVocabulary')
+      .mockResolvedValue({ imported: 1, updated: 0, skipped: 0 });
+
+    await expect(
+      service.importOxfordPart('user-id', 'A1', 3, ['definition-id']),
+    ).resolves.toEqual({ imported: 1, updated: 0, skipped: 0 });
+    expect(importToVocabulary).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+      {
+        catalogDefinitionIds: ['definition-id'],
+        limit: 20,
+        offset: 40,
+      },
+    );
   });
 });
