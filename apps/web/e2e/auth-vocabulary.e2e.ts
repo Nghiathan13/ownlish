@@ -29,22 +29,18 @@ test("persists a protected vocabulary session and clears it on logout", async ({
     await setupApi.dispose();
   }
 
-  await page.goto("/collections?tab=user");
+  await page.goto("/collections/user");
   await expect(page).toHaveURL(
     (url) =>
       url.pathname === "/login" &&
-      url.searchParams.get("redirect") === "/collections?tab=user",
+      url.searchParams.get("redirect") === "/collections/user",
   );
 
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(E2E_USER_PASSWORD);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
 
-  await expect(page).toHaveURL(
-    (url) =>
-      url.pathname === "/collections" &&
-      url.searchParams.get("tab") === "user",
-  );
+  await expect(page).toHaveURL((url) => url.pathname === "/collections/user");
 
   const refreshCookie = (await context.cookies()).find(
     (cookie) => cookie.name === "engvocab.refreshToken",
@@ -130,10 +126,10 @@ test("persists a protected vocabulary session and clears it on logout", async ({
     ),
   ).toBeUndefined();
 
-  await page.goto("/collections?tab=user");
+  await page.goto("/collections/user");
   await expect(page).toHaveURL(
     (url) =>
       url.pathname === "/login" &&
-      url.searchParams.get("redirect") === "/collections?tab=user",
+      url.searchParams.get("redirect") === "/collections/user",
   );
 });

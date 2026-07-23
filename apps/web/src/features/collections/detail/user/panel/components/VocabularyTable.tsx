@@ -70,7 +70,7 @@ export function VocabularyTable({
     ? "Try a different search term."
     : "Add your first word with the form above.";
   const mobileScrollClassName = classNames(
-    "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 gap-3 overflow-auto rounded-xl border border-border md:hidden",
+    "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 gap-3 overflow-auto rounded-xl bg-surface p-3 shadow-card md:hidden dark:border dark:border-border",
     className,
   );
 
@@ -108,7 +108,7 @@ export function VocabularyTable({
           return (
             <article
               key={word.id}
-              className="rounded-lg border border-border bg-background p-4"
+              className="rounded-lg border border-border bg-surface p-4"
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <h2 className="text-base font-semibold">{word.word}</h2>

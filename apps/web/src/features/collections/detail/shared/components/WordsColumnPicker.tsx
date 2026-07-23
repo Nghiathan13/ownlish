@@ -59,8 +59,7 @@ export function WordsColumnPicker<Id extends string>({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         className={iconTextButtonClassName(
-          "w-fit shrink-0",
-          "border-0 bg-surface shadow-card hover:bg-transparent hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border",
+          "w-fit shrink-0 border border-surface bg-surface shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
         )}
         onClick={() => setIsOpen((current) => !current)}
       >

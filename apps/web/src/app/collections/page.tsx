@@ -1,11 +1,30 @@
-import { Suspense } from "react";
-import { CollectionsPage } from "@/features/collections/list/components/CollectionsPage";
-import { CollectionsPageSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
+import { redirect } from "next/navigation";
+import {
+  getCollectionsLegacyRedirectPath,
+  getCollectionsListPath,
+} from "@/entities/collection/lib/collectionDisplay";
 
-export default function CollectionsRoute() {
-  return (
-    <Suspense fallback={<CollectionsPageSkeleton />}>
-      <CollectionsPage />
-    </Suspense>
-  );
+type CollectionsRootPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function firstParam(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return value ?? null;
+}
+
+export default async function CollectionsRootPage({
+  searchParams,
+}: CollectionsRootPageProps) {
+  const params = await searchParams;
+  const legacyPath = getCollectionsLegacyRedirectPath({
+    get(key: string) {
+      return firstParam(params[key]);
+    },
+  });
+
+  redirect(legacyPath ?? getCollectionsListPath("user"));
 }

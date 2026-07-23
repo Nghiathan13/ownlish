@@ -25,7 +25,7 @@ export function OxfordBandTabs({ activeBand }: OxfordBandTabsProps) {
             className={classNames(
               "inline-flex cursor-pointer items-center justify-center rounded-md px-3 py-1.5 text-[15px] leading-[20px] font-normal",
               isActive
-                ? "bg-foreground text-background"
+                ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
                 : "text-foreground hover:bg-hover-overlay",
             )}
             href={getOxfordPath(band)}

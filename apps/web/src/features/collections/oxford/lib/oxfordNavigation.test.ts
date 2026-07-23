@@ -8,9 +8,8 @@ import {
 
 describe("oxfordNavigation", () => {
   it("builds stable group URLs", () => {
-    expect(getOxfordPath("A1", 3)).toBe(
-      "/collections?band=A1&tab=oxford&group=3",
-    );
+    expect(getOxfordPath("A1")).toBe("/collections/oxford/A1");
+    expect(getOxfordPath("A1", 3)).toBe("/collections/oxford/A1/part-3");
   });
 
   it("splits the final A1 group to its remaining words", () => {
@@ -25,7 +24,9 @@ describe("oxfordNavigation", () => {
   it("accepts only supported bands and positive group numbers", () => {
     expect(parseOxfordBand("B2")).toBe("B2");
     expect(parseOxfordBand("C2")).toBeNull();
+    expect(parseOxfordGroup("part-1")).toBe(1);
     expect(parseOxfordGroup("1")).toBe(1);
+    expect(parseOxfordGroup("part-0")).toBeNull();
     expect(parseOxfordGroup("0")).toBeNull();
     expect(parseOxfordGroup("1.5")).toBeNull();
   });

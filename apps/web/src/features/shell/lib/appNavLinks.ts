@@ -34,7 +34,7 @@ export const APP_NAV_LINKS: AppNavLink[] = [
     activeIcon: DashboardNavFillIcon,
   },
   {
-    href: "/collections?tab=user",
+    href: "/collections/user",
     label: "Collections",
     activeMatch: "/collections",
     icon: CollectionsNavIcon,

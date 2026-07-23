@@ -160,7 +160,8 @@ traces, screenshots, and video are uploaded only when the job fails.
 | --- | --- | --- |
 | `/` | Public | Guest landing page or authenticated vocabulary dashboard |
 | `/login` | Public | Email/password login, registration, and optional Google Sign-In |
-| `/collections?tab=user\|oxford\|toeic\|ielts` | Authenticated | User collections and system catalogs |
+| `/collections/user\|oxford\|toeic\|ielts` | Authenticated | User collections and system catalogs |
+| `/collections/oxford/[band]` / `/collections/oxford/[band]/part-[n]` | Authenticated | Oxford CEFR band groups and word lists |
 | `/collections/[collectionId]?kind=user\|system` | Authenticated | User vocabulary or system catalog detail |
 | `/review?collectionId=...` | Authenticated | Due-word review for a selected collection |
 | `/tests?tab=mock_tests&year=...` | Authenticated | TOEIC test catalog and per-test progress |

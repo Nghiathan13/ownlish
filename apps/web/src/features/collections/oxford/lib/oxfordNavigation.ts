@@ -7,24 +7,36 @@ export function parseOxfordBand(value: string | null): OxfordBand | null {
   return OXFORD_BANDS.find((band) => band === value) ?? null;
 }
 
+export function formatOxfordPartSegment(group: number) {
+  return `part-${group}`;
+}
+
 export function parseOxfordGroup(value: string | null) {
-  if (!value || !/^\d+$/.test(value)) {
+  if (!value) {
     return null;
   }
 
-  const group = Number(value);
+  const partMatch = /^part-(\d+)$/i.exec(value);
+  if (partMatch) {
+    const group = Number(partMatch[1]);
+    return Number.isSafeInteger(group) && group > 0 ? group : null;
+  }
 
-  return Number.isSafeInteger(group) && group > 0 ? group : null;
+  // Legacy numeric path segment: /oxford/A1/2
+  if (/^\d+$/.test(value)) {
+    const group = Number(value);
+    return Number.isSafeInteger(group) && group > 0 ? group : null;
+  }
+
+  return null;
 }
 
 export function getOxfordPath(band: OxfordBand, group?: number) {
-  const params = new URLSearchParams({ band, tab: "oxford" });
-
   if (group) {
-    params.set("group", String(group));
+    return `/collections/oxford/${band}/${formatOxfordPartSegment(group)}`;
   }
 
-  return `/collections?${params}`;
+  return `/collections/oxford/${band}`;
 }
 
 export function getOxfordGroupRange(group: number, totalWords: number) {

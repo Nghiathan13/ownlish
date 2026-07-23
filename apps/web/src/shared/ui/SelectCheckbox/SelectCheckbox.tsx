@@ -42,7 +42,7 @@ export function SelectCheckbox({
           "flex size-4 shrink-0 items-center justify-center rounded border peer-focus-visible:ring-2 peer-focus-visible:ring-focus-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background",
           checked || indeterminate
             ? "border-foreground bg-foreground"
-            : "border-border bg-muted hover:border-foreground",
+            : "border-border bg-transparent hover:border-foreground",
         )}
       >
         {checked ? (

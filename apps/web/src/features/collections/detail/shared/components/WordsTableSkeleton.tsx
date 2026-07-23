@@ -43,7 +43,7 @@ export function WordsTableSkeleton({
       />
       <div
         className={classNames(
-          "mx-4 mb-4 flex flex-col gap-3 overflow-auto rounded-xl border border-border p-4 md:hidden",
+          "mx-4 mb-4 flex flex-col gap-3 overflow-auto rounded-xl bg-surface p-4 shadow-card md:hidden dark:border dark:border-border",
           className,
         )}
       >

@@ -143,38 +143,41 @@ export function OxfordGroupWordsPanel({
 
   return (
     <>
-      <div className="m-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Link
-          className={iconTextButtonClassName(
-            "w-fit shrink-0",
-            "border-0 bg-surface shadow-card hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:border dark:border-border",
-          )}
-          href={getOxfordPath(band)}
-        >
-          Back to {band}
-        </Link>
-        {canImport && selectedCount > 0 ? (
-          <button
+      <div className="m-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Link
             className={iconTextButtonClassName(
-              "w-fit shrink-0",
-              "border-foreground bg-foreground text-background",
+              "w-fit shrink-0 border border-surface bg-surface shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
             )}
-            disabled={isImporting || query.isLoading || words.length === 0}
-            onClick={() => {
-              void handleImport(
-                selectedDefinitions.map((item) => item.definition.id),
-              );
-            }}
-            type="button"
+            href={getOxfordPath(band)}
           >
-            {importLabel}
-          </button>
-        ) : null}
-        <WordsColumnPicker
-          columnVisibility={columnVisibility}
-          columns={CATALOG_TOGGLEABLE_COLUMNS}
-          onToggleColumn={toggleColumn}
-        />
+            Back to {band}
+          </Link>
+          {canImport && selectedCount > 0 ? (
+            <button
+              className={iconTextButtonClassName(
+                "w-fit shrink-0",
+                "border-foreground bg-foreground text-background",
+              )}
+              disabled={isImporting || query.isLoading || words.length === 0}
+              onClick={() => {
+                void handleImport(
+                  selectedDefinitions.map((item) => item.definition.id),
+                );
+              }}
+              type="button"
+            >
+              {importLabel}
+            </button>
+          ) : null}
+        </div>
+        <div className="self-end sm:self-auto">
+          <WordsColumnPicker
+            columnVisibility={columnVisibility}
+            columns={CATALOG_TOGGLEABLE_COLUMNS}
+            onToggleColumn={toggleColumn}
+          />
+        </div>
       </div>
 
       {resultMessage ? (

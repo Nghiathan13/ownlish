@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
-  getCollectionsListPath,
-  parseCollectionCategoryTab,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
 import { CreateCollectionModal } from "@/features/collections/shared/components/CreateCollectionModal";
 import { EditCollectionModal } from "@/features/collections/shared/components/EditCollectionModal";
 import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
-import { CollectionsPageSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
 import { OxfordBandTabs } from "@/features/collections/oxford/components/OxfordBandTabs";
 import { OxfordCollections } from "@/features/collections/oxford/components/OxfordCollections";
 import {
@@ -21,32 +16,34 @@ import {
 import { useCollectionsListPage } from "@/features/collections/list/hooks/useCollectionsListPage";
 import { PageShell } from "@/shared/ui/PageShell";
 
-function CollectionsPageContent({
-  activeCategory,
-  bandParam,
-  groupParam,
-}: {
-  activeCategory: CollectionCategory;
-  bandParam: string | null;
-  groupParam: string | null;
-}) {
-  const page = useCollectionsListPage(activeCategory);
+type CollectionsPageProps = {
+  category: CollectionCategory;
+  bandParam?: string | null;
+  groupParam?: string | null;
+};
+
+export function CollectionsPage({
+  category,
+  bandParam = null,
+  groupParam = null,
+}: CollectionsPageProps) {
+  const page = useCollectionsListPage(category);
   const oxfordBand = parseOxfordBand(bandParam) ?? "A1";
   const oxfordGroup = parseOxfordGroup(groupParam);
 
   return (
     <PageShell>
-      {activeCategory === "oxford" && oxfordGroup === null ? (
+      {category === "oxford" && oxfordGroup === null ? (
         <div className="my-4 flex flex-wrap items-center gap-4 px-4 lg:my-8 lg:px-16">
-          <CollectionCategorySelect activeCategory={activeCategory} />
+          <CollectionCategorySelect activeCategory={category} />
           <OxfordBandTabs activeBand={oxfordBand} />
         </div>
-      ) : activeCategory !== "oxford" ? (
+      ) : category !== "oxford" ? (
         <div className="my-4 px-4 lg:my-8 lg:px-16">
-          <CollectionCategorySelect activeCategory={activeCategory} />
+          <CollectionCategorySelect activeCategory={category} />
         </div>
       ) : null}
-      {activeCategory === "oxford" ? (
+      {category === "oxford" ? (
         <OxfordCollections
           bandParam={bandParam}
           collections={page.activeCollections}
@@ -90,35 +87,5 @@ function CollectionsPageContent({
         userId={page.userId}
       />
     </PageShell>
-  );
-}
-
-export function CollectionsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const bandParam = searchParams.get("band");
-  const groupParam = searchParams.get("group");
-  const activeCategory: CollectionCategory =
-    parseCollectionCategoryTab(tabParam) ?? "user";
-  const isTabParamValid = tabParam === activeCategory;
-
-  useEffect(() => {
-    if (!isTabParamValid) {
-      router.replace(getCollectionsListPath(activeCategory), { scroll: false });
-    }
-  }, [activeCategory, isTabParamValid, router]);
-
-  if (!isTabParamValid) {
-    return <CollectionsPageSkeleton />;
-  }
-
-  return (
-    <CollectionsPageContent
-      key={activeCategory}
-      activeCategory={activeCategory}
-      bandParam={bandParam}
-      groupParam={groupParam}
-    />
   );
 }

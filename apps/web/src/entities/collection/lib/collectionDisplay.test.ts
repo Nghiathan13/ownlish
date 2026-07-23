@@ -5,6 +5,7 @@ import {
   findCollectionById,
   getCollectionCategory,
   getCollectionPath,
+  getCollectionsLegacyRedirectPath,
   getCollectionsListCategory,
   getCollectionsListPath,
   getUserOwnedCollections,
@@ -55,10 +56,26 @@ describe("collection display helpers", () => {
   });
 
   it("builds collections list paths from category", () => {
-    expect(getCollectionsListPath("user")).toBe("/collections?tab=user");
-    expect(getCollectionsListPath("oxford")).toBe("/collections?tab=oxford");
+    expect(getCollectionsListPath("user")).toBe("/collections/user");
+    expect(getCollectionsListPath("oxford")).toBe("/collections/oxford/A1");
+    expect(getCollectionsListPath("toeic")).toBe("/collections/toeic");
     expect(parseCollectionCategoryTab("toeic")).toBe("toeic");
     expect(parseCollectionCategoryTab("invalid")).toBeNull();
+  });
+
+  it("maps legacy query collections URLs to path URLs", () => {
+    expect(
+      getCollectionsLegacyRedirectPath(
+        new URLSearchParams("tab=oxford&band=B1&group=2"),
+      ),
+    ).toBe("/collections/oxford/B1/part-2");
+    expect(
+      getCollectionsLegacyRedirectPath(new URLSearchParams("tab=oxford")),
+    ).toBe("/collections/oxford/A1");
+    expect(
+      getCollectionsLegacyRedirectPath(new URLSearchParams("tab=toeic")),
+    ).toBe("/collections/toeic");
+    expect(getCollectionsLegacyRedirectPath(new URLSearchParams())).toBeNull();
   });
 
   it("resolves collections list category from collection kind", () => {

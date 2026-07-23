@@ -7,6 +7,7 @@ import { CollectionCategoryEmptyState } from "@/features/collections/list/compon
 import { CollectionsGridSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
 import { CollectionsRetryPanel } from "@/features/collections/shared/components/CollectionsRetryPanel";
 import {
+  formatOxfordPartSegment,
   getOxfordPath,
   OXFORD_GROUP_SIZE,
   parseOxfordBand,
@@ -45,15 +46,25 @@ export function OxfordCollections({
   const groupCount = collection
     ? Math.ceil(collection.itemCount / OXFORD_GROUP_SIZE)
     : 0;
+  const isGroupOutOfRange =
+    group !== null && groupCount > 0 && group > groupCount;
+  const isGroupSegmentCanonical =
+    groupParam === null ||
+    (group !== null && groupParam === formatOxfordPartSegment(group));
   const shouldResetPath =
     bandParam !== band ||
-    (groupParam !== null && (group === null || group > groupCount));
+    (groupParam !== null && (group === null || isGroupOutOfRange)) ||
+    (group !== null && !isGroupSegmentCanonical);
 
   useEffect(() => {
     if (!isLoading && shouldResetPath) {
-      router.replace(getOxfordPath(band), { scroll: false });
+      const nextPath =
+        group !== null && !isGroupOutOfRange
+          ? getOxfordPath(band, group)
+          : getOxfordPath(band);
+      router.replace(nextPath, { scroll: false });
     }
-  }, [band, isLoading, router, shouldResetPath]);
+  }, [band, group, isGroupOutOfRange, isLoading, router, shouldResetPath]);
 
   if (isLoading || shouldResetPath) {
     return <CollectionsGridSkeleton />;

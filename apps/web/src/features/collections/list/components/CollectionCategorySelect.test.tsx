@@ -22,6 +22,6 @@ describe("CollectionCategorySelect", () => {
     );
     await user.click(screen.getByRole("option", { name: "TOEIC" }));
 
-    expect(mocks.push).toHaveBeenCalledWith("/collections?tab=toeic");
+    expect(mocks.push).toHaveBeenCalledWith("/collections/toeic");
   });
 });

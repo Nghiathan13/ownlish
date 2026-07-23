@@ -26,7 +26,7 @@ describe("OxfordWordGroupGrid", () => {
     expect(screen.getByRole("heading", { name: "A1 - Part 1" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open A1 - Part 1" })).toHaveAttribute(
       "href",
-      "/collections?band=A1&tab=oxford&group=1",
+      "/collections/oxford/A1/part-1",
     );
     expect(screen.getByRole("heading", { name: "A1 - Part 48" }))
       .toHaveTextContent("A1 - Part 48");

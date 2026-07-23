@@ -103,7 +103,11 @@ export function getCollectionsListCategory(
 }
 
 export function getCollectionsListPath(category: CollectionCategory) {
-  return `/collections?tab=${category}`;
+  if (category === "oxford") {
+    return "/collections/oxford/A1";
+  }
+
+  return `/collections/${category}`;
 }
 
 export function parseCollectionCategoryTab(
@@ -116,6 +120,34 @@ export function parseCollectionCategoryTab(
   return collectionCategoryTabs.some((tab) => tab.key === value)
     ? (value as CollectionCategory)
     : null;
+}
+
+export function getCollectionsLegacyRedirectPath(
+  searchParams: URLSearchParams | { get: (key: string) => string | null },
+): string | null {
+  const tabParam = searchParams.get("tab");
+  if (tabParam == null) {
+    return null;
+  }
+
+  const category = parseCollectionCategoryTab(tabParam) ?? "user";
+
+  if (category !== "oxford") {
+    return getCollectionsListPath(category);
+  }
+
+  const bandParam = searchParams.get("band");
+  const groupParam = searchParams.get("group");
+  const resolvedBand =
+    bandParam && ["A1", "A2", "B1", "B2", "C1"].includes(bandParam)
+      ? bandParam
+      : "A1";
+
+  if (groupParam && /^\d+$/.test(groupParam) && Number(groupParam) > 0) {
+    return `/collections/oxford/${resolvedBand}/part-${groupParam}`;
+  }
+
+  return `/collections/oxford/${resolvedBand}`;
 }
 
 export function parseCollectionKindHint(
