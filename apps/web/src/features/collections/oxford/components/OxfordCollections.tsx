@@ -1,88 +1,104 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { CollectionsGridSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
+import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";
 import { CollectionsRetryPanel } from "@/features/collections/shared/components/CollectionsRetryPanel";
-import {
-  formatOxfordPartSegment,
-  getOxfordPath,
-  parseOxfordBand,
-  parseOxfordGroup,
-} from "@/features/collections/oxford/lib/oxfordNavigation";
 import { useOxfordCollectionMetaQuery } from "@/features/collections/oxford/model/useOxfordCollectionMetaQuery";
+import { useOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
+import {
+  isAuthenticatedStatus,
+  useAuthSession,
+} from "@/features/auth/hooks/useAuthSession";
+import { OxfordBandTabs } from "./OxfordBandTabs";
 import { OxfordGroupWordsPanel } from "./OxfordGroupWordsPanel";
 import { OxfordWordGroupGrid } from "./OxfordWordGroupGrid";
 
 type OxfordCollectionsProps = {
   bandParam: string | null;
   groupParam: string | null;
-  isAuthenticated: boolean;
-  userId: string | null;
 };
 
 export function OxfordCollections({
   bandParam,
   groupParam,
-  isAuthenticated,
-  userId,
 }: OxfordCollectionsProps) {
-  const router = useRouter();
-  const band = parseOxfordBand(bandParam) ?? "A1";
-  const group = parseOxfordGroup(groupParam);
-  const isGroupSegmentCanonical =
-    groupParam === null ||
-    (group !== null && groupParam === formatOxfordPartSegment(group));
-  const shouldResetPath =
-    bandParam !== band ||
-    (groupParam !== null && group === null) ||
-    (group !== null && !isGroupSegmentCanonical);
-  const metaQuery = useOxfordCollectionMetaQuery({
-    band,
-    enabled: group === null && !shouldResetPath,
+  const { status, user } = useAuthSession();
+  const isAuthenticated = isAuthenticatedStatus(status);
+  const navigation = useOxfordNavigation({
+    bandParam,
+    groupParam,
     isAuthenticated,
-    userId,
+  });
+  const metaQuery = useOxfordCollectionMetaQuery({
+    band: navigation.band,
+    enabled: navigation.group === null && !navigation.shouldResetPath,
+    isAuthenticated,
   });
 
-  useEffect(() => {
-    if (shouldResetPath) {
-      router.replace(group === null ? getOxfordPath(band) : getOxfordPath(band, group), {
-        scroll: false,
-      });
-    }
-  }, [band, group, router, shouldResetPath]);
-
-  if (shouldResetPath) {
+  if (navigation.shouldResetPath) {
     return <CollectionsGridSkeleton />;
   }
 
-  if (group) {
+  if (navigation.group) {
     return (
       <OxfordGroupWordsPanel
-        band={band}
-        group={group}
+        band={navigation.band}
+        group={navigation.group}
         isAuthenticated={isAuthenticated}
-        userId={userId}
+        onBack={navigation.navigateOverview}
+        userId={user?.id ?? null}
       />
     );
   }
 
+  const overviewHeader = (
+    <div className="my-4 flex flex-wrap items-center gap-4 px-4 lg:my-8 lg:px-16">
+      <CollectionCategorySelect activeCategory="oxford" />
+      <OxfordBandTabs
+        activeBand={navigation.band}
+        onSelectBand={navigation.navigateBand}
+      />
+    </div>
+  );
+
   if (metaQuery.isLoading) {
-    return <CollectionsGridSkeleton />;
+    return (
+      <>
+        {overviewHeader}
+        <CollectionsGridSkeleton />
+      </>
+    );
   }
 
   if (metaQuery.error) {
     return (
-      <CollectionsRetryPanel
-        message={metaQuery.error}
-        onRetry={metaQuery.reload}
-      />
+      <>
+        {overviewHeader}
+        <CollectionsRetryPanel
+          message={metaQuery.error}
+          onRetry={metaQuery.reload}
+        />
+      </>
     );
   }
 
   if (!metaQuery.meta) {
-    return <CollectionsGridSkeleton />;
+    return (
+      <>
+        {overviewHeader}
+        <CollectionsGridSkeleton />
+      </>
+    );
   }
 
-  return <OxfordWordGroupGrid band={band} itemCount={metaQuery.meta.itemCount} />;
+  return (
+    <>
+      {overviewHeader}
+      <OxfordWordGroupGrid
+        band={navigation.band}
+        itemCount={metaQuery.meta.itemCount}
+        onOpenPart={navigation.navigatePart}
+      />
+    </>
+  );
 }

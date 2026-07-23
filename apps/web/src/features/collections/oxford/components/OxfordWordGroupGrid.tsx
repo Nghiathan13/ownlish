@@ -5,17 +5,20 @@ import {
   OXFORD_GROUP_SIZE,
   type OxfordBand,
 } from "@/features/collections/oxford/lib/oxfordNavigation";
+import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
 
 type OxfordWordGroupGridProps = {
   band: OxfordBand;
   itemCount: number;
+  onOpenPart: (part: number) => void;
 };
 
 export function OxfordWordGroupGrid({
   band,
   itemCount,
+  onOpenPart,
 }: OxfordWordGroupGridProps) {
   const groupCount = Math.ceil(itemCount / OXFORD_GROUP_SIZE);
 
@@ -34,6 +37,15 @@ export function OxfordWordGroupGrid({
               aria-label={`Open ${band} - Part ${group}`}
               className="absolute inset-0 rounded-[16px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
               href={getOxfordPath(band, group)}
+              onClick={(event) => {
+                if (!shouldHandleOxfordNavigation(event)) {
+                  return;
+                }
+
+                event.preventDefault();
+                onOpenPart(group);
+              }}
+              prefetch={false}
             />
             <div className="pointer-events-none relative">
               <h2 className="text-lg font-semibold">

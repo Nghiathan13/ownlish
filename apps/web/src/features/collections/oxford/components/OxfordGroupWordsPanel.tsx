@@ -16,6 +16,7 @@ import {
 } from "@/features/collections/oxford/lib/oxfordNavigation";
 import { useImportOxfordPart } from "@/features/collections/oxford/model/useImportOxfordPart";
 import { useOxfordPartQuery } from "@/features/collections/oxford/model/useOxfordPartQuery";
+import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
 import { WordsColumnPicker } from "@/features/collections/detail/shared/components";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
@@ -23,6 +24,7 @@ type OxfordGroupWordsPanelProps = {
   band: OxfordBand;
   group: number;
   isAuthenticated: boolean;
+  onBack: () => void;
   userId: string | null;
 };
 
@@ -32,13 +34,13 @@ export function OxfordGroupWordsPanel({
   band,
   group,
   isAuthenticated,
+  onBack,
   userId,
 }: OxfordGroupWordsPanelProps) {
   const query = useOxfordPartQuery({
     band,
     isAuthenticated,
     part: group,
-    userId,
   });
   const { columnVisibility, toggleColumn } = useCatalogTableColumnVisibility();
   const [selectedDefinitionIds, setSelectedDefinitionIds] = useState<
@@ -132,6 +134,15 @@ export function OxfordGroupWordsPanel({
               "w-fit shrink-0 border border-surface bg-surface shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
             )}
             href={getOxfordPath(band)}
+            onClick={(event) => {
+              if (!shouldHandleOxfordNavigation(event)) {
+                return;
+              }
+
+              event.preventDefault();
+              onBack();
+            }}
+            prefetch={false}
           >
             Back
           </Link>
