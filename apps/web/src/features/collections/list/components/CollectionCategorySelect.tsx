@@ -10,10 +10,12 @@ import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 type CollectionCategorySelectProps = {
   activeCategory: CollectionCategory;
+  onCategoryChange?: (category: CollectionCategory) => void;
 };
 
 export function CollectionCategorySelect({
   activeCategory,
+  onCategoryChange,
 }: CollectionCategorySelectProps) {
   const router = useRouter();
 
@@ -23,6 +25,8 @@ export function CollectionCategorySelect({
       className="w-fit min-w-[10rem] max-w-[14rem]"
       onChange={(category) => {
         const path = getCollectionsListPath(category);
+
+        onCategoryChange?.(category);
 
         if (window.location.pathname !== path) {
           window.history.pushState(null, "", path);

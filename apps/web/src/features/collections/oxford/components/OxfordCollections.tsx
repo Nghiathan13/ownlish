@@ -1,5 +1,6 @@
 "use client";
 
+import type { CollectionCategory } from "@/entities/collection/lib/collectionDisplay";
 import { CollectionsGridSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
 import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";
 import { CollectionsRetryPanel } from "@/features/collections/shared/components/CollectionsRetryPanel";
@@ -16,11 +17,13 @@ import { OxfordWordGroupGrid } from "./OxfordWordGroupGrid";
 type OxfordCollectionsProps = {
   bandParam: string | null;
   groupParam: string | null;
+  onCategoryChange?: (category: CollectionCategory) => void;
 };
 
 export function OxfordCollections({
   bandParam,
   groupParam,
+  onCategoryChange,
 }: OxfordCollectionsProps) {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
@@ -53,7 +56,10 @@ export function OxfordCollections({
 
   const overviewHeader = (
     <div className="my-4 flex flex-wrap items-center gap-4 px-4 lg:my-8 lg:px-16">
-      <CollectionCategorySelect activeCategory="oxford" />
+      <CollectionCategorySelect
+        activeCategory="oxford"
+        onCategoryChange={onCategoryChange}
+      />
       <OxfordBandTabs
         activeBand={navigation.band}
         onSelectBand={navigation.navigateBand}

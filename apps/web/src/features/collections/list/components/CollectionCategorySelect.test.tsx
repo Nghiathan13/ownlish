@@ -34,4 +34,28 @@ describe("CollectionCategorySelect", () => {
       mocks.push.mock.invocationCallOrder[0],
     );
   });
+
+  it("notifies the parent before starting route navigation", async () => {
+    const user = userEvent.setup();
+    const onCategoryChange = vi.fn();
+
+    render(
+      <CollectionCategorySelect
+        activeCategory="user"
+        onCategoryChange={onCategoryChange}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Collection category: My Collections",
+      }),
+    );
+    await user.click(screen.getByRole("option", { name: "Oxford" }));
+
+    expect(onCategoryChange).toHaveBeenCalledWith("oxford");
+    expect(onCategoryChange.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.push.mock.invocationCallOrder[0],
+    );
+  });
 });
