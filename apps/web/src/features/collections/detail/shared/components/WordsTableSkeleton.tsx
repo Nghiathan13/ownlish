@@ -43,16 +43,13 @@ export function WordsTableSkeleton({
       />
       <div
         className={classNames(
-          "mx-4 mb-4 flex flex-col gap-3 overflow-auto rounded-xl bg-surface p-4 shadow-card md:hidden dark:border dark:border-border",
+          "mx-4 mb-4 grid content-start gap-3 overflow-auto [grid-template-columns:repeat(auto-fit,minmax(max(300px,calc(50%-0.375rem)),1fr))] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:hidden",
           className,
         )}
       >
         {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
           <Skeleton
-            className={classNames(
-              "h-24 w-full rounded-lg",
-              index < SKELETON_ROW_COUNT - 1 && "border-b border-border pb-3",
-            )}
+            className="h-24 min-w-0 w-full rounded-xl shadow-card"
             key={index}
           />
         ))}

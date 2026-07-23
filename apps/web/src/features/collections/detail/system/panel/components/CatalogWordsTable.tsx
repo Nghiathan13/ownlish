@@ -65,7 +65,7 @@ export function CatalogWordsTable({
     ? "Try a different search term."
     : "This collection does not have any catalog words yet.";
   const mobileScrollClassName = classNames(
-    "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 gap-3 overflow-auto rounded-xl bg-surface p-3 shadow-card md:hidden dark:border dark:border-border",
+    "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 content-start gap-3 overflow-auto [grid-template-columns:repeat(auto-fit,minmax(max(300px,calc(50%-0.375rem)),1fr))] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:hidden",
     className,
   );
 
@@ -92,124 +92,94 @@ export function CatalogWordsTable({
             onRetry={onRetry}
           />
         ) : (
-          words.map((word) => {
-          const wordRows = expandCatalogWordsToDefinitionRows([word]);
-          const uniformIpaUk = hasUniformIpaUk(word.definitions);
-          const uniformIpaUs = hasUniformIpaUs(word.definitions);
-          const showHeaderIpa =
-            (uniformIpaUk && showColumn("ipaUk")) ||
-            (uniformIpaUs && showColumn("ipaUs"));
+          rows.map((row) => {
+            const { word, definition } = row;
 
-          return (
-            <article
-              key={word.id}
-              className="rounded-lg border border-border bg-surface p-4"
-            >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <h2 className="text-base font-semibold">{word.word}</h2>
-                {showHeaderIpa ? (
-                  <div className="grid shrink-0 gap-0.5 text-right text-base text-muted-foreground">
-                    {uniformIpaUk && showColumn("ipaUk") ? (
-                      <DefinitionIpaValueCell
-                        value={getSharedIpaUk(word.definitions)}
-                      />
+            return (
+              <article
+                key={getDefinitionRowKey(row)}
+                className={classNames(
+                  "min-w-0 rounded-xl border border-surface bg-surface p-4 shadow-card dark:border-border",
+                  definition && "cursor-pointer",
+                )}
+                onClick={
+                  definition
+                    ? () => onToggleDefinition(definition.id)
+                    : undefined
+                }
+              >
+                <div className="mb-3 flex items-center gap-2">
+                  <h2 className="min-w-0 truncate text-base font-semibold">
+                    {word.word}
+                  </h2>
+                  {showColumn("type") ? (
+                    <DefinitionTypeCell definition={definition} />
+                  ) : null}
+                  <div className="ml-auto flex shrink-0 items-center gap-2">
+                    {definition?.band ? (
+                      <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-sm text-muted-foreground">
+                        {definition.band}
+                      </span>
                     ) : null}
-                    {uniformIpaUs && showColumn("ipaUs") ? (
-                      <DefinitionIpaValueCell
-                        value={getSharedIpaUs(word.definitions)}
-                      />
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="text-base">
-                {wordRows.map((row) => {
-                  const definition = row.definition;
-
-                  return (
-                    <div
-                      key={getDefinitionRowKey(row)}
-                      className={classNames(
-                        "grid gap-3",
-                        !row.isFirstInWord &&
-                          "mt-2 border-t border-border pt-2",
-                      )}
-                    >
-                      {definition ? (
+                    {definition &&
+                    selectedDefinitionIds.has(definition.id) ? (
+                      <span
+                        onClick={(event) => event.stopPropagation()}
+                        onKeyDown={(event) => event.stopPropagation()}
+                      >
                         <SelectCheckbox
-                          checked={selectedDefinitionIds.has(definition.id)}
+                          checked
                           label={`Select ${word.word}`}
                           onChange={() => onToggleDefinition(definition.id)}
                         />
-                      ) : null}
-                      {!uniformIpaUk && showColumn("ipaUk") ? (
-                        <dl className="grid grid-cols-1 gap-3">
-                          <div>
-                            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              IPA UK
-                            </dt>
-                            <dd className="mt-1">
-                              <DefinitionIpaValueCell
-                                value={getIpaFieldValue(row.definition, "uk")}
-                              />
-                            </dd>
-                          </div>
-                        </dl>
-                      ) : null}
-                      {!uniformIpaUs && showColumn("ipaUs") ? (
-                        <dl className="grid grid-cols-1 gap-3">
-                          <div>
-                            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              IPA US
-                            </dt>
-                            <dd className="mt-1">
-                              <DefinitionIpaValueCell
-                                value={getIpaFieldValue(row.definition, "us")}
-                              />
-                            </dd>
-                          </div>
-                        </dl>
-                      ) : null}
-                      <dl className="grid grid-cols-2 gap-3">
-                        {showColumn("type") ? (
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Type
-                          </dt>
-                          <dd className="mt-1">
-                            <DefinitionTypeCell definition={row.definition} />
-                          </dd>
-                        </div>
-                        ) : null}
-                        {showColumn("meaning") ? (
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Meaning
-                          </dt>
-                          <dd className="mt-1">
-                            <DefinitionMeaningCell definition={row.definition} />
-                          </dd>
-                        </div>
-                        ) : null}
-                        {showColumn("example") ? (
-                        <div className="col-span-2">
-                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Example
-                          </dt>
-                          <dd className="mt-1">
-                            <DefinitionExampleCell definition={row.definition} />
-                          </dd>
-                        </div>
-                        ) : null}
-                      </dl>
-                    </div>
-                  );
-                })}
-              </div>
-            </article>
-          );
-        })
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                {(showColumn("ipaUk") || showColumn("ipaUs")) &&
+                (getIpaFieldValue(definition, "uk") ||
+                  getIpaFieldValue(definition, "us")) ? (
+                  <div className="mb-3 flex flex-wrap gap-x-3 gap-y-0.5 text-base text-muted-foreground">
+                    {showColumn("ipaUk") ? (
+                      <span className="inline-flex items-baseline gap-1">
+                        <span>UK:</span>
+                        <DefinitionIpaValueCell
+                          value={getIpaFieldValue(definition, "uk")}
+                        />
+                      </span>
+                    ) : null}
+                    {showColumn("ipaUs") ? (
+                      <span className="inline-flex items-baseline gap-1">
+                        <span>US:</span>
+                        <DefinitionIpaValueCell
+                          value={getIpaFieldValue(definition, "us")}
+                        />
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="grid gap-3 text-base">
+                  <dl className="grid grid-cols-2 gap-3">
+                    {showColumn("meaning") ? (
+                      <div>
+                        <DefinitionMeaningCell
+                          definition={definition}
+                          showBand={false}
+                        />
+                      </div>
+                    ) : null}
+                    {showColumn("example") ? (
+                      <div className="col-span-2 text-muted-foreground">
+                        <DefinitionExampleCell definition={definition} />
+                      </div>
+                    ) : null}
+                  </dl>
+                </div>
+              </article>
+            );
+          })
         )}
       </div>
 
@@ -415,8 +385,10 @@ function DefinitionTypeCell({
 
 function DefinitionMeaningCell({
   definition,
+  showBand = true,
 }: {
   definition: CatalogDefinition | null;
+  showBand?: boolean;
 }) {
   if (!definition) {
     return <span className="text-muted-foreground">-</span>;
@@ -427,7 +399,7 @@ function DefinitionMeaningCell({
   return (
     <div className="flex items-start justify-between gap-3">
       <p className="min-w-0 flex-1 break-words">{meaning}</p>
-      {definition.band ? (
+      {showBand && definition.band ? (
         <span className="inline-flex shrink-0 rounded-full border border-border px-2 py-0.5 text-sm text-muted-foreground">
           {definition.band}
         </span>

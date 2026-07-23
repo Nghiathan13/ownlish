@@ -143,8 +143,8 @@ export function OxfordGroupWordsPanel({
 
   return (
     <>
-      <div className="m-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="m-4 flex flex-row items-center justify-between gap-2">
+        <div className="flex flex-row items-center gap-2">
           <Link
             className={iconTextButtonClassName(
               "w-fit shrink-0 border border-surface bg-surface shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
@@ -171,13 +171,11 @@ export function OxfordGroupWordsPanel({
             </button>
           ) : null}
         </div>
-        <div className="self-end sm:self-auto">
-          <WordsColumnPicker
-            columnVisibility={columnVisibility}
-            columns={CATALOG_TOGGLEABLE_COLUMNS}
-            onToggleColumn={toggleColumn}
-          />
-        </div>
+        <WordsColumnPicker
+          columnVisibility={columnVisibility}
+          columns={CATALOG_TOGGLEABLE_COLUMNS}
+          onToggleColumn={toggleColumn}
+        />
       </div>
 
       {resultMessage ? (

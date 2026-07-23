@@ -80,7 +80,7 @@ export function TableMobileState({
 }: Omit<TableBodyStateProps, "columnCount">) {
   if (isLoading) {
     return (
-      <p className="rounded-lg border border-border p-6 text-sm text-muted-foreground">
+      <p className="col-span-full rounded-lg border border-border p-6 text-sm text-muted-foreground">
         {loadingMessage}
       </p>
     );
@@ -88,7 +88,7 @@ export function TableMobileState({
 
   if (error) {
     return (
-      <div className="grid gap-4 rounded-lg border border-border p-6">
+      <div className="col-span-full grid gap-4 rounded-lg border border-border p-6">
         <p className="text-sm text-danger">{error}</p>
         {onRetry ? (
           <button
@@ -105,7 +105,7 @@ export function TableMobileState({
 
   if (isEmpty) {
     return (
-      <div className="rounded-lg border border-border p-6">
+      <div className="col-span-full rounded-lg border border-border p-6">
         <h2 className="mb-2 text-xl font-semibold">{emptyTitle}</h2>
         <p className="text-muted-foreground">{emptyDescription}</p>
       </div>
