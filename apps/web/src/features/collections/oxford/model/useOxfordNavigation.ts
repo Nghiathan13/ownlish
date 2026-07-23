@@ -98,7 +98,7 @@ export function useOxfordNavigation({
     (nextLocation: OxfordLocation) => {
       const nextPath = getLocationPath(nextLocation);
 
-      if (nextPath === pendingPathRef.current || nextPath === routePath) {
+      if (nextPath === pendingPathRef.current) {
         return;
       }
 
@@ -119,7 +119,7 @@ export function useOxfordNavigation({
 
       router.push(nextPath, { scroll: false });
     },
-    [isAuthenticated, queryClient, routePath, router],
+    [isAuthenticated, queryClient, router],
   );
 
   const navigateBand = useCallback(
