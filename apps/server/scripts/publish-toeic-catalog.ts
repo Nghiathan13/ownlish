@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import {
   buildToeicCatalog,
+  copyToeicCatalogMediaArtifacts,
   writeToeicCatalogArtifacts,
 } from '../src/entities/toeic-catalog/lib/catalog-builder';
 
@@ -49,11 +50,20 @@ async function publishFile(
   objectPath: string,
   filePath: string,
 ): Promise<void> {
+  const extension = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+  const contentType =
+    extension === '.mp3'
+      ? 'audio/mpeg'
+      : extension === '.png'
+        ? 'image/png'
+        : extension === '.avif'
+          ? 'image/avif'
+          : 'application/json';
   const { error } = await bucket
     .from(bucketName)
     .upload(objectPath, readFileSync(filePath), {
       upsert: true,
-      contentType: 'application/json',
+      contentType,
       cacheControl: '0',
     });
 
@@ -82,6 +92,7 @@ async function main(): Promise<void> {
       outputDirectory,
       buildToeicCatalog(sourceDirectory),
     );
+    copyToeicCatalogMediaArtifacts(sourceDirectory, outputDirectory);
     const files = listFiles(outputDirectory).sort((left, right) => {
       const leftPath = relative(outputDirectory, left).replaceAll('\\', '/');
       const rightPath = relative(outputDirectory, right).replaceAll('\\', '/');

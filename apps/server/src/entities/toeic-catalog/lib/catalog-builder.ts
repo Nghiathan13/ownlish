@@ -1,11 +1,12 @@
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   readdirSync,
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, extname, join, relative } from 'node:path';
 
 type JsonRecord = Record<string, unknown>;
 type AnswerKey = 'A' | 'B' | 'C' | 'D';
@@ -93,6 +94,7 @@ const QUESTION_TOTALS: Record<number, number> = {
   7: 54,
 };
 const OPTION_KEYS: AnswerKey[] = ['A', 'B', 'C', 'D'];
+const MEDIA_EXTENSIONS = new Set(['.mp3', '.png', '.avif']);
 
 function fail(filePath: string, message: string): never {
   throw new Error(`${filePath}: ${message}`);
@@ -681,4 +683,33 @@ export function writeToeicCatalogArtifacts(
       `${JSON.stringify(part, null, 2)}\n`,
     );
   });
+}
+
+export function copyToeicCatalogMediaArtifacts(
+  sourceDirectory: string,
+  outputDirectory: string,
+): void {
+  const copyDirectory = (directory: string): void => {
+    readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
+      const sourcePath = join(directory, entry.name);
+
+      if (entry.isDirectory()) {
+        copyDirectory(sourcePath);
+        return;
+      }
+
+      if (!entry.isFile() || !MEDIA_EXTENSIONS.has(extname(entry.name))) {
+        return;
+      }
+
+      const outputPath = join(
+        outputDirectory,
+        relative(sourceDirectory, sourcePath),
+      );
+      mkdirSync(dirname(outputPath), { recursive: true });
+      copyFileSync(sourcePath, outputPath);
+    });
+  };
+
+  copyDirectory(sourceDirectory);
 }

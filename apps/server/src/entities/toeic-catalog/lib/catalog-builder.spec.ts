@@ -6,9 +6,10 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   buildToeicCatalog,
+  copyToeicCatalogMediaArtifacts,
   writeToeicCatalogArtifacts,
 } from './catalog-builder';
 
@@ -186,6 +187,40 @@ describe('buildToeicCatalog', () => {
       readFileSync(join(outputDirectory, 'ets_26/test_01/part_1.json'), 'utf8'),
     ) as { items: Array<Record<string, unknown>> };
     expect(writtenPart.items[0]).not.toHaveProperty('audioUrl');
+  });
+
+  it('copies source media while preserving its relative paths', () => {
+    const root = mkdtempSync(join(tmpdir(), 'engvocab-toeic-'));
+    temporaryDirectories.push(root);
+    const sourceDirectory = join(root, 'source');
+    const outputDirectory = join(root, 'out');
+    const audioPath = join(sourceDirectory, 'ets_26/test_01/audio/001.mp3');
+    const imagePath = join(sourceDirectory, 'ets_26/test_01/image/001.avif');
+    const ignoredPath = join(sourceDirectory, 'ets_26/test_01/part_1.json');
+
+    mkdirSync(dirname(audioPath), { recursive: true });
+    mkdirSync(dirname(imagePath), { recursive: true });
+    writeFileSync(audioPath, 'audio');
+    writeFileSync(imagePath, 'image');
+    writeFileSync(ignoredPath, '{}');
+
+    copyToeicCatalogMediaArtifacts(sourceDirectory, outputDirectory);
+
+    expect(
+      readFileSync(
+        join(outputDirectory, 'ets_26/test_01/audio/001.mp3'),
+        'utf8',
+      ),
+    ).toBe('audio');
+    expect(
+      readFileSync(
+        join(outputDirectory, 'ets_26/test_01/image/001.avif'),
+        'utf8',
+      ),
+    ).toBe('image');
+    expect(() =>
+      readFileSync(join(outputDirectory, 'ets_26/test_01/part_1.json')),
+    ).toThrow();
   });
 
   it('reports a missing option translation', () => {

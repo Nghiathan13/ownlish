@@ -76,15 +76,15 @@ bucket:
 pnpm toeic:publish -- --source /path/to/toeic --dry-run
 ```
 
-Publish the catalog, its part documents, and `grading-index.json`:
+Publish the catalog, its part documents, media files, and `grading-index.json`:
 
 ```bash
 pnpm toeic:publish -- --source /path/to/toeic
 ```
 
-The script uploads part documents before `catalog.json`, so the manifest only
-becomes visible after its referenced files are present. It does not upload media
-files or create the bucket.
+The script uploads part documents and media before `catalog.json`, so the
+manifest only becomes visible after its referenced files are present. It does
+not create the bucket.
 
 ## Environment Variables
 

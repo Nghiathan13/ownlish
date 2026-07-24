@@ -1,5 +1,6 @@
 import {
   buildToeicCatalog,
+  copyToeicCatalogMediaArtifacts,
   writeToeicCatalogArtifacts,
 } from '../src/entities/toeic-catalog/lib/catalog-builder';
 
@@ -19,9 +20,10 @@ const outputDirectory = readArgument('--out');
 const result = buildToeicCatalog(sourceDirectory);
 
 writeToeicCatalogArtifacts(outputDirectory, result);
+copyToeicCatalogMediaArtifacts(sourceDirectory, outputDirectory);
 
 console.log(
-  `Wrote catalog and server grading index to ${outputDirectory}`,
+  `Wrote catalog, media, and server grading index to ${outputDirectory}`,
 );
 if (result.incompleteTestIds.length > 0) {
   console.log(`Incomplete tests: ${result.incompleteTestIds.join(', ')}`);
