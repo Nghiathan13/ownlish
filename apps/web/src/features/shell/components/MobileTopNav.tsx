@@ -13,6 +13,7 @@ import {
   isAppNavLinkActive,
 } from "@/features/shell/lib/appNavLinks";
 import { classNames } from "@/shared/lib/classNames";
+import { useLocale, useT } from "@/shared/providers/LocaleProvider";
 import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DarkModeIcon } from "@/shared/ui/icons/DarkModeIcon";
@@ -20,11 +21,31 @@ import { LightModeIcon } from "@/shared/ui/icons/LightModeIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 import { MenuIcon } from "@/shared/ui/icons/MenuIcon";
 
+function MobileNavLocaleToggle() {
+  const { locale, setLocale, t } = useLocale();
+  const targetLocale = locale === "en" ? "vi" : "en";
+  const tooltip =
+    targetLocale === "en" ? t("locale.switchToEn") : t("locale.switchToVi");
+
+  return (
+    <button
+      aria-label={tooltip}
+      className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-xs font-semibold tracking-wide text-foreground hover:bg-hover-overlay"
+      onClick={() => setLocale(targetLocale)}
+      type="button"
+    >
+      {targetLocale.toUpperCase()}
+    </button>
+  );
+}
+
 function MobileNavThemeToggle() {
+  const t = useT();
   const { setTheme } = useTheme();
   const resolvedTheme = useResolvedTheme();
   const targetTheme = resolvedTheme === "dark" ? "light" : "dark";
-  const tooltip = `Switch to ${targetTheme} theme`;
+  const tooltip =
+    targetTheme === "light" ? t("theme.switchToLight") : t("theme.switchToDark");
   const Icon = targetTheme === "light" ? LightModeIcon : DarkModeIcon;
 
   return (
@@ -40,6 +61,7 @@ function MobileNavThemeToggle() {
 }
 
 export function MobileTopNav() {
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const { logout, updateProfile, user } = useAuthSession();
@@ -113,10 +135,11 @@ export function MobileTopNav() {
             <LogoIcon className="size-6 shrink-0" />
           </Link>
           <div className="flex items-center gap-2">
+            <MobileNavLocaleToggle />
             <MobileNavThemeToggle />
             <button
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? t("shell.closeMenu") : t("shell.openMenu")}
               className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-foreground hover:bg-hover-overlay"
               onClick={() => setMenuOpen((current) => !current)}
               type="button"
@@ -133,7 +156,7 @@ export function MobileTopNav() {
 
       {menuOpen ? (
         <div
-          aria-label="Menu"
+          aria-label={t("shell.openMenu")}
           aria-modal="true"
           className="fixed inset-0 z-40 flex flex-col bg-surface sm:hidden"
           role="dialog"
@@ -156,7 +179,7 @@ export function MobileTopNav() {
                   scroll={false}
                 >
                   <Icon className="size-6 shrink-0" />
-                  <span>{link.label}</span>
+                  <span>{t(link.labelKey)}</span>
                 </Link>
               );
             })}
@@ -179,7 +202,9 @@ export function MobileTopNav() {
                       scroll={false}
                     >
                       <Icon className="size-6 shrink-0" />
-                      <span>Admin {link.label}</span>
+                      <span>
+                        {t("shell.admin")} {t(link.labelKey)}
+                      </span>
                     </Link>
                   );
                 })

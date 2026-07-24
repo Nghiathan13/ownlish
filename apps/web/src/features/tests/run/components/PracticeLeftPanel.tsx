@@ -7,6 +7,8 @@ import { PartInstructionText } from "@/features/tests/run/components/PartInstruc
 import { useAutoplayMediaAudio } from "@/features/tests/run/hooks/useAutoplayMediaAudio";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PracticeLeftPanelProps = {
   partConfig: PartPracticeConfig;
@@ -37,6 +39,7 @@ export function PracticeLeftPanel({
   showContextTranslation = false,
   plain = false,
 }: PracticeLeftPanelProps) {
+  const t = useT();
   const instruction = getPartInstruction(partNumber, group);
   const showAudio =
     partConfig.leftPanel !== "none" &&
@@ -84,7 +87,9 @@ export function PracticeLeftPanel({
                 src={audioUrl}
               />
             ) : (
-              <p className="text-base text-muted-foreground">No audio available.</p>
+              <p className="text-base text-muted-foreground">
+                {t("tests.noAudioAvailable")}
+              </p>
             )
           ) : null}
 
@@ -92,14 +97,18 @@ export function PracticeLeftPanel({
             imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
               <img
-                alt={`Question ${questionNumber}`}
+                alt={formatMessage(t("tests.questionImageAlt"), {
+                  number: questionNumber,
+                })}
                 className="mx-auto max-h-[420px] w-full object-contain"
                 key={`image-${group.id}`}
                 onError={onMediaError}
                 src={imageUrl}
               />
             ) : partConfig.leftPanel === "audio-image" ? (
-              <p className="text-base text-muted-foreground">No image available.</p>
+              <p className="text-base text-muted-foreground">
+                {t("tests.noImageAvailable")}
+              </p>
             ) : null
           ) : null}
         </div>
@@ -113,15 +122,15 @@ export function PracticeLeftPanel({
           contentViSegments={group.contentViSegments}
           showEvidenceToggle
           showTranslation={showContextTranslation}
-          title="Transcript"
+          title={t("tests.transcript")}
         />
       ) : null}
 
       {partConfig.leftPanel === "question" ? (
         <div className="space-y-2">
-          <h3 className="text-base font-semibold">Question</h3>
+          <h3 className="text-base font-semibold">{t("tests.questionHeading")}</h3>
           <p className="whitespace-pre-wrap text-base select-text">
-            {questionText?.trim() || "No question text available."}
+            {questionText?.trim() || t("tests.noQuestionTextAvailable")}
           </p>
         </div>
       ) : null}

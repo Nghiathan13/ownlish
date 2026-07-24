@@ -26,7 +26,9 @@ import { WordsTableHead } from "@/features/collections/detail/shared/components/
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
 import { useWordRowHover } from "@/features/collections/detail/shared/hooks/useWordRowHover";
 import { getCatalogWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
+import { formatMessage } from "@/shared/i18n/messages";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 type CatalogWordsTableProps = {
@@ -58,6 +60,7 @@ export function CatalogWordsTable({
   someDefinitionsSelected,
   words,
 }: CatalogWordsTableProps) {
+  const t = useT();
   const { hoveredWordId, onWordRowMouseEnter, onWordRowMouseLeave } =
     useWordRowHover();
   const rows = expandCatalogWordsToDefinitionRows(words);
@@ -65,10 +68,13 @@ export function CatalogWordsTable({
     isCatalogColumnVisible(columnVisibility, columnId);
   const columnCount = getCatalogTableColumnCount(columnVisibility);
   const showBodyState = isLoading || Boolean(error) || words.length === 0;
-  const emptyTitle = hasSearch ? "No matching words." : "No words in this collection.";
+  const emptyTitle = hasSearch
+    ? t("wordsTable.noMatchingWords")
+    : t("wordsTable.noWordsInCollection");
   const emptyDescription = hasSearch
-    ? "Try a different search term."
-    : "This collection does not have any catalog words yet.";
+    ? t("wordsTable.tryDifferentSearch")
+    : t("wordsTable.noCatalogWordsYet");
+  const headColumns = getCatalogWordsTableHeadColumns(columnVisibility, t);
   const mobileScrollClassName = classNames(
     "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 content-start gap-3 overflow-auto [grid-template-columns:repeat(auto-fit,minmax(max(300px,calc(50%-0.375rem)),1fr))] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:hidden",
     className,
@@ -78,7 +84,7 @@ export function CatalogWordsTable({
     return (
       <WordsTableSkeleton
         className={className}
-        columns={getCatalogWordsTableHeadColumns(columnVisibility)}
+        columns={headColumns}
       />
     );
   }
@@ -93,7 +99,7 @@ export function CatalogWordsTable({
             error={error}
             isEmpty={words.length === 0}
             isLoading={isLoading}
-            loadingMessage="Loading words..."
+            loadingMessage={t("wordsTable.loadingWords")}
             onRetry={onRetry}
           />
         ) : (
@@ -134,7 +140,7 @@ export function CatalogWordsTable({
                       >
                         <SelectCheckbox
                           checked
-                          label={`Select ${word.word}`}
+                          label={formatMessage(t("wordsTable.selectWord"), { word: word.word })}
                           onChange={() => onToggleDefinition(definition.id)}
                         />
                       </span>
@@ -183,7 +189,7 @@ export function CatalogWordsTable({
         className={className}
         head={
           <WordsTableHead
-            columns={getCatalogWordsTableHeadColumns(columnVisibility)}
+            columns={headColumns}
             allDefinitionsSelected={allDefinitionsSelected}
             checkbox
             onToggleAllDefinitions={onToggleAllDefinitions}
@@ -199,7 +205,7 @@ export function CatalogWordsTable({
               error={error}
               isEmpty={words.length === 0}
               isLoading={isLoading}
-              loadingMessage="Loading words..."
+              loadingMessage={t("wordsTable.loadingWords")}
               onRetry={onRetry}
             />
           ) : (
@@ -233,7 +239,7 @@ export function CatalogWordsTable({
                     <div className="flex items-center">
                       <SelectCheckbox
                         checked={selectedDefinitionIds.has(definition.id)}
-                        label={`Select ${row.word.word}`}
+                        label={formatMessage(t("wordsTable.selectWord"), { word: row.word.word })}
                         onChange={() => onToggleDefinition(definition.id)}
                       />
                     </div>

@@ -12,6 +12,7 @@ import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTab
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { formatCatalogTestLabel } from "@/features/tests/shared/model/catalogTestSummary";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type MockTestsTabProps = {
   availableYears: ToeicYear[];
@@ -26,6 +27,7 @@ export function MockTestsTab({
   source,
   catalogError,
 }: MockTestsTabProps) {
+  const t = useT();
   const overview = useTestsOverview(selectedYear, source, catalogError);
   const selectedTest = overview.selectedTest;
 
@@ -47,13 +49,11 @@ export function MockTestsTab({
               onClick={() => void overview.reloadTests()}
               type="button"
             >
-              Retry
+              {t("tests.retry")}
             </button>
           </div>
         ) : overview.tests.length === 0 ? (
-          <p className="text-muted-foreground">
-            No tests available for this year yet.
-          </p>
+          <p className="text-muted-foreground">{t("tests.noTestsForYear")}</p>
         ) : (
           <div className={testOverviewCardGridClassName}>
             {overview.tests.map((test) => (
@@ -100,8 +100,8 @@ export function MockTestsTab({
           isConfirming={overview.isClearingHistory}
           onClose={overview.cancelClearHistory}
           onConfirm={() => void overview.confirmClearHistory()}
-          subtitle="This cannot be undone."
-          title="Clear practice history"
+          subtitle={t("tests.clearHistorySubtitle")}
+          title={t("tests.clearHistoryTitle")}
         />
       ) : null}
     </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { FlashcardIcon } from "@/shared/ui/icons/FlashcardIcon";
 import { KeyboardIcon } from "@/shared/ui/icons/KeyboardIcon";
 
@@ -28,6 +29,7 @@ export function ReviewModeToggle({
   onModeChange,
   orientation = "horizontal",
 }: ReviewModeToggleProps) {
+  const t = useT();
   const isVertical = orientation === "vertical";
 
   return (
@@ -47,7 +49,7 @@ export function ReviewModeToggle({
         type="button"
       >
         <FlashcardIcon className="size-7" />
-        Flashcard
+        {t("review.flashcard")}
       </button>
       <button
         aria-selected={mode === "typing"}
@@ -57,7 +59,7 @@ export function ReviewModeToggle({
         type="button"
       >
         <KeyboardIcon className="size-7" />
-        Keyboard
+        {t("review.keyboard")}
       </button>
     </div>
   );

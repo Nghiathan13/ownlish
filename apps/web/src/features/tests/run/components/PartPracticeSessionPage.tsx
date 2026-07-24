@@ -12,6 +12,7 @@ import {
 } from "@/features/tests/shared/lib/partPracticePaths";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PartPracticeSessionPageProps = {
   params: Promise<{
@@ -39,6 +40,7 @@ function PartPracticeSessionPageContent({
 }
 
 export function PartPracticeSessionPage({ params }: PartPracticeSessionPageProps) {
+  const t = useT();
   const resolved = use(params);
 
   if (!isPartPracticeSessionId(resolved.sessionId)) {
@@ -46,7 +48,9 @@ export function PartPracticeSessionPage({ params }: PartPracticeSessionPageProps
       <RequireAuth>
         <PageShell>
           <Panel>
-            <p className="text-muted-foreground">Invalid part practice route.</p>
+            <p className="text-muted-foreground">
+              {t("tests.invalidPartPracticeRoute")}
+            </p>
           </Panel>
         </PageShell>
       </RequireAuth>

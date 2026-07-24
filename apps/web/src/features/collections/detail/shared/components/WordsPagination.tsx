@@ -1,10 +1,14 @@
+"use client";
+
 import type { ReactNode } from "react";
 import {
   VOCABULARY_PAGE_SIZE_OPTIONS,
   isVocabularyPageSize,
   type VocabularyPageSize,
 } from "@/entities/vocab/lib/vocabPagination";
+import { formatMessage } from "@/shared/i18n/messages";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
@@ -32,6 +36,8 @@ export function WordsPagination({
   pageSize,
   total,
 }: WordsPaginationProps) {
+  const t = useT();
+
   if (total === 0) {
     return null;
   }
@@ -43,19 +49,22 @@ export function WordsPagination({
     <div className={classNames("flex flex-wrap items-center gap-2", className)}>
       <PaginationIconButton
         disabled={!canGoPrevious}
-        label="Previous page"
+        label={t("wordsTable.previousPage")}
         onClick={onPrevious}
       >
         <ArrowBackIcon />
       </PaginationIconButton>
 
       <p className="text-base text-muted-foreground">
-        Page {currentPage} of {totalPages}
+        {formatMessage(t("wordsTable.pageOf"), {
+          current: currentPage,
+          total: totalPages,
+        })}
       </p>
 
       <PaginationIconButton
         disabled={!canGoNext}
-        label="Next page"
+        label={t("wordsTable.nextPage")}
         onClick={onNext}
       >
         <ArrowForwardIcon />
@@ -63,7 +72,7 @@ export function WordsPagination({
 
       <div className="flex flex-wrap items-center gap-1 text-base text-muted-foreground">
         <select
-          aria-label="Words per page"
+          aria-label={t("wordsTable.wordsPerPage")}
           className="page-size-select h-8 w-fit min-w-0 cursor-pointer appearance-none rounded-md border border-border bg-transparent px-2.5 text-base text-foreground outline-none [field-sizing:content] hover:border-foreground"
           value={pageSize}
           onChange={(event) => {
@@ -76,11 +85,13 @@ export function WordsPagination({
         >
           {VOCABULARY_PAGE_SIZE_OPTIONS.map((option) => (
             <option key={option} value={option}>
-              {option} words
+              {formatMessage(t("wordsTable.wordsOption"), { count: option })}
             </option>
           ))}
         </select>
-        <span>of {total}</span>
+        <span>
+          {formatMessage(t("wordsTable.ofTotal"), { total })}
+        </span>
       </div>
     </div>
   );

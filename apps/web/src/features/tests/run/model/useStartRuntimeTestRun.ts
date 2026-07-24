@@ -30,6 +30,8 @@ import {
   writeTestPracticeGroupKey,
 } from "@/features/tests/shared/model/testPracticePosition";
 import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
+import { getLocaleSnapshot } from "@/shared/i18n/locale";
+import { translate } from "@/shared/i18n/messages";
 
 export type StartRuntimeTestRunVariables = {
   test: ToeicCatalogTest;
@@ -140,7 +142,10 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
     startRun,
     isStarting: mutation.isPending,
     startingTestKey: mutation.isPending ? mutation.variables?.test.id ?? null : null,
-    startError: toQueryErrorMessage(mutation.error, "Cannot start test."),
+    startError: toQueryErrorMessage(
+      mutation.error,
+      translate(getLocaleSnapshot(), "tests.cannotStartTest"),
+    ),
     resetStartState: mutation.reset,
   };
 }

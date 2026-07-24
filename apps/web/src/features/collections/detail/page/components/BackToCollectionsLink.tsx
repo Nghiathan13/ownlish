@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { getCollectionsListPath } from "@/entities/collection/lib/collectionDisplay";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 
 export function BackToCollectionsLink() {
+  const t = useT();
+
   return (
     <Link
-      aria-label="Back to My Collections"
+      aria-label={t("collections.backToMyCollections")}
       className={iconTextButtonClassName(
         "w-fit shrink-0",
         "border-foreground bg-foreground text-background",
@@ -14,7 +19,7 @@ export function BackToCollectionsLink() {
       href={getCollectionsListPath("user")}
     >
       <ArrowBackIcon />
-      Back
+      {t("collections.back")}
     </Link>
   );
 }

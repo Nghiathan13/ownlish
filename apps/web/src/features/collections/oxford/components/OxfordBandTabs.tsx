@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { classNames } from "@/shared/lib/classNames";
 import {
@@ -6,6 +8,7 @@ import {
   type OxfordBand,
 } from "@/features/collections/oxford/lib/oxfordNavigation";
 import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type OxfordBandTabsProps = {
   activeBand: OxfordBand;
@@ -18,9 +21,11 @@ export function OxfordBandTabs({
   getHref = getOxfordPath,
   onSelectBand,
 }: OxfordBandTabsProps) {
+  const t = useT();
+
   return (
     <nav
-      aria-label="Oxford CEFR levels"
+      aria-label={t("collections.oxfordCefrLevels")}
       className="flex w-fit gap-1 rounded-lg bg-surface p-1 shadow-card dark:border dark:border-border"
     >
       {OXFORD_BANDS.map((band) => {

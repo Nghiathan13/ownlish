@@ -14,8 +14,10 @@ import {
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { BilingualIcon } from "@/shared/ui/icons/BilingualIcon";
 import { APP_CONTAINER_CLASS } from "@/shared/ui/layout";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 export function ImmersiveToolbar() {
+  const t = useT();
   const router = useRouter();
   const exitContext = useImmersiveExit();
   const finishContext = useImmersiveFinish();
@@ -48,7 +50,9 @@ export function ImmersiveToolbar() {
               }}
               type="button"
             >
-              {finishContext?.isPending ? "Finishing..." : "Finish"}
+              {finishContext?.isPending
+                ? t("tests.finishing")
+                : t("tests.finish")}
             </button>
           ) : (
             <button
@@ -61,7 +65,7 @@ export function ImmersiveToolbar() {
               type="button"
             >
               <ArrowBackIcon />
-              Exit
+              {t("tests.exit")}
             </button>
           )}
 
@@ -82,7 +86,7 @@ export function ImmersiveToolbar() {
                   type="button"
                 >
                   <BilingualIcon />
-                  Bilingual
+                  {t("tests.bilingual")}
                 </button>
               ) : null}
             </div>

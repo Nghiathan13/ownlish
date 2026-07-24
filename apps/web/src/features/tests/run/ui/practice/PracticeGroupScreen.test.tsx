@@ -5,6 +5,7 @@ import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { PracticeGroupScreen } from "@/features/tests/run/ui/practice/PracticeGroupScreen";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 vi.mock("@/features/tests/run/hooks/useSignedMedia", () => ({
   useSignedMedia: () => ({
@@ -83,12 +84,14 @@ describe("PracticeGroupScreen", () => {
     };
 
     render(
-      <PracticeGroupScreen
-        partNumber={3}
-        practice={practice}
-        practiceGroup={practiceGroup}
-        testId={1}
-      />,
+      <LocaleProvider>
+        <PracticeGroupScreen
+          partNumber={3}
+          practice={practice}
+          practiceGroup={practiceGroup}
+          testId={1}
+        />
+      </LocaleProvider>,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(

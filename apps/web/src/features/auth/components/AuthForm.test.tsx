@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AuthForm } from "@/features/auth/components/AuthForm";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 const mocks = vi.hoisted(() => ({
   googleLogin: vi.fn(),
@@ -27,12 +28,20 @@ vi.mock("@/features/auth/hooks/useAuthSession", () => ({
   }),
 }));
 
+function renderAuthForm() {
+  return render(
+    <LocaleProvider>
+      <AuthForm />
+    </LocaleProvider>,
+  );
+}
+
 describe("AuthForm", () => {
   it("signs in with email and password, with a link to create an account", async () => {
     const user = userEvent.setup();
     mocks.login.mockResolvedValue(undefined);
 
-    render(<AuthForm />);
+    renderAuthForm();
 
     expect(
       screen.getByRole("heading", { name: "Get started with Engvocab" }),
@@ -67,7 +76,7 @@ describe("AuthForm", () => {
     const user = userEvent.setup();
     mocks.register.mockResolvedValue(undefined);
 
-    render(<AuthForm />);
+    renderAuthForm();
 
     await user.click(screen.getByRole("button", { name: "Create account" }));
     await user.type(screen.getByPlaceholderText("Email"), "linh@example.com");

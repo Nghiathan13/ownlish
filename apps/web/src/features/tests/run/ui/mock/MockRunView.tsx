@@ -27,6 +27,8 @@ import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { Modal } from "@/shared/ui/Modal";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type MockRunViewProps = {
   sessionId: string;
@@ -200,12 +202,18 @@ function MockResultModal({
   onClose: () => void;
   wrongCount: number;
 }) {
+  const t = useT();
+
   return (
-    <Modal onClose={onClose} title="Mock test result">
+    <Modal onClose={onClose} title={t("tests.mockTestResultTitle")}>
       <div className="grid gap-3 text-base">
-        <p>Answered: {answeredCount}</p>
-        <p>Correct: {correctCount}</p>
-        <p>Wrong: {wrongCount}</p>
+        <p>
+          {formatMessage(t("tests.resultAnswered"), { count: answeredCount })}
+        </p>
+        <p>
+          {formatMessage(t("tests.resultCorrect"), { count: correctCount })}
+        </p>
+        <p>{formatMessage(t("tests.resultWrong"), { count: wrongCount })}</p>
       </div>
     </Modal>
   );
@@ -216,6 +224,7 @@ export function MockRunView({
   testKey,
   selectedParts,
 }: MockRunViewProps) {
+  const t = useT();
   const router = useRouter();
   const mock = useMockTestRun({ sessionId, testKey, selectedParts });
   const isReviewingResults = mock.isFinished || mock.isFinishAccepted;
@@ -262,7 +271,7 @@ export function MockRunView({
     mediaError == null;
   const mediaMessage =
     shouldPlayListeningAudio && !activeGroup.audioUrl
-      ? "Audio is not available for this question group."
+      ? t("tests.audioUnavailableForGroup")
       : mediaError;
   const finishRun = mock.finishRun;
   const selectAnswer = mock.selectAnswer;
@@ -326,7 +335,12 @@ export function MockRunView({
 
   const testLabel =
     mock.testNumber != null
-      ? `${mock.series?.match(/[A-Za-z]+/)?.[0]?.toUpperCase() ?? "TOEIC"} ${mock.year ?? ""} · Test ${mock.testNumber}`
+      ? formatMessage(t("tests.testSessionTitle"), {
+          series:
+            mock.series?.match(/[A-Za-z]+/)?.[0]?.toUpperCase() ?? "TOEIC",
+          year: mock.year ?? "",
+          testNumber: mock.testNumber,
+        })
       : null;
 
   useRegisterImmersiveFinish(
@@ -357,7 +371,7 @@ export function MockRunView({
 
   const finishFailureModal = mock.isFinishFailureOpen ? (
     <MockFinishFailureModal
-      error={mock.finishError ?? "Cannot finish mock test."}
+      error={mock.finishError ?? t("tests.cannotFinishMockTest")}
       isRetrying={mock.isFinishing}
       onClose={mock.closeFinishFailure}
       onRetry={() => void mock.finishRun()}
@@ -384,7 +398,7 @@ export function MockRunView({
               onClick={() => router.push(testsListPath)}
               type="button"
             >
-              Back to tests
+              {t("tests.backToTests")}
             </button>
           </div>
         </Panel>
@@ -396,7 +410,7 @@ export function MockRunView({
     return (
       <PageShell>
         <Panel>
-          <p className="text-muted-foreground">This mock test has no questions.</p>
+          <p className="text-muted-foreground">{t("tests.mockTestNoQuestions")}</p>
         </Panel>
       </PageShell>
     );
@@ -428,9 +442,9 @@ export function MockRunView({
         audioUrl={activeGroup.audioUrl}
         enabled={shouldPlayListeningAudio && Boolean(activeGroup.audioUrl)}
         groupId={activeGroup.id}
-        onAutoplayBlocked={() => setMediaError("Audio autoplay was blocked.")}
+        onAutoplayBlocked={() => setMediaError(t("tests.audioAutoplayBlocked"))}
         onEnded={advanceAfterAudio}
-        onError={() => setMediaError("Audio could not be loaded.")}
+        onError={() => setMediaError(t("tests.audioCouldNotLoad"))}
       />
       <div className="flex min-h-0 flex-1 flex-col">
         <MockSubmissionAlert

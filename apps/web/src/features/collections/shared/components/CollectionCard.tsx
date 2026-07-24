@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { CalenderIcon } from "@/shared/ui/icons/CalenderIcon";
 
 type CollectionCardProps = {
@@ -25,6 +29,8 @@ export function CollectionCard({
   title,
   wordCountLabel,
 }: CollectionCardProps) {
+  const t = useT();
+
   if (isDisabled || !href) {
     return (
       <article className="rounded-xl border border-border p-4 opacity-50">
@@ -53,7 +59,7 @@ export function CollectionCard({
 
   return (
     <article className="group relative rounded-xl border border-border hover:border-foreground">
-      <div className="relative z-10 flex flex-col gap-4 p-4 pointer-events-none">
+      <div className="pointer-events-none relative z-10 flex flex-col gap-4 p-4">
         <div className="flex items-start gap-4">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 className="text-lg font-semibold">{title}</h2>
@@ -77,7 +83,7 @@ export function CollectionCard({
         </div>
       </div>
       <Link
-        aria-label={`Open ${title}`}
+        aria-label={formatMessage(t("collections.openCollection"), { title })}
         className="absolute inset-0 rounded-xl"
         href={href}
       />
@@ -95,7 +101,8 @@ function CollectionCardCreatedLabel({ label }: { label: string }) {
 }
 
 function CollectionCardWordCount({ label }: { label: string }) {
-  const wordsSuffix = " words";
+  const t = useT();
+  const wordsSuffix = ` ${t("collections.words")}`;
 
   if (!label.endsWith(wordsSuffix)) {
     return <p className="text-base whitespace-nowrap">{label}</p>;

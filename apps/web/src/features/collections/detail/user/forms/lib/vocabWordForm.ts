@@ -4,6 +4,8 @@ import type {
   VocabWord,
   VocabWordDefinition,
 } from "@/entities/vocab/api/vocab";
+import { VOCAB_WORD_FORM_LIMITS } from "@/features/collections/detail/user/forms/constants/vocabWordFormLimits";
+import type { MessageKey } from "@/shared/i18n/messages";
 
 export type VocabWordFormValues = {
   band: string;
@@ -17,8 +19,6 @@ export type VocabWordFormValues = {
   word: string;
 };
 
-import { VOCAB_WORD_FORM_LIMITS } from "@/features/collections/detail/user/forms/constants/vocabWordFormLimits";
-
 export const EMPTY_VOCAB_WORD_FORM_VALUES: VocabWordFormValues = {
   band: "",
   definition: "",
@@ -29,6 +29,33 @@ export const EMPTY_VOCAB_WORD_FORM_VALUES: VocabWordFormValues = {
   meaningVi: "",
   type: "",
   word: "",
+};
+
+export type VocabWordFormField =
+  | "word"
+  | "type"
+  | "ipaUk"
+  | "ipaUs"
+  | "band"
+  | "meaningVi"
+  | "definition"
+  | "example"
+  | "exampleVi";
+
+export type VocabWordFormValidationError =
+  | { code: "wordRequired" }
+  | { code: "maxLength"; field: VocabWordFormField; limit: number };
+
+const FIELD_LABEL_KEYS: Record<VocabWordFormField, MessageKey> = {
+  word: "wordsTable.word",
+  type: "wordsTable.type",
+  ipaUk: "wordsTable.ipaUk",
+  ipaUs: "wordsTable.ipaUs",
+  band: "wordsTable.band",
+  meaningVi: "wordsTable.meaningVi",
+  definition: "wordsTable.definition",
+  example: "wordsTable.example",
+  exampleVi: "wordsTable.exampleVi",
 };
 
 function optionalValue(value: string) {
@@ -47,36 +74,38 @@ export function getVocabWordDefinition(
 function validateMaxLength(
   value: string,
   limit: number,
-  label: string,
-): string | null {
+  field: VocabWordFormField,
+): VocabWordFormValidationError | null {
   if (value.trim().length > limit) {
-    return `${label} must be at most ${limit} characters.`;
+    return { code: "maxLength", field, limit };
   }
 
   return null;
 }
 
-export function getVocabWordFormError(values: VocabWordFormValues) {
+export function getVocabWordFormError(
+  values: VocabWordFormValues,
+): VocabWordFormValidationError | null {
   const trimmedWord = values.word.trim();
 
   if (!trimmedWord) {
-    return "Word is required.";
+    return { code: "wordRequired" };
   }
 
-  const fieldChecks: Array<[string, number, string]> = [
-    [values.word, VOCAB_WORD_FORM_LIMITS.word, "Word"],
-    [values.type, VOCAB_WORD_FORM_LIMITS.type, "Type"],
-    [values.ipaUk, VOCAB_WORD_FORM_LIMITS.ipaUk, "IPA UK"],
-    [values.ipaUs, VOCAB_WORD_FORM_LIMITS.ipaUs, "IPA US"],
-    [values.band, VOCAB_WORD_FORM_LIMITS.band, "Band"],
-    [values.meaningVi, VOCAB_WORD_FORM_LIMITS.meaningVi, "Vietnamese meaning"],
-    [values.definition, VOCAB_WORD_FORM_LIMITS.definition, "Definition"],
-    [values.example, VOCAB_WORD_FORM_LIMITS.example, "Example"],
-    [values.exampleVi, VOCAB_WORD_FORM_LIMITS.exampleVi, "Vietnamese example"],
+  const fieldChecks: Array<[string, number, VocabWordFormField]> = [
+    [values.word, VOCAB_WORD_FORM_LIMITS.word, "word"],
+    [values.type, VOCAB_WORD_FORM_LIMITS.type, "type"],
+    [values.ipaUk, VOCAB_WORD_FORM_LIMITS.ipaUk, "ipaUk"],
+    [values.ipaUs, VOCAB_WORD_FORM_LIMITS.ipaUs, "ipaUs"],
+    [values.band, VOCAB_WORD_FORM_LIMITS.band, "band"],
+    [values.meaningVi, VOCAB_WORD_FORM_LIMITS.meaningVi, "meaningVi"],
+    [values.definition, VOCAB_WORD_FORM_LIMITS.definition, "definition"],
+    [values.example, VOCAB_WORD_FORM_LIMITS.example, "example"],
+    [values.exampleVi, VOCAB_WORD_FORM_LIMITS.exampleVi, "exampleVi"],
   ];
 
-  for (const [value, limit, label] of fieldChecks) {
-    const error = validateMaxLength(value, limit, label);
+  for (const [value, limit, field] of fieldChecks) {
+    const error = validateMaxLength(value, limit, field);
 
     if (error) {
       return error;
@@ -84,6 +113,19 @@ export function getVocabWordFormError(values: VocabWordFormValues) {
   }
 
   return null;
+}
+
+export function formatVocabWordFormError(
+  error: VocabWordFormValidationError,
+  t: (key: MessageKey) => string,
+) {
+  if (error.code === "wordRequired") {
+    return t("wordsTable.wordRequired");
+  }
+
+  return t("wordsTable.fieldMaxLength")
+    .replaceAll("{field}", t(FIELD_LABEL_KEYS[error.field]))
+    .replaceAll("{max}", String(error.limit));
 }
 
 function toDefinitionInputFields(

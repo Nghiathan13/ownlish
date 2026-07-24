@@ -1,5 +1,8 @@
+"use client";
+
 import { VOCAB_WORD_FORM_LIMITS } from "@/features/collections/detail/user/forms/constants/vocabWordFormLimits";
 import type { VocabWordFormValues } from "@/features/collections/detail/user/forms/lib/vocabWordForm";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { Field } from "@/shared/ui/Field";
 import { TextInput } from "@/shared/ui/TextInput";
 import { Textarea } from "@/shared/ui/Textarea";
@@ -17,10 +20,12 @@ export function VocabWordFormFields({
   onChange,
   values,
 }: VocabWordFormFieldsProps) {
+  const t = useT();
+
   return (
     <div className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Word">
+        <Field label={t("wordsTable.word")}>
           <TextInput
             value={values.word}
             onChange={(event) => onChange("word", event.target.value)}
@@ -30,17 +35,17 @@ export function VocabWordFormFields({
           />
         </Field>
 
-        <Field label="Type">
+        <Field label={t("wordsTable.type")}>
           <TextInput
             value={values.type}
             onChange={(event) => onChange("type", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.type}
-            placeholder="noun, verb..."
+            placeholder={t("wordsTable.typePlaceholder")}
             disabled={disabled}
           />
         </Field>
 
-        <Field label="IPA UK">
+        <Field label={t("wordsTable.ipaUk")}>
           <TextInput
             value={values.ipaUk}
             onChange={(event) => onChange("ipaUk", event.target.value)}
@@ -50,7 +55,7 @@ export function VocabWordFormFields({
           />
         </Field>
 
-        <Field label="IPA US">
+        <Field label={t("wordsTable.ipaUs")}>
           <TextInput
             value={values.ipaUs}
             onChange={(event) => onChange("ipaUs", event.target.value)}
@@ -60,17 +65,17 @@ export function VocabWordFormFields({
           />
         </Field>
 
-        <Field label="Band">
+        <Field label={t("wordsTable.band")}>
           <TextInput
             value={values.band}
             onChange={(event) => onChange("band", event.target.value)}
             maxLength={VOCAB_WORD_FORM_LIMITS.band}
-            placeholder="A1, B2..."
+            placeholder={t("wordsTable.bandPlaceholder")}
             disabled={disabled}
           />
         </Field>
 
-        <Field label="Vietnamese meaning">
+        <Field label={t("wordsTable.meaningVi")}>
           <TextInput
             value={values.meaningVi}
             onChange={(event) => onChange("meaningVi", event.target.value)}
@@ -80,7 +85,7 @@ export function VocabWordFormFields({
         </Field>
       </div>
 
-      <Field label="Definition">
+      <Field label={t("wordsTable.definition")}>
         <Textarea
           value={values.definition}
           onChange={(event) => onChange("definition", event.target.value)}
@@ -89,7 +94,7 @@ export function VocabWordFormFields({
         />
       </Field>
 
-      <Field label="Example">
+      <Field label={t("wordsTable.example")}>
         <Textarea
           value={values.example}
           onChange={(event) => onChange("example", event.target.value)}
@@ -98,7 +103,7 @@ export function VocabWordFormFields({
         />
       </Field>
 
-      <Field label="Vietnamese example">
+      <Field label={t("wordsTable.exampleVi")}>
         <Textarea
           value={values.exampleVi}
           onChange={(event) => onChange("exampleVi", event.target.value)}

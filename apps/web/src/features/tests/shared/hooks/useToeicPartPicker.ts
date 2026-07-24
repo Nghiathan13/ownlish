@@ -78,12 +78,6 @@ export function useToeicPartPicker({
     onStartMock?.(parts);
   };
 
-  const startLabel = isStarting
-    ? "Starting..."
-    : selectedParts.length > 1
-      ? `Start (${selectedParts.length} parts)`
-      : "Start";
-
   return {
     areAllPartsChecked,
     intent,
@@ -93,10 +87,10 @@ export function useToeicPartPicker({
       selectedParts.length === 0 ||
       hasUnsupportedPart ||
       selectedWrongCount === 0,
+    isStarting,
     selectedParts,
     selectedWrongCount,
     startMock,
-    startLabel,
     startWithMode,
     toggleAllParts,
     togglePart,

@@ -1,4 +1,7 @@
+"use client";
+
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { SearchIcon } from "@/shared/ui/icons/SearchIcon";
 import { TextInput } from "@/shared/ui/TextInput";
 
@@ -11,16 +14,18 @@ export function WordsSearch({
   onSearchChange,
   search,
 }: WordsSearchProps) {
+  const t = useT();
+
   return (
     <div className="relative min-w-0 flex-1">
       <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
       <TextInput
         id="words-search"
-        aria-label="Search the word"
+        aria-label={t("wordsTable.searchAria")}
         className={classNames("rounded-md px-4 py-2 pl-11 pr-4 text-sm")}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="Search the word"
+        placeholder={t("wordsTable.searchPlaceholder")}
       />
     </div>
   );

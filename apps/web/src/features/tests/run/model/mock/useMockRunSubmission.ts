@@ -15,9 +15,16 @@ import {
   removeMockFinishCommand,
   storeMockFinishCommand,
 } from "@/features/tests/run/model/mock/mockFinishOutbox";
+import { getLocaleSnapshot } from "@/shared/i18n/locale";
+import { translate } from "@/shared/i18n/messages";
 
-const ANSWER_SYNC_ERROR =
-  "Some answers could not be saved. Retry them before finishing.";
+function answerSyncErrorMessage() {
+  return translate(
+    getLocaleSnapshot(),
+    "tests.answersCouldNotBeSavedBeforeFinish",
+  );
+}
+
 const FINISH_RETRY_DELAYS = [1_000, 2_000, 5_000] as const;
 
 type QuestionSyncEntry = {
@@ -396,7 +403,9 @@ export function useMockRunSubmission({
       try {
         storeMockFinishCommand(sessionId);
       } catch {
-        setFinishError("Cannot save the Finish request on this device.");
+        setFinishError(
+          translate(getLocaleSnapshot(), "tests.cannotSaveFinishRequest"),
+        );
         setIsFinishFailureOpen(true);
         return Promise.resolve();
       }
@@ -408,7 +417,7 @@ export function useMockRunSubmission({
     }
 
     if (failedQuestionIdsRef.current.size > 0) {
-      setFinishError(ANSWER_SYNC_ERROR);
+      setFinishError(answerSyncErrorMessage());
       return Promise.resolve();
     }
 
@@ -449,7 +458,7 @@ export function useMockRunSubmission({
           setFinishError(
             error instanceof Error
               ? error.message
-              : "Cannot finish mock test.",
+              : translate(getLocaleSnapshot(), "tests.cannotFinishMockTest"),
           );
           setIsFinishFailureOpen(true);
         }

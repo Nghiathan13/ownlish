@@ -9,6 +9,7 @@ import {
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { ImportTargetCollectionSelect } from "@/features/collections/shared/components/ImportTargetCollectionSelect";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type UserCollectionSwitcherProps = {
   collectionId: string;
@@ -17,6 +18,7 @@ type UserCollectionSwitcherProps = {
 export function UserCollectionSwitcher({
   collectionId,
 }: UserCollectionSwitcherProps) {
+  const t = useT();
   const router = useRouter();
   const { status, user } = useAuthSession();
   const userId = user?.id ?? null;
@@ -38,7 +40,7 @@ export function UserCollectionSwitcher({
 
   return (
     <ImportTargetCollectionSelect
-      ariaLabel="Collection"
+      ariaLabel={t("wordsTable.collectionSwitcher")}
       collections={userOwnedCollections}
       onChange={(nextCollectionId) => {
         if (nextCollectionId === collectionId) {

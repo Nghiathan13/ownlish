@@ -11,6 +11,7 @@ import {
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
 import { getSafeAuthRedirectPath } from "@/features/auth/lib/authRedirect";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 
@@ -23,6 +24,7 @@ export default function LoginPage() {
 }
 
 function LoginPageContent() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useAuthSession();
@@ -49,7 +51,7 @@ function LoginPageContent() {
           href="/"
         >
           <ArrowBackIcon />
-          Back to home
+          {t("auth.backToHome")}
         </Link>
         <AuthForm redirectTo={redirectTo} />
       </div>

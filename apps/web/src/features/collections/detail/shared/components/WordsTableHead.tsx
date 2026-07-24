@@ -1,8 +1,12 @@
+"use client";
+
 import { classNames } from "@/shared/lib/classNames";
 import { TABLE_COLUMN_WIDTH } from "@/features/collections/detail/shared/constants/columnWidths";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
 
 export type WordsTableHeadColumn = {
+  id: string;
   label: string;
   widthClass: string;
 };
@@ -29,6 +33,8 @@ export function WordsTableHead({
   onToggleAllDefinitions,
   someDefinitionsSelected = false,
 }: WordsTableHeadProps) {
+  const t = useT();
+
   return (
     <thead>
       <tr>
@@ -40,7 +46,7 @@ export function WordsTableHead({
                 indeterminate={
                   someDefinitionsSelected && !allDefinitionsSelected
                 }
-                label="Select all definitions on this page"
+                label={t("wordsTable.selectAllDefinitions")}
                 onChange={onToggleAllDefinitions}
               />
             </div>
@@ -49,12 +55,12 @@ export function WordsTableHead({
         <th
           className={classNames(headerCellClassName, TABLE_COLUMN_WIDTH.word)}
         >
-          Word
+          {t("wordsTable.word")}
         </th>
         {columns.map((column) => (
           <th
             className={classNames(headerCellClassName, column.widthClass)}
-            key={column.label}
+            key={column.id}
           >
             {column.label}
           </th>
@@ -66,7 +72,7 @@ export function WordsTableHead({
               TABLE_COLUMN_WIDTH.actions,
             )}
           >
-            Actions
+            {t("wordsTable.actions")}
           </th>
         ) : null}
       </tr>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { SwapColumnIcon } from "@/shared/ui/icons/SwapColumnIcon";
@@ -21,6 +22,7 @@ export function WordsColumnPicker<Id extends string>({
   columns,
   onToggleColumn,
 }: WordsColumnPickerProps<Id>) {
+  const t = useT();
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -64,14 +66,14 @@ export function WordsColumnPicker<Id extends string>({
         onClick={() => setIsOpen((current) => !current)}
       >
         <SwapColumnIcon />
-        Column
+        {t("wordsTable.column")}
       </button>
 
       {isOpen ? (
         <div
           id={menuId}
           role="menu"
-          aria-label="Toggle table columns"
+          aria-label={t("wordsTable.toggleColumns")}
           className="absolute top-[calc(100%+0.5rem)] right-0 z-20 min-w-[12rem] rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
         >
           {columns.map((column) => {

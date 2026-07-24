@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { ReviewStudySession } from "./ReviewStudySession";
 
 const word = {
@@ -25,31 +26,35 @@ describe("ReviewStudySession", () => {
     const onEasy = vi.fn();
 
     const { rerender } = render(
-      <ReviewStudySession
-        isSubmitting={false}
-        mode="flashcard"
-        onAgain={() => {}}
-        onEasy={onEasy}
-        onGood={() => {}}
-        onHard={() => {}}
-        reviewedCount={0}
-        totalWords={20}
-        word={word}
-      />,
+      <LocaleProvider>
+        <ReviewStudySession
+          isSubmitting={false}
+          mode="flashcard"
+          onAgain={() => {}}
+          onEasy={onEasy}
+          onGood={() => {}}
+          onHard={() => {}}
+          reviewedCount={0}
+          totalWords={20}
+          word={word}
+        />
+      </LocaleProvider>,
     );
 
     rerender(
-      <ReviewStudySession
-        isSubmitting={false}
-        mode="typing"
-        onAgain={() => {}}
-        onEasy={onEasy}
-        onGood={() => {}}
-        onHard={() => {}}
-        reviewedCount={0}
-        totalWords={20}
-        word={word}
-      />,
+      <LocaleProvider>
+        <ReviewStudySession
+          isSubmitting={false}
+          mode="typing"
+          onAgain={() => {}}
+          onEasy={onEasy}
+          onGood={() => {}}
+          onHard={() => {}}
+          reviewedCount={0}
+          totalWords={20}
+          word={word}
+        />
+      </LocaleProvider>,
     );
 
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "wrong" } });

@@ -26,8 +26,10 @@ import { WordsTableHead } from "@/features/collections/detail/shared/components/
 import { WordsTableSkeleton } from "@/features/collections/detail/shared/components/WordsTableSkeleton";
 import { useWordRowHover } from "@/features/collections/detail/shared/hooks/useWordRowHover";
 import { getVocabularyWordsTableHeadColumns } from "@/features/collections/detail/shared/lib/wordsTableHeadColumns";
+import { formatMessage } from "@/shared/i18n/messages";
 import { classNames } from "@/shared/lib/classNames";
 import { formatDisplayDate } from "@/shared/lib/date";
+import { useLocale, useT } from "@/shared/providers/LocaleProvider";
 import { EditIcon } from "@/shared/ui/icons/EditIcon";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { SelectCheckbox } from "@/shared/ui/SelectCheckbox";
@@ -63,6 +65,7 @@ export function VocabularyTable({
   someDefinitionsSelected,
   words,
 }: VocabularyTableProps) {
+  const t = useT();
   const { hoveredWordId, onWordRowMouseEnter, onWordRowMouseLeave } =
     useWordRowHover();
   const rows = expandWordsToDefinitionRows(words);
@@ -70,10 +73,13 @@ export function VocabularyTable({
     isColumnVisible(columnVisibility, columnId);
   const columnCount = getVocabularyTableColumnCount(columnVisibility);
   const showBodyState = isLoading || Boolean(error) || words.length === 0;
-  const emptyTitle = hasSearch ? "No matching words." : "No vocabulary yet.";
+  const emptyTitle = hasSearch
+    ? t("wordsTable.noMatchingWords")
+    : t("wordsTable.noVocabularyYet");
   const emptyDescription = hasSearch
-    ? "Try a different search term."
-    : "Add your first word with the form above.";
+    ? t("wordsTable.tryDifferentSearch")
+    : t("wordsTable.addFirstWord");
+  const headColumns = getVocabularyWordsTableHeadColumns(columnVisibility, t);
   const mobileScrollClassName = classNames(
     "mx-4 mb-4 grid h-0 min-h-0 min-w-0 flex-1 content-start gap-3 overflow-auto [grid-template-columns:repeat(auto-fit,minmax(max(300px,calc(50%-0.375rem)),1fr))] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:hidden",
     className,
@@ -83,7 +89,7 @@ export function VocabularyTable({
     return (
       <WordsTableSkeleton
         className={className}
-        columns={getVocabularyWordsTableHeadColumns(columnVisibility)}
+        columns={headColumns}
         showActions
       />
     );
@@ -140,7 +146,7 @@ export function VocabularyTable({
                           >
                             <SelectCheckbox
                               checked
-                              label={`Select ${word.word}`}
+                              label={formatMessage(t("wordsTable.selectWord"), { word: word.word })}
                               onChange={() =>
                                 onToggleDefinition(definition.id)
                               }
@@ -152,7 +158,7 @@ export function VocabularyTable({
                           onKeyDown={(event) => event.stopPropagation()}
                         >
                           <EditDefinitionButton
-                            label={`Edit ${word.word}`}
+                            label={formatMessage(t("wordsTable.editWordAria"), { word: word.word })}
                             onClick={() => onEdit(word, definition)}
                           />
                         </span>
@@ -193,7 +199,7 @@ export function VocabularyTable({
                 {showColumn("level") ? (
                   <div>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Level
+                      {t("wordsTable.level")}
                     </dt>
                     <dd className="mt-1">
                       <DefinitionLevelCell definition={definition} />
@@ -208,7 +214,7 @@ export function VocabularyTable({
                 {showColumn("nextReview") ? (
                   <div>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Next review
+                      {t("wordsTable.nextReview")}
                     </dt>
                     <dd className="mt-1 text-muted-foreground">
                       <DefinitionNextReviewCell definition={definition} />
@@ -225,7 +231,7 @@ export function VocabularyTable({
         className={className}
         head={
           <WordsTableHead
-            columns={getVocabularyWordsTableHeadColumns(columnVisibility)}
+            columns={headColumns}
             actions
             allDefinitionsSelected={allDefinitionsSelected}
             checkbox
@@ -242,7 +248,7 @@ export function VocabularyTable({
               error={error}
               isEmpty={words.length === 0}
               isLoading={isLoading}
-              loadingMessage="Loading words..."
+              loadingMessage={t("wordsTable.loadingWords")}
               onRetry={onRetry}
             />
           ) : (
@@ -276,7 +282,7 @@ export function VocabularyTable({
                     <div className="flex items-center">
                       <SelectCheckbox
                         checked={selectedDefinitionIds.has(definition.id)}
-                        label={`Select ${row.word.word}`}
+                        label={formatMessage(t("wordsTable.selectWord"), { word: row.word.word })}
                         onChange={() => onToggleDefinition(definition.id)}
                       />
                     </div>
@@ -409,7 +415,7 @@ export function VocabularyTable({
                 >
                   {definition ? (
                     <EditDefinitionButton
-                      label={`Edit ${row.word.word}`}
+                      label={formatMessage(t("wordsTable.editWordAria"), { word: row.word.word })}
                       onClick={() => onEdit(row.word, definition)}
                     />
                   ) : (
@@ -560,9 +566,17 @@ function DefinitionNextReviewCell({
 }: {
   definition: VocabWordDefinition | null;
 }) {
+  const t = useT();
+  const { locale } = useLocale();
+
   if (!definition) {
     return <span>-</span>;
   }
 
-  return <span>{formatDisplayDate(definition.nextReview)}</span>;
+  return (
+    <span>
+      {formatDisplayDate(definition.nextReview, locale) ??
+        t("wordsTable.notScheduled")}
+    </span>
+  );
 }

@@ -9,6 +9,7 @@ import {
   isLoadingStatus,
 } from "@/features/auth/hooks/useAuthSession";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import { SidebarLocaleToggle } from "@/features/shell/components/SidebarLocaleToggle";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
 import { SidebarThemeToggle } from "@/features/shell/components/SidebarThemeToggle";
 import { ShellAuthSlotSkeleton } from "@/features/shell/components/ShellAuthSlotSkeleton";
@@ -24,6 +25,7 @@ import {
 } from "@/features/shell/lib/appNavLinks";
 import { parseTestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import {
   iconOnlyButtonClassName,
   primaryTextButtonClassName,
@@ -60,6 +62,7 @@ type TestsSubNavProps = {
 };
 
 function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
+  const t = useT();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = parseTestsOverviewTab(searchParams.get("tab"));
@@ -73,11 +76,12 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
       <div className="flex flex-col items-center gap-1">
         {TESTS_SUB_LINKS.map((subLink) => {
           const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
+          const label = t(subLink.labelKey);
 
           return (
             <Link
               aria-current={isSubActive ? "page" : undefined}
-              aria-label={subLink.label}
+              aria-label={label}
               className={classNames(
                 sidebarLinkGroupClassName,
                 "relative flex size-10 items-center justify-center rounded-lg hover:bg-hover-overlay",
@@ -94,7 +98,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
                 )}
               />
               <Tooltip group="sidebar-link" placement="right">
-                {subLink.label}
+                {label}
               </Tooltip>
             </Link>
           );
@@ -129,7 +133,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
               />
             </span>
             <span className="text-base font-normal text-foreground">
-              {subLink.label}
+              {t(subLink.labelKey)}
             </span>
           </Link>
         );
@@ -139,6 +143,7 @@ function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
 }
 
 export function AppSidebar() {
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const { logout, status, updateProfile, user } = useAuthSession();
@@ -177,7 +182,7 @@ export function AppSidebar() {
             <div className="flex justify-center">
               <button
                 type="button"
-                aria-label="Open sidebar"
+                aria-label={t("shell.openSidebar")}
                 onClick={() => {
                   setCollapsed(false);
                 }}
@@ -188,7 +193,7 @@ export function AppSidebar() {
               >
                 <PanelOpenIcon />
                 <Tooltip group="sidebar-toggle" placement="right">
-                  Open sidebar
+                  {t("shell.openSidebar")}
                 </Tooltip>
               </button>
             </div>
@@ -203,7 +208,7 @@ export function AppSidebar() {
               </Link>
               <button
                 type="button"
-                aria-label="Close sidebar"
+                aria-label={t("shell.closeSidebar")}
                 onClick={() => {
                   setCollapsed(true);
                 }}
@@ -214,7 +219,7 @@ export function AppSidebar() {
               >
                 <PanelCloseIcon />
                 <Tooltip group="sidebar-toggle" placement="bottom">
-                  Close sidebar
+                  {t("shell.closeSidebar")}
                 </Tooltip>
               </button>
             </div>
@@ -228,6 +233,7 @@ export function AppSidebar() {
                 {APP_NAV_LINKS.map((link) => {
                   const isActive = isAppNavLinkActive(pathname, link);
                   const Icon = isActive ? link.activeIcon : link.icon;
+                  const label = t(link.labelKey);
 
                   if (link.activeMatch === "/tests") {
                     return (
@@ -243,7 +249,7 @@ export function AppSidebar() {
                         ) : null}
                         <button
                           aria-expanded={testsExpanded}
-                          aria-label={collapsed ? link.label : undefined}
+                          aria-label={collapsed ? label : undefined}
                           className={classNames(
                             getAppSidebarLinkClass(pathname, link),
                             sidebarLinkGroupClassName,
@@ -255,9 +261,7 @@ export function AppSidebar() {
                         >
                           <Icon className="size-6 shrink-0" />
                           {!collapsed ? (
-                            <span className="flex-1 text-left">
-                              {link.label}
-                            </span>
+                            <span className="flex-1 text-left">{label}</span>
                           ) : null}
                           {!collapsed ? (
                             <ArrowForwardIcon
@@ -269,7 +273,7 @@ export function AppSidebar() {
                           ) : null}
                           {collapsed ? (
                             <Tooltip group="sidebar-link" placement="right">
-                              {link.label}
+                              {label}
                             </Tooltip>
                           ) : null}
                         </button>
@@ -287,7 +291,7 @@ export function AppSidebar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      aria-label={collapsed ? link.label : undefined}
+                      aria-label={collapsed ? label : undefined}
                       className={classNames(
                         getAppSidebarLinkClass(pathname, link),
                         sidebarLinkGroupClassName,
@@ -296,10 +300,10 @@ export function AppSidebar() {
                       )}
                     >
                       <Icon className="size-6 shrink-0" />
-                      {!collapsed ? <span>{link.label}</span> : null}
+                      {!collapsed ? <span>{label}</span> : null}
                       {collapsed ? (
                         <Tooltip group="sidebar-link" placement="right">
-                          {link.label}
+                          {label}
                         </Tooltip>
                       ) : null}
                     </Link>
@@ -311,19 +315,21 @@ export function AppSidebar() {
                 <div className="border-t border-border pt-2">
                   {!collapsed ? (
                     <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Admin
+                      {t("shell.admin")}
                     </p>
                   ) : null}
                   <div className="flex flex-col gap-1">
                     {ADMIN_NAV_LINKS.map((link) => {
                       const isActive = isAppNavLinkActive(pathname, link);
                       const Icon = isActive ? link.activeIcon : link.icon;
+                      const label = t(link.labelKey);
+                      const adminLabel = `${t("shell.admin")} ${label}`;
 
                       return (
                         <Link
                           key={link.href}
                           href={link.href}
-                          aria-label={collapsed ? `Admin ${link.label}` : undefined}
+                          aria-label={collapsed ? adminLabel : undefined}
                           className={classNames(
                             getAppSidebarLinkClass(pathname, link),
                             sidebarLinkGroupClassName,
@@ -332,10 +338,10 @@ export function AppSidebar() {
                           )}
                         >
                           <Icon className="size-6 shrink-0" />
-                          {!collapsed ? <span>{link.label}</span> : null}
+                          {!collapsed ? <span>{label}</span> : null}
                           {collapsed ? (
                             <Tooltip group="sidebar-link" placement="right">
-                              Admin {link.label}
+                              {adminLabel}
                             </Tooltip>
                           ) : null}
                         </Link>
@@ -353,6 +359,7 @@ export function AppSidebar() {
             <ShellAuthSlotSkeleton collapsed={collapsed} />
           ) : isAuth && user ? (
             <div className="flex flex-col gap-1">
+              <SidebarLocaleToggle collapsed={collapsed} />
               <SidebarThemeToggle collapsed={collapsed} />
               <SidebarUserMenu
                 collapsed={collapsed}
@@ -365,15 +372,19 @@ export function AppSidebar() {
               />
             </div>
           ) : pathname !== "/login" ? (
-            <Link
-              href="/login"
-              className={classNames(
-                primaryTextButtonClassName(),
-                collapsed ? "px-1 text-center text-xs" : "w-full text-center",
-              )}
-            >
-              {collapsed ? "In" : "Sign in"}
-            </Link>
+            <div className="flex flex-col gap-1">
+              <SidebarLocaleToggle collapsed={collapsed} />
+              <SidebarThemeToggle collapsed={collapsed} />
+              <Link
+                href="/login"
+                className={classNames(
+                  primaryTextButtonClassName(),
+                  collapsed ? "px-1 text-center text-xs" : "w-full text-center",
+                )}
+              >
+                {collapsed ? t("auth.signInShort") : t("auth.signIn")}
+              </Link>
+            </div>
           ) : null}
         </div>
       </div>

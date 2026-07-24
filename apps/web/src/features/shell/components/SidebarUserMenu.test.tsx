@@ -1,22 +1,25 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { SidebarUserMenu } from "./SidebarUserMenu";
 
 describe("SidebarUserMenu", () => {
   it("shows a Google avatar and falls back to the account icon when it fails", () => {
     render(
-      <SidebarUserMenu
-        collapsed={false}
-        onLogout={vi.fn()}
-        onUpdateProfile={vi.fn()}
-        user={{
-          id: "user-1",
-          email: "user@example.com",
-          name: "Google User",
-          avatarUrl: "https://lh3.googleusercontent.com/avatar",
-          role: "USER",
-        }}
-      />,
+      <LocaleProvider>
+        <SidebarUserMenu
+          collapsed={false}
+          onLogout={vi.fn()}
+          onUpdateProfile={vi.fn()}
+          user={{
+            id: "user-1",
+            email: "user@example.com",
+            name: "Google User",
+            avatarUrl: "https://lh3.googleusercontent.com/avatar",
+            role: "USER",
+          }}
+        />
+      </LocaleProvider>,
     );
 
     const avatar = document.querySelector("img");
@@ -35,18 +38,20 @@ describe("SidebarUserMenu", () => {
 
   it("opens the profile modal from the account menu", () => {
     render(
-      <SidebarUserMenu
-        collapsed={false}
-        onLogout={vi.fn()}
-        onUpdateProfile={vi.fn()}
-        user={{
-          id: "user-1",
-          email: "user@example.com",
-          name: "Profile User",
-          avatarUrl: null,
-          role: "USER",
-        }}
-      />,
+      <LocaleProvider>
+        <SidebarUserMenu
+          collapsed={false}
+          onLogout={vi.fn()}
+          onUpdateProfile={vi.fn()}
+          user={{
+            id: "user-1",
+            email: "user@example.com",
+            name: "Profile User",
+            avatarUrl: null,
+            role: "USER",
+          }}
+        />
+      </LocaleProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Profile User" }));

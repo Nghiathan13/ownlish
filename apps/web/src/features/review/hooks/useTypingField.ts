@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 const TYPING_INPUT_MAX_WIDTH = 360;
 const TYPING_UNDERLINE_EXTRA_WIDTH = 28;
@@ -12,11 +13,12 @@ type UseTypingFieldParams = {
 };
 
 export function useTypingField({ typedAnswer, enabled }: UseTypingFieldParams) {
+  const t = useT();
   const typingInputRef = useRef<HTMLInputElement>(null);
   const typingMeasureRef = useRef<HTMLSpanElement>(null);
   const typingFieldRef = useRef<HTMLDivElement>(null);
 
-  const typingFieldText = typedAnswer || "Type the word";
+  const typingFieldText = typedAnswer || t("review.typeTheWord");
 
   useLayoutEffect(() => {
     if (!enabled) {

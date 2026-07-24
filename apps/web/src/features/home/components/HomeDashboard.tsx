@@ -15,10 +15,11 @@ import {
   useAuthSession,
 } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
+import { GuestLanding } from "@/features/home/components/GuestLanding";
 import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
 import { useDashboardPartPractice } from "@/features/home/hooks/useDashboardPartPractice";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
-import { GuestLanding } from "@/features/home/components/GuestLanding";
+import { useT } from "@/shared/providers/LocaleProvider";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -30,6 +31,7 @@ const dashboardButtonInteractionClassName =
   "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px [&_svg]:size-5 [&_svg]:shrink-0";
 
 export function HomeDashboard() {
+  const t = useT();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
   const {
@@ -83,7 +85,7 @@ export function HomeDashboard() {
           <DashboardMessage role="alert">
             <div>
               <p className="font-semibold text-foreground">
-                We couldn&apos;t load your collections.
+                {t("dashboard.collectionsLoadError")}
               </p>
               <p className="mt-1 text-sm">{collectionsError}</p>
             </div>
@@ -94,18 +96,17 @@ export function HomeDashboard() {
               onClick={() => void reloadCollections()}
               type="button"
             >
-              Try again
+              {t("dashboard.tryAgain")}
             </button>
           </DashboardMessage>
         ) : !defaultCollection ? (
           <DashboardMessage>
             <div className="max-w-xl">
               <p className="font-semibold text-foreground">
-                Set up your vocabulary space
+                {t("dashboard.setupTitle")}
               </p>
               <p className="mt-1 text-sm leading-6">
-                Choose or create a personal collection before tracking your
-                vocabulary progress here.
+                {t("dashboard.setupDescription")}
               </p>
             </div>
             <Link
@@ -114,7 +115,7 @@ export function HomeDashboard() {
               )}
               href={getCollectionsListPath("user")}
             >
-              Browse collections
+              {t("dashboard.browseCollections")}
               <ArrowForwardIcon />
             </Link>
           </DashboardMessage>
@@ -148,30 +149,41 @@ function VocabularyOverview({
   onRetry: () => void;
   stats: VocabStats | null;
 }) {
+  const t = useT();
+
   return (
     <section aria-labelledby="vocabulary-title">
-      <div className="flex items-center mb-8 gap-4">
+      <div className="mb-8 flex items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <h1
           className="text-2xl font-semibold tracking-tight sm:text-3xl"
           id="vocabulary-title"
         >
-          Vocabulary
+          {t("dashboard.vocabulary")}
         </h1>
         <span className="h-px flex-1 bg-border" />
       </div>
       {error ? (
         <InlinePanelState
-          actionLabel="Retry vocabulary"
+          actionLabel={t("dashboard.retryVocabulary")}
           message={error}
           onAction={onRetry}
         />
       ) : (
         <div className="grid grid-cols-2 gap-4 lg:gap-8 min-[1481px]:grid-cols-4">
-          <MetricCard label="Study time" value="-" />
-          <MetricCard label="Due for review" value={stats?.due ?? 0} />
-          <MetricCard label="Mastered" value={stats?.mastered ?? 0} />
-          <MetricCard label="Difficult" value={stats?.highWrongCount ?? 0} />
+          <MetricCard label={t("dashboard.studyTime")} value="-" />
+          <MetricCard
+            label={t("dashboard.dueForReview")}
+            value={stats?.due ?? 0}
+          />
+          <MetricCard
+            label={t("dashboard.mastered")}
+            value={stats?.mastered ?? 0}
+          />
+          <MetricCard
+            label={t("dashboard.difficult")}
+            value={stats?.highWrongCount ?? 0}
+          />
         </div>
       )}
     </section>
@@ -187,31 +199,32 @@ function PartPracticeOverview({
   onRetry: () => void;
   summaries: PartPracticePartSummary[];
 }) {
+  const t = useT();
   const answered = summaries.reduce((total, summary) => total + summary.answered, 0);
 
   return (
     <section aria-labelledby="toeic-title">
-      <div className="flex items-center mb-8 gap-4">
+      <div className="mb-8 flex items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <h2
           className="text-2xl font-semibold tracking-tight sm:text-3xl"
           id="toeic-title"
         >
-          TOEIC
+          {t("dashboard.toeic")}
         </h2>
         <span className="h-px flex-1 bg-border" />
       </div>
       {error ? (
         <InlinePanelState
-          actionLabel="Retry Part Practice"
+          actionLabel={t("dashboard.retryPartPractice")}
           message={error}
           onAction={onRetry}
         />
       ) : (
         <div className="flex flex-col gap-4 lg:gap-8">
           <div className="grid grid-cols-2 gap-4 lg:gap-8">
-            <MetricCard label="Answered" value={answered} />
-            <MetricCard label="Study time" value="-" />
+            <MetricCard label={t("dashboard.answered")} value={answered} />
+            <MetricCard label={t("dashboard.studyTime")} value="-" />
           </div>
           <div className="rounded-2xl bg-surface p-5 shadow-card sm:p-6">
             <div className="space-y-5">
@@ -250,6 +263,7 @@ function PartProgress({
   partNumber: number;
   summary: PartPracticePartSummary | undefined;
 }) {
+  const t = useT();
   const correct = summary?.correct ?? 0;
   const answered = summary?.answered ?? 0;
   const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
@@ -257,7 +271,9 @@ function PartProgress({
   return (
     <div>
       <div className="flex items-baseline justify-between gap-4 text-sm">
-        <p className="font-medium">Part {partNumber}</p>
+        <p className="font-medium">
+          {t("dashboard.part")} {partNumber}
+        </p>
         <p className="font-mono tabular-nums text-muted-foreground">
           {correct}/{answered} ({accuracy}%)
         </p>
@@ -281,9 +297,13 @@ function InlinePanelState({
   message: string;
   onAction: () => void;
 }) {
+  const t = useT();
+
   return (
     <div className="mt-7 border-l-2 border-border pl-4" role="alert">
-      <p className="font-semibold text-foreground">This section did not load.</p>
+      <p className="font-semibold text-foreground">
+        {t("dashboard.sectionDidNotLoad")}
+      </p>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{message}</p>
       <button
         className={secondaryTextButtonClassName(

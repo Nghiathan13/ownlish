@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type GoogleSignInButtonProps = {
@@ -53,10 +54,12 @@ export function GoogleSignInButton({
   onCode,
   onError,
 }: GoogleSignInButtonProps) {
+  const t = useT();
   const codeClientRef = useRef<GoogleCodeClient | null>(null);
   const disabledRef = useRef(disabled);
   const onCodeRef = useRef(onCode);
   const onErrorRef = useRef(onError);
+  const googleErrorMessageRef = useRef(t("auth.googleSignInFailed"));
   const [isScriptReady, setIsScriptReady] = useState(
     () => typeof window !== "undefined" && isGoogleIdentityReady(),
   );
@@ -72,6 +75,10 @@ export function GoogleSignInButton({
   useEffect(() => {
     onErrorRef.current = onError;
   }, [onError]);
+
+  useEffect(() => {
+    googleErrorMessageRef.current = t("auth.googleSignInFailed");
+  }, [t]);
 
   const markScriptReady = useCallback(() => {
     if (isGoogleIdentityReady()) {
@@ -97,7 +104,7 @@ export function GoogleSignInButton({
       },
       error_callback: () => {
         if (!disabledRef.current) {
-          onErrorRef.current("Google sign-in could not be completed. Please try again.");
+          onErrorRef.current(googleErrorMessageRef.current);
         }
       },
     });
@@ -134,7 +141,7 @@ export function GoogleSignInButton({
         type="button"
       >
         <Image alt="" aria-hidden height={18} src="/google.svg" width={18} />
-        {isScriptReady ? "Continue with Google" : "Loading Google..."}
+        {isScriptReady ? t("auth.continueWithGoogle") : t("auth.loadingGoogle")}
       </button>
     </>
   );

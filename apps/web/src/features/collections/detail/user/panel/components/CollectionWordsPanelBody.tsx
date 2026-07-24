@@ -1,3 +1,5 @@
+"use client";
+
 import { AddWordForm } from "@/features/collections/detail/user/forms/components/AddWordForm";
 import { DeleteDefinitionsConfirm } from "@/features/collections/detail/user/forms/components/DeleteDefinitionsConfirm";
 import { EditWordPanel } from "@/features/collections/detail/user/forms/components/EditWordPanel";
@@ -9,6 +11,8 @@ import {
 } from "@/features/collections/detail/shared/components";
 import type { useCollectionWordsPanel } from "@/features/collections/detail/user/panel/hooks/useCollectionWordsPanel";
 import { VOCABULARY_TOGGLEABLE_COLUMNS } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { AddIcon } from "@/shared/ui/icons/AddIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
@@ -56,6 +60,12 @@ export function CollectionWordsPanelBody({
   updatingDefinitionId,
   words,
 }: CollectionWordsPanelBodyProps) {
+  const t = useT();
+  const columns = VOCABULARY_TOGGLEABLE_COLUMNS.map((column) => ({
+    id: column.id,
+    label: t(column.labelKey),
+  }));
+
   return (
     <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
@@ -68,13 +78,13 @@ export function CollectionWordsPanelBody({
           onClick={() => setIsAddWordOpen(true)}
         >
           <AddIcon />
-          Add word
+          {t("wordsTable.addWord")}
         </button>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <WordsSearch search={search} onSearchChange={setSearch} />
           <WordsColumnPicker
             columnVisibility={columnVisibility}
-            columns={VOCABULARY_TOGGLEABLE_COLUMNS}
+            columns={columns}
             onToggleColumn={toggleColumn}
           />
         </div>
@@ -88,15 +98,17 @@ export function CollectionWordsPanelBody({
             onClick={() => setIsBulkDeleteOpen(true)}
           >
             <DeleteIcon />
-            Delete ({selectedDefinitions.length})
+            {formatMessage(t("wordsTable.deleteCount"), {
+              count: selectedDefinitions.length,
+            })}
           </button>
         ) : null}
       </div>
 
       {isAddWordOpen ? (
         <Modal
-          title="Add word"
-          description="Add a word to this collection."
+          title={t("wordsTable.addWord")}
+          description={t("wordsTable.addWordDescription")}
           onClose={() => setIsAddWordOpen(false)}
         >
           <AddWordForm
@@ -108,8 +120,8 @@ export function CollectionWordsPanelBody({
 
       {editingTarget ? (
         <Modal
-          title="Edit word"
-          description="Update the selected vocabulary definition."
+          title={t("wordsTable.editWord")}
+          description={t("wordsTable.editWordDescription")}
           onClose={() => setEditingTarget(null)}
         >
           <EditWordPanel
@@ -127,8 +139,8 @@ export function CollectionWordsPanelBody({
 
       {isBulkDeleteOpen ? (
         <Modal
-          title="Delete definitions"
-          description="This action removes the selected definitions from this collection."
+          title={t("wordsTable.deleteDefinitions")}
+          description={t("wordsTable.deleteDefinitionsDescription")}
           onClose={() => setIsBulkDeleteOpen(false)}
         >
           <DeleteDefinitionsConfirm

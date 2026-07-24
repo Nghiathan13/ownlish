@@ -1,3 +1,7 @@
+"use client";
+
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -16,12 +20,12 @@ export function DeleteDefinitionsConfirm({
   onCancel,
   onConfirm,
 }: DeleteDefinitionsConfirmProps) {
+  const t = useT();
+
   return (
     <div className="grid gap-4">
       <p className="text-sm text-muted-foreground">
-        Delete{" "}
-        <span className="font-semibold text-foreground">{count}</span> selected
-        definition{count === 1 ? "" : "s"} from your vocabulary?
+        {formatMessage(t("wordsTable.deleteConfirm"), { count })}
       </p>
 
       <div className="flex gap-3">
@@ -31,14 +35,14 @@ export function DeleteDefinitionsConfirm({
           disabled={isDeleting}
           onClick={onConfirm}
         >
-          {isDeleting ? "Deleting..." : "Delete"}
+          {isDeleting ? t("wordsTable.deleting") : t("wordsTable.delete")}
         </button>
         <button
           type="button"
           className={secondaryTextButtonClassName()}
           onClick={onCancel}
         >
-          Cancel
+          {t("wordsTable.cancel")}
         </button>
       </div>
     </div>

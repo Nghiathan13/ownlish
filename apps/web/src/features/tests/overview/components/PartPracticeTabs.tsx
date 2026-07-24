@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePaths";
+import { formatMessage } from "@/shared/i18n/messages";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 const partTabButtonClassName =
   "inline-flex shrink-0 items-center justify-center rounded-lg px-4 py-2 text-[15px] leading-[20px] font-normal";
@@ -25,6 +27,8 @@ export function PartPracticeTabs({
   partNumbers,
   selectedPartNumber,
 }: PartPracticeTabsProps) {
+  const t = useT();
+
   if (partNumbers.length === 0) {
     return null;
   }
@@ -45,7 +49,7 @@ export function PartPracticeTabs({
             key={partNumber}
             scroll={false}
           >
-            Part {partNumber}
+            {formatMessage(t("tests.partNumber"), { number: partNumber })}
           </Link>
         );
       })}

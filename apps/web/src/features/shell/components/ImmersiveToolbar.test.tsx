@@ -7,6 +7,7 @@ import {
   ImmersiveToolbarProvider,
   useRegisterImmersiveFinish,
 } from "@/features/shell/providers/ImmersiveToolbarProvider";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -36,10 +37,16 @@ describe("ImmersiveToolbar finish action", () => {
     const user = userEvent.setup();
     const finish = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
     const { rerender } = render(
-      <ImmersiveToolbarProvider>
-        <FinishRegistration disabled={false} finish={finish} isPending={false} />
-        <ImmersiveToolbar />
-      </ImmersiveToolbarProvider>,
+      <LocaleProvider>
+        <ImmersiveToolbarProvider>
+          <FinishRegistration
+            disabled={false}
+            finish={finish}
+            isPending={false}
+          />
+          <ImmersiveToolbar />
+        </ImmersiveToolbarProvider>
+      </LocaleProvider>,
     );
 
     const finishButton = await screen.findByRole("button", { name: "Finish" });
@@ -48,10 +55,12 @@ describe("ImmersiveToolbar finish action", () => {
     expect(finish).toHaveBeenCalledTimes(1);
 
     rerender(
-      <ImmersiveToolbarProvider>
-        <FinishRegistration disabled finish={finish} isPending />
-        <ImmersiveToolbar />
-      </ImmersiveToolbarProvider>,
+      <LocaleProvider>
+        <ImmersiveToolbarProvider>
+          <FinishRegistration disabled finish={finish} isPending />
+          <ImmersiveToolbar />
+        </ImmersiveToolbarProvider>
+      </LocaleProvider>,
     );
 
     const pendingButton = await screen.findByRole("button", {

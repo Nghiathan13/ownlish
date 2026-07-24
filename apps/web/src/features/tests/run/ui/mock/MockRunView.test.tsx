@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { MockRunView } from "@/features/tests/run/ui/mock/MockRunView";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 const mocks = vi.hoisted(() => ({
   registerExit: vi.fn(),
@@ -103,7 +104,9 @@ describe("MockRunView", () => {
   it("enters review immediately after Finish is accepted without remounting media", () => {
     mocks.useMockTestRun.mockReturnValue(createMockRunState(false));
     const { container, rerender } = render(
-      <MockRunView sessionId="mock-1" />,
+      <LocaleProvider>
+        <MockRunView sessionId="mock-1" />
+      </LocaleProvider>,
     );
     const image = screen.getByRole("img", { name: "Question 1" });
 
@@ -114,7 +117,11 @@ describe("MockRunView", () => {
     expect(screen.getByRole("button", { name: /^A\b/i })).toBeEnabled();
 
     mocks.useMockTestRun.mockReturnValue(createMockRunState(true));
-    rerender(<MockRunView sessionId="mock-1" />);
+    rerender(
+      <LocaleProvider>
+        <MockRunView sessionId="mock-1" />
+      </LocaleProvider>,
+    );
 
     expect(container.querySelector("audio")).not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Question 1" })).toBe(image);

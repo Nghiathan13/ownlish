@@ -1,6 +1,7 @@
 "use client";
 
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
 import { DarkModeIcon } from "@/shared/ui/icons/DarkModeIcon";
 import { LightModeIcon } from "@/shared/ui/icons/LightModeIcon";
@@ -11,11 +12,14 @@ type SidebarThemeToggleProps = {
 };
 
 export function SidebarThemeToggle({ collapsed }: SidebarThemeToggleProps) {
+  const t = useT();
   const { setTheme } = useTheme();
   const resolvedTheme = useResolvedTheme();
   const targetTheme = resolvedTheme === "dark" ? "light" : "dark";
-  const label = targetTheme === "light" ? "Light mode" : "Dark mode";
-  const tooltip = `Switch to ${targetTheme} theme`;
+  const label =
+    targetTheme === "light" ? t("theme.lightMode") : t("theme.darkMode");
+  const tooltip =
+    targetTheme === "light" ? t("theme.switchToLight") : t("theme.switchToDark");
   const Icon = targetTheme === "light" ? LightModeIcon : DarkModeIcon;
 
   return (

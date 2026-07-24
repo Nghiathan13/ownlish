@@ -1,3 +1,5 @@
+"use client";
+
 import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { CatalogWordsTable } from "@/features/collections/detail/system/panel/components/CatalogWordsTable";
 import type { useSystemCollectionWordsPanel } from "@/features/collections/detail/system/panel/hooks/useSystemCollectionWordsPanel";
@@ -7,6 +9,8 @@ import {
   WordsPagination,
   WordsSearch,
 } from "@/features/collections/detail/shared/components";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type SystemCollectionWordsPanelState = ReturnType<
@@ -58,16 +62,21 @@ export function SystemCollectionWordsPanelBody({
   pageSize,
   previousPage,
 }: SystemCollectionWordsPanelBodyProps) {
+  const t = useT();
   const canImport =
     hasCollectionsList &&
     userOwnedCollections.length > 0 &&
     Boolean(resolvedImportTargetCollectionId);
   const selectedCount = selectedDefinitions.length;
   const importLabel = isImporting
-    ? "Importing..."
+    ? t("collections.importing")
     : selectedCount > 0
-      ? `Import (${selectedCount})`
-      : "Import all";
+      ? formatMessage(t("collections.importCount"), { count: selectedCount })
+      : t("wordsTable.importAll");
+  const columns = CATALOG_TOGGLEABLE_COLUMNS.map((column) => ({
+    id: column.id,
+    label: t(column.labelKey),
+  }));
 
   return (
     <>
@@ -96,7 +105,7 @@ export function SystemCollectionWordsPanelBody({
           <WordsSearch onSearchChange={setSearch} search={search} />
           <WordsColumnPicker
             columnVisibility={columnVisibility}
-            columns={CATALOG_TOGGLEABLE_COLUMNS}
+            columns={columns}
             onToggleColumn={toggleColumn}
           />
         </div>

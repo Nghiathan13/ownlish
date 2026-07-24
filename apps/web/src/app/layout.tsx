@@ -4,6 +4,8 @@ import { AuthQueryReset } from "@/features/auth/components/AuthQueryReset";
 import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 import { AppShell } from "@/features/shell";
 import { ImmersiveToolbarProvider } from "@/features/shell/providers/ImmersiveToolbarProvider";
+import { localeInitScript } from "@/shared/i18n/locale";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { QueryProvider } from "@/shared/providers/QueryProvider";
 import { ThemeProvider } from "@/shared/providers/ThemeProvider";
 import { themeInitScript } from "@/shared/ui/theme/theme";
@@ -37,20 +39,23 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: localeInitScript }} />
       </head>
       <body
         className="flex h-dvh min-h-0 flex-col overflow-hidden"
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <AuthProvider>
-            <QueryProvider>
-              <ImmersiveToolbarProvider>
-                <AuthQueryReset />
-                <AppShell>{children}</AppShell>
-              </ImmersiveToolbarProvider>
-            </QueryProvider>
-          </AuthProvider>
+          <LocaleProvider>
+            <AuthProvider>
+              <QueryProvider>
+                <ImmersiveToolbarProvider>
+                  <AuthQueryReset />
+                  <AppShell>{children}</AppShell>
+                </ImmersiveToolbarProvider>
+              </QueryProvider>
+            </AuthProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

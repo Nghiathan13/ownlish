@@ -2,6 +2,7 @@
 
 import { Modal } from "@/shared/ui/Modal";
 import { textButtonClassName } from "@/shared/ui/button";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type ClearHistoryConfirmModalProps = {
   title: string;
@@ -16,12 +17,16 @@ type ClearHistoryConfirmModalProps = {
 export function ClearHistoryConfirmModal({
   title,
   subtitle,
-  confirmLabel = "Submit",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   isConfirming = false,
   onConfirm,
   onClose,
 }: ClearHistoryConfirmModalProps) {
+  const t = useT();
+  const resolvedConfirmLabel = confirmLabel ?? t("tests.submit");
+  const resolvedCancelLabel = cancelLabel ?? t("tests.cancel");
+
   return (
     <Modal
       className="max-w-md gap-0 rounded-[16px] bg-surface p-0 shadow-card dark:border dark:border-border [&>div:first-child]:px-6 [&>div:first-child]:pb-4 [&>div:first-child]:pt-6"
@@ -40,7 +45,7 @@ export function ClearHistoryConfirmModal({
           onClick={onClose}
           type="button"
         >
-          {cancelLabel}
+          {resolvedCancelLabel}
         </button>
         <button
           className={textButtonClassName(
@@ -50,7 +55,7 @@ export function ClearHistoryConfirmModal({
           onClick={onConfirm}
           type="button"
         >
-          {isConfirming ? "Clearing..." : confirmLabel}
+          {isConfirming ? t("tests.clearing") : resolvedConfirmLabel}
         </button>
       </div>
     </Modal>

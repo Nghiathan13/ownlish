@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import type { CreateCollectionInput } from "@/entities/collection/api/collections";
 import { ApiError } from "@/shared/api/http";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/Field";
 import { TextInput } from "@/shared/ui/TextInput";
@@ -20,6 +22,7 @@ export function CreateCollectionForm({
   onCreate,
   onCreated,
 }: CreateCollectionFormProps) {
+  const t = useT();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +35,15 @@ export function CreateCollectionForm({
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      setError("Collection name is required.");
+      setError(t("collections.nameRequired"));
       return;
     }
 
     if (trimmedName.length > COLLECTION_NAME_MAX_LENGTH) {
       setError(
-        `Collection name must be at most ${COLLECTION_NAME_MAX_LENGTH} characters.`,
+        formatMessage(t("collections.nameMaxLength"), {
+          max: COLLECTION_NAME_MAX_LENGTH,
+        }),
       );
       return;
     }
@@ -47,7 +52,9 @@ export function CreateCollectionForm({
 
     if (trimmedDescription.length > COLLECTION_DESCRIPTION_MAX_LENGTH) {
       setError(
-        `Description must be at most ${COLLECTION_DESCRIPTION_MAX_LENGTH} characters.`,
+        formatMessage(t("collections.descriptionMaxLength"), {
+          max: COLLECTION_DESCRIPTION_MAX_LENGTH,
+        }),
       );
       return;
     }
@@ -57,9 +64,7 @@ export function CreateCollectionForm({
     try {
       await onCreate({
         name: trimmedName,
-        ...(trimmedDescription
-          ? { description: trimmedDescription }
-          : {}),
+        ...(trimmedDescription ? { description: trimmedDescription } : {}),
       });
       setName("");
       setDescription("");
@@ -68,7 +73,7 @@ export function CreateCollectionForm({
       setError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : "Cannot create collection.",
+          : t("collections.cannotCreate"),
       );
     } finally {
       setIsSubmitting(false);
@@ -77,22 +82,22 @@ export function CreateCollectionForm({
 
   return (
     <form className="grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
-      <Field label="Name">
+      <Field label={t("collections.name")}>
         <TextInput
           id="collection-name"
           maxLength={COLLECTION_NAME_MAX_LENGTH}
           onChange={(event) => setName(event.target.value)}
-          placeholder="e.g. TOEIC prep"
+          placeholder={t("collections.namePlaceholder")}
           value={name}
         />
       </Field>
 
-      <Field label="Description (optional)">
+      <Field label={t("collections.descriptionOptional")}>
         <Textarea
           id="collection-description"
           maxLength={COLLECTION_DESCRIPTION_MAX_LENGTH}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="What is this collection for?"
+          placeholder={t("collections.descriptionPlaceholder")}
           rows={3}
           value={description}
         />
@@ -105,7 +110,9 @@ export function CreateCollectionForm({
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "Creating..." : "Create collection"}
+        {isSubmitting
+          ? t("collections.creating")
+          : t("collections.createCollection")}
       </button>
     </form>
   );

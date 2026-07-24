@@ -5,6 +5,7 @@ import type { AuthUser, UpdateProfileInput } from "@/entities/auth/types";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import { ProfileModal } from "@/features/profile/ui/ProfileModal";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { AccountIcon } from "@/shared/ui/icons/AccountIcon";
 import { LogoutIcon } from "@/shared/ui/icons/LogoutIcon";
 import { sidebarLinkGroupClassName, Tooltip } from "@/shared/ui/Tooltip";
@@ -23,9 +24,11 @@ function getUserDisplayName(user: AuthUser) {
 }
 
 function AdminBadge() {
+  const t = useT();
+
   return (
     <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-      Admin
+      {t("shell.admin")}
     </span>
   );
 }
@@ -61,6 +64,7 @@ export function SidebarUserMenu({
   onUpdateProfile,
   user,
 }: SidebarUserMenuProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
@@ -172,7 +176,7 @@ export function SidebarUserMenu({
             className="flex w-full cursor-pointer items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay"
           >
             <AccountIcon className="size-6 shrink-0" />
-            Profile
+            {t("auth.profile")}
           </button>
 
           <div className="my-2 mx-2 border-t border-border" />
@@ -187,7 +191,7 @@ export function SidebarUserMenu({
             className="flex w-full cursor-pointer items-center gap-2 rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay"
           >
             <LogoutIcon className="size-6 shrink-0" />
-            Logout
+            {t("auth.logout")}
           </button>
         </div>
       ) : null}

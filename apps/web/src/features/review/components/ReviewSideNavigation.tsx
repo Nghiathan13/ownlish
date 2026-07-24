@@ -1,9 +1,16 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
 import { classNames } from "@/shared/lib/classNames";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
@@ -25,7 +32,12 @@ type ReviewSideNavigationProps = {
   widthClassName?: string;
 };
 
-function shouldHandleReviewNavigation(event: MouseEvent<HTMLAnchorElement>) {
+type OverlayThumb = {
+  height: number;
+  top: number;
+};
+
+function shouldHandleReviewNavigation(event: ReactMouseEvent<HTMLAnchorElement>) {
   return (
     event.button === 0 &&
     !event.defaultPrevented &&
@@ -34,6 +46,22 @@ function shouldHandleReviewNavigation(event: MouseEvent<HTMLAnchorElement>) {
     !event.ctrlKey &&
     !event.shiftKey
   );
+}
+
+function getOverlayThumb(list: HTMLDivElement): OverlayThumb | null {
+  const { clientHeight, scrollHeight, scrollTop } = list;
+  if (scrollHeight <= clientHeight + 1) {
+    return null;
+  }
+
+  const height = Math.max(28, (clientHeight / scrollHeight) * clientHeight);
+  const maxTop = clientHeight - height;
+  const top =
+    maxTop <= 0
+      ? 0
+      : (scrollTop / (scrollHeight - clientHeight)) * maxTop;
+
+  return { height, top };
 }
 
 export function ReviewSideNavigation({
@@ -49,12 +77,27 @@ export function ReviewSideNavigation({
   const router = useRouter();
   const hasItems = !loading && items.length > 0;
   const listRef = useRef<HTMLDivElement>(null);
+  const dragOffsetRef = useRef(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [thumb, setThumb] = useState<OverlayThumb | null>(null);
   const activeItem = items.find((item) => item.isActive) ?? items[0] ?? null;
+
+  const syncThumb = useCallback(() => {
+    const list = listRef.current;
+    if (!list) {
+      setThumb(null);
+      return;
+    }
+
+    setThumb(getOverlayThumb(list));
+  }, []);
 
   // Keep the active Oxford part centered when there is enough scroll space.
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list || scrollKey == null || loading || !hasItems) {
+      syncThumb();
       return;
     }
 
@@ -62,6 +105,7 @@ export function ReviewSideNavigation({
       '[aria-current="page"]',
     );
     if (!activeLink) {
+      syncThumb();
       return;
     }
 
@@ -73,7 +117,73 @@ export function ReviewSideNavigation({
       Math.max(0, centeredScrollTop),
       Math.max(0, maxScrollTop),
     );
-  }, [activeItem?.id, hasItems, loading, scrollKey]);
+    syncThumb();
+  }, [activeItem?.id, hasItems, loading, scrollKey, syncThumb]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      syncThumb();
+    });
+    observer.observe(list);
+
+    return () => observer.disconnect();
+  }, [hasItems, loading, syncThumb]);
+
+  useEffect(() => {
+    if (!isDragging) {
+      return;
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const list = listRef.current;
+      if (!list || !thumb) {
+        return;
+      }
+
+      const rect = list.getBoundingClientRect();
+      const maxTop = list.clientHeight - thumb.height;
+      const nextTop = Math.min(
+        Math.max(0, event.clientY - rect.top - dragOffsetRef.current),
+        maxTop,
+      );
+      const maxScrollTop = list.scrollHeight - list.clientHeight;
+      list.scrollTop =
+        maxTop <= 0 ? 0 : (nextTop / maxTop) * maxScrollTop;
+      syncThumb();
+    }
+
+    function handlePointerUp() {
+      setIsDragging(false);
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isDragging, syncThumb, thumb]);
+
+  function handleThumbPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    const list = listRef.current;
+    if (!list || !thumb) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = list.getBoundingClientRect();
+    dragOffsetRef.current = event.clientY - rect.top - thumb.top;
+    setIsDragging(true);
+  }
+
+  const showThumb = Boolean(thumb) && (isHovering || isDragging);
 
   return (
     <>
@@ -116,17 +226,24 @@ export function ReviewSideNavigation({
       <nav
         aria-label={ariaLabel}
         className={classNames(
-          "hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg bg-surface p-1 shadow-card lg:sticky lg:top-4 lg:flex lg:self-start dark:border dark:border-border",
+          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg bg-surface p-1 shadow-card lg:sticky lg:top-4 lg:flex lg:self-start dark:border dark:border-border",
           widthClassName,
         )}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => {
+          if (!isDragging) {
+            setIsHovering(false);
+          }
+        }}
       >
         <div
           className={classNames(
-            "min-h-0 flex-1 overflow-y-auto",
+            "overlay-scroll-hide min-h-0 max-h-[480px] flex-1 overflow-y-auto",
             loading || hasItems
               ? classNames("grid content-start gap-1", itemsClassName)
               : "grid place-items-center",
           )}
+          onScroll={syncThumb}
           ref={listRef}
         >
           {loading
@@ -172,6 +289,26 @@ export function ReviewSideNavigation({
                   </p>
                 )}
         </div>
+
+        {thumb ? (
+          <div
+            aria-hidden
+            className={classNames(
+              "pointer-events-none absolute inset-y-1 right-0 w-3 transition-opacity duration-150",
+              showThumb ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <div
+              className={classNames(
+                "absolute right-0.5 w-1.5 rounded-full bg-foreground/30 hover:bg-foreground/45",
+                showThumb ? "pointer-events-auto cursor-grab" : "pointer-events-none",
+                isDragging && "cursor-grabbing bg-foreground/45",
+              )}
+              onPointerDown={handleThumbPointerDown}
+              style={{ height: thumb.height, top: thumb.top }}
+            />
+          </div>
+        ) : null}
       </nav>
     </>
   );

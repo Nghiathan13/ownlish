@@ -5,6 +5,8 @@ import { refreshToeicPartMedia } from "@/entities/toeic/api/toeic";
 import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+import { getLocaleSnapshot } from "@/shared/i18n/locale";
+import { translate } from "@/shared/i18n/messages";
 
 const REFRESH_BUFFER_MS = 2 * 60 * 1000;
 
@@ -127,7 +129,9 @@ export function useSignedMedia({
       });
       const next = refreshed.find((item) => item.id === group.id);
       if (!next) {
-        setMediaError("Cannot refresh media.");
+        setMediaError(
+          translate(getLocaleSnapshot(), "tests.cannotRefreshMedia"),
+        );
         return;
       }
 
@@ -175,12 +179,12 @@ export function useSignedMedia({
 
   const handleMediaError = useCallback(() => {
     if (usesStaticMedia) {
-      setMediaError("Cannot load media. Please try again.");
+      setMediaError(translate(getLocaleSnapshot(), "tests.cannotLoadMedia"));
       return;
     }
 
     void refresh({ force: true }).catch(() => {
-      setMediaError("Cannot load media. Please try again.");
+      setMediaError(translate(getLocaleSnapshot(), "tests.cannotLoadMedia"));
     });
   }, [refresh, usesStaticMedia]);
 

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useVocabStats } from "@/features/home/hooks/useVocabStats";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 import { QuizIcon } from "@/shared/ui/icons/QuizIcon";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
@@ -17,6 +19,7 @@ export function CollectionReviewLink({
   isAuthenticated,
   userId,
 }: CollectionReviewLinkProps) {
+  const t = useT();
   const { isLoading, stats } = useVocabStats({
     collectionId,
     isAuthenticated,
@@ -28,9 +31,13 @@ export function CollectionReviewLink({
     return null;
   }
 
-  const label = isLoading ? "Review (...)" : "Review";
+  const label = isLoading
+    ? t("collections.reviewLoading")
+    : t("collections.review");
   const reviewLabel =
-    !isLoading && dueCount > 0 ? `Review (${dueCount})` : label;
+    !isLoading && dueCount > 0
+      ? formatMessage(t("collections.reviewWithCount"), { count: dueCount })
+      : label;
   const className = iconTextButtonClassName(
     "pointer-events-auto relative z-20 shrink-0 border-foreground bg-foreground text-background",
   );

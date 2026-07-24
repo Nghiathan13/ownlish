@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PracticeSubmissionAlert } from "@/features/tests/run/ui/practice/PracticeSubmissionAlert";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 describe("PracticeSubmissionAlert", () => {
   it("shows the save failure and retries it", async () => {
@@ -9,7 +10,9 @@ describe("PracticeSubmissionAlert", () => {
     const onRetry = vi.fn();
 
     render(
-      <PracticeSubmissionAlert isSubmitting={false} onRetry={onRetry} />,
+      <LocaleProvider>
+        <PracticeSubmissionAlert isSubmitting={false} onRetry={onRetry} />
+      </LocaleProvider>,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
@@ -27,7 +30,11 @@ describe("PracticeSubmissionAlert", () => {
     const user = userEvent.setup();
     const onRetry = vi.fn();
 
-    render(<PracticeSubmissionAlert isSubmitting onRetry={onRetry} />);
+    render(
+      <LocaleProvider>
+        <PracticeSubmissionAlert isSubmitting onRetry={onRetry} />
+      </LocaleProvider>,
+    );
 
     const alert = screen.getByRole("alert");
     const retryButton = screen.getByRole("button", {

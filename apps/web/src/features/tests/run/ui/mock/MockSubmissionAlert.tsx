@@ -1,6 +1,9 @@
+"use client";
+
 import { classNames } from "@/shared/lib/classNames";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type MockSubmissionAlertProps = {
   hasSyncFailures: boolean;
@@ -11,6 +14,8 @@ export function MockSubmissionAlert({
   hasSyncFailures,
   onRetry,
 }: MockSubmissionAlertProps) {
+  const t = useT();
+
   if (!hasSyncFailures) {
     return null;
   }
@@ -25,7 +30,7 @@ export function MockSubmissionAlert({
       )}
       role="alert"
     >
-      <p>Some answers could not be saved.</p>
+      <p>{t("tests.answersCouldNotBeSaved")}</p>
       <button
         className={secondaryTextButtonClassName(
           statusColorClasses.danger.border,
@@ -35,7 +40,7 @@ export function MockSubmissionAlert({
         onClick={onRetry}
         type="button"
       >
-        Retry saving answers
+        {t("tests.retrySavingAnswers")}
       </button>
     </div>
   );

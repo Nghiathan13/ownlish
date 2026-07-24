@@ -1,6 +1,7 @@
 "use client";
 
 import type { CollectionSummary } from "@/entities/collection/api/collections";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 type ImportTargetCollectionSelectProps = {
@@ -11,26 +12,26 @@ type ImportTargetCollectionSelectProps = {
   variant?: "form" | "review" | "toolbar";
 };
 
-function getCollectionLabel(collection: CollectionSummary) {
-  return collection.isDefault ? "My Vocabulary" : collection.name;
-}
-
 export function ImportTargetCollectionSelect({
-  ariaLabel = "Import into",
+  ariaLabel,
   collections,
   onChange,
   value,
   variant = "form",
 }: ImportTargetCollectionSelectProps) {
+  const t = useT();
+  const resolvedAriaLabel = ariaLabel ?? t("collections.importInto");
   const options = collections.map((collection) => ({
-    label: getCollectionLabel(collection),
+    label: collection.isDefault
+      ? t("collections.myVocabulary")
+      : collection.name,
     value: collection.id,
   }));
 
   if (variant === "review") {
     return (
       <SelectDropdown
-        ariaLabel={ariaLabel}
+        ariaLabel={resolvedAriaLabel}
         className="w-full max-w-72"
         onChange={onChange}
         options={options}
@@ -42,7 +43,7 @@ export function ImportTargetCollectionSelect({
   if (variant === "toolbar") {
     return (
       <SelectDropdown
-        ariaLabel={ariaLabel}
+        ariaLabel={resolvedAriaLabel}
         className="w-fit min-w-[10rem] max-w-[14rem]"
         onChange={onChange}
         options={options}
@@ -57,7 +58,7 @@ export function ImportTargetCollectionSelect({
         className="text-sm font-semibold text-foreground"
         htmlFor="import-target-collection"
       >
-        Import into
+        {t("collections.importInto")}
       </label>
       <select
         className="h-10 w-full max-w-md cursor-pointer appearance-none rounded-lg border border-border bg-transparent px-3 text-sm text-foreground outline-none transition hover:border-foreground focus:border-foreground"
@@ -67,7 +68,9 @@ export function ImportTargetCollectionSelect({
       >
         {collections.map((collection) => (
           <option key={collection.id} value={collection.id}>
-            {collection.isDefault ? "My Vocabulary" : collection.name}
+            {collection.isDefault
+              ? t("collections.myVocabulary")
+              : collection.name}
           </option>
         ))}
       </select>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type SystemCollectionImportButtonProps = {
@@ -13,6 +14,7 @@ export function SystemCollectionImportButton({
   isDisabled = false,
   onImport,
 }: SystemCollectionImportButtonProps) {
+  const t = useT();
   const enabledClassName = iconTextButtonClassName(
     "pointer-events-auto shrink-0 border-foreground bg-foreground text-background",
   );
@@ -23,7 +25,7 @@ export function SystemCollectionImportButton({
   if (isDisabled) {
     return (
       <button className={disabledClassName} disabled type="button">
-        Import
+        {t("collections.import")}
       </button>
     );
   }
@@ -35,7 +37,7 @@ export function SystemCollectionImportButton({
       onClick={onImport}
       type="button"
     >
-      {isImporting ? "Importing..." : "Import"}
+      {isImporting ? t("collections.importing") : t("collections.import")}
     </button>
   );
 }

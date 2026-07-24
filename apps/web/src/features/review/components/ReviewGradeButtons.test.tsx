@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { ReviewGradeButtons } from "./ReviewGradeButtons";
 
 describe("ReviewGradeButtons", () => {
@@ -8,15 +9,17 @@ describe("ReviewGradeButtons", () => {
     const onEasy = vi.fn();
 
     render(
-      <ReviewGradeButtons
-        disableGood
-        disableHard
-        disabled={false}
-        onAgain={onAgain}
-        onEasy={onEasy}
-        onGood={() => {}}
-        onHard={() => {}}
-      />,
+      <LocaleProvider>
+        <ReviewGradeButtons
+          disableGood
+          disableHard
+          disabled={false}
+          onAgain={onAgain}
+          onEasy={onEasy}
+          onGood={() => {}}
+          onHard={() => {}}
+        />
+      </LocaleProvider>,
     );
 
     expect(screen.getByRole("button", { name: /^Hard/ })).toBeDisabled();

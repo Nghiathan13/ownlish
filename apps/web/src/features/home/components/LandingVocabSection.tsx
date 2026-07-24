@@ -6,6 +6,8 @@ import {
   LANDING_VOCAB_DEMO_METRICS,
   LANDING_VOCAB_DEMO_WORD,
 } from "@/features/home/lib/landingDemoData";
+import type { MessageKey } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { ProgressNavIcon } from "@/shared/ui/icons/ProgressNavIcon";
 import { ReviewNavIcon } from "@/shared/ui/icons/ReviewNavIcon";
 
@@ -13,6 +15,8 @@ const vocabCardClassName =
   "group flex min-w-[300px] flex-col rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border sm:p-6";
 
 export function LandingVocabSection() {
+  const t = useT();
+
   return (
     <section
       className="flex flex-col gap-8 px-4 py-16 sm:px-16 lg:py-24"
@@ -20,10 +24,10 @@ export function LandingVocabSection() {
     >
       <div className="flex flex-col items-center gap-3 text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Build vocabulary that sticks.
+          {t("landing.vocabTitle")}
         </h2>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Bilingual cards and spaced review in one place.
+          {t("landing.vocabDescription")}
         </p>
       </div>
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
@@ -57,6 +61,7 @@ function VocabCardHeader({
 }
 
 function LandingReviewCard() {
+  const t = useT();
   const [showMeaning, setShowMeaning] = useState(false);
   const word = LANDING_VOCAB_DEMO_WORD;
 
@@ -64,12 +69,14 @@ function LandingReviewCard() {
     <article className={vocabCardClassName}>
       <VocabCardHeader
         Icon={ReviewNavIcon}
-        description="Click to reveal meaning"
-        title="Review"
+        description={t("landing.reviewDescription")}
+        title={t("landing.reviewTitle")}
       />
 
       <div
-        aria-label={showMeaning ? "Hide meaning" : "Reveal meaning"}
+        aria-label={
+          showMeaning ? t("landing.hideMeaning") : t("landing.revealMeaning")
+        }
         className="mt-5 flex min-h-[16rem] flex-1 cursor-pointer flex-col content-center justify-center gap-6 text-center"
         onClick={() => setShowMeaning((current) => !current)}
       >
@@ -102,26 +109,30 @@ function LandingReviewCard() {
 }
 
 function LandingProgressCard() {
-  const metrics = [
-    { label: "Due for review", value: LANDING_VOCAB_DEMO_METRICS.due },
-    { label: "Mastered", value: LANDING_VOCAB_DEMO_METRICS.mastered },
-    { label: "Difficult", value: LANDING_VOCAB_DEMO_METRICS.difficult },
+  const t = useT();
+  const metrics: Array<{ labelKey: MessageKey; value: number }> = [
+    { labelKey: "landing.dueForReview", value: LANDING_VOCAB_DEMO_METRICS.due },
+    { labelKey: "landing.mastered", value: LANDING_VOCAB_DEMO_METRICS.mastered },
+    {
+      labelKey: "landing.difficult",
+      value: LANDING_VOCAB_DEMO_METRICS.difficult,
+    },
   ];
 
   return (
     <article className={vocabCardClassName}>
       <VocabCardHeader
         Icon={ProgressNavIcon}
-        description="Due, mastered, and difficult words."
-        title="Progress"
+        description={t("landing.progressDescription")}
+        title={t("landing.progressTitle")}
       />
       <div className="mt-5 grid flex-1 grid-cols-1 gap-3">
         {metrics.map((metric) => (
           <div
             className="rounded-xl border border-border bg-background p-4"
-            key={metric.label}
+            key={metric.labelKey}
           >
-            <p className="text-sm text-muted-foreground">{metric.label}</p>
+            <p className="text-sm text-muted-foreground">{t(metric.labelKey)}</p>
             <p className="mt-2 font-mono text-3xl font-semibold tracking-tight tabular-nums">
               {metric.value}
             </p>

@@ -10,7 +10,12 @@ import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
 import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { testOverviewCardClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import {
+  testOverviewCardClassName,
+  testOverviewPracticeButtonClassName,
+} from "@/features/tests/overview/lib/testOverviewCard";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PartPracticeCardProps = {
   summary: PartPracticePartSummary;
@@ -29,16 +34,19 @@ export function PartPracticeCard({
   onPractice,
   onReviewWrong,
 }: PartPracticeCardProps) {
+  const t = useT();
   const { partNumber, total, answered, correct, wrong } = summary;
 
   return (
     <article className={testOverviewCardClassName}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Part {partNumber}</h2>
+          <h2 className="text-lg font-semibold">
+            {formatMessage(t("tests.partNumber"), { number: partNumber })}
+          </h2>
           {answered === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              No practice progress yet
+              {t("tests.noProgressYet")}
             </p>
           ) : (
             <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
@@ -59,7 +67,9 @@ export function PartPracticeCard({
         <div className="flex shrink-0 items-center gap-2">
           <button
             aria-label={
-              wrong > 0 ? `Review wrong (${wrong})` : "Review wrong (no wrong answers)"
+              wrong > 0
+                ? formatMessage(t("tests.reviewWrongCount"), { count: wrong })
+                : t("tests.reviewWrongNone")
             }
             className={iconOnlyButtonClassName(
               "relative bg-transparent",
@@ -75,7 +85,11 @@ export function PartPracticeCard({
             {wrong > 0 ? <TopRightCountBadge count={wrong} /> : null}
           </button>
           <button
-            aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
+            aria-label={
+              isClearingHistory
+                ? t("tests.clearingHistory")
+                : t("tests.clearHistory")
+            }
             className={iconOnlyButtonClassName(
               "bg-transparent",
               statusColorClasses.danger.text,
@@ -97,7 +111,7 @@ export function PartPracticeCard({
           type="button"
         >
           <PracticeIcon />
-          Practice
+          {t("tests.practice")}
         </button>
       </div>
     </article>

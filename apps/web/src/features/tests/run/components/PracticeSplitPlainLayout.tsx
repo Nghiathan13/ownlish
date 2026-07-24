@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 const DEFAULT_LEFT_PANEL_WIDTH = 50;
 const MIN_LEFT_PANEL_WIDTH = 30;
@@ -44,6 +45,7 @@ export function PracticeSplitPlainLayout({
   navigation,
   right,
 }: PracticeSplitPlainLayoutProps) {
+  const t = useT();
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<SplitDragStart | null>(null);
   const [leftPanelWidth, setLeftPanelWidth] = useState(getInitialLeftPanelWidth);
@@ -92,7 +94,7 @@ export function PracticeSplitPlainLayout({
           {left}
         </div>
         <div
-          aria-label="Resize question and answer panels"
+          aria-label={t("tests.resizePanels")}
           aria-orientation="vertical"
           className="relative hidden cursor-col-resize touch-none select-none sm:block before:absolute before:inset-y-0 before:left-1/2 before:w-px before:-translate-x-1/2 before:bg-border hover:before:bg-foreground"
           onDoubleClick={() => {

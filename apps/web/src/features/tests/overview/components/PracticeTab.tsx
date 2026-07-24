@@ -7,6 +7,7 @@ import { PracticeTabSkeleton } from "@/features/tests/overview/components/Practi
 import { usePartPracticeOverview } from "@/features/tests/overview/hooks/usePartPracticeOverview";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 function buildPartSummary(
   summaries: PartPracticePartSummary[],
@@ -24,6 +25,7 @@ function buildPartSummary(
 }
 
 export function PracticeTab() {
+  const t = useT();
   const overview = usePartPracticeOverview();
   const selectedSummary = buildPartSummary(
     overview.summaries,
@@ -48,7 +50,7 @@ export function PracticeTab() {
               onClick={() => void overview.reload()}
               type="button"
             >
-              Retry
+              {t("tests.retry")}
             </button>
           </div>
         ) : (
@@ -88,8 +90,8 @@ export function PracticeTab() {
           isConfirming={overview.isClearing}
           onClose={overview.cancelClearHistory}
           onConfirm={() => void overview.confirmClearHistory()}
-          subtitle="This cannot be undone."
-          title="Clear practice history"
+          subtitle={t("tests.clearHistorySubtitle")}
+          title={t("tests.clearHistoryTitle")}
         />
       ) : null}
     </>

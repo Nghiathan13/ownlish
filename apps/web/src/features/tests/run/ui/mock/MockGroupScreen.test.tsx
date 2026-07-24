@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
 import { MockGroupScreen } from "@/features/tests/run/ui/mock/MockGroupScreen";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 const group: ToeicQuestionGroup = {
   id: 11,
@@ -56,7 +57,11 @@ describe("MockGroupScreen", () => {
       onSelect,
       partNumber: 5,
     };
-    const { rerender } = render(<MockGroupScreen {...props} />);
+    const { rerender } = render(
+      <LocaleProvider>
+        <MockGroupScreen {...props} />
+      </LocaleProvider>,
+    );
     const optionA = screen.getByRole("button", { name: /A.*Alpha/i });
     const optionB = screen.getByRole("button", { name: /B.*Beta/i });
 
@@ -67,7 +72,11 @@ describe("MockGroupScreen", () => {
     await user.click(optionB);
     expect(onSelect).toHaveBeenCalledWith(101, "B");
 
-    rerender(<MockGroupScreen {...props} isReviewingResults />);
+    rerender(
+      <LocaleProvider>
+        <MockGroupScreen {...props} isReviewingResults />
+      </LocaleProvider>,
+    );
 
     expect(screen.queryByRole("button", { name: /A.*Alpha/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /B.*Beta/i })).not.toBeInTheDocument();
@@ -94,19 +103,29 @@ describe("MockGroupScreen", () => {
       onSelect: vi.fn(),
       partNumber: 1,
     };
-    const { container, rerender } = render(<MockGroupScreen {...props} />);
+    const { container, rerender } = render(
+      <LocaleProvider>
+        <MockGroupScreen {...props} />
+      </LocaleProvider>,
+    );
     const mockImage = screen.getByRole("img", { name: "Question 1" });
 
     expect(container.querySelector("audio")).not.toBeInTheDocument();
 
-    rerender(<MockGroupScreen {...props} isReviewingResults />);
+    rerender(
+      <LocaleProvider>
+        <MockGroupScreen {...props} isReviewingResults />
+      </LocaleProvider>,
+    );
 
     expect(screen.getByRole("img", { name: "Question 1" })).toBe(mockImage);
     expect(container.querySelector("audio")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /A.*Alpha/i })).not.toBeInTheDocument();
 
     rerender(
-      <MockGroupScreen {...props} isFinished isReviewingResults />,
+      <LocaleProvider>
+        <MockGroupScreen {...props} isFinished isReviewingResults />
+      </LocaleProvider>,
     );
 
     expect(container.querySelector("audio")).toHaveAttribute(

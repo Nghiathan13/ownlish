@@ -8,6 +8,7 @@ import type {
 import { isOxfordDefinitionSource } from "@/entities/vocab/lib/vocabSources";
 import { VocabWordFormFields } from "@/features/collections/detail/user/forms/components/VocabWordFormFields";
 import {
+  formatVocabWordFormError,
   getVocabWordDefinition,
   getVocabWordFormError,
   toUpdateVocabWordInput,
@@ -15,6 +16,7 @@ import {
   type VocabWordFormValues,
 } from "@/features/collections/detail/user/forms/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
+import { useT } from "@/shared/providers/LocaleProvider";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
@@ -39,6 +41,7 @@ export function EditWordPanel({
   onUpdate,
   word,
 }: EditWordPanelProps) {
+  const t = useT();
   const [values, setValues] = useState<VocabWordFormValues>(() =>
     toVocabWordFormValues(word, definitionId),
   );
@@ -55,7 +58,7 @@ export function EditWordPanel({
     const validationError = getVocabWordFormError(values);
 
     if (validationError) {
-      setError(validationError);
+      setError(formatVocabWordFormError(validationError, t));
       return;
     }
 
@@ -71,7 +74,7 @@ export function EditWordPanel({
       setError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : "Cannot update word.",
+          : t("wordsTable.cannotUpdateWord"),
       );
     }
   }
@@ -116,7 +119,9 @@ export function EditWordPanel({
           className={primaryTextButtonClassName()}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Saving..." : "Save changes"}
+          {isSubmitting
+            ? t("collections.saving")
+            : t("collections.saveChanges")}
         </button>
         <button
           type="button"
@@ -124,7 +129,7 @@ export function EditWordPanel({
           onClick={onClose}
           disabled={isSubmitting}
         >
-          Cancel
+          {t("wordsTable.cancel")}
         </button>
       </div>
     </form>

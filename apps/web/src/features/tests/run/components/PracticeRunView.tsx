@@ -41,6 +41,8 @@ import {
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PracticeRunViewProps = {
   sessionId: string;
@@ -61,6 +63,7 @@ export function PracticeRunView({
   practiceMode = "practice",
   testKey,
 }: PracticeRunViewProps) {
+  const t = useT();
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
@@ -197,7 +200,12 @@ export function PracticeRunView({
   useRegisterImmersiveExit(
     practice.sessionId ? () => undefined : null,
     practice.testNumber != null
-      ? `${practice.series?.match(/[A-Za-z]+/)?.[0]?.toUpperCase() ?? "TOEIC"} ${practice.year ?? ""} · Test ${practice.testNumber}`
+      ? formatMessage(t("tests.testSessionTitle"), {
+          series:
+            practice.series?.match(/[A-Za-z]+/)?.[0]?.toUpperCase() ?? "TOEIC",
+          year: practice.year ?? "",
+          testNumber: practice.testNumber,
+        })
       : null,
     testsListPath,
     { showBilingualAction: true },
@@ -245,7 +253,6 @@ export function PracticeRunView({
     <PracticeNavigationButtons
       currentQuestionNumber={currentQuestionNumber}
       isQuestionGridOpen={isQuestionGridOpen}
-      nextAriaLabel="Next"
       nextDisabled={isLastStep}
       onNext={() => {
         goToStepIndex(activeStepIndex + 1);
@@ -285,7 +292,7 @@ export function PracticeRunView({
               onClick={() => router.push(testsListPath)}
               type="button"
             >
-              Back to tests
+              {t("tests.backToTests")}
             </button>
           </div>
         </Panel>
@@ -299,8 +306,8 @@ export function PracticeRunView({
         <Panel>
           <p className="text-muted-foreground">
             {isWrongMode
-              ? "No wrong questions left to review for the selected parts."
-              : "This practice has no questions yet. Check that TOEIC data is imported."}
+              ? t("tests.noWrongQuestionsForParts")
+              : t("tests.practiceNoQuestions")}
           </p>
         </Panel>
       </PageShell>

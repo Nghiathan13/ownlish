@@ -14,7 +14,7 @@ describe("getAppNavLinksForUser", () => {
     const links = getAppNavLinksForUser();
 
     expect(links.some((link) => link.href === "/admin")).toBe(false);
-    expect(links.some((link) => link.label === "Admin")).toBe(false);
+    expect(links.some((link) => link.labelKey === "shell.admin")).toBe(false);
     expect(links.some((link) => link.href.startsWith("/admin/"))).toBe(false);
   });
 
@@ -22,13 +22,15 @@ describe("getAppNavLinksForUser", () => {
     expect(ADMIN_NAV_LINKS).toEqual([
       expect.objectContaining({
         href: "/admin/toeic",
-        label: "Tests",
+        labelKey: "nav.tests",
       }),
     ]);
   });
 
   it("links Tests nav to canonical mock overview URL", () => {
-    const testsLink = getAppNavLinksForUser().find((link) => link.label === "Tests");
+    const testsLink = getAppNavLinksForUser().find(
+      (link) => link.labelKey === "nav.tests",
+    );
 
     expect(testsLink?.href).toBe("/tests?tab=mock_tests&year=2026");
   });

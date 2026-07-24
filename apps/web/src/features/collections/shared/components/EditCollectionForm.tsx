@@ -6,6 +6,8 @@ import type {
   UpdateCollectionInput,
 } from "@/entities/collection/api/collections";
 import { ApiError } from "@/shared/api/http";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/Field";
 import { TextInput } from "@/shared/ui/TextInput";
@@ -25,6 +27,7 @@ export function EditCollectionForm({
   onSubmit,
   onUpdated,
 }: EditCollectionFormProps) {
+  const t = useT();
   const [name, setName] = useState(collection.name);
   const [description, setDescription] = useState(collection.description ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +40,15 @@ export function EditCollectionForm({
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      setError("Collection name is required.");
+      setError(t("collections.nameRequired"));
       return;
     }
 
     if (trimmedName.length > COLLECTION_NAME_MAX_LENGTH) {
       setError(
-        `Collection name must be at most ${COLLECTION_NAME_MAX_LENGTH} characters.`,
+        formatMessage(t("collections.nameMaxLength"), {
+          max: COLLECTION_NAME_MAX_LENGTH,
+        }),
       );
       return;
     }
@@ -52,7 +57,9 @@ export function EditCollectionForm({
 
     if (trimmedDescription.length > COLLECTION_DESCRIPTION_MAX_LENGTH) {
       setError(
-        `Description must be at most ${COLLECTION_DESCRIPTION_MAX_LENGTH} characters.`,
+        formatMessage(t("collections.descriptionMaxLength"), {
+          max: COLLECTION_DESCRIPTION_MAX_LENGTH,
+        }),
       );
       return;
     }
@@ -62,16 +69,14 @@ export function EditCollectionForm({
     try {
       await onSubmit({
         name: trimmedName,
-        ...(trimmedDescription
-          ? { description: trimmedDescription }
-          : {}),
+        ...(trimmedDescription ? { description: trimmedDescription } : {}),
       });
       onUpdated?.();
     } catch (caughtError) {
       setError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : "Cannot update collection.",
+          : t("collections.cannotUpdate"),
       );
     } finally {
       setIsSubmitting(false);
@@ -84,22 +89,22 @@ export function EditCollectionForm({
       className="grid gap-4"
       onSubmit={(event) => void handleSubmit(event)}
     >
-      <Field label="Name">
+      <Field label={t("collections.name")}>
         <TextInput
           id={`collection-name-${collection.id}`}
           maxLength={COLLECTION_NAME_MAX_LENGTH}
           onChange={(event) => setName(event.target.value)}
-          placeholder="e.g. TOEIC prep"
+          placeholder={t("collections.namePlaceholder")}
           value={name}
         />
       </Field>
 
-      <Field label="Description (optional)">
+      <Field label={t("collections.descriptionOptional")}>
         <Textarea
           id={`collection-description-${collection.id}`}
           maxLength={COLLECTION_DESCRIPTION_MAX_LENGTH}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="What is this collection for?"
+          placeholder={t("collections.descriptionPlaceholder")}
           rows={3}
           value={description}
         />
@@ -112,7 +117,7 @@ export function EditCollectionForm({
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "Saving..." : "Save changes"}
+        {isSubmitting ? t("collections.saving") : t("collections.saveChanges")}
       </button>
     </form>
   );

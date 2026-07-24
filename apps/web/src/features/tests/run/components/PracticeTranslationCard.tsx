@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PracticeTranslationCardProps = {
   children: ReactNode;
@@ -14,8 +17,11 @@ export function PracticeTranslationCard({
   className,
   headerAction,
   showHeader = true,
-  title = "Translation",
+  title,
 }: PracticeTranslationCardProps) {
+  const t = useT();
+  const resolvedTitle = title ?? t("tests.translation");
+
   return (
     <div
       className={classNames(
@@ -26,7 +32,7 @@ export function PracticeTranslationCard({
       {showHeader ? (
         <>
           <div className="flex items-center gap-4 p-4">
-            <p className="font-semibold">{title}</p>
+            <p className="font-semibold">{resolvedTitle}</p>
             {headerAction}
           </div>
           <div className="border-t border-border" />

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 const storageMocks = vi.hoisted(() => ({
   readEvidenceHighlightEnabled: vi.fn(() => true),
@@ -23,21 +24,23 @@ describe("PassagePanel structured evidence", () => {
     const user = userEvent.setup();
 
     render(
-      <PassagePanel
-        content="Intro. Shared evidence. Outro."
-        contentSegments={[
-          { type: "text", value: "Intro. " },
-          {
-            type: "evidence",
-            questionNumbers: [89, 90],
-            value: "Shared evidence.",
-          },
-          { type: "text", value: " Outro." },
-        ]}
-        showEvidenceToggle
-        showTranslation={false}
-        title="Transcript"
-      />,
+      <LocaleProvider>
+        <PassagePanel
+          content="Intro. Shared evidence. Outro."
+          contentSegments={[
+            { type: "text", value: "Intro. " },
+            {
+              type: "evidence",
+              questionNumbers: [89, 90],
+              value: "Shared evidence.",
+            },
+            { type: "text", value: " Outro." },
+          ]}
+          showEvidenceToggle
+          showTranslation={false}
+          title="Transcript"
+        />
+      </LocaleProvider>,
     );
 
     expect(screen.getByText("89")).toBeInTheDocument();

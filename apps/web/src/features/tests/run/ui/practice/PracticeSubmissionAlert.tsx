@@ -1,6 +1,9 @@
+"use client";
+
 import { classNames } from "@/shared/lib/classNames";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PracticeSubmissionAlertProps = {
   isSubmitting: boolean;
@@ -11,6 +14,8 @@ export function PracticeSubmissionAlert({
   isSubmitting,
   onRetry,
 }: PracticeSubmissionAlertProps) {
+  const t = useT();
+
   return (
     <div
       aria-busy={isSubmitting}
@@ -22,9 +27,7 @@ export function PracticeSubmissionAlert({
       )}
       role="alert"
     >
-      <p>
-        Some answers could not be saved. Please retry before leaving this group.
-      </p>
+      <p>{t("tests.answersCouldNotBeSavedBeforeLeaving")}</p>
       <button
         aria-busy={isSubmitting}
         className={secondaryTextButtonClassName(
@@ -36,7 +39,7 @@ export function PracticeSubmissionAlert({
         onClick={onRetry}
         type="button"
       >
-        Retry saving answers
+        {t("tests.retrySavingAnswers")}
       </button>
     </div>
   );

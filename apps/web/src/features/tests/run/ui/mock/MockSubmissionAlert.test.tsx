@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MockSubmissionAlert } from "@/features/tests/run/ui/mock/MockSubmissionAlert";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 describe("MockSubmissionAlert", () => {
   it("offers an actionable retry when answers are not saved", async () => {
@@ -9,10 +10,9 @@ describe("MockSubmissionAlert", () => {
     const onRetry = vi.fn();
 
     render(
-      <MockSubmissionAlert
-        hasSyncFailures
-        onRetry={onRetry}
-      />,
+      <LocaleProvider>
+        <MockSubmissionAlert hasSyncFailures onRetry={onRetry} />
+      </LocaleProvider>,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(

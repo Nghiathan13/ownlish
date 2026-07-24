@@ -43,7 +43,7 @@ describe("OxfordPartReviewNavigation", () => {
     );
     const partsList = screen
       .getByRole("navigation", { name: "Oxford review parts" })
-      .querySelector("div");
+      .querySelector(".overlay-scroll-hide");
 
     if (!partsList) {
       throw new Error("Oxford parts list is missing");
@@ -64,7 +64,7 @@ describe("OxfordPartReviewNavigation", () => {
     );
     const partsList = screen
       .getByRole("navigation", { name: "Oxford review parts" })
-      .querySelector("div");
+      .querySelector(".overlay-scroll-hide");
     const partSix = screen.getByRole("link", { name: "Part 6" });
 
     if (!partsList) {

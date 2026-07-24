@@ -3,8 +3,10 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { classNames } from "@/shared/lib/classNames";
+import { formatMessage } from "@/shared/i18n/messages";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PracticeQuestionGridPanelProps = {
   sections: QuestionGridSection[];
@@ -17,6 +19,8 @@ export function PracticeQuestionGridPanel({
   onClose,
   onSelect,
 }: PracticeQuestionGridPanelProps) {
+  const t = useT();
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -35,7 +39,7 @@ export function PracticeQuestionGridPanel({
   return createPortal(
     <div className="fixed inset-0 z-[100]" role="presentation">
       <button
-        aria-label="Close question list"
+        aria-label={t("tests.closeQuestionList")}
         className="absolute inset-0 bg-background/60 backdrop-blur-sm"
         onClick={onClose}
         type="button"
@@ -48,7 +52,9 @@ export function PracticeQuestionGridPanel({
           {sections.map((section) => (
             <section className="flex flex-col gap-2" key={section.partNumber}>
               <h3 className="text-base font-semibold">
-                Part {section.partNumber}
+                {formatMessage(t("tests.partNumber"), {
+                  number: section.partNumber,
+                })}
               </h3>
               <div className="grid grid-cols-[repeat(6,2.5rem)] gap-2">
                 {section.cells.map((cell) => (

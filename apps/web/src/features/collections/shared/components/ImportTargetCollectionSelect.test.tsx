@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { CollectionSummary } from "@/entities/collection/api/collections";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { ImportTargetCollectionSelect } from "./ImportTargetCollectionSelect";
 
 const collections: CollectionSummary[] = [
@@ -39,13 +40,15 @@ describe("ImportTargetCollectionSelect", () => {
     const onChange = vi.fn();
 
     render(
-      <ImportTargetCollectionSelect
-        ariaLabel="Review collection"
-        collections={collections}
-        onChange={onChange}
-        value="collection-1"
-        variant="review"
-      />,
+      <LocaleProvider>
+        <ImportTargetCollectionSelect
+          ariaLabel="Review collection"
+          collections={collections}
+          onChange={onChange}
+          value="collection-1"
+          variant="review"
+        />
+      </LocaleProvider>,
     );
 
     const trigger = screen.getByRole("button", {
@@ -66,13 +69,15 @@ describe("ImportTargetCollectionSelect", () => {
     const user = userEvent.setup();
 
     render(
-      <ImportTargetCollectionSelect
-        ariaLabel="Collection"
-        collections={collections}
-        onChange={vi.fn()}
-        value="collection-1"
-        variant="toolbar"
-      />,
+      <LocaleProvider>
+        <ImportTargetCollectionSelect
+          ariaLabel="Collection"
+          collections={collections}
+          onChange={vi.fn()}
+          value="collection-1"
+          variant="toolbar"
+        />
+      </LocaleProvider>,
     );
 
     await user.click(

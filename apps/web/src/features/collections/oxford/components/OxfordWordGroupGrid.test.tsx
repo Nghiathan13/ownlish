@@ -1,11 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { OxfordWordGroupGrid } from "./OxfordWordGroupGrid";
 
 describe("OxfordWordGroupGrid", () => {
   it("renders 48 A1 groups and preserves the final 17-word range", () => {
     render(
-      <OxfordWordGroupGrid band="A1" itemCount={957} onOpenPart={() => {}} />,
+      <LocaleProvider>
+        <OxfordWordGroupGrid band="A1" itemCount={957} onOpenPart={() => {}} />
+      </LocaleProvider>,
     );
 
     expect(screen.getAllByRole("link")).toHaveLength(96);
@@ -28,11 +31,13 @@ describe("OxfordWordGroupGrid", () => {
     const onOpenPart = vi.fn();
 
     render(
-      <OxfordWordGroupGrid
-        band="A1"
-        itemCount={20}
-        onOpenPart={onOpenPart}
-      />,
+      <LocaleProvider>
+        <OxfordWordGroupGrid
+          band="A1"
+          itemCount={20}
+          onOpenPart={onOpenPart}
+        />
+      </LocaleProvider>,
     );
 
     const partLink = screen.getByRole("link", { name: "Open A1 - Part 1" });

@@ -1,8 +1,12 @@
+"use client";
+
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type MockLeftPanelProps = {
   group: ToeicQuestionGroup;
@@ -19,6 +23,7 @@ export function MockLeftPanel({
   partConfig,
   partNumber,
 }: MockLeftPanelProps) {
+  const t = useT();
   const instruction = getPartInstruction(partNumber, group);
   const showImage =
     partConfig.leftPanel === "audio-image" ||
@@ -37,7 +42,9 @@ export function MockLeftPanel({
       {showImage && imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
         <img
-          alt={`Question ${group.questionStart}`}
+          alt={formatMessage(t("tests.questionImageAlt"), {
+            number: group.questionStart,
+          })}
           className="mx-auto max-h-[420px] w-full object-contain"
           key={`image-${group.id}`}
           src={imageUrl}

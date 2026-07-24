@@ -5,13 +5,14 @@ import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { LandingPart3Demo } from "@/features/home/components/LandingPart3Demo";
 import { LandingVocabSection } from "@/features/home/components/LandingVocabSection";
+import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { useResolvedTheme } from "@/shared/providers/ThemeProvider";
+import { iconTextButtonClassName } from "@/shared/ui/button";
 import { FacebookIcon } from "@/shared/ui/icons/FacebookIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 import { TikTokIcon } from "@/shared/ui/icons/TikTokIcon";
 import { YouTubeIcon } from "@/shared/ui/icons/YouTubeIcon";
-import { iconTextButtonClassName } from "@/shared/ui/button";
-import { classNames } from "@/shared/lib/classNames";
 
 const socialIconButtonClassName = classNames(
   "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
@@ -47,6 +48,7 @@ const SOCIAL_LINKS: {
 ];
 
 export function GuestLanding() {
+  const t = useT();
   const resolvedTheme = useResolvedTheme();
 
   return (
@@ -63,16 +65,17 @@ export function GuestLanding() {
         <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center sm:px-16 lg:py-24">
           <div className="flex items-center gap-3 rounded-full border-0 border-border bg-surface px-4 py-1.5 text-sm font-medium uppercase text-muted-foreground shadow-card dark:border">
             <LogoIcon className="size-4 shrink-0" />
-            Learn smarter, not harder
+            {t("landing.badge")}
           </div>
           <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Grow your vocabulary.
+            {t("landing.heroTitleLine1")}
             <br />
-            <span className="whitespace-nowrap">Raise your TOEIC readiness.</span>
+            <span className="whitespace-nowrap">
+              {t("landing.heroTitleLine2")}
+            </span>
           </h1>
           <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            Use spaced repetition, bilingual learning content, and complete
-            Part 1–7 practice to make steady progress.
+            {t("landing.heroDescription")}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
@@ -81,7 +84,7 @@ export function GuestLanding() {
                 "whitespace-nowrap border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
               )}
             >
-              Get started
+              {t("landing.getStarted")}
             </Link>
           </div>
         </div>
@@ -109,11 +112,10 @@ export function GuestLanding() {
           <div className="relative z-10 grid items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:gap-8 lg:px-12 lg:py-16">
             <div className="flex flex-col items-start gap-6">
               <h2 className="max-w-md text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Organize your vocabulary
+                {t("landing.collectionsTitle")}
               </h2>
               <p className="max-w-md text-lg text-white/80 sm:text-xl">
-                Build collections, track reviews, and keep every word in one
-                place.
+                {t("landing.collectionsDescription")}
               </p>
               <Link
                 href="/login"
@@ -121,12 +123,12 @@ export function GuestLanding() {
                   "border-[#1F48DA] bg-[#1F48DA] text-white hover:[box-shadow:inset_0_0_0_9999px_rgba(255,255,255,0.12)]",
                 )}
               >
-                Get started
+                {t("landing.getStarted")}
               </Link>
             </div>
             <div className="relative flex min-h-64 items-center justify-center [perspective:1000px] lg:min-h-[22rem]">
               <Image
-                alt="EngVocab collections page with vocabulary table"
+                alt={t("landing.collectionsImageAlt")}
                 className="w-full max-w-xl rounded-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] brightness-90 [transform:translateY(40px)_scaleY(0.94)_skewX(-4deg)_rotate(6deg)] lg:absolute lg:right-[-10%] lg:w-[118%] lg:max-w-none lg:[transform:translateY(40px)_scaleY(0.86)_skewX(-8deg)_rotate(11deg)]"
                 height={1481}
                 src="/collection_page.png"

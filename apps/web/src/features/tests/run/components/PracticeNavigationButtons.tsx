@@ -4,10 +4,12 @@ import { useState } from "react";
 import { PracticeQuestionGridPanel } from "@/features/tests/run/components/PracticeQuestionGridPanel";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { ReactNode } from "react";
+import { formatMessage } from "@/shared/i18n/messages";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { GridViewIcon } from "@/shared/ui/icons/GridViewIcon";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PracticeNavigationButtonsProps = {
   nextAriaLabel?: string;
@@ -25,7 +27,7 @@ type PracticeNavigationButtonsProps = {
 };
 
 export function PracticeNavigationButtons({
-  nextAriaLabel = "Next",
+  nextAriaLabel,
   nextDisabled = false,
   onNext,
   onPrevious,
@@ -38,6 +40,8 @@ export function PracticeNavigationButtons({
   currentQuestionNumber,
   totalQuestions,
 }: PracticeNavigationButtonsProps) {
+  const t = useT();
+  const resolvedNextAriaLabel = nextAriaLabel ?? t("tests.next");
   const [internalGridOpen, setInternalGridOpen] = useState(false);
   const isGridOpen = isQuestionGridOpen ?? internalGridOpen;
   const setIsGridOpen = onQuestionGridOpenChange ?? setInternalGridOpen;
@@ -65,7 +69,7 @@ export function PracticeNavigationButtons({
         <div className="min-w-0">{leftSlot}</div>
         <div className="flex items-center justify-end gap-2">
           <button
-            aria-label="Previous"
+            aria-label={t("tests.previous")}
             className={iconOnlyButtonClassName(
               "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
             )}
@@ -79,8 +83,11 @@ export function PracticeNavigationButtons({
             <button
               aria-label={
                 showQuestionPosition
-                  ? `Question list, question ${currentQuestionNumber} of ${totalQuestions}`
-                  : "Question list"
+                  ? formatMessage(t("tests.questionListWithPosition"), {
+                      current: currentQuestionNumber,
+                      total: totalQuestions,
+                    })
+                  : t("tests.questionList")
               }
               className={iconOnlyButtonClassName(
                 "w-auto gap-1.5 border border-border bg-transparent px-2 text-foreground hover:border-foreground",
@@ -97,14 +104,17 @@ export function PracticeNavigationButtons({
             </button>
           ) : showQuestionPosition ? (
             <span
-              aria-label={`Question ${currentQuestionNumber} of ${totalQuestions}`}
+              aria-label={formatMessage(t("tests.questionPosition"), {
+                current: currentQuestionNumber,
+                total: totalQuestions,
+              })}
               className="tabular-nums text-sm text-foreground"
             >
               {currentQuestionNumber}/{totalQuestions}
             </span>
           ) : null}
           <button
-            aria-label={nextAriaLabel}
+            aria-label={resolvedNextAriaLabel}
             className={iconOnlyButtonClassName(
               "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
             )}

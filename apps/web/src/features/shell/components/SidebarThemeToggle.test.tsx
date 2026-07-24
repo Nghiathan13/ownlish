@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { SidebarThemeToggle } from "./SidebarThemeToggle";
 
 const mocks = vi.hoisted(() => ({
@@ -12,6 +13,14 @@ vi.mock("@/shared/providers/ThemeProvider", () => ({
   useResolvedTheme: mocks.useResolvedTheme,
 }));
 
+function renderToggle(collapsed: boolean) {
+  return render(
+    <LocaleProvider>
+      <SidebarThemeToggle collapsed={collapsed} />
+    </LocaleProvider>,
+  );
+}
+
 describe("SidebarThemeToggle", () => {
   beforeEach(() => {
     mocks.setTheme.mockReset();
@@ -19,7 +28,7 @@ describe("SidebarThemeToggle", () => {
   });
 
   it("shows the dark mode action and switches to dark", () => {
-    render(<SidebarThemeToggle collapsed={false} />);
+    renderToggle(false);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Switch to dark theme" }),
@@ -32,7 +41,7 @@ describe("SidebarThemeToggle", () => {
   it("shows the light mode tooltip when collapsed", () => {
     mocks.useResolvedTheme.mockReturnValue("dark");
 
-    render(<SidebarThemeToggle collapsed />);
+    renderToggle(true);
 
     expect(
       screen.getByRole("button", { name: "Switch to light theme" }),

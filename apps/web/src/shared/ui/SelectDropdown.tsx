@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { classNames } from "@/shared/lib/classNames";
 import { ArrowDropDownIcon } from "@/shared/ui/icons/ArrowDropDownIcon";
 import { ArrowDropUpIcon } from "@/shared/ui/icons/ArrowDropUpIcon";
+import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
 
 export type SelectDropdownOption<T extends string> = {
   label: string;
@@ -79,32 +80,38 @@ export function SelectDropdown<T extends string>({
       {isOpen ? (
         <div
           aria-label={ariaLabel}
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid max-h-[calc(0.5rem+5*2.25rem+4*0.25rem)] w-full gap-1 overflow-y-auto rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 w-full rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
           id={menuId}
           role="listbox"
         >
-          {options.map((option) => {
-            const isSelected = option.value === value;
+          <OverlayScrollArea
+            centerSelector='[aria-selected="true"]'
+            className="max-h-[calc(5*2.25rem+4*0.25rem)]"
+            contentClassName="grid gap-1"
+          >
+            {options.map((option) => {
+              const isSelected = option.value === value;
 
-            return (
-              <button
-                aria-selected={isSelected}
-                className={classNames(
-                  "flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-hover-overlay",
-                  isSelected && "bg-muted",
-                )}
-                key={option.value}
-                onClick={() => {
-                  setIsOpen(false);
-                  onChange(option.value);
-                }}
-                role="option"
-                type="button"
-              >
-                <span className="truncate">{option.label}</span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  aria-selected={isSelected}
+                  className={classNames(
+                    "flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-hover-overlay",
+                    isSelected && "bg-muted",
+                  )}
+                  key={option.value}
+                  onClick={() => {
+                    setIsOpen(false);
+                    onChange(option.value);
+                  }}
+                  role="option"
+                  type="button"
+                >
+                  <span className="truncate">{option.label}</span>
+                </button>
+              );
+            })}
+          </OverlayScrollArea>
         </div>
       ) : null}
     </div>

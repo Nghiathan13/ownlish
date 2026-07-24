@@ -1,12 +1,15 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 const STORAGE_KEY = "engvocab:tests-split-left-panel-width";
 
 function renderLayout() {
   return render(
-    <PracticeSplitPlainLayout left={<p>Question</p>} right={<p>Answer</p>} />,
+    <LocaleProvider>
+      <PracticeSplitPlainLayout left={<p>Question</p>} right={<p>Answer</p>} />
+    </LocaleProvider>,
   );
 }
 

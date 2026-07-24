@@ -34,11 +34,16 @@ describe("GoogleSignInButton", () => {
     const user = userEvent.setup();
     const onCode = vi.fn();
     const onError = vi.fn();
-    const { GoogleSignInButton } = await import(
-      "@/features/auth/components/GoogleSignInButton"
-    );
+    const [{ GoogleSignInButton }, { LocaleProvider }] = await Promise.all([
+      import("@/features/auth/components/GoogleSignInButton"),
+      import("@/shared/providers/LocaleProvider"),
+    ]);
 
-    render(<GoogleSignInButton onCode={onCode} onError={onError} />);
+    render(
+      <LocaleProvider>
+        <GoogleSignInButton onCode={onCode} onError={onError} />
+      </LocaleProvider>,
+    );
 
     await user.click(
       screen.getByRole("button", { name: "Continue with Google" }),

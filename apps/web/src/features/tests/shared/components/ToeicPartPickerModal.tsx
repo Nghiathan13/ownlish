@@ -19,6 +19,8 @@ import {
   READING_PARTS,
 } from "@/features/tests/shared/constants/toeicPartPicker";
 import { isPartEnabled } from "@/features/tests/shared/lib/toeicPartPicker";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type ToeicPartPickerModalProps = {
   intent?: "practice" | "mock";
@@ -91,6 +93,7 @@ export function ToeicPartPickerModal({
   onStart,
   onStartMock,
 }: ToeicPartPickerModalProps) {
+  const t = useT();
   const partPicker = useToeicPartPicker({
     intent,
     isStarting,
@@ -99,23 +102,31 @@ export function ToeicPartPickerModal({
     test,
   });
   const showsWrongProgress = partPicker.intent === "practice";
+  const startLabel = partPicker.isStarting
+    ? t("tests.starting")
+    : partPicker.selectedParts.length > 1
+      ? formatMessage(t("tests.startParts"), {
+          count: partPicker.selectedParts.length,
+        })
+      : t("tests.start");
+  const title = formatMessage(
+    t(partPicker.intent === "mock" ? "tests.mockTitle" : "tests.practiceTitle"),
+    { label: testLabel },
+  );
 
   return (
-    <Modal
-      onClose={onClose}
-      title={`${partPicker.intent === "mock" ? "Mock" : "Practice"} ${testLabel}`}
-    >
+    <Modal onClose={onClose} title={title}>
       <div className="flex flex-col gap-4">
         <section className="flex flex-col gap-2">
           <PartCheckboxOption
             checked={partPicker.areAllPartsChecked}
-            label="All parts"
+            label={t("tests.allParts")}
             onToggle={partPicker.toggleAllParts}
           />
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="text-base font-semibold">Listening</h3>
+          <h3 className="text-base font-semibold">{t("tests.listening")}</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {LISTENING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
@@ -127,7 +138,9 @@ export function ToeicPartPickerModal({
                   checked={partPicker.selectedParts.includes(partNumber)}
                   disabled={!enabled}
                   key={partNumber}
-                  label={`Part ${partNumber}`}
+                  label={formatMessage(t("tests.partNumber"), {
+                    number: partNumber,
+                  })}
                   onToggle={() => enabled && partPicker.togglePart(partNumber)}
                   wrongCount={showsWrongProgress && enabled ? wrongCount : 0}
                 />
@@ -137,7 +150,7 @@ export function ToeicPartPickerModal({
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="text-base font-semibold">Reading</h3>
+          <h3 className="text-base font-semibold">{t("tests.reading")}</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {READING_PARTS.map((partNumber) => {
               const enabled = isPartEnabled(partNumber);
@@ -149,7 +162,9 @@ export function ToeicPartPickerModal({
                   checked={partPicker.selectedParts.includes(partNumber)}
                   disabled={!enabled}
                   key={partNumber}
-                  label={`Part ${partNumber}`}
+                  label={formatMessage(t("tests.partNumber"), {
+                    number: partNumber,
+                  })}
                   onToggle={() => enabled && partPicker.togglePart(partNumber)}
                   wrongCount={showsWrongProgress && enabled ? wrongCount : 0}
                 />
@@ -166,7 +181,7 @@ export function ToeicPartPickerModal({
               onClick={() => partPicker.startWithMode("review_wrong")}
               type="button"
             >
-              Review wrong
+              {t("tests.reviewWrong")}
               {partPicker.selectedWrongCount > 0
                 ? ` (${partPicker.selectedWrongCount})`
                 : ""}
@@ -188,7 +203,7 @@ export function ToeicPartPickerModal({
             type="button"
           >
             <StartIcon />
-            {partPicker.startLabel}
+            {startLabel}
           </button>
         </div>
       </div>

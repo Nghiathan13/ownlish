@@ -1,5 +1,8 @@
+"use client";
+
 import { ReviewProgress } from "@/features/review/components/ReviewProgress";
 import type { ReviewStudyWord } from "@/features/review/model/reviewStudyWord";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type ReviewCardProps = {
   onToggleMeaning: () => void;
@@ -16,9 +19,11 @@ export function ReviewCard({
   totalWords,
   word,
 }: ReviewCardProps) {
+  const t = useT();
+
   return (
     <article
-      aria-label={showMeaning ? "Hide meaning" : "Reveal meaning"}
+      aria-label={showMeaning ? t("review.clickToHide") : t("review.clickToReview")}
       className="flex h-[480px] cursor-pointer flex-col rounded-lg bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
       onClick={onToggleMeaning}
     >
@@ -55,8 +60,10 @@ export function ReviewCard({
       </div>
 
       <p className="mt-6 flex shrink-0 items-center justify-center gap-2 text-sm text-muted-foreground">
-        <span>{showMeaning ? "Click to hide" : "Click to review"}</span>
-        <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-border bg-muted px-1.5 text-xs font-medium text-foreground">
+        <span>
+          {showMeaning ? t("review.clickToHide") : t("review.clickToReview")}
+        </span>
+        <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-border bg-background px-1.5 text-xs font-medium text-foreground">
           Space
         </kbd>
       </p>
@@ -87,7 +94,7 @@ function ReviewMeaning({ word }: { word: ReviewStudyWord }) {
           ) : null}
           {definition.example ? (
             <div className="mx-auto w-full text-center">
-              <p className="leading-7 text-foreground">
+              <p className="leading-7 text-foreground italic">
                 &ldquo;{definition.example}&rdquo;
               </p>
               {definition.exampleVi ? (

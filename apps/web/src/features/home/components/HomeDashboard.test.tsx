@@ -33,6 +33,20 @@ vi.mock("@/shared/providers/ThemeProvider", () => ({
   useResolvedTheme: () => "light",
 }));
 
+vi.mock("@/shared/providers/LocaleProvider", async () => {
+  const { translate } = await import("@/shared/i18n/messages");
+
+  return {
+    LocaleProvider: ({ children }: { children: React.ReactNode }) => children,
+    useLocale: () => ({
+      locale: "en" as const,
+      setLocale: vi.fn(),
+      t: (key: Parameters<typeof translate>[1]) => translate("en", key),
+    }),
+    useT: () => (key: Parameters<typeof translate>[1]) => translate("en", key),
+  };
+});
+
 const defaultCollection = {
   id: "collection-1",
   name: "Daily vocabulary",

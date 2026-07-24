@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { CollectionCategorySelect } from "./CollectionCategorySelect";
 
 const mocks = vi.hoisted(() => ({ push: vi.fn() }));
@@ -19,7 +20,11 @@ describe("CollectionCategorySelect", () => {
     const user = userEvent.setup();
     const pushState = vi.spyOn(window.history, "pushState");
 
-    render(<CollectionCategorySelect activeCategory="user" />);
+    render(
+      <LocaleProvider>
+        <CollectionCategorySelect activeCategory="user" />
+      </LocaleProvider>,
+    );
 
     await user.click(
       screen.getByRole("button", {
@@ -42,10 +47,12 @@ describe("CollectionCategorySelect", () => {
     const onCategoryChange = vi.fn();
 
     render(
-      <CollectionCategorySelect
-        activeCategory="user"
-        onCategoryChange={onCategoryChange}
-      />,
+      <LocaleProvider>
+        <CollectionCategorySelect
+          activeCategory="user"
+          onCategoryChange={onCategoryChange}
+        />
+      </LocaleProvider>,
     );
 
     await user.click(

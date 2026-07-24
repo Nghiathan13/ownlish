@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MockFinishFailureModal } from "@/features/tests/run/ui/mock/MockFinishFailureModal";
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
 describe("MockFinishFailureModal", () => {
   it("keeps Finish retry actionable while explaining local-only edits", async () => {
@@ -10,12 +11,14 @@ describe("MockFinishFailureModal", () => {
     const onRetry = vi.fn();
 
     render(
-      <MockFinishFailureModal
-        error="Cannot connect to server."
-        isRetrying={false}
-        onClose={onClose}
-        onRetry={onRetry}
-      />,
+      <LocaleProvider>
+        <MockFinishFailureModal
+          error="Cannot connect to server."
+          isRetrying={false}
+          onClose={onClose}
+          onRetry={onRetry}
+        />
+      </LocaleProvider>,
     );
 
     expect(

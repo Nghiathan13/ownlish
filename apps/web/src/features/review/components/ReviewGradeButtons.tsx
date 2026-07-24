@@ -1,5 +1,9 @@
+"use client";
+
+import type { MessageKey } from "@/shared/i18n/messages";
 import { classNames } from "@/shared/lib/classNames";
-import { primaryTextButtonClassName, secondaryTextButtonClassName } from "@/shared/ui/button";
+import { useT } from "@/shared/providers/LocaleProvider";
+import { textButtonClassName } from "@/shared/ui/button";
 
 type ReviewGradeButtonsProps = {
   disableGood?: boolean;
@@ -11,34 +15,50 @@ type ReviewGradeButtonsProps = {
   onHard: () => void;
 };
 
-const gradeButtons = [
+const gradeButtons: Array<{
+  key: string;
+  labelKey: MessageKey;
+  interval: string;
+  action: "again" | "hard" | "good" | "easy";
+  textClassName: string;
+  backgroundClassName: string;
+  borderClassName: string;
+}> = [
   {
     key: "1",
-    label: "Again",
+    labelKey: "review.again",
     interval: "1m",
-    variant: "secondary" as const,
-    action: "again" as const,
+    action: "again",
+    textClassName: "text-danger",
+    backgroundClassName: "bg-danger-background",
+    borderClassName: "border-danger-border",
   },
   {
     key: "2",
-    label: "Hard",
+    labelKey: "review.hard",
     interval: "8h",
-    variant: "secondary" as const,
-    action: "hard" as const,
+    action: "hard",
+    textClassName: "text-warning",
+    backgroundClassName: "bg-warning-background",
+    borderClassName: "border-warning-border",
   },
   {
     key: "3",
-    label: "Good",
+    labelKey: "review.good",
     interval: "1d",
-    variant: "secondary" as const,
-    action: "good" as const,
+    action: "good",
+    textClassName: "text-success",
+    backgroundClassName: "bg-success-background",
+    borderClassName: "border-success-border",
   },
   {
     key: "4",
-    label: "Easy",
+    labelKey: "review.easy",
     interval: "3d",
-    variant: "primary" as const,
-    action: "easy" as const,
+    action: "easy",
+    textClassName: "text-information",
+    backgroundClassName: "bg-information-background",
+    borderClassName: "border-information-border",
   },
 ];
 
@@ -51,6 +71,7 @@ export function ReviewGradeButtons({
   onGood,
   onHard,
 }: ReviewGradeButtonsProps) {
+  const t = useT();
   const actions = {
     again: onAgain,
     hard: onHard,
@@ -65,42 +86,34 @@ export function ReviewGradeButtons({
           disabled ||
           (button.action === "hard" && disableHard) ||
           (button.action === "good" && disableGood);
-        const className =
-          button.variant === "primary"
-            ? primaryTextButtonClassName("w-full flex-col gap-1")
-            : secondaryTextButtonClassName("w-full flex-col gap-1 hover:bg-hover-overlay");
 
         return (
           <button
-            className={className}
+            className={textButtonClassName(
+              "w-full flex-col gap-1",
+              button.textClassName,
+              button.backgroundClassName,
+              button.borderClassName,
+              "hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+            )}
             disabled={isDisabled}
             key={button.key}
             onClick={actions[button.action]}
             type="button"
           >
             <span className="inline-flex items-center gap-1.5">
-              <span>{button.label}</span>
+              <span>{t(button.labelKey)}</span>
               <kbd
                 className={classNames(
                   "inline-flex h-5 min-w-5 items-center justify-center rounded border px-1 text-[11px] font-medium",
-                  button.variant === "primary"
-                    ? "border-background/35 text-background"
-                    : "border-border bg-muted text-foreground",
+                  button.backgroundClassName,
+                  button.borderClassName,
                 )}
               >
                 {button.key}
               </kbd>
             </span>
-            <span
-              className={classNames(
-                "text-xs font-normal",
-                button.variant === "primary"
-                  ? "text-background/75"
-                  : "text-muted-foreground",
-              )}
-            >
-              {button.interval}
-            </span>
+            <span className="text-xs font-normal opacity-80">{button.interval}</span>
           </button>
         );
       })}

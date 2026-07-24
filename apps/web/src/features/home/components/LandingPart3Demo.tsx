@@ -16,6 +16,7 @@ import { QuestionTranslationPanel } from "@/features/tests/run/components/Questi
 import {
   iconTextButtonClassName,
 } from "@/shared/ui/button";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type Selections = Record<string, LandingOptionKey | null>;
 
@@ -45,6 +46,7 @@ function isComplete(selections: Selections) {
 }
 
 export function LandingPart3Demo() {
+  const t = useT();
   const demo = LANDING_PART3_DEMO;
   const sectionRef = useRef<HTMLElement>(null);
   const [selections, setSelections] = useState<Selections>(createEmptySelections);
@@ -87,10 +89,10 @@ export function LandingPart3Demo() {
     >
       <div className="flex flex-col items-center gap-3 text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Try a real Part 3 conversation.
+          {t("landing.part3Title")}
         </h2>
         <p className="max-w-xl text-lg text-muted-foreground">
-          One short dialogue, three questions — same flow as in the app.
+          {t("landing.part3Description")}
         </p>
       </div>
 
@@ -109,12 +111,12 @@ export function LandingPart3Demo() {
             preload="metadata"
             src={demo.audioSrc}
           >
-            Your browser does not support the audio element.
+            {t("landing.audioUnsupported")}
           </audio>
 
           <div className="overflow-hidden rounded-xl border border-border bg-background">
             <Image
-              alt="Part 3 graphic for questions 68 to 70"
+              alt={t("landing.part3ImageAlt")}
               className="h-auto w-full"
               height={720}
               src={demo.imageSrc}
@@ -131,7 +133,7 @@ export function LandingPart3Demo() {
               contentViSegments={[...demo.transcriptViSegments]}
               showEvidenceToggle
               showTranslation
-              title="Transcript"
+              title={t("landing.transcript")}
             />
           ) : null}
         </div>
@@ -178,7 +180,7 @@ export function LandingPart3Demo() {
                 onClick={handleReset}
                 type="button"
               >
-                Try again
+                {t("landing.tryAgain")}
               </button>
               <Link
                 className={iconTextButtonClassName(
@@ -186,7 +188,7 @@ export function LandingPart3Demo() {
                 )}
                 href="/login"
               >
-                Get started
+                {t("landing.getStarted")}
               </Link>
             </div>
           ) : null}
@@ -194,8 +196,7 @@ export function LandingPart3Demo() {
       </div>
 
       <p className="text-center text-sm text-muted-foreground">
-        Listening 1–4 · Reading 5–7 · Mock + Practice · 80+ exams (2019–2026,
-        ETS &amp; YBM)
+        {t("landing.coverage")}
       </p>
     </section>
   );

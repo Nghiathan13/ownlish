@@ -5,11 +5,13 @@ import type { CreateVocabWordInput } from "@/entities/vocab/api/vocab";
 import { VocabWordFormFields } from "@/features/collections/detail/user/forms/components/VocabWordFormFields";
 import {
   EMPTY_VOCAB_WORD_FORM_VALUES,
+  formatVocabWordFormError,
   getVocabWordFormError,
   toCreateVocabWordInput,
   type VocabWordFormValues,
 } from "@/features/collections/detail/user/forms/lib/vocabWordForm";
 import { ApiError } from "@/shared/api/http";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 
 type AddWordFormProps = {
@@ -18,6 +20,7 @@ type AddWordFormProps = {
 };
 
 export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
+  const t = useT();
   const [values, setValues] = useState<VocabWordFormValues>(
     EMPTY_VOCAB_WORD_FORM_VALUES,
   );
@@ -31,7 +34,7 @@ export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
     const validationError = getVocabWordFormError(values);
 
     if (validationError) {
-      setError(validationError);
+      setError(formatVocabWordFormError(validationError, t));
       return;
     }
 
@@ -46,7 +49,7 @@ export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
       setError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : "Cannot add word.",
+          : t("wordsTable.cannotAddWord"),
       );
     } finally {
       setIsSubmitting(false);
@@ -92,7 +95,7 @@ export function AddWordForm({ onCreate, onCreated }: AddWordFormProps) {
           className={primaryTextButtonClassName()}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Adding..." : "Add word"}
+          {isSubmitting ? t("wordsTable.adding") : t("wordsTable.addWord")}
         </button>
       </div>
     </form>

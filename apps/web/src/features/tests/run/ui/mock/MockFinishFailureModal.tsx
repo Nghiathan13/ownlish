@@ -1,5 +1,8 @@
+"use client";
+
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { Modal } from "@/shared/ui/Modal";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type MockFinishFailureModalProps = {
   error: string;
@@ -14,14 +17,13 @@ export function MockFinishFailureModal({
   onClose,
   onRetry,
 }: MockFinishFailureModalProps) {
+  const t = useT();
+
   return (
-    <Modal onClose={onClose} title="Could not finish mock test">
+    <Modal onClose={onClose} title={t("tests.couldNotFinishMockTest")}>
       <div className="grid gap-4">
         <p className="text-muted-foreground">{error}</p>
-        <p>
-          Changes made after Finish stay only on this screen and will not change
-          the submitted result.
-        </p>
+        <p>{t("tests.finishFailureLocalEditsNote")}</p>
         <div>
           <button
             aria-busy={isRetrying}
@@ -30,7 +32,7 @@ export function MockFinishFailureModal({
             onClick={onRetry}
             type="button"
           >
-            {isRetrying ? "Retrying..." : "Retry Finish"}
+            {isRetrying ? t("tests.retrying") : t("tests.retryFinish")}
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { ReviewProgress } from "@/features/review/components/ReviewProgress";
 import type { ReviewStudyWord } from "@/features/review/model/reviewStudyWord";
 import { getTypingAnswer } from "@/features/review/lib/typing";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 
 export type TypingResult = {
@@ -37,6 +38,7 @@ export function ReviewTypingCard({
   typingResult,
   word,
 }: ReviewTypingCardProps) {
+  const t = useT();
   const meaningVi = word.definitions
     .map((definition) => definition.meaningVi?.trim())
     .filter((meaning): meaning is string => Boolean(meaning))
@@ -92,7 +94,7 @@ export function ReviewTypingCard({
             autoComplete="off"
             className="mx-auto block h-[38px] w-[calc(100%-28px)] max-w-[360px] border-0 bg-transparent px-0 py-2 text-center font-[inherit] text-[20px] leading-none text-foreground outline-none placeholder:text-muted-foreground/50 read-only:text-muted-foreground"
             onChange={(event) => onTypedAnswerChange(event.target.value)}
-            placeholder="Type the word"
+            placeholder={t("review.typeTheWord")}
             readOnly={Boolean(typingResult)}
             ref={typingInputRef}
             spellCheck={false}
@@ -111,17 +113,21 @@ export function ReviewTypingCard({
                     : statusColorClasses.danger.text,
                 )}
               >
-                {typingResult.isCorrect ? "Correct" : "Incorrect"}
+                {typingResult.isCorrect
+                  ? t("review.correct")
+                  : t("review.incorrect")}
               </p>
               <p className="flex items-center justify-center gap-2.5">
-                <span className="text-muted-foreground/70">Answer</span>
+                <span className="text-muted-foreground/70">{t("review.answer")}</span>
                 <strong className="font-medium text-foreground">
                   {getTypingAnswer(word.word)}
                 </strong>
               </p>
               {!typingResult.isCorrect ? (
                 <p className="mt-1.5 flex items-center justify-center gap-2.5">
-                  <span className="text-muted-foreground/70">You typed</span>
+                  <span className="text-muted-foreground/70">
+                    {t("review.youTyped")}
+                  </span>
                   <strong className="font-medium text-muted-foreground">
                     {typingResult.submittedAnswer || "-"}
                   </strong>

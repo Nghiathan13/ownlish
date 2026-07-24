@@ -10,25 +10,32 @@ import {
 } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
 import { TABLE_COLUMN_WIDTH } from "@/features/collections/detail/shared/constants/columnWidths";
 import type { WordsTableHeadColumn } from "@/features/collections/detail/shared/components/WordsTableHead";
+import type { MessageKey } from "@/shared/i18n/messages";
+
+type Translate = (key: MessageKey) => string;
 
 export function getVocabularyWordsTableHeadColumns(
   visibility: VocabularyColumnVisibility,
+  t: Translate,
 ): WordsTableHeadColumn[] {
   return VOCABULARY_TOGGLEABLE_COLUMNS.filter((column) =>
     isColumnVisible(visibility, column.id),
   ).map((column) => ({
-    label: column.label,
+    id: column.id,
+    label: t(column.labelKey),
     widthClass: TABLE_COLUMN_WIDTH[column.id],
   }));
 }
 
 export function getCatalogWordsTableHeadColumns(
   visibility: CatalogColumnVisibility,
+  t: Translate,
 ): WordsTableHeadColumn[] {
   return CATALOG_TOGGLEABLE_COLUMNS.filter((column) =>
     isCatalogColumnVisible(visibility, column.id),
   ).map((column) => ({
-    label: column.label,
+    id: column.id,
+    label: t(column.labelKey),
     widthClass: TABLE_COLUMN_WIDTH[column.id],
   }));
 }

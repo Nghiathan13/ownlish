@@ -30,6 +30,30 @@ vi.mock("@/shared/providers/ThemeProvider", () => ({
   useResolvedTheme: () => "light",
 }));
 
+vi.mock("@/shared/providers/LocaleProvider", () => ({
+  LocaleProvider: ({ children }: { children: React.ReactNode }) => children,
+  useLocale: () => ({
+    locale: "en",
+    setLocale: vi.fn(),
+    t: (key: string) => {
+      const labels: Record<string, string> = {
+        "auth.signIn": "Sign in",
+        "locale.switchToVi": "Switch to Vietnamese",
+        "theme.switchToDark": "Switch to dark theme",
+      };
+      return labels[key] ?? key;
+    },
+  }),
+  useT: () => (key: string) => {
+    const labels: Record<string, string> = {
+      "auth.signIn": "Sign in",
+      "locale.switchToVi": "Switch to Vietnamese",
+      "theme.switchToDark": "Switch to dark theme",
+    };
+    return labels[key] ?? key;
+  },
+}));
+
 describe("AppShell", () => {
   beforeEach(() => {
     mocks.usePathname.mockReturnValue("/");

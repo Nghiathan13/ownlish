@@ -9,6 +9,7 @@ import {
   parseColumnVisibility,
   VOCABULARY_COLUMN_VISIBILITY_STORAGE_KEY,
 } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { Skeleton } from "@/shared/ui/Skeleton";
 
 function readVocabularyColumnVisibilityFromStorage() {
@@ -22,12 +23,14 @@ function readVocabularyColumnVisibilityFromStorage() {
 }
 
 export function CollectionDetailPageSkeletonBody() {
+  const t = useT();
   const tableColumns = useMemo(
     () =>
       getVocabularyWordsTableHeadColumns(
         readVocabularyColumnVisibilityFromStorage(),
+        t,
       ),
-    [],
+    [t],
   );
 
   return (

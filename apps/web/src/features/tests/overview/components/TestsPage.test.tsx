@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { TestsPage } from "./TestsPage";
 
 const mocks = vi.hoisted(() => ({
@@ -70,7 +71,11 @@ describe("TestsPage", () => {
   });
 
   it("keeps incomplete catalog years available for testing", () => {
-    render(<TestsPage />);
+    render(
+      <LocaleProvider>
+        <TestsPage />
+      </LocaleProvider>,
+    );
 
     const props = mocks.mockTestsTab.mock.calls.at(-1)?.[0];
 

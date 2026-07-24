@@ -17,7 +17,13 @@ import {
   getTestWrongCount,
 } from "@/features/tests/shared/lib/toeicTestProgress";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { testOverviewCardClassName, testOverviewMockButtonClassName, testOverviewPracticeButtonClassName } from "@/features/tests/overview/lib/testOverviewCard";
+import {
+  testOverviewCardClassName,
+  testOverviewMockButtonClassName,
+  testOverviewPracticeButtonClassName,
+} from "@/features/tests/overview/lib/testOverviewCard";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type TestCardProps = {
   test: CatalogTestSummary;
@@ -36,6 +42,7 @@ export function TestCard({
   onPractice,
   onReviewWrong,
 }: TestCardProps) {
+  const t = useT();
   const testCorrectCount = getTestCorrectCount(test);
   const testWrongCount = getTestWrongCount(test);
   const answeredQuestionCount = testCorrectCount + testWrongCount;
@@ -43,13 +50,19 @@ export function TestCard({
   return (
     <article className={testOverviewCardClassName}>
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">Test {test.catalog.testNumber}</h2>
+        <h2 className="text-lg font-semibold">
+          {formatMessage(t("tests.testNumber"), {
+            number: test.catalog.testNumber,
+          })}
+        </h2>
         <div className="flex shrink-0 items-center gap-2">
           <button
             aria-label={
               testWrongCount > 0
-                ? `Review wrong (${testWrongCount})`
-                : "Review wrong (all parts)"
+                ? formatMessage(t("tests.reviewWrongCount"), {
+                    count: testWrongCount,
+                  })
+                : t("tests.reviewWrongAllParts")
             }
             className={iconOnlyButtonClassName(
               "relative bg-transparent",
@@ -67,7 +80,11 @@ export function TestCard({
             ) : null}
           </button>
           <button
-            aria-label={isClearingHistory ? "Clearing history" : "Clear history"}
+            aria-label={
+              isClearingHistory
+                ? t("tests.clearingHistory")
+                : t("tests.clearHistory")
+            }
             className={iconOnlyButtonClassName(
               "bg-transparent",
               statusColorClasses.danger.text,
@@ -82,7 +99,9 @@ export function TestCard({
         </div>
       </div>
       {answeredQuestionCount === 0 ? (
-        <p className="text-sm text-muted-foreground">No practice progress yet</p>
+        <p className="text-sm text-muted-foreground">
+          {t("tests.noProgressYet")}
+        </p>
       ) : (
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>
@@ -109,7 +128,7 @@ export function TestCard({
           type="button"
         >
           <StartIcon />
-          Mock
+          {t("tests.mock")}
         </button>
         <button
           className={testOverviewPracticeButtonClassName}
@@ -117,7 +136,7 @@ export function TestCard({
           type="button"
         >
           <PracticeIcon />
-          Practice
+          {t("tests.practice")}
         </button>
       </div>
     </article>

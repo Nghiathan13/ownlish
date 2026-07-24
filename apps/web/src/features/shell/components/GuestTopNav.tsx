@@ -7,6 +7,7 @@ import {
   useAuthSession,
 } from "@/features/auth/hooks/useAuthSession";
 import { classNames } from "@/shared/lib/classNames";
+import { useLocale, useT } from "@/shared/providers/LocaleProvider";
 import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
 import { DarkModeIcon } from "@/shared/ui/icons/DarkModeIcon";
 import { LightModeIcon } from "@/shared/ui/icons/LightModeIcon";
@@ -19,11 +20,31 @@ const signInButtonClassName = classNames(
   "hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
 );
 
+function GuestNavLocaleToggle() {
+  const { locale, setLocale, t } = useLocale();
+  const targetLocale = locale === "en" ? "vi" : "en";
+  const tooltip =
+    targetLocale === "en" ? t("locale.switchToEn") : t("locale.switchToVi");
+
+  return (
+    <button
+      aria-label={tooltip}
+      className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-xs font-semibold tracking-wide text-foreground hover:bg-hover-overlay"
+      onClick={() => setLocale(targetLocale)}
+      type="button"
+    >
+      {targetLocale.toUpperCase()}
+    </button>
+  );
+}
+
 function GuestNavThemeToggle() {
+  const t = useT();
   const { setTheme } = useTheme();
   const resolvedTheme = useResolvedTheme();
   const targetTheme = resolvedTheme === "dark" ? "light" : "dark";
-  const tooltip = `Switch to ${targetTheme} theme`;
+  const tooltip =
+    targetTheme === "light" ? t("theme.switchToLight") : t("theme.switchToDark");
   const Icon = targetTheme === "light" ? LightModeIcon : DarkModeIcon;
 
   return (
@@ -39,6 +60,7 @@ function GuestNavThemeToggle() {
 }
 
 export function GuestTopNav() {
+  const t = useT();
   const { status } = useAuthSession();
   const navRef = useRef<HTMLElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
@@ -78,10 +100,11 @@ export function GuestTopNav() {
           <span className="hidden sm:inline">EngVocab</span>
         </Link>
         <div className="flex items-center gap-2">
+          <GuestNavLocaleToggle />
           <GuestNavThemeToggle />
           {isLoadingStatus(status) ? null : (
             <Link className={signInButtonClassName} href="/login">
-              Sign in
+              {t("auth.signIn")}
             </Link>
           )}
         </div>

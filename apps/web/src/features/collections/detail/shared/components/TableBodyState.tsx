@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/shared/providers/LocaleProvider";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type TableBodyStateProps = {
@@ -18,9 +21,12 @@ export function TableBodyState({
   error = null,
   isEmpty = false,
   isLoading = false,
-  loadingMessage = "Loading words...",
+  loadingMessage,
   onRetry,
 }: TableBodyStateProps) {
+  const t = useT();
+  const resolvedLoadingMessage = loadingMessage ?? t("wordsTable.loadingWords");
+
   if (isLoading) {
     return (
       <tr>
@@ -28,7 +34,7 @@ export function TableBodyState({
           className="p-6 text-sm text-muted-foreground"
           colSpan={columnCount}
         >
-          {loadingMessage}
+          {resolvedLoadingMessage}
         </td>
       </tr>
     );
@@ -46,7 +52,7 @@ export function TableBodyState({
                 onClick={onRetry}
                 type="button"
               >
-                Retry
+                {t("collections.retry")}
               </button>
             ) : null}
           </div>
@@ -75,13 +81,16 @@ export function TableMobileState({
   error = null,
   isEmpty = false,
   isLoading = false,
-  loadingMessage = "Loading words...",
+  loadingMessage,
   onRetry,
 }: Omit<TableBodyStateProps, "columnCount">) {
+  const t = useT();
+  const resolvedLoadingMessage = loadingMessage ?? t("wordsTable.loadingWords");
+
   if (isLoading) {
     return (
       <p className="col-span-full rounded-lg border border-border p-6 text-sm text-muted-foreground">
-        {loadingMessage}
+        {resolvedLoadingMessage}
       </p>
     );
   }
@@ -96,7 +105,7 @@ export function TableMobileState({
             onClick={onRetry}
             type="button"
           >
-            Retry
+            {t("collections.retry")}
           </button>
         ) : null}
       </div>

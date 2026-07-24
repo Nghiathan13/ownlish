@@ -18,6 +18,8 @@ import { useImportOxfordPart } from "@/features/collections/oxford/model/useImpo
 import { useOxfordPartQuery } from "@/features/collections/oxford/model/useOxfordPartQuery";
 import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
 import { WordsColumnPicker } from "@/features/collections/detail/shared/components";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type OxfordGroupWordsPanelProps = {
@@ -37,6 +39,7 @@ export function OxfordGroupWordsPanel({
   onBack,
   userId,
 }: OxfordGroupWordsPanelProps) {
+  const t = useT();
   const query = useOxfordPartQuery({
     band,
     isAuthenticated,
@@ -108,7 +111,11 @@ export function OxfordGroupWordsPanel({
         });
         setSelectedDefinitionIds(new Set());
         setResultMessage(
-          `Imported ${result.imported} words. Updated ${result.updated} existing words. Skipped ${result.skipped} words.`,
+          formatMessage(t("collections.importResult"), {
+            imported: result.imported,
+            updated: result.updated,
+            skipped: result.skipped,
+          }),
         );
       } catch {
         // The mutation error is rendered below.
@@ -118,12 +125,13 @@ export function OxfordGroupWordsPanel({
       group,
       importPart,
       resetImportState,
+      t,
     ],
   );
   const selectedCount = selectedDefinitions.length;
   const importLabel = isImporting
-    ? "Importing..."
-    : `Import (${selectedCount})`;
+    ? t("collections.importing")
+    : formatMessage(t("collections.importCount"), { count: selectedCount });
 
   return (
     <>
@@ -144,7 +152,7 @@ export function OxfordGroupWordsPanel({
             }}
             prefetch={false}
           >
-            Back
+            {t("collections.back")}
           </Link>
           {canImport && selectedCount > 0 ? (
             <button
@@ -166,7 +174,10 @@ export function OxfordGroupWordsPanel({
         </div>
         <WordsColumnPicker
           columnVisibility={columnVisibility}
-          columns={CATALOG_TOGGLEABLE_COLUMNS}
+          columns={CATALOG_TOGGLEABLE_COLUMNS.map((column) => ({
+            id: column.id,
+            label: t(column.labelKey),
+          }))}
           onToggleColumn={toggleColumn}
         />
       </div>

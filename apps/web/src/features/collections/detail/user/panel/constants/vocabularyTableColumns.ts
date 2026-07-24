@@ -1,12 +1,17 @@
+import type { MessageKey } from "@/shared/i18n/messages";
+
 export const VOCABULARY_TOGGLEABLE_COLUMNS = [
-  { id: "ipaUk", label: "IPA UK" },
-  { id: "ipaUs", label: "IPA US" },
-  { id: "type", label: "Type" },
-  { id: "meaning", label: "Meaning" },
-  { id: "level", label: "Level" },
-  { id: "example", label: "Example" },
-  { id: "nextReview", label: "Next review" },
-] as const;
+  { id: "ipaUk", labelKey: "wordsTable.ipaUk" },
+  { id: "ipaUs", labelKey: "wordsTable.ipaUs" },
+  { id: "type", labelKey: "wordsTable.type" },
+  { id: "meaning", labelKey: "wordsTable.meaning" },
+  { id: "level", labelKey: "wordsTable.level" },
+  { id: "example", labelKey: "wordsTable.example" },
+  { id: "nextReview", labelKey: "wordsTable.nextReview" },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  labelKey: MessageKey;
+}>;
 
 export type VocabularyToggleableColumnId =
   (typeof VOCABULARY_TOGGLEABLE_COLUMNS)[number]["id"];

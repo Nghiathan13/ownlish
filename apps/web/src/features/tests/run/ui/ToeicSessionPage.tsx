@@ -19,6 +19,8 @@ import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunL
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
+import type { MessageKey } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 export type ToeicSessionMode = PracticeMode | "mock_test";
 
@@ -29,23 +31,23 @@ type ToeicSessionPageProps = {
   mode: ToeicSessionMode;
 };
 
-type SessionCopy = {
-  invalidRoute: string;
-  selectParts: string;
+type SessionCopyKeys = {
+  invalidRoute: MessageKey;
+  selectParts: MessageKey;
 };
 
-const SESSION_COPY: Record<ToeicSessionMode, SessionCopy> = {
+const SESSION_COPY_KEYS: Record<ToeicSessionMode, SessionCopyKeys> = {
   practice: {
-    invalidRoute: "Invalid practice route.",
-    selectParts: "Select at least one test part.",
+    invalidRoute: "tests.invalidPracticeRoute",
+    selectParts: "tests.selectAtLeastOnePart",
   },
   review_wrong: {
-    invalidRoute: "Invalid review wrong route.",
-    selectParts: "Select at least one part to review wrong questions.",
+    invalidRoute: "tests.invalidReviewWrongRoute",
+    selectParts: "tests.selectPartsReviewWrong",
   },
   mock_test: {
-    invalidRoute: "Invalid mock test route.",
-    selectParts: "Select at least one test part.",
+    invalidRoute: "tests.invalidMockTestRoute",
+    selectParts: "tests.selectAtLeastOnePart",
   },
 };
 
@@ -54,21 +56,22 @@ type ToeicSessionPageContentProps = {
   sessionId: string;
 };
 
-function EmptyPartsState({ copy }: { copy: SessionCopy }) {
+function EmptyPartsState({ copyKeys }: { copyKeys: SessionCopyKeys }) {
+  const t = useT();
   const router = useRouter();
   const testsListPath = getTestsListPath(DEFAULT_TOEIC_YEAR);
 
   return (
     <PageShell>
       <Panel>
-        <p className="text-muted-foreground">{copy.selectParts}</p>
+        <p className="text-muted-foreground">{t(copyKeys.selectParts)}</p>
         <div className="mt-4">
           <button
             className={secondaryTextButtonClassName()}
             onClick={() => router.push(testsListPath)}
             type="button"
           >
-            Back to tests
+            {t("tests.backToTests")}
           </button>
         </div>
       </Panel>
@@ -78,7 +81,7 @@ function EmptyPartsState({ copy }: { copy: SessionCopy }) {
 
 function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentProps) {
   const searchParams = useSearchParams();
-  const copy = SESSION_COPY[mode];
+  const copyKeys = SESSION_COPY_KEYS[mode];
   const selectedParts = useMemo(
     () => parseToeicRunPartsParam(searchParams.get("parts")),
     [searchParams],
@@ -89,7 +92,7 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
   );
 
   if (selectedParts.length === 0) {
-    return <EmptyPartsState copy={copy} />;
+    return <EmptyPartsState copyKeys={copyKeys} />;
   }
 
   if (mode === "mock_test") {
@@ -115,15 +118,16 @@ function ToeicSessionPageContent({ mode, sessionId }: ToeicSessionPageContentPro
 }
 
 export function ToeicSessionPage({ params, mode }: ToeicSessionPageProps) {
+  const t = useT();
   const resolved = use(params);
-  const copy = SESSION_COPY[mode];
+  const copyKeys = SESSION_COPY_KEYS[mode];
 
   if (!isToeicSessionId(resolved.sessionId)) {
     return (
       <RequireAuth>
         <PageShell>
           <Panel>
-            <p className="text-muted-foreground">{copy.invalidRoute}</p>
+            <p className="text-muted-foreground">{t(copyKeys.invalidRoute)}</p>
           </Panel>
         </PageShell>
       </RequireAuth>

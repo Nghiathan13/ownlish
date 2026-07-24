@@ -37,6 +37,8 @@ import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePa
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PartPracticeRunViewProps = {
   sessionId: string;
@@ -53,6 +55,7 @@ export function PartPracticeRunView({
   practiceMode = "practice",
   partNumber: routePartNumber,
 }: PartPracticeRunViewProps) {
+  const t = useT();
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [isQuestionGridOpen, setIsQuestionGridOpen] = useState(false);
@@ -168,7 +171,9 @@ export function PartPracticeRunView({
 
   useRegisterImmersiveExit(
     practice.sessionId ? () => undefined : null,
-    partNumber > 0 ? `Part ${partNumber}` : null,
+    partNumber > 0
+      ? formatMessage(t("tests.partNumber"), { number: partNumber })
+      : null,
     practiceOverviewPath,
     { showBilingualAction: true },
   );
@@ -218,7 +223,6 @@ export function PartPracticeRunView({
     <PracticeNavigationButtons
       currentQuestionNumber={currentQuestionNumber}
       isQuestionGridOpen={isQuestionGridOpen}
-      nextAriaLabel="Next"
       nextDisabled={isLastStep}
       onNext={() => {
         goToStepIndex(activeStepIndex + 1);
@@ -254,7 +258,7 @@ export function PartPracticeRunView({
               onClick={() => router.push(practiceOverviewPath)}
               type="button"
             >
-              Back to practice
+              {t("tests.backToPractice")}
             </button>
           </div>
         </Panel>
@@ -268,8 +272,8 @@ export function PartPracticeRunView({
         <Panel>
           <p className="text-muted-foreground">
             {isWrongMode
-              ? "No wrong questions left to review for this part."
-              : "This part has no questions yet. Check that TOEIC data is imported."}
+              ? t("tests.noWrongQuestionsForPart")
+              : t("tests.partNoQuestions")}
           </p>
           <div className="mt-4">
             <button
@@ -277,7 +281,7 @@ export function PartPracticeRunView({
               onClick={() => router.push(practiceOverviewPath)}
               type="button"
             >
-              Back to practice
+              {t("tests.backToPractice")}
             </button>
           </div>
         </Panel>

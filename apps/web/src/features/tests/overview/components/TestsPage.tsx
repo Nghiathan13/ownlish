@@ -22,8 +22,10 @@ import {
 } from "@/features/auth/hooks/useAuthSession";
 import { PageShell } from "@/shared/ui/PageShell";
 import { useToeicCatalogQuery } from "@/entities/toeic-catalog/model/useToeicCatalogQuery";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 export function TestsPage() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useAuthSession();
@@ -114,7 +116,7 @@ export function TestsPage() {
             catalog.error instanceof Error
               ? catalog.error.message
               : catalog.error
-                ? "Cannot load TOEIC catalog."
+                ? t("tests.cannotLoadCatalog")
                 : null
           }
           selectedYear={selectedYear}

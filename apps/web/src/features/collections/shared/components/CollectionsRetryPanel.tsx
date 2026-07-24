@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/shared/providers/LocaleProvider";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 type CollectionsRetryPanelProps = {
@@ -9,6 +12,8 @@ export function CollectionsRetryPanel({
   message,
   onRetry,
 }: CollectionsRetryPanelProps) {
+  const t = useT();
+
   return (
     <div className="grid gap-4 rounded-xl border border-border p-4">
       <p className="text-sm text-muted-foreground">{message}</p>
@@ -19,7 +24,7 @@ export function CollectionsRetryPanel({
         }}
         type="button"
       >
-        Retry
+        {t("collections.retry")}
       </button>
     </div>
   );

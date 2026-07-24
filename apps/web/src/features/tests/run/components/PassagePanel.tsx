@@ -8,6 +8,7 @@ import { StructuredEvidenceText } from "@/features/tests/run/components/Structur
 import { useEvidenceHighlightPreference } from "@/features/tests/run/hooks/useEvidenceHighlightPreference";
 import { passageContentHasEvidence } from "@/features/tests/run/lib/parsePassageContent";
 import { classNames } from "@/shared/lib/classNames";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type PassagePanelProps = {
   content: string | null;
@@ -31,10 +32,12 @@ function EvidenceHighlightSwitch({
   checked,
   onCheckedChange,
 }: EvidenceHighlightSwitchProps) {
+  const t = useT();
+
   return (
     <button
       aria-checked={checked}
-      aria-label="Highlight evidence"
+      aria-label={t("tests.highlightEvidence")}
       className={classNames(
         "relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         checked ? "bg-foreground" : "bg-neutral-300 dark:bg-neutral-600",
@@ -99,9 +102,11 @@ export function PassagePanel({
   showRawContentWhenEvidenceOff = false,
   showTitle = true,
   showTranslation,
-  title = "Passage",
+  title,
   showEvidenceToggle = false,
 }: PassagePanelProps) {
+  const t = useT();
+  const resolvedTitle = title ?? t("tests.passage");
   const hasStructuredContent = Boolean(contentSegments?.length);
   const hasStructuredTranslation = Boolean(
     showTranslation && contentViSegments?.length,
@@ -149,7 +154,7 @@ export function PassagePanel({
             ) : undefined
           }
           showHeader={showTitle}
-          title={title}
+          title={resolvedTitle}
         >
           <PassageBody
             content={content}
@@ -170,7 +175,7 @@ export function PassagePanel({
               />
             ) : undefined
           }
-          title={hasContent ? "Translation" : title}
+          title={hasContent ? t("tests.translation") : resolvedTitle}
         >
           <PassageBody
             content={contentVi ?? null}

@@ -7,6 +7,7 @@ import {
   getTestsOverviewPath,
   type TestsOverviewTab,
 } from "@/features/tests/shared/lib/partPracticePaths";
+import type { MessageKey } from "@/shared/i18n/messages";
 import { CollectionsNavFillIcon } from "@/shared/ui/icons/CollectionsNavFillIcon";
 import { CollectionsNavIcon } from "@/shared/ui/icons/CollectionsNavIcon";
 import { DashboardNavFillIcon } from "@/shared/ui/icons/DashboardNavFillIcon";
@@ -20,7 +21,7 @@ export type AppNavIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 export type AppNavLink = {
   href: string;
-  label: string;
+  labelKey: MessageKey;
   activeMatch?: string;
   icon: AppNavIcon;
   activeIcon: AppNavIcon;
@@ -29,26 +30,26 @@ export type AppNavLink = {
 export const APP_NAV_LINKS: AppNavLink[] = [
   {
     href: "/",
-    label: "Dashboard",
+    labelKey: "nav.dashboard",
     icon: DashboardNavIcon,
     activeIcon: DashboardNavFillIcon,
   },
   {
     href: "/collections/user",
-    label: "Collections",
+    labelKey: "nav.collections",
     activeMatch: "/collections",
     icon: CollectionsNavIcon,
     activeIcon: CollectionsNavFillIcon,
   },
   {
     href: "/review",
-    label: "Review",
+    labelKey: "nav.review",
     icon: ReviewNavIcon,
     activeIcon: ReviewNavFillIcon,
   },
   {
     href: getTestsListPath(DEFAULT_TOEIC_YEAR),
-    label: "Tests",
+    labelKey: "nav.tests",
     activeMatch: "/tests",
     icon: TestsNavIcon,
     activeIcon: TestsNavFillIcon,
@@ -58,7 +59,7 @@ export const APP_NAV_LINKS: AppNavLink[] = [
 export const ADMIN_NAV_LINKS: AppNavLink[] = [
   {
     href: "/admin/toeic",
-    label: "Tests",
+    labelKey: "nav.tests",
     activeMatch: "/admin/toeic",
     icon: TestsNavIcon,
     activeIcon: TestsNavFillIcon,
@@ -102,19 +103,19 @@ export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
 
 export type TestsSubLink = {
   href: string;
-  label: string;
+  labelKey: MessageKey;
   tab: TestsOverviewTab;
 };
 
 export const TESTS_SUB_LINKS: TestsSubLink[] = [
   {
     href: getTestsListPath(DEFAULT_TOEIC_YEAR),
-    label: "Mock Tests",
+    labelKey: "nav.mockTests",
     tab: "mock_tests",
   },
   {
     href: getTestsOverviewPath({ tab: "part_practice" }),
-    label: "Part Practice",
+    labelKey: "nav.partPractice",
     tab: "part_practice",
   },
 ];

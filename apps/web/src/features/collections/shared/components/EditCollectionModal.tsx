@@ -6,6 +6,7 @@ import type {
 } from "@/entities/collection/api/collections";
 import { EditCollectionForm } from "@/features/collections/shared/components/EditCollectionForm";
 import { useUpdateCollection } from "@/features/collections/shared/mutations/hooks";
+import { useT } from "@/shared/providers/LocaleProvider";
 import { Modal } from "@/shared/ui/Modal";
 
 type EditCollectionModalProps = {
@@ -19,6 +20,7 @@ export function EditCollectionModal({
   onClose,
   userId,
 }: EditCollectionModalProps) {
+  const t = useT();
   const { resetUpdateState, updateCollection } = useUpdateCollection({
     userId,
   });
@@ -29,12 +31,12 @@ export function EditCollectionModal({
 
   return (
     <Modal
-      description="Update the collection name and description."
+      description={t("collections.editDescription")}
       onClose={() => {
         resetUpdateState();
         onClose();
       }}
-      title="Edit collection"
+      title={t("collections.editCollection")}
     >
       <EditCollectionForm
         collection={collection}
