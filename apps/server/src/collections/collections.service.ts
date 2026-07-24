@@ -102,7 +102,6 @@ export class CollectionsService {
       include: {
         _count: {
           select: {
-            catalogItems: true,
             vocabWords: true,
           },
         },
@@ -120,11 +119,20 @@ export class CollectionsService {
       ],
     });
 
+    const systemCounts = await this.prisma.systemVocabularyEntry.groupBy({
+      by: ['band'],
+      where: { source: { in: OXFORD_DEFINITION_SOURCES } },
+      _count: { _all: true },
+    });
+    const systemCountByBand = new Map(
+      systemCounts.map((count) => [count.band, count._count._all]),
+    );
+
     return collections.map((collection) => ({
       ...this.toSummary(collection),
       itemCount:
         collection.kind === WordCollectionKind.SYSTEM
-          ? collection._count.catalogItems
+          ? (systemCountByBand.get(collection.cefrLevel ?? '') ?? 0)
           : collection._count.vocabWords,
     }));
   }
@@ -152,7 +160,6 @@ export class CollectionsService {
       include: {
         _count: {
           select: {
-            catalogItems: true,
             vocabWords: true,
           },
         },
@@ -198,7 +205,6 @@ export class CollectionsService {
       include: {
         _count: {
           select: {
-            catalogItems: true,
             vocabWords: true,
           },
         },
@@ -242,7 +248,7 @@ export class CollectionsService {
 
     const catalogWords =
       collection.kind === WordCollectionKind.SYSTEM
-        ? await this.getCatalogWords(collection.id, collection.cefrLevel)
+        ? await this.getCatalogWords(collection.cefrLevel)
         : [];
     const vocabWords =
       collection.kind === WordCollectionKind.USER
@@ -294,7 +300,6 @@ export class CollectionsService {
     }
 
     let catalogWords = await this.getCatalogWords(
-      collection.id,
       collection.cefrLevel,
       hasCatalogPage
         ? { offset: offset as number, limit: limit as number }
@@ -460,16 +465,14 @@ export class CollectionsService {
 
     const offset = options.offset ?? 0;
     const limit = options.limit ?? 20;
-    const where = this.getCatalogWordsWhere(
-      collection.id,
-      collection.cefrLevel,
-    );
     const [items, total] = await Promise.all([
-      this.getCatalogWords(collection.id, collection.cefrLevel, {
+      this.getCatalogWords(collection.cefrLevel, {
         offset,
         limit,
       }),
-      this.prisma.collectionCatalogItem.count({ where }),
+      this.prisma.systemVocabularyEntry.count({
+        where: this.systemVocabularyWhere(collection.cefrLevel),
+      }),
     ]);
 
     return { items, total, offset, limit };
@@ -478,76 +481,23 @@ export class CollectionsService {
   async getOxfordMeta(band: string): Promise<OxfordCollectionMeta> {
     this.assertOxfordBand(band);
 
-    const collection = await this.prisma.wordCollection.findFirst({
-      where: this.oxfordCollectionWhere(band),
-      include: {
-        _count: {
-          select: {
-            catalogItems: true,
-          },
-        },
-      },
+    const itemCount = await this.prisma.systemVocabularyEntry.count({
+      where: this.systemVocabularyWhere(band),
     });
 
-    if (!collection) {
+    if (itemCount === 0) {
       throw new NotFoundException('Oxford collection not found');
     }
 
-    return {
-      band,
-      itemCount: collection._count.catalogItems,
-    };
+    return { band, itemCount };
   }
 
   async getOxfordPart(band: string, part: number): Promise<OxfordPart> {
     this.assertOxfordBand(band);
     const offset = this.getOxfordPartOffset(part);
-    const items = await this.prisma.collectionCatalogItem.findMany({
-      where: {
-        collection: this.oxfordCollectionWhere(band),
-        catalogWord: {
-          definitions: {
-            some: {
-              band,
-              source: {
-                in: OXFORD_DEFINITION_SOURCES,
-              },
-            },
-          },
-        },
-      },
-      include: {
-        catalogWord: {
-          include: {
-            definitions: {
-              where: {
-                band,
-                source: {
-                  in: OXFORD_DEFINITION_SOURCES,
-                },
-              },
-              orderBy: [
-                {
-                  source: 'asc',
-                },
-                {
-                  type: 'asc',
-                },
-              ],
-            },
-          },
-        },
-      },
-      orderBy: [
-        {
-          sortOrder: 'asc',
-        },
-        {
-          catalogWord: {
-            word: 'asc',
-          },
-        },
-      ],
+    const items = await this.prisma.systemVocabularyEntry.findMany({
+      where: this.systemVocabularyWhere(band),
+      orderBy: { sortOrder: 'asc' },
       skip: offset,
       take: 20,
     });
@@ -557,7 +507,7 @@ export class CollectionsService {
     }
 
     return {
-      items: items.map((item) => item.catalogWord),
+      items: items.map((entry) => this.toCatalogWordFromSystemEntry(entry)),
       limit: 20,
       offset,
     };
@@ -651,64 +601,51 @@ export class CollectionsService {
   }
 
   private async getCatalogWords(
-    collectionId: string,
     cefrLevel: string | null,
     page?: { offset: number; limit: number },
   ): Promise<CatalogWordResult[]> {
-    const items = await this.prisma.collectionCatalogItem.findMany({
-      where: this.getCatalogWordsWhere(collectionId, cefrLevel),
-      include: {
-        catalogWord: {
-          include: {
-            definitions: {
-              where: {
-                ...(cefrLevel ? { band: cefrLevel } : {}),
-                source: {
-                  in: OXFORD_DEFINITION_SOURCES,
-                },
-              },
-              orderBy: [
-                {
-                  source: 'asc',
-                },
-                {
-                  type: 'asc',
-                },
-              ],
-            },
-          },
-        },
-      },
-      orderBy: [
-        {
-          sortOrder: 'asc',
-        },
-        {
-          catalogWord: {
-            word: 'asc',
-          },
-        },
-      ],
+    const items = await this.prisma.systemVocabularyEntry.findMany({
+      where: this.systemVocabularyWhere(cefrLevel),
+      orderBy: { sortOrder: 'asc' },
       skip: page?.offset,
       take: page?.limit,
     });
 
-    return items.map((item) => item.catalogWord);
+    return items.map((entry) => this.toCatalogWordFromSystemEntry(entry));
   }
 
-  private getCatalogWordsWhere(collectionId: string, cefrLevel: string | null) {
+  private systemVocabularyWhere(cefrLevel: string | null) {
     return {
-      collectionId,
-      catalogWord: {
-        definitions: {
-          some: {
-            ...(cefrLevel ? { band: cefrLevel } : {}),
-            source: {
-              in: OXFORD_DEFINITION_SOURCES,
-            },
-          },
+      ...(cefrLevel ? { band: cefrLevel } : {}),
+      source: { in: OXFORD_DEFINITION_SOURCES },
+    };
+  }
+
+  private toCatalogWordFromSystemEntry(
+    entry: Awaited<
+      ReturnType<PrismaService['systemVocabularyEntry']['findMany']>
+    >[number],
+  ): CatalogWordResult {
+    return {
+      id: entry.id,
+      word: entry.word,
+      normalizedWord: entry.normalizedWord,
+      definitions: [
+        {
+          id: entry.id,
+          sourceDefinitionId: entry.sourceDefinitionId,
+          sourceWordId: entry.sourceWordId,
+          type: entry.type,
+          meaningVi: entry.meaningVi,
+          definition: entry.definition,
+          example: entry.example,
+          exampleVi: entry.exampleVi,
+          ipaUk: entry.ipaUk,
+          ipaUs: entry.ipaUs,
+          band: entry.band,
+          source: entry.source,
         },
-      },
+      ],
     };
   }
 

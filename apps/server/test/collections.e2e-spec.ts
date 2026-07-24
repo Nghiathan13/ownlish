@@ -49,7 +49,7 @@ describe('CollectionsController (e2e)', () => {
     await prisma.user.deleteMany({
       where: { email },
     });
-    await prisma.catalogWord.deleteMany({
+    await prisma.systemVocabularyEntry.deleteMany({
       where: { normalizedWord },
     });
     await prisma.wordCollection.deleteMany({
@@ -61,21 +61,18 @@ describe('CollectionsController (e2e)', () => {
 
     await app.init();
 
-    const catalogWord = await prisma.catalogWord.create({
+    await prisma.systemVocabularyEntry.create({
       data: {
         word: 'e2e catalog word',
         normalizedWord,
-        definitions: {
-          create: {
-            sourceDefinitionId: 999001,
-            sourceWordId: 999001,
-            type: 'noun',
-            meaningVi: 'tu e2e',
-            example: 'This is an e2e catalog word.',
-            band: 'A1',
-            source: 'oxford_3000',
-          },
-        },
+        sourceDefinitionId: 999001,
+        sourceWordId: 999001,
+        type: 'noun',
+        meaningVi: 'tu e2e',
+        example: 'This is an e2e catalog word.',
+        band: 'A1',
+        source: 'oxford_3000',
+        sortOrder: 99_900,
       },
     });
     const collection = await prisma.wordCollection.create({
@@ -86,12 +83,6 @@ describe('CollectionsController (e2e)', () => {
         source: 'test',
         cefrLevel: 'A1',
         isPublic: true,
-        catalogItems: {
-          create: {
-            catalogWordId: catalogWord.id,
-            sortOrder: 0,
-          },
-        },
       },
     });
     const auth = await registerE2eUser(app.getHttpServer(), {
@@ -111,7 +102,7 @@ describe('CollectionsController (e2e)', () => {
     await prisma.user.deleteMany({
       where: { email },
     });
-    await prisma.catalogWord.deleteMany({
+    await prisma.systemVocabularyEntry.deleteMany({
       where: { normalizedWord },
     });
     await prisma.wordCollection.deleteMany({
@@ -352,42 +343,36 @@ describe('CollectionsController (e2e)', () => {
     const partialImportNormalizedWord = 'e2e-partial-import-word';
     const catalogDefinitionId = 'oxford-def-e2e-partial-import';
 
-    await prisma.catalogWord.deleteMany({
+    await prisma.systemVocabularyEntry.deleteMany({
       where: { normalizedWord: partialImportNormalizedWord },
     });
 
-    const catalogWord = await prisma.catalogWord.create({
-      data: {
-        word: partialImportWord,
-        normalizedWord: partialImportNormalizedWord,
-        definitions: {
-          create: [
-            {
-              id: catalogDefinitionId,
-              sourceDefinitionId: 999101,
-              sourceWordId: 999101,
-              type: 'noun',
-              meaningVi: 'tu chon',
-              band: 'A1',
-              source: 'oxford_3000',
-            },
-            {
-              sourceDefinitionId: 999102,
-              sourceWordId: 999101,
-              type: 'verb',
-              meaningVi: 'tu bo qua',
-              band: 'A1',
-              source: 'oxford_3000',
-            },
-          ],
+    await prisma.systemVocabularyEntry.createMany({
+      data: [
+        {
+          id: catalogDefinitionId,
+          word: partialImportWord,
+          normalizedWord: partialImportNormalizedWord,
+          sourceDefinitionId: 999101,
+          sourceWordId: 999101,
+          type: 'noun',
+          meaningVi: 'tu chon',
+          band: 'A1',
+          source: 'oxford_3000',
+          sortOrder: 99_901,
         },
-        collectionItems: {
-          create: {
-            collectionId,
-            sortOrder: 1,
-          },
+        {
+          word: partialImportWord,
+          normalizedWord: partialImportNormalizedWord,
+          sourceDefinitionId: 999102,
+          sourceWordId: 999101,
+          type: 'verb',
+          meaningVi: 'tu bo qua',
+          band: 'A1',
+          source: 'oxford_3000',
+          sortOrder: 99_902,
         },
-      },
+      ],
     });
 
     await request(app.getHttpServer())
@@ -428,8 +413,8 @@ describe('CollectionsController (e2e)', () => {
     });
     expect(importedWord?.definitions).toHaveLength(1);
 
-    await prisma.catalogWord.delete({
-      where: { id: catalogWord.id },
+    await prisma.systemVocabularyEntry.deleteMany({
+      where: { normalizedWord: partialImportNormalizedWord },
     });
   });
 

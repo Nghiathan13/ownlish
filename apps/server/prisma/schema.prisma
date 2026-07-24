@@ -30,6 +30,7 @@ model User {
   collections         WordCollection[]
   refreshSessions     RefreshSession[]
   vocabWords          VocabWord[]
+  definitionProgress  UserDefinitionProgress[]
   toeicRuns              ToeicRun[]
   toeicPartPracticeRuns  ToeicPartPracticeRun[]
   toeicLearningRuns      ToeicLearningRun[]
@@ -109,23 +110,10 @@ enum WordCollectionKind {
   USER
 }
 
-model CatalogWord {
-  id             String   @id @default(uuid())
-  word           String
-  normalizedWord String   @unique @map("normalized_word")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  collectionItems CollectionCatalogItem[]
-  definitions     CatalogDefinition[]
-
-  @@index([word])
-  @@map("catalog_words")
-}
-
-model CatalogDefinition {
+model SystemVocabularyEntry {
   id                 String   @id @default(uuid())
-  catalogWordId      String   @map("catalog_word_id")
+  word               String
+  normalizedWord     String   @map("normalized_word")
   sourceDefinitionId Int      @map("source_definition_id")
   sourceWordId       Int      @map("source_word_id")
   type               String
@@ -135,17 +123,17 @@ model CatalogDefinition {
   exampleVi          String?  @map("example_vi")
   ipaUk              String?  @map("ipa_uk")
   ipaUs              String?  @map("ipa_us")
-  band               String?
+  band               String
   source             String
+  sortOrder          Int      @map("sort_order")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  catalogWord CatalogWord @relation(fields: [catalogWordId], references: [id], onDelete: Cascade)
+  progress UserDefinitionProgress[]
 
   @@unique([source, sourceDefinitionId])
-  @@index([catalogWordId])
-  @@index([source, band])
-  @@map("catalog_definitions")
+  @@index([band, sortOrder])
+  @@map("system_vocabulary_entries")
 }
 
 model WordCollection {
@@ -161,7 +149,6 @@ model WordCollection {
   createdAt   DateTime           @default(now()) @map("created_at")
   updatedAt   DateTime           @updatedAt @map("updated_at")
 
-  catalogItems CollectionCatalogItem[]
   owner        User?                   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   vocabWords   VocabWord[]
 
@@ -171,17 +158,18 @@ model WordCollection {
   @@map("word_collections")
 }
 
-model CollectionCatalogItem {
-  collectionId  String @map("collection_id")
-  catalogWordId String @map("catalog_word_id")
-  sortOrder     Int    @default(0) @map("sort_order")
+model UserDefinitionProgress {
+  userId              String   @map("user_id")
+  systemEntryId       String   @map("system_entry_id")
+  level               Int      @default(0) @db.SmallInt
+  nextReviewAt        DateTime @map("next_review_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  catalogWord CatalogWord    @relation(fields: [catalogWordId], references: [id], onDelete: Cascade)
-  collection  WordCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  systemEntry       SystemVocabularyEntry @relation(fields: [systemEntryId], references: [id], onDelete: Cascade)
 
-  @@id([collectionId, catalogWordId])
-  @@index([catalogWordId])
-  @@map("collection_catalog_items")
+  @@id([userId, systemEntryId])
+  @@map("user_definition_progress")
 }
 
 enum ToeicRunMode {
