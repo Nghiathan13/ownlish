@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import {
   VOCABULARY_PAGE_SIZE_OPTIONS,
-  isVocabularyPageSize,
   type VocabularyPageSize,
 } from "@/entities/vocab/lib/vocabPagination";
 import { formatMessage } from "@/shared/i18n/messages";
@@ -12,6 +11,11 @@ import { useT } from "@/shared/providers/LocaleProvider";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
 import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
+import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+
+const paginationSurfaceButtonClassName = iconOnlyButtonClassName(
+  "border border-surface bg-surface text-foreground shadow-card enabled:hover:border-[var(--hover-on-surface)] enabled:hover:bg-[var(--hover-on-surface)] dark:border-border dark:enabled:hover:border-border dark:enabled:hover:bg-surface dark:enabled:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+);
 
 type WordsPaginationProps = {
   canGoNext: boolean;
@@ -44,6 +48,10 @@ export function WordsPagination({
 
   const currentPage = Math.floor(offset / pageSize) + 1;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const pageSizeOptions = VOCABULARY_PAGE_SIZE_OPTIONS.map((option) => ({
+    label: formatMessage(t("wordsTable.wordsOption"), { count: option }),
+    value: option,
+  }));
 
   return (
     <div className={classNames("flex flex-wrap items-center gap-2", className)}>
@@ -70,28 +78,18 @@ export function WordsPagination({
         <ArrowForwardIcon />
       </PaginationIconButton>
 
-      <div className="flex flex-wrap items-center gap-1 text-base text-muted-foreground">
-        <select
-          aria-label={t("wordsTable.wordsPerPage")}
-          className="page-size-select h-8 w-fit min-w-0 cursor-pointer appearance-none rounded-md border border-border bg-transparent px-2.5 text-base text-foreground outline-none [field-sizing:content] hover:border-foreground"
+      <div className="flex flex-wrap items-center gap-2 text-base text-muted-foreground">
+        <SelectDropdown
+          ariaLabel={t("wordsTable.wordsPerPage")}
+          className="w-fit"
+          hideIcon
+          menuPlacement="top"
+          onChange={onPageSizeChange}
+          options={pageSizeOptions}
+          triggerClassName="h-8 rounded-md px-2.5 text-base font-normal"
           value={pageSize}
-          onChange={(event) => {
-            const value = Number(event.target.value);
-
-            if (isVocabularyPageSize(value)) {
-              onPageSizeChange(value);
-            }
-          }}
-        >
-          {VOCABULARY_PAGE_SIZE_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {formatMessage(t("wordsTable.wordsOption"), { count: option })}
-            </option>
-          ))}
-        </select>
-        <span>
-          {formatMessage(t("wordsTable.ofTotal"), { total })}
-        </span>
+        />
+        <span>{formatMessage(t("wordsTable.ofTotal"), { total })}</span>
       </div>
     </div>
   );
@@ -113,9 +111,7 @@ function PaginationIconButton({
       type="button"
       aria-label={label}
       disabled={disabled}
-      className={iconOnlyButtonClassName(
-        "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
-      )}
+      className={paginationSurfaceButtonClassName}
       onClick={onClick}
     >
       {children}

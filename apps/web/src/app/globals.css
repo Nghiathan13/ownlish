@@ -11,17 +11,17 @@
   --primary: #1f48da;
   --primary-foreground: #ffffff;
   --danger: #d92d20;
-  --danger-background: color-mix(in srgb, #fecaca 30%, transparent);
-  --danger-border: color-mix(in srgb, var(--danger) 45%, transparent);
+  --danger-background: color-mix(in srgb, #fecaca 15%, transparent);
+  --danger-border: color-mix(in srgb, var(--danger) 65%, transparent);
   --success: #047857;
-  --success-background: color-mix(in srgb, #a7f3d0 30%, transparent);
-  --success-border: color-mix(in srgb, var(--success) 45%, transparent);
-  --warning: #78350f;
-  --warning-background: color-mix(in srgb, #fde68a 30%, transparent);
-  --warning-border: color-mix(in srgb, var(--warning) 45%, transparent);
+  --success-background: color-mix(in srgb, #a7f3d0 15%, transparent);
+  --success-border: color-mix(in srgb, var(--success) 65%, transparent);
+  --warning: #bc4704;
+  --warning-background: color-mix(in srgb, #fde68a 15%, transparent);
+  --warning-border: color-mix(in srgb, var(--warning) 65%, transparent);
   --information: #0284c7;
-  --information-background: color-mix(in srgb, #bae6fd 30%, transparent);
-  --information-border: color-mix(in srgb, var(--information) 45%, transparent);
+  --information-background: color-mix(in srgb, #bae6fd 15%, transparent);
+  --information-border: color-mix(in srgb, var(--information) 65%, transparent);
   --border: rgba(0, 0, 0, 0.24);
   --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
   --muted: color-mix(in srgb, var(--foreground) 6%, transparent);
@@ -97,11 +97,6 @@ button,
 input,
 select {
   font: inherit;
-}
-
-.page-size-select option {
-  background-color: var(--surface);
-  color: var(--foreground);
 }
 
 /* Hide native scrollbar; OverlayScrollArea draws an overlay thumb. */

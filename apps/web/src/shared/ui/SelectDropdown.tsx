@@ -6,24 +6,30 @@ import { ArrowDropDownIcon } from "@/shared/ui/icons/ArrowDropDownIcon";
 import { ArrowDropUpIcon } from "@/shared/ui/icons/ArrowDropUpIcon";
 import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
 
-export type SelectDropdownOption<T extends string> = {
+export type SelectDropdownOption<T extends string | number> = {
   label: string;
   value: T;
 };
 
-type SelectDropdownProps<T extends string> = {
+type SelectDropdownProps<T extends string | number> = {
   ariaLabel: string;
   className: string;
+  hideIcon?: boolean;
+  menuPlacement?: "bottom" | "top";
   onChange: (value: T) => void;
   options: SelectDropdownOption<T>[];
+  triggerClassName?: string;
   value: T;
 };
 
-export function SelectDropdown<T extends string>({
+export function SelectDropdown<T extends string | number>({
   ariaLabel,
   className,
+  hideIcon = false,
+  menuPlacement = "bottom",
   onChange,
   options,
+  triggerClassName,
   value,
 }: SelectDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,12 +71,16 @@ export function SelectDropdown<T extends string>({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`${ariaLabel}: ${selectedLabel}`}
-        className="flex h-10 w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-surface bg-surface px-4 text-left text-sm font-medium text-foreground shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+        className={classNames(
+          "flex h-10 w-full cursor-pointer items-center rounded-lg border border-surface bg-surface text-left text-sm font-medium text-foreground shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+          hideIcon ? "justify-center px-3" : "justify-between gap-3 px-4",
+          triggerClassName,
+        )}
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >
         <span className="truncate">{selectedLabel}</span>
-        {isOpen ? (
+        {hideIcon ? null : isOpen ? (
           <ArrowDropUpIcon className="size-5 shrink-0 text-muted-foreground" />
         ) : (
           <ArrowDropDownIcon className="size-5 shrink-0 text-muted-foreground" />
@@ -80,7 +90,12 @@ export function SelectDropdown<T extends string>({
       {isOpen ? (
         <div
           aria-label={ariaLabel}
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 w-full rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
+          className={classNames(
+            "absolute right-0 z-20 min-w-full w-max rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border",
+            menuPlacement === "top"
+              ? "bottom-[calc(100%+0.5rem)]"
+              : "top-[calc(100%+0.5rem)]",
+          )}
           id={menuId}
           role="listbox"
         >
@@ -99,7 +114,7 @@ export function SelectDropdown<T extends string>({
                     "flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-hover-overlay",
                     isSelected && "bg-muted",
                   )}
-                  key={option.value}
+                  key={String(option.value)}
                   onClick={() => {
                     setIsOpen(false);
                     onChange(option.value);

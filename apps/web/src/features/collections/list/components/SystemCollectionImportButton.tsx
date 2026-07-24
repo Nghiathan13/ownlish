@@ -16,10 +16,10 @@ export function SystemCollectionImportButton({
 }: SystemCollectionImportButtonProps) {
   const t = useT();
   const enabledClassName = iconTextButtonClassName(
-    "pointer-events-auto shrink-0 border-foreground bg-foreground text-background",
+    "w-full border-border bg-transparent text-foreground hover:bg-hover-overlay",
   );
   const disabledClassName = iconTextButtonClassName(
-    "pointer-events-auto shrink-0 border-border bg-muted text-muted-foreground",
+    "w-full border-border bg-muted text-muted-foreground",
   );
 
   if (isDisabled) {

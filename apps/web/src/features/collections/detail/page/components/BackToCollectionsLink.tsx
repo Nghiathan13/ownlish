@@ -4,7 +4,10 @@ import Link from "next/link";
 import { getCollectionsListPath } from "@/entities/collection/lib/collectionDisplay";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
-import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
+
+export const collectionsBackButtonClassName = iconTextButtonClassName(
+  "w-fit shrink-0 border border-surface bg-surface shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+);
 
 export function BackToCollectionsLink() {
   const t = useT();
@@ -12,13 +15,9 @@ export function BackToCollectionsLink() {
   return (
     <Link
       aria-label={t("collections.backToMyCollections")}
-      className={iconTextButtonClassName(
-        "w-fit shrink-0",
-        "border-foreground bg-foreground text-background",
-      )}
+      className={collectionsBackButtonClassName}
       href={getCollectionsListPath("user")}
     >
-      <ArrowBackIcon />
       {t("collections.back")}
     </Link>
   );

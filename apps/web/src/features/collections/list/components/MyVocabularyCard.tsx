@@ -46,11 +46,7 @@ export function MyVocabularyCard({
       description={description}
       footerAction={
         collectionId ? (
-          <CollectionReviewLink
-            collectionId={collectionId}
-            isAuthenticated={isAuthenticated}
-            userId={userId}
-          />
+          <CollectionReviewLink collectionId={collectionId} />
         ) : null
       }
       headerAction={

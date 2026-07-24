@@ -22,6 +22,7 @@ type OverlayScrollAreaProps = {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  rootClassName?: string;
   onScroll?: (event: UIEvent<HTMLDivElement>) => void;
   scrollRef?: (node: HTMLDivElement | null) => void;
 };
@@ -57,6 +58,7 @@ export function OverlayScrollArea({
   children,
   className,
   contentClassName,
+  rootClassName,
   onScroll,
   scrollRef,
 }: OverlayScrollAreaProps) {
@@ -169,7 +171,7 @@ export function OverlayScrollArea({
 
   return (
     <div
-      className="relative"
+      className={classNames("relative", rootClassName)}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => {
         if (!isDragging) {
@@ -179,7 +181,7 @@ export function OverlayScrollArea({
     >
       <div
         className={classNames(
-          "overlay-scroll-hide overflow-y-auto",
+          "overlay-scroll-hide overflow-auto",
           className,
           contentClassName,
         )}

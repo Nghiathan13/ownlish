@@ -471,7 +471,7 @@ function EditDefinitionButton({
       type="button"
       aria-label={label}
       className={iconOnlyButtonClassName(
-        "text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "bg-transparent text-foreground hover:bg-hover-overlay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       )}
       onClick={onClick}
     >

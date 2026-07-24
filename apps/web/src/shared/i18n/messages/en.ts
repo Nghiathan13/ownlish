@@ -147,6 +147,10 @@ export const en = {
     editNamed: "Edit {name}",
     deleteNamed: "Delete {name}",
     deletingCollection: "Deleting collection",
+    deleteCollectionSubtitle: "This cannot be undone.",
+    deleteCollectionConfirm: "Delete",
+    deleteCollectionCancel: "Cancel",
+    deleting: "Deleting...",
     retry: "Retry",
     emptyTitle: "No {category} collections yet.",
     emptyDescription: "This category is ready for future word sets.",
@@ -221,7 +225,6 @@ export const en = {
     exampleVi: "Vietnamese example",
     notScheduled: "Not scheduled",
     importAll: "Import all",
-    collectionSwitcher: "Collection",
   },
   tests: {
     testNumber: "Test {number}",

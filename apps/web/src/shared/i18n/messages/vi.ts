@@ -149,6 +149,10 @@ export const vi = {
     editNamed: "Sửa {name}",
     deleteNamed: "Xóa {name}",
     deletingCollection: "Đang xóa bộ sưu tập",
+    deleteCollectionSubtitle: "Thao tác này không thể hoàn tác.",
+    deleteCollectionConfirm: "Xóa",
+    deleteCollectionCancel: "Hủy",
+    deleting: "Đang xóa...",
     retry: "Thử lại",
     emptyTitle: "Chưa có bộ sưu tập {category}.",
     emptyDescription: "Danh mục này sẵn sàng cho các bộ từ sau này.",
@@ -223,7 +227,6 @@ export const vi = {
     exampleVi: "Ví dụ tiếng Việt",
     notScheduled: "Chưa lên lịch",
     importAll: "Nhập tất cả",
-    collectionSwitcher: "Bộ sưu tập",
   },
   tests: {
     testNumber: "Test {number}",

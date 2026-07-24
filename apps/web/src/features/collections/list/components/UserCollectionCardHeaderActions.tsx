@@ -11,7 +11,7 @@ import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 type UserCollectionCardHeaderActionsProps = {
   collection: CollectionSummary;
   deletingCollectionId: string | null;
-  onDelete?: (collectionId: string) => void;
+  onDelete?: (collection: CollectionSummary) => void;
   onEdit: (collection: CollectionSummary) => void;
 };
 
@@ -25,15 +25,17 @@ export function UserCollectionCardHeaderActions({
   const isDeleting = deletingCollectionId === collection.id;
 
   return (
-    <div className="pointer-events-none flex shrink-0 items-center gap-2 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100">
+    <div className="pointer-events-none flex shrink-0 items-center gap-2 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
       <button
         aria-label={formatMessage(t("collections.editNamed"), {
           name: collection.name,
         })}
         className={iconOnlyButtonClassName(
-          "pointer-events-auto bg-transparent text-foreground hover:bg-muted",
+          "pointer-events-auto bg-transparent text-foreground hover:bg-hover-overlay",
         )}
-        onClick={() => {
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
           onEdit(collection);
         }}
         type="button"
@@ -55,8 +57,10 @@ export function UserCollectionCardHeaderActions({
             statusColorClasses.danger.backgroundHover,
           )}
           disabled={isDeleting}
-          onClick={() => {
-            void onDelete(collection.id);
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void onDelete(collection);
           }}
           type="button"
         >

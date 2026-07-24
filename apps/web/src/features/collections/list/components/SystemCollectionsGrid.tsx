@@ -19,9 +19,9 @@ export function SystemCollectionsGrid({
   return (
     <>
       {importError ? (
-        <p className="mb-4 px-4 text-sm text-danger">{importError}</p>
+        <p className="mb-4 px-4 text-sm text-danger lg:px-16">{importError}</p>
       ) : null}
-      <div className="mb-8 gap-4 px-4 sm:px-16 grid sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-4 lg:px-16">
         {collections.map((collection) => (
           <SystemCollectionCard
             canImport={canImport}

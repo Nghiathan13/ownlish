@@ -11,19 +11,15 @@ import { useLocale, useT } from "@/shared/providers/LocaleProvider";
 type UserCollectionCardProps = {
   collection: CollectionSummary;
   deletingCollectionId: string | null;
-  isAuthenticated: boolean;
-  onDelete: (collectionId: string) => void;
+  onDelete: (collection: CollectionSummary) => void;
   onEdit: (collection: CollectionSummary) => void;
-  userId: string | null;
 };
 
 export function UserCollectionCard({
   collection,
   deletingCollectionId,
-  isAuthenticated,
   onDelete,
   onEdit,
-  userId,
 }: UserCollectionCardProps) {
   const t = useT();
   const { locale } = useLocale();
@@ -34,13 +30,7 @@ export function UserCollectionCard({
     <CollectionCard
       createdLabel={formatCreatedLabel(collection.createdAt, locale)}
       description={description}
-      footerAction={
-        <CollectionReviewLink
-          collectionId={collection.id}
-          isAuthenticated={isAuthenticated}
-          userId={userId}
-        />
-      }
+      footerAction={<CollectionReviewLink collectionId={collection.id} />}
       headerAction={
         <UserCollectionCardHeaderActions
           collection={collection}

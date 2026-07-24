@@ -4,6 +4,7 @@ import { AddWordForm } from "@/features/collections/detail/user/forms/components
 import { DeleteDefinitionsConfirm } from "@/features/collections/detail/user/forms/components/DeleteDefinitionsConfirm";
 import { EditWordPanel } from "@/features/collections/detail/user/forms/components/EditWordPanel";
 import { VocabularyTable } from "@/features/collections/detail/user/panel/components/VocabularyTable";
+import { BackToCollectionsLink } from "@/features/collections/detail/page/components/BackToCollectionsLink";
 import {
   WordsColumnPicker,
   WordsPagination,
@@ -68,31 +69,33 @@ export function CollectionWordsPanelBody({
 
   return (
     <>
-      <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
+      <div className="mt-4 mb-4 flex shrink-0 flex-row flex-wrap items-center gap-2 px-4">
+        <BackToCollectionsLink />
         <button
           type="button"
           className={iconTextButtonClassName(
-            "w-fit shrink-0",
-            "border-foreground bg-foreground text-background",
+            "w-fit shrink-0 border-transparent text-white",
+            "[background:linear-gradient(180deg,#001651_0%,#0040F0_100%)]",
+            "[box-shadow:inset_0_-1.5px_2px_0_#638DFF,inset_0_0_10px_0_#0043FB,inset_0_0_8px_0_#0043FB]",
+            "hover:[background:linear-gradient(180deg,#001E8A_9%,#013EFF_100%)]",
+            "hover:[box-shadow:inset_0_-0.5px_1px_0_#5CCEFF,inset_0_-1px_3px_0_#5CCEFF,inset_0_-1.5px_5px_0_#5CC3FF,inset_0_0_12px_0_#0055DB,inset_0_0_10px_0_#0055DB]",
           )}
           onClick={() => setIsAddWordOpen(true)}
         >
           <AddIcon />
           {t("wordsTable.addWord")}
         </button>
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <WordsSearch search={search} onSearchChange={setSearch} />
-          <WordsColumnPicker
-            columnVisibility={columnVisibility}
-            columns={columns}
-            onToggleColumn={toggleColumn}
-          />
-        </div>
+        <WordsSearch search={search} onSearchChange={setSearch} />
+        <WordsColumnPicker
+          columnVisibility={columnVisibility}
+          columns={columns}
+          onToggleColumn={toggleColumn}
+        />
         {selectedDefinitions.length > 0 ? (
           <button
             type="button"
             className={iconTextButtonClassName(
-              "w-fit shrink-0 sm:ml-auto",
+              "w-fit shrink-0",
               "border-foreground bg-foreground text-background",
             )}
             onClick={() => setIsBulkDeleteOpen(true)}

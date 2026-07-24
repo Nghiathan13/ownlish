@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { classNames } from "@/shared/lib/classNames";
+import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
 
 const TABLE_CLASS_NAME =
   "w-full min-w-[920px] table-fixed border-collapse text-left text-base";
@@ -22,12 +25,15 @@ export function WordsTableDesktopLayout({
         className,
       )}
     >
-      <div className="min-h-0 flex-1 overflow-auto">
+      <OverlayScrollArea
+        className="h-full min-h-0"
+        rootClassName="min-h-0 flex-1"
+      >
         <table className={TABLE_CLASS_NAME}>
           {head}
           <tbody>{body}</tbody>
         </table>
-      </div>
+      </OverlayScrollArea>
     </div>
   );
 }

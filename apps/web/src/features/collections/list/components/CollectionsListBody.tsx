@@ -12,7 +12,7 @@ type CollectionsListBodyProps = {
   isAuthenticated: boolean;
   isLoadingCollections: boolean;
   onCreateCollection: () => void;
-  onDeleteCollection: (collectionId: string) => void;
+  onDeleteCollection: (collection: CollectionSummary) => void;
   onEditCollection: (collection: CollectionSummary) => void;
   onRetry: () => void;
   userId: string | null;

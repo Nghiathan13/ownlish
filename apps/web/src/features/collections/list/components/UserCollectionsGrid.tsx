@@ -2,6 +2,7 @@ import type { CollectionSummary } from "@/entities/collection/api/collections";
 import { MyVocabularyCard } from "@/features/collections/list/components/MyVocabularyCard";
 import { CreateCollectionCard } from "@/features/collections/list/components/CreateCollectionCard";
 import { UserCollectionCard } from "@/features/collections/list/components/UserCollectionCard";
+import { userCollectionCardGridClassName } from "@/features/collections/shared/lib/collectionListCard";
 
 type UserCollectionsGridProps = {
   collections: CollectionSummary[];
@@ -10,7 +11,7 @@ type UserCollectionsGridProps = {
   deletingCollectionId: string | null;
   isAuthenticated: boolean;
   onCreateCollection: () => void;
-  onDeleteCollection: (collectionId: string) => void;
+  onDeleteCollection: (collection: CollectionSummary) => void;
   onEditCollection: (collection: CollectionSummary) => void;
   userId: string | null;
 };
@@ -29,9 +30,9 @@ export function UserCollectionsGrid({
   return (
     <>
       {deleteError ? (
-        <p className="mb-4 px-4 text-sm text-danger">{deleteError}</p>
+        <p className="mb-4 px-4 text-sm text-danger lg:px-16">{deleteError}</p>
       ) : null}
-      <div className="mb-4 grid gap-4 px-4 lg:px-16 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={userCollectionCardGridClassName}>
         <MyVocabularyCard
           collection={defaultCollection}
           deletingCollectionId={deletingCollectionId}
@@ -43,11 +44,9 @@ export function UserCollectionsGrid({
           <UserCollectionCard
             collection={collection}
             deletingCollectionId={deletingCollectionId}
-            isAuthenticated={isAuthenticated}
             key={collection.id}
             onDelete={onDeleteCollection}
             onEdit={onEditCollection}
-            userId={userId}
           />
         ))}
         <CreateCollectionCard onClick={onCreateCollection} />

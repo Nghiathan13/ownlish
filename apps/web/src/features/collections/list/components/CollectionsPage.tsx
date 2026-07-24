@@ -16,6 +16,9 @@ import { EditCollectionModal } from "@/features/collections/shared/components/Ed
 import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";
 import { CollectionsListBody } from "@/features/collections/list/components/CollectionsListBody";
 import { OxfordCollections } from "@/features/collections/oxford/components/OxfordCollections";
+import { ClearHistoryConfirmModal } from "@/features/tests/overview/components/ClearHistoryConfirmModal";
+import { formatMessage } from "@/shared/i18n/messages";
+import { useT } from "@/shared/providers/LocaleProvider";
 import {
   getOxfordPath,
   parseOxfordBand,
@@ -58,7 +61,9 @@ function getLocationPath(location: CollectionsLocation) {
 }
 
 function UserCollectionsPage({ onCategoryChange }: { onCategoryChange: (category: CollectionCategory) => void }) {
+  const t = useT();
   const page = useCollectionsListPage("user");
+  const pendingDelete = page.pendingDeleteCollection;
 
   return (
     <PageShell>
@@ -77,7 +82,7 @@ function UserCollectionsPage({ onCategoryChange }: { onCategoryChange: (category
         isAuthenticated={page.isAuthenticated}
         isLoadingCollections={page.isLoadingCollections}
         onCreateCollection={page.openCreateCollection}
-        onDeleteCollection={page.handleDeleteCollection}
+        onDeleteCollection={page.requestDeleteCollection}
         onEditCollection={page.openEditCollection}
         onRetry={page.reloadCollections}
         userId={page.userId}
@@ -91,6 +96,20 @@ function UserCollectionsPage({ onCategoryChange }: { onCategoryChange: (category
         onClose={page.closeEditCollection}
         userId={page.userId}
       />
+      {pendingDelete ? (
+        <ClearHistoryConfirmModal
+          cancelLabel={t("collections.deleteCollectionCancel")}
+          confirmLabel={t("collections.deleteCollectionConfirm")}
+          confirmingLabel={t("collections.deleting")}
+          isConfirming={page.deletingCollectionId === pendingDelete.id}
+          onClose={page.cancelDeleteCollection}
+          onConfirm={() => void page.confirmDeleteCollection()}
+          subtitle={t("collections.deleteCollectionSubtitle")}
+          title={formatMessage(t("collections.deleteNamed"), {
+            name: pendingDelete.name,
+          })}
+        />
+      ) : null}
     </PageShell>
   );
 }

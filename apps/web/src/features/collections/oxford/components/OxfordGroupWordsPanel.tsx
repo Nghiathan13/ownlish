@@ -17,6 +17,7 @@ import {
 import { useImportOxfordPart } from "@/features/collections/oxford/model/useImportOxfordPart";
 import { useOxfordPartQuery } from "@/features/collections/oxford/model/useOxfordPartQuery";
 import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
+import { collectionsBackButtonClassName } from "@/features/collections/detail/page/components/BackToCollectionsLink";
 import { WordsColumnPicker } from "@/features/collections/detail/shared/components";
 import { formatMessage } from "@/shared/i18n/messages";
 import { useT } from "@/shared/providers/LocaleProvider";
@@ -138,9 +139,7 @@ export function OxfordGroupWordsPanel({
       <div className="m-4 flex flex-row items-center justify-between gap-2">
         <div className="flex flex-row items-center gap-2">
           <Link
-            className={iconTextButtonClassName(
-              "w-fit shrink-0 border border-surface bg-surface shadow-card hover:border-[var(--hover-on-surface)] hover:bg-[var(--hover-on-surface)] dark:border-border dark:hover:border-border dark:hover:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-            )}
+            className={collectionsBackButtonClassName}
             href={getOxfordPath(band)}
             onClick={(event) => {
               if (!shouldHandleOxfordNavigation(event)) {

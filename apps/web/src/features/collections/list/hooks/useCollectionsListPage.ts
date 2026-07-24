@@ -22,6 +22,8 @@ export function useCollectionsListPage(activeCategory: CollectionCategory) {
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
   const [editingCollection, setEditingCollection] =
     useState<CollectionSummary | null>(null);
+  const [pendingDeleteCollection, setPendingDeleteCollection] =
+    useState<CollectionSummary | null>(null);
   const [importingCollectionId, setImportingCollectionId] = useState<
     string | null
   >(null);
@@ -57,18 +59,36 @@ export function useCollectionsListPage(activeCategory: CollectionCategory) {
     "Collections";
   const isUserTab = activeCategory === "user";
 
-  const handleDeleteCollection = useCallback(
-    async (collectionId: string) => {
+  const requestDeleteCollection = useCallback(
+    (collection: CollectionSummary) => {
       resetDeleteState();
-
-      try {
-        await deleteCollection(collectionId);
-      } catch {
-        // deleteError is rendered by the page.
-      }
+      setPendingDeleteCollection(collection);
     },
-    [deleteCollection, resetDeleteState],
+    [resetDeleteState],
   );
+
+  const cancelDeleteCollection = useCallback(() => {
+    if (deletingCollectionId) {
+      return;
+    }
+
+    setPendingDeleteCollection(null);
+  }, [deletingCollectionId]);
+
+  const confirmDeleteCollection = useCallback(async () => {
+    if (!pendingDeleteCollection) {
+      return;
+    }
+
+    resetDeleteState();
+
+    try {
+      await deleteCollection(pendingDeleteCollection.id);
+      setPendingDeleteCollection(null);
+    } catch {
+      // deleteError is rendered by the page.
+    }
+  }, [deleteCollection, pendingDeleteCollection, resetDeleteState]);
 
   const handleImportSystemCollection = useCallback(
     async (systemCollectionId: string) => {
@@ -124,7 +144,8 @@ export function useCollectionsListPage(activeCategory: CollectionCategory) {
     deleteError,
     deletingCollectionId,
     editingCollection,
-    handleDeleteCollection,
+    cancelDeleteCollection,
+    confirmDeleteCollection,
     handleImportSystemCollection,
     importError,
     importingCollectionId,
@@ -134,7 +155,9 @@ export function useCollectionsListPage(activeCategory: CollectionCategory) {
     isUserTab,
     openCreateCollection,
     openEditCollection,
+    pendingDeleteCollection,
     reloadCollections,
+    requestDeleteCollection,
     userId,
   };
 }

@@ -8,6 +8,10 @@ import {
   type OxfordBand,
 } from "@/features/collections/oxford/lib/oxfordNavigation";
 import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
+import {
+  collectionListCardClassName,
+  collectionListCardGridClassName,
+} from "@/features/collections/shared/lib/collectionListCard";
 import { formatMessage } from "@/shared/i18n/messages";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
@@ -28,7 +32,7 @@ export function OxfordWordGroupGrid({
   const groupCount = Math.ceil(itemCount / OXFORD_GROUP_SIZE);
 
   return (
-    <div className="mb-8 grid gap-4 px-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] lg:px-16">
+    <div className={`${collectionListCardGridClassName} mb-8`}>
       {Array.from({ length: groupCount }, (_, index) => {
         const group = index + 1;
         const range = getOxfordGroupRange(group, itemCount);
@@ -39,7 +43,7 @@ export function OxfordWordGroupGrid({
 
         return (
           <article
-            className="relative flex min-w-[300px] flex-col gap-4 rounded-[16px] bg-surface p-4 shadow-card hover:[box-shadow:0_1px_2px_color-mix(in_srgb,var(--primary)_24%,transparent),0_4px_16px_color-mix(in_srgb,var(--primary)_36%,transparent)] dark:border dark:border-border dark:hover:border-primary dark:hover:[box-shadow:none]"
+            className={`${collectionListCardClassName} min-w-[300px]`}
             key={group}
           >
             <Link

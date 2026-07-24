@@ -9,6 +9,7 @@ type ClearHistoryConfirmModalProps = {
   subtitle: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  confirmingLabel?: string;
   isConfirming?: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -19,6 +20,7 @@ export function ClearHistoryConfirmModal({
   subtitle,
   confirmLabel,
   cancelLabel,
+  confirmingLabel,
   isConfirming = false,
   onConfirm,
   onClose,
@@ -26,6 +28,7 @@ export function ClearHistoryConfirmModal({
   const t = useT();
   const resolvedConfirmLabel = confirmLabel ?? t("tests.submit");
   const resolvedCancelLabel = cancelLabel ?? t("tests.cancel");
+  const resolvedConfirmingLabel = confirmingLabel ?? t("tests.clearing");
 
   return (
     <Modal
@@ -55,7 +58,7 @@ export function ClearHistoryConfirmModal({
           onClick={onConfirm}
           type="button"
         >
-          {isConfirming ? t("tests.clearing") : resolvedConfirmLabel}
+          {isConfirming ? resolvedConfirmingLabel : resolvedConfirmLabel}
         </button>
       </div>
     </Modal>
