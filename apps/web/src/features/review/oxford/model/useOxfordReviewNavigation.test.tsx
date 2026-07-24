@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
@@ -21,6 +21,10 @@ describe("useOxfordReviewNavigation", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    window.history.replaceState(null, "", "/review/oxford/A1/part-1");
+  });
+
   it("prefetches the selected part before navigating", () => {
     const queryClient = createTestQueryClient();
     const prefetchQuery = vi
@@ -29,8 +33,9 @@ describe("useOxfordReviewNavigation", () => {
     const { result } = renderHook(
       () =>
         useOxfordReviewNavigation({
-          activeBand: "A1",
+          bandParam: "A1",
           isAuthenticated: true,
+          partParam: "part-1",
           userId: "user-id",
         }),
       { wrapper: createQueryClientWrapper(queryClient) },
@@ -48,6 +53,8 @@ describe("useOxfordReviewNavigation", () => {
     expect(mocks.push).toHaveBeenCalledWith("/review/oxford/A1/part-2", {
       scroll: false,
     });
+    expect(result.current.part).toBe(2);
+    expect(window.location.pathname).toBe("/review/oxford/A1/part-2");
     expect(prefetchQuery.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.push.mock.invocationCallOrder[0],
     );
@@ -61,8 +68,9 @@ describe("useOxfordReviewNavigation", () => {
     const { result } = renderHook(
       () =>
         useOxfordReviewNavigation({
-          activeBand: "A1",
+          bandParam: "A1",
           isAuthenticated: true,
+          partParam: "part-1",
           userId: "user-id",
         }),
       { wrapper: createQueryClientWrapper(queryClient) },
@@ -80,5 +88,8 @@ describe("useOxfordReviewNavigation", () => {
     expect(mocks.push).toHaveBeenCalledWith("/review/oxford/B1/part-1", {
       scroll: false,
     });
+    expect(result.current.band).toBe("B1");
+    expect(result.current.part).toBe(1);
+    expect(window.location.pathname).toBe("/review/oxford/B1/part-1");
   });
 });
