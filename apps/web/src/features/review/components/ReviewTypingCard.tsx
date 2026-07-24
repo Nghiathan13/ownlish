@@ -1,12 +1,8 @@
 "use client";
 
 import type { RefObject } from "react";
-import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
-import {
-  ReviewModeToggle,
-  type ReviewMode,
-} from "@/features/review/components/ReviewModeToggle";
 import { ReviewProgress } from "@/features/review/components/ReviewProgress";
+import type { ReviewStudyWord } from "@/features/review/model/reviewStudyWord";
 import { getTypingAnswer } from "@/features/review/lib/typing";
 import { classNames } from "@/shared/lib/classNames";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
@@ -17,8 +13,6 @@ export type TypingResult = {
 };
 
 type ReviewTypingCardProps = {
-  mode: ReviewMode;
-  onModeChange: (mode: ReviewMode) => void;
   onTypedAnswerChange: (value: string) => void;
   reviewedCount: number;
   totalWords: number;
@@ -28,12 +22,10 @@ type ReviewTypingCardProps = {
   typingInputRef: RefObject<HTMLInputElement | null>;
   typingMeasureRef: RefObject<HTMLSpanElement | null>;
   typingResult: TypingResult | null;
-  word: VocabReviewItem;
+  word: ReviewStudyWord;
 };
 
 export function ReviewTypingCard({
-  mode,
-  onModeChange,
   onTypedAnswerChange,
   reviewedCount,
   totalWords,
@@ -45,28 +37,39 @@ export function ReviewTypingCard({
   typingResult,
   word,
 }: ReviewTypingCardProps) {
+  const meaningVi = word.definitions
+    .map((definition) => definition.meaningVi?.trim())
+    .filter((meaning): meaning is string => Boolean(meaning))
+    .join(" · ");
+
   return (
-    <article className="rounded-[1.75rem] bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border">
-      <div className="mb-8 grid gap-3">
-        <ReviewModeToggle mode={mode} onModeChange={onModeChange} />
+    <article className="flex h-[480px] flex-col rounded-lg bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border">
+      <div className="mb-8 shrink-0">
         <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
       </div>
 
-      <div className="grid min-h-[18rem] content-center gap-6 text-center sm:min-h-[22rem]">
-        {(word.type || word.band) ? (
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {word.type ? (
-              <span className="font-medium text-muted-foreground text-[16px] sm:text-[18px]">
-                ({word.type})
-              </span>
-            ) : null}
-            {word.band ? (
-              <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
-                {word.band}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
+      <div className="grid min-h-0 flex-1 content-center gap-6 overflow-y-auto text-center">
+        <div className="grid gap-2">
+          {(word.types.length > 0 || word.band) ? (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {word.types.length > 0 ? (
+                <span className="font-medium text-muted-foreground text-[16px] sm:text-[18px]">
+                  ({word.types.join(" · ")})
+                </span>
+              ) : null}
+              {word.band ? (
+                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
+                  {word.band}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+          {meaningVi ? (
+            <p className="text-2xl font-bold leading-tight text-foreground">
+              {meaningVi}
+            </p>
+          ) : null}
+        </div>
 
         <div
           className={classNames(
@@ -113,7 +116,7 @@ export function ReviewTypingCard({
               <p className="flex items-center justify-center gap-2.5">
                 <span className="text-muted-foreground/70">Answer</span>
                 <strong className="font-medium text-foreground">
-                  {getTypingAnswer(word.vocabWord.word)}
+                  {getTypingAnswer(word.word)}
                 </strong>
               </p>
               {!typingResult.isCorrect ? (

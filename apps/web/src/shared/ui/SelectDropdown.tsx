@@ -79,7 +79,7 @@ export function SelectDropdown<T extends string>({
       {isOpen ? (
         <div
           aria-label={ariaLabel}
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid w-full gap-1 rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid max-h-[calc(0.5rem+5*2.25rem+4*0.25rem)] w-full gap-1 overflow-y-auto rounded-lg border-0 bg-surface p-1 shadow-card dark:border dark:border-border"
           id={menuId}
           role="listbox"
         >

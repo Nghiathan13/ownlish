@@ -55,15 +55,16 @@ export function OxfordWordGroupGrid({
                 {range.wordCount} words
               </p>
             </div>
-            <button
+            <Link
               className={iconTextButtonClassName(
                 "relative z-10 w-full border-border bg-transparent text-foreground hover:bg-hover-overlay",
               )}
-              type="button"
+              href={`/review/oxford/${band}/part-${group}`}
+              prefetch={false}
             >
               <StartIcon />
               Review
-            </button>
+            </Link>
           </article>
         );
       })}

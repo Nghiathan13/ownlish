@@ -20,7 +20,7 @@ export function ReviewStateBlock({
 
   if (error) {
     return (
-      <div className="grid min-h-[28rem] place-items-center rounded-[2rem] border border-border bg-background p-6 text-center">
+      <div className="grid h-[480px] place-items-center rounded-lg bg-surface p-6 text-center shadow-card dark:border dark:border-border">
         <div className="max-w-md">
           <p className="text-sm font-semibold text-danger">Review could not load</p>
           <h2 className="mt-3 text-3xl font-black tracking-tight">
@@ -41,7 +41,7 @@ export function ReviewStateBlock({
 
   if (isEmpty) {
     return (
-      <div className="grid min-h-[28rem] place-items-center rounded-[2rem] border border-border bg-background p-6 text-center">
+      <div className="grid h-[480px] place-items-center rounded-lg bg-surface p-6 text-center shadow-card dark:border dark:border-border">
         <div className="max-w-lg">
           <p className="text-sm font-semibold text-muted-foreground">Queue clear</p>
           <h2 className="mt-3 text-4xl font-black tracking-tight">

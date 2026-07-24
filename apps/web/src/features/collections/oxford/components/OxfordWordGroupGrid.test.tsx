@@ -8,8 +8,12 @@ describe("OxfordWordGroupGrid", () => {
       <OxfordWordGroupGrid band="A1" itemCount={957} onOpenPart={() => {}} />,
     );
 
-    expect(screen.getAllByRole("link")).toHaveLength(48);
-    expect(screen.getAllByRole("button", { name: "Review" })).toHaveLength(48);
+    expect(screen.getAllByRole("link")).toHaveLength(96);
+    expect(screen.getAllByRole("link", { name: "Review" })).toHaveLength(48);
+    expect(screen.getAllByRole("link", { name: "Review" })[0]).toHaveAttribute(
+      "href",
+      "/review/oxford/A1/part-1",
+    );
     expect(screen.getByRole("heading", { name: "A1 - Part 1" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open A1 - Part 1" })).toHaveAttribute(
       "href",

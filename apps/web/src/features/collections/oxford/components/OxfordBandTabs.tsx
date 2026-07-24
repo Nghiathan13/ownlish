@@ -9,10 +9,15 @@ import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/mode
 
 type OxfordBandTabsProps = {
   activeBand: OxfordBand;
-  onSelectBand: (band: OxfordBand) => void;
+  getHref?: (band: OxfordBand) => string;
+  onSelectBand?: (band: OxfordBand) => void;
 };
 
-export function OxfordBandTabs({ activeBand, onSelectBand }: OxfordBandTabsProps) {
+export function OxfordBandTabs({
+  activeBand,
+  getHref = getOxfordPath,
+  onSelectBand,
+}: OxfordBandTabsProps) {
   return (
     <nav
       aria-label="Oxford CEFR levels"
@@ -30,16 +35,20 @@ export function OxfordBandTabs({ activeBand, onSelectBand }: OxfordBandTabsProps
                 ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
                 : "text-foreground hover:bg-hover-overlay",
             )}
-            href={getOxfordPath(band)}
+            href={getHref(band)}
             key={band}
-            onClick={(event) => {
-              if (!shouldHandleOxfordNavigation(event)) {
-                return;
-              }
+            onClick={
+              onSelectBand
+                ? (event) => {
+                    if (!shouldHandleOxfordNavigation(event)) {
+                      return;
+                    }
 
-              event.preventDefault();
-              onSelectBand(band);
-            }}
+                    event.preventDefault();
+                    onSelectBand(band);
+                  }
+                : undefined
+            }
             prefetch={false}
             scroll={false}
           >
