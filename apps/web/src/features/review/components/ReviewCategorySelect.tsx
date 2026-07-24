@@ -9,13 +9,17 @@ import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 type ReviewCategorySelectProps = {
   activeCategory: CollectionCategory;
+  onCategoryChange?: (category: CollectionCategory) => void;
 };
 
 function getReviewCategoryPath(category: CollectionCategory) {
   return category === "oxford" ? "/review/oxford/A1/part-1" : "/review";
 }
 
-export function ReviewCategorySelect({ activeCategory }: ReviewCategorySelectProps) {
+export function ReviewCategorySelect({
+  activeCategory,
+  onCategoryChange,
+}: ReviewCategorySelectProps) {
   const router = useRouter();
 
   return (
@@ -25,11 +29,16 @@ export function ReviewCategorySelect({ activeCategory }: ReviewCategorySelectPro
       onChange={(category) => {
         const path = getReviewCategoryPath(category);
 
+        if (onCategoryChange) {
+          onCategoryChange(category);
+          return;
+        }
+
         if (window.location.pathname !== path) {
           window.history.pushState(null, "", path);
         }
 
-        router.push(path);
+        router.push(path, { scroll: false });
       }}
       options={collectionCategoryTabs.map((category) => ({
         label: category.label,

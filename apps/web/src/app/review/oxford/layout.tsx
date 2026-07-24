@@ -1,16 +1,10 @@
 import type { ReactNode } from "react";
-import { OxfordReviewBandShell } from "@/features/review/oxford/components/OxfordReviewBandShell";
 
 type OxfordReviewLayoutProps = {
   children: ReactNode;
 };
 
-/** Persistent shell so band/part navigations do not remount the review card. */
+/** The persistent review workspace lives in the parent review layout. */
 export default function OxfordReviewLayout({ children }: OxfordReviewLayoutProps) {
-  return (
-    <>
-      <OxfordReviewBandShell />
-      {children}
-    </>
-  );
+  return children;
 }

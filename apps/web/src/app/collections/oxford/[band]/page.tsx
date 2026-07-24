@@ -1,4 +1,5 @@
-import { CollectionsPage } from "@/features/collections/list/components/CollectionsPage";
+import { notFound } from "next/navigation";
+import { parseOxfordBand } from "@/features/collections/oxford/lib/oxfordNavigation";
 
 type OxfordBandPageProps = {
   params: Promise<{ band: string }>;
@@ -7,5 +8,9 @@ type OxfordBandPageProps = {
 export default async function OxfordBandPage({ params }: OxfordBandPageProps) {
   const { band } = await params;
 
-  return <CollectionsPage bandParam={band} category="oxford" />;
+  if (!parseOxfordBand(band)) {
+    notFound();
+  }
+
+  return null;
 }

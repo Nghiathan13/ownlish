@@ -29,13 +29,15 @@ describe("CollectionCategorySelect", () => {
     await user.click(screen.getByRole("option", { name: "Oxford" }));
 
     expect(pushState).toHaveBeenCalledWith(null, "", "/collections/oxford/A1");
-    expect(mocks.push).toHaveBeenCalledWith("/collections/oxford/A1");
+    expect(mocks.push).toHaveBeenCalledWith("/collections/oxford/A1", {
+      scroll: false,
+    });
     expect(pushState.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.push.mock.invocationCallOrder[0],
     );
   });
 
-  it("notifies the parent before starting route navigation", async () => {
+  it("delegates navigation to the parent when provided", async () => {
     const user = userEvent.setup();
     const onCategoryChange = vi.fn();
 
@@ -54,8 +56,6 @@ describe("CollectionCategorySelect", () => {
     await user.click(screen.getByRole("option", { name: "Oxford" }));
 
     expect(onCategoryChange).toHaveBeenCalledWith("oxford");
-    expect(onCategoryChange.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.push.mock.invocationCallOrder[0],
-    );
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 });

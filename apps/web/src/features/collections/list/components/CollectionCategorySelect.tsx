@@ -26,13 +26,16 @@ export function CollectionCategorySelect({
       onChange={(category) => {
         const path = getCollectionsListPath(category);
 
-        onCategoryChange?.(category);
+        if (onCategoryChange) {
+          onCategoryChange(category);
+          return;
+        }
 
         if (window.location.pathname !== path) {
           window.history.pushState(null, "", path);
         }
 
-        router.push(path);
+        router.push(path, { scroll: false });
       }}
       options={collectionCategoryTabs.map((category) => ({
         label: category.label,

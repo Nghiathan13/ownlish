@@ -7,18 +7,25 @@ import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedR
 import type { CollectionAuthParams } from "@/features/collections/shared/lib/collectionQueryParams";
 import { toQueryErrorMessage } from "@/features/collections/shared/lib/toQueryErrorMessage";
 
+export function getCollectionsListQueryOptions(userId: string) {
+  return {
+    queryKey: getCollectionsQueryKey(userId),
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      runAuthenticatedRequest({
+        request: (token) => listCollections(token, { signal }),
+      }),
+    staleTime: 60_000,
+  };
+}
+
 export function useCollectionsListQuery({
   isAuthenticated,
   userId,
 }: CollectionAuthParams) {
   const collectionsQuery = useQuery({
+    ...getCollectionsListQueryOptions(userId ?? ""),
     queryKey: getCollectionsQueryKey(userId),
-    queryFn: ({ signal }) =>
-      runAuthenticatedRequest({
-        request: (token) => listCollections(token, { signal }),
-      }),
     enabled: isAuthenticated && Boolean(userId),
-    staleTime: 60_000,
   });
 
   return {

@@ -1,7 +1,5 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { OxfordBandTabs } from "@/features/collections/oxford/components/OxfordBandTabs";
 import {
@@ -14,10 +12,7 @@ import {
   ReviewWorkspace,
   ReviewWorkspaceRow,
 } from "@/features/review/components";
-import {
-  ReviewModeProvider,
-  useReviewMode,
-} from "@/features/review/hooks/useReviewMode";
+import { useReviewMode } from "@/features/review/hooks/useReviewMode";
 import { OxfordPartReviewNavigation } from "./OxfordPartReviewNavigation";
 import { OxfordPartReviewSession } from "./OxfordPartReviewSession";
 import {
@@ -25,24 +20,21 @@ import {
   useOxfordReviewNavigation,
 } from "../model/useOxfordReviewNavigation";
 
+type OxfordReviewBandShellProps = {
+  bandParam: string;
+  onCategoryChange: (category: "user" | "oxford") => void;
+  partParam: string;
+};
+
 function getOxfordReviewBandPath(band: OxfordBand) {
   return getOxfordReviewPath(band, 1);
 }
 
-export function OxfordReviewBandShell() {
-  return (
-    <RequireAuth>
-      <ReviewModeProvider>
-        <OxfordReviewBandShellContent />
-      </ReviewModeProvider>
-    </RequireAuth>
-  );
-}
-
-function OxfordReviewBandShellContent() {
-  const params = useParams();
-  const bandParam = typeof params.band === "string" ? params.band : null;
-  const partParam = typeof params.part === "string" ? params.part : null;
+export function OxfordReviewBandShell({
+  bandParam,
+  onCategoryChange,
+  partParam,
+}: OxfordReviewBandShellProps) {
   const { status, user } = useAuthSession();
   const { mode, setMode } = useReviewMode();
   const isAuthenticated = isAuthenticatedStatus(status);
@@ -61,7 +53,10 @@ function OxfordReviewBandShellContent() {
     <ReviewWorkspace
       header={
         <>
-          <ReviewCategorySelect activeCategory="oxford" />
+          <ReviewCategorySelect
+            activeCategory="oxford"
+            onCategoryChange={onCategoryChange}
+          />
           <OxfordBandTabs
             activeBand={navigation.band}
             getHref={getOxfordReviewBandPath}
