@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OxfordPartReviewNavigation } from "./OxfordPartReviewNavigation";
 
@@ -18,6 +18,23 @@ describe("OxfordPartReviewNavigation", () => {
       "href",
       "/review/oxford/A2/part-2",
     );
+  });
+
+  it("uses the provided navigation handler for a part", () => {
+    const onSelectPart = vi.fn();
+
+    render(
+      <OxfordPartReviewNavigation
+        activeBand="A1"
+        activePart={1}
+        itemCount={40}
+        onSelectPart={onSelectPart}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("link", { name: "Part 2" }));
+
+    expect(onSelectPart).toHaveBeenCalledWith(2);
   });
 
   it("returns to the first part when the band changes", () => {

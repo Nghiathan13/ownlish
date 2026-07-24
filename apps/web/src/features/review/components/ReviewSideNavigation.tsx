@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { classNames } from "@/shared/lib/classNames";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
@@ -19,10 +20,21 @@ type ReviewSideNavigationProps = {
   items: ReviewSideNavigationItem[];
   itemsClassName?: string;
   loading: boolean;
-  /** Persist/restore list scroll across part navigations (e.g. Oxford band). */
+  onNavigate?: (item: ReviewSideNavigationItem) => void;
   scrollKey?: string;
   widthClassName?: string;
 };
+
+function shouldHandleReviewNavigation(event: MouseEvent<HTMLAnchorElement>) {
+  return (
+    event.button === 0 &&
+    !event.defaultPrevented &&
+    !event.metaKey &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.shiftKey
+  );
+}
 
 export function ReviewSideNavigation({
   ariaLabel,
@@ -30,6 +42,7 @@ export function ReviewSideNavigation({
   items,
   itemsClassName = "grid-cols-1",
   loading,
+  onNavigate,
   scrollKey,
   widthClassName = "lg:w-[200px]",
 }: ReviewSideNavigationProps) {
@@ -77,6 +90,11 @@ export function ReviewSideNavigation({
             onChange={(itemId) => {
               const nextItem = items.find((item) => item.id === itemId);
               if (!nextItem || nextItem.id === activeItem.id) {
+                return;
+              }
+
+              if (onNavigate) {
+                onNavigate(nextItem);
                 return;
               }
 
@@ -130,6 +148,18 @@ export function ReviewSideNavigation({
                     )}
                     href={item.href}
                     key={item.id}
+                    onClick={
+                      onNavigate
+                        ? (event) => {
+                            if (!shouldHandleReviewNavigation(event)) {
+                              return;
+                            }
+
+                            event.preventDefault();
+                            onNavigate(item);
+                          }
+                        : undefined
+                    }
                     prefetch={false}
                     scroll={false}
                   >

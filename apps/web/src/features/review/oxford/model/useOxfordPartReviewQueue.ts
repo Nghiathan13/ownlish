@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getOxfordPartReview,
   gradeOxfordReviewDefinition,
   type OxfordPartReview,
   type OxfordReviewRating,
@@ -11,6 +10,10 @@ import {
 } from "@/entities/review/api/oxfordReview";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
+import {
+  getOxfordPartReviewQueryKey,
+  getOxfordPartReviewQueryOptions,
+} from "./oxfordReviewQueries";
 
 type UseOxfordPartReviewQueueParams = {
   band: string;
@@ -27,10 +30,6 @@ type QueueState = {
 
 const EMPTY_ITEMS: OxfordReviewItem[] = [];
 
-function getOxfordPartReviewQueryKey(userId: string | null, band: string, part: number) {
-  return ["oxford-part-review", userId, band, part] as const;
-}
-
 export function useOxfordPartReviewQueue({
   band,
   isAuthenticated,
@@ -46,11 +45,8 @@ export function useOxfordPartReviewQueue({
   });
 
   const query = useQuery({
+    ...getOxfordPartReviewQueryOptions(userId ?? "", band, part),
     queryKey,
-    queryFn: ({ signal }) =>
-      runAuthenticatedRequest({
-        request: (token) => getOxfordPartReview(token, band, part, { signal }),
-      }),
     enabled: isAuthenticated && Boolean(userId),
     placeholderData: keepPreviousData,
     refetchOnReconnect: false,

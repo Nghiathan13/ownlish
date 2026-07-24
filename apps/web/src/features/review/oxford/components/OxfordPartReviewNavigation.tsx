@@ -9,6 +9,7 @@ type OxfordPartReviewNavigationProps = {
   activePart: number;
   itemCount: number | null;
   loading?: boolean;
+  onSelectPart?: (part: number) => void;
 };
 
 function getReviewPath(band: OxfordBand, part: number) {
@@ -20,6 +21,7 @@ export function OxfordPartReviewNavigation({
   activePart,
   itemCount,
   loading = false,
+  onSelectPart,
 }: OxfordPartReviewNavigationProps) {
   const partCount = itemCount === null ? 0 : Math.ceil(itemCount / OXFORD_GROUP_SIZE);
 
@@ -38,6 +40,11 @@ export function OxfordPartReviewNavigation({
         };
       })}
       loading={loading}
+      onNavigate={
+        onSelectPart
+          ? (item) => onSelectPart(Number(item.id))
+          : undefined
+      }
       scrollKey={activeBand}
     />
   );

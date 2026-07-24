@@ -22,6 +22,7 @@ import {
 } from "@/features/review/hooks/useReviewMode";
 import { OxfordPartReviewNavigation } from "./OxfordPartReviewNavigation";
 import { OxfordPartReviewSession } from "./OxfordPartReviewSession";
+import { useOxfordReviewNavigation } from "../model/useOxfordReviewNavigation";
 
 function getOxfordReviewBandPath(band: OxfordBand) {
   return `/review/oxford/${band}/part-1`;
@@ -43,9 +44,14 @@ function OxfordReviewBandShellContent() {
   const partParam = typeof params.part === "string" ? params.part : null;
   const band = parseOxfordBand(bandParam);
   const activePart = parseOxfordGroup(partParam) ?? 1;
-  const { status } = useAuthSession();
+  const { status, user } = useAuthSession();
   const { mode, setMode } = useReviewMode();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const { navigateBand, navigatePart } = useOxfordReviewNavigation({
+    activeBand: band ?? "A1",
+    isAuthenticated,
+    userId: user?.id ?? null,
+  });
   const metaQuery = useOxfordCollectionMetaQuery({
     // Fall back while the URL is briefly invalid; page-level notFound handles real misses.
     band: band ?? "A1",
@@ -62,7 +68,11 @@ function OxfordReviewBandShellContent() {
       header={
         <>
           <ReviewCategorySelect activeCategory="oxford" />
-          <OxfordBandTabs activeBand={band} getHref={getOxfordReviewBandPath} />
+          <OxfordBandTabs
+            activeBand={band}
+            getHref={getOxfordReviewBandPath}
+            onSelectBand={navigateBand}
+          />
         </>
       }
     >
@@ -73,6 +83,7 @@ function OxfordReviewBandShellContent() {
             activePart={activePart}
             itemCount={metaQuery.meta?.itemCount ?? null}
             loading={metaQuery.isLoading}
+            onSelectPart={navigatePart}
           />
         }
         rail={
