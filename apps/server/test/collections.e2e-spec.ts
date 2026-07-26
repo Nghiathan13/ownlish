@@ -202,7 +202,7 @@ describe('CollectionsController (e2e)', () => {
         const page = parseResponseBody<CollectionCatalogPageBody>(response);
         expect(page).toMatchObject({ limit: 20, offset: 0 });
         expect(page.total).toBeGreaterThanOrEqual(1);
-        expect(page.items).toHaveLength(20);
+        expect(page.items).toHaveLength(Math.min(20, page.total));
         expect(page.items[0]).toMatchObject({ word: 'e2e catalog word' });
       });
 
