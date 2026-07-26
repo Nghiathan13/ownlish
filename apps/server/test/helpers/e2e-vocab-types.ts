@@ -22,8 +22,30 @@ export type VocabWordBody = {
   definitions: VocabDefinitionBody[];
 };
 
+export type VocabularyEntryBody = {
+  id: string;
+  userId?: string;
+  collectionId?: string;
+  systemEntryId?: string | null;
+  word: string;
+  normalizedWord: string;
+  source: string;
+  type?: string | null;
+  meaningVi?: string | null;
+  definition?: string | null;
+  example?: string | null;
+  exampleVi?: string | null;
+  ipaUk?: string | null;
+  ipaUs?: string | null;
+  band?: string | null;
+  level: number;
+  wrongCount: number;
+  lastReview?: string | null;
+  nextReview?: string | null;
+};
+
 export type VocabListBody = {
-  items: VocabWordBody[];
+  items: VocabularyEntryBody[];
   meta: {
     limit: number;
     offset: number;

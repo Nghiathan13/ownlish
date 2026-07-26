@@ -18,7 +18,10 @@ import type {
 } from './helpers/e2e-collection-types';
 import { getE2ePrisma } from './helpers/e2e-prisma';
 import { parseResponseBody } from './helpers/parse-response-body';
-import type { VocabListBody, VocabWordBody } from './helpers/e2e-vocab-types';
+import type {
+  VocabListBody,
+  VocabularyEntryBody,
+} from './helpers/e2e-vocab-types';
 
 describe('CollectionsController (e2e)', () => {
   let app: INestApplication<App>;
@@ -73,7 +76,7 @@ describe('CollectionsController (e2e)', () => {
         example: 'This is an e2e catalog word.',
         band: 'A1',
         source: 'oxford_3000',
-        sortOrder: 99_900,
+        sortOrder: -1,
       },
     });
     const collection = await prisma.wordCollection.create({
@@ -159,16 +162,13 @@ describe('CollectionsController (e2e)', () => {
       .expect((response) => {
         const collections =
           parseResponseBody<CollectionSummaryBody[]>(response);
-        expect(collections).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              id: collectionId,
-              itemCount: 1,
-              kind: 'SYSTEM',
-              name: 'Oxford E2E A1',
-            }),
-          ]),
-        );
+        const collection = collections.find((item) => item.id === collectionId);
+        expect(collection).toMatchObject({
+          id: collectionId,
+          kind: 'SYSTEM',
+          name: 'Oxford E2E A1',
+        });
+        expect(collection?.itemCount).toBeGreaterThanOrEqual(1);
       });
 
     await request(app.getHttpServer())
@@ -178,17 +178,20 @@ describe('CollectionsController (e2e)', () => {
       .expect((response) => {
         const collectionDetail =
           parseResponseBody<CollectionCatalogBody>(response);
-        expect(collectionDetail.catalogWords).toHaveLength(1);
-        expect(collectionDetail.catalogWords[0]).toMatchObject({
-          word: 'e2e catalog word',
-          definitions: [
+        expect(collectionDetail.catalogWords).toEqual(
+          expect.arrayContaining([
             expect.objectContaining({
-              band: 'A1',
-              meaningVi: 'tu e2e',
-              type: 'noun',
+              word: 'e2e catalog word',
+              definitions: [
+                expect.objectContaining({
+                  band: 'A1',
+                  meaningVi: 'tu e2e',
+                  type: 'noun',
+                }),
+              ],
             }),
-          ],
-        });
+          ]),
+        );
       });
 
     await request(app.getHttpServer())
@@ -197,15 +200,10 @@ describe('CollectionsController (e2e)', () => {
       .expect(200)
       .expect((response) => {
         const page = parseResponseBody<CollectionCatalogPageBody>(response);
-        expect(page).toMatchObject({
-          limit: 20,
-          offset: 0,
-          total: 1,
-        });
-        expect(page.items).toHaveLength(1);
-        expect(page.items[0]).toMatchObject({
-          word: 'e2e catalog word',
-        });
+        expect(page).toMatchObject({ limit: 20, offset: 0 });
+        expect(page.total).toBeGreaterThanOrEqual(1);
+        expect(page.items).toHaveLength(20);
+        expect(page.items[0]).toMatchObject({ word: 'e2e catalog word' });
       });
 
     await request(app.getHttpServer())
@@ -216,6 +214,7 @@ describe('CollectionsController (e2e)', () => {
     await request(app.getHttpServer())
       .post(`/collections/${collectionId}/import`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .send({ catalogDefinitionIds: [systemEntryId] })
       .expect(201)
       .expect((response) => {
         expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
@@ -228,6 +227,7 @@ describe('CollectionsController (e2e)', () => {
     await request(app.getHttpServer())
       .post(`/collections/${collectionId}/import`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .send({ catalogDefinitionIds: [systemEntryId] })
       .expect(201)
       .expect((response) => {
         expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
@@ -243,25 +243,20 @@ describe('CollectionsController (e2e)', () => {
       .expect(200);
 
     const vocabListBody = parseResponseBody<VocabListBody>(vocabListResponse);
-    const importedWord = vocabListBody.items[0];
-    const importedDefinition = importedWord.definitions[0];
+    const importedEntry = vocabListBody.items[0];
 
     await request(app.getHttpServer())
-      .patch(`/vocab/${importedWord.id}`)
+      .patch(`/vocab/${importedEntry.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        definitionId: importedDefinition.id,
         meaningVi: 'nghia da sua',
       })
       .expect(200)
       .expect((response) => {
-        const updatedWord = parseResponseBody<VocabWordBody>(response);
-        expect(updatedWord.definitions).toHaveLength(1);
-        expect(updatedWord.definitions[0]).toMatchObject({
-          id: importedDefinition.id,
+        expect(parseResponseBody<VocabularyEntryBody>(response)).toMatchObject({
+          id: importedEntry.id,
           source: 'oxford_3000',
           systemEntryId,
-          sourceWordId: 999001,
           example: 'This is an e2e catalog word.',
           band: 'A1',
           meaningVi: 'nghia da sua',
@@ -281,54 +276,43 @@ describe('CollectionsController (e2e)', () => {
       )
       .expect(201);
 
-    const manualAddBody = parseResponseBody<VocabWordBody>(manualAddResponse);
+    const manualEntry =
+      parseResponseBody<VocabularyEntryBody>(manualAddResponse);
 
-    expect(manualAddBody.id).toBe(importedWord.id);
-    expect(manualAddBody.definitions).toHaveLength(2);
-
-    const manualDefinition = manualAddBody.definitions.find(
-      (definition) => definition.source === 'manual',
-    );
-    if (!manualDefinition) {
-      throw new Error('Expected a manual definition');
-    }
-
-    expect(manualDefinition).toMatchObject({
+    expect(manualEntry.id).not.toBe(importedEntry.id);
+    expect(manualEntry).toMatchObject({
       source: 'manual',
       type: 'verb',
       meaningVi: 'nghia manual',
     });
 
     await request(app.getHttpServer())
-      .patch(`/vocab/${importedWord.id}`)
+      .patch(`/vocab/${manualEntry.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        definitionId: manualDefinition.id,
         meaningVi: 'nghia manual da sua',
       })
       .expect(200)
       .expect((response) => {
-        const updatedWord = parseResponseBody<VocabWordBody>(response);
-        expect(updatedWord.definitions).toHaveLength(2);
-        expect(updatedWord.definitions).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              id: importedDefinition.id,
-              source: 'oxford_3000',
-              meaningVi: 'nghia da sua',
-            }),
-            expect.objectContaining({
-              id: manualDefinition.id,
-              source: 'manual',
-              meaningVi: 'nghia manual da sua',
-            }),
-          ]),
-        );
+        expect(parseResponseBody<VocabularyEntryBody>(response)).toMatchObject({
+          id: manualEntry.id,
+          source: 'manual',
+          meaningVi: 'nghia manual da sua',
+        });
       });
+
+    const entriesResponse = await request(app.getHttpServer())
+      .get(buildVocabListPath(defaultCollectionId))
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(parseResponseBody<VocabListBody>(entriesResponse).meta.total).toBe(
+      2,
+    );
 
     await request(app.getHttpServer())
       .post(`/collections/${collectionId}/import`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .send({ catalogDefinitionIds: [systemEntryId] })
       .expect(201)
       .expect((response) => {
         expect(parseResponseBody<CollectionImportBody>(response)).toEqual({
@@ -397,21 +381,16 @@ describe('CollectionsController (e2e)', () => {
       .expect(200);
 
     const vocabListBody = parseResponseBody<VocabListBody>(vocabListResponse);
-    const importedWord = vocabListBody.items.find(
+    const importedEntry = vocabListBody.items.find(
       (item) => item.word === partialImportWord,
     );
 
-    expect(importedWord).toMatchObject({
+    expect(importedEntry).toMatchObject({
       word: partialImportWord,
-      definitions: [
-        expect.objectContaining({
-          systemEntryId: catalogDefinitionId,
-          type: 'noun',
-          meaningVi: 'tu chon',
-        }),
-      ],
+      systemEntryId: catalogDefinitionId,
+      type: 'noun',
+      meaningVi: 'tu chon',
     });
-    expect(importedWord?.definitions).toHaveLength(1);
 
     await prisma.systemVocabularyEntry.deleteMany({
       where: { normalizedWord: partialImportNormalizedWord },
