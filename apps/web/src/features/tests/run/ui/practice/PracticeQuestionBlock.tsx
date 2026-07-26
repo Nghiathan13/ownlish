@@ -1,6 +1,7 @@
 "use client";
 
 import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
+import { practiceSurfaceFrameClassName } from "@/features/tests/run/components/PracticeTranslationCard";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
 import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
@@ -8,6 +9,7 @@ import type { PracticeQuestionPresentation } from "@/features/tests/run/lib/prac
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
+import { classNames } from "@/shared/lib/classNames";
 
 type PracticeQuestionBlockProps = {
   question: ToeicQuestion;
@@ -30,8 +32,22 @@ export function PracticeQuestionBlock({
   isBilingual,
   onSelect,
 }: PracticeQuestionBlockProps) {
-  const options = (
-    <>
+  const contentGapClassName = usesSplitPlainLayout ? "gap-4" : "gap-3";
+
+  const questionCard = (
+    <div
+      className={classNames(
+        practiceSurfaceFrameClassName,
+        "flex flex-col p-4",
+        contentGapClassName,
+      )}
+    >
+      <PracticeQuestionPrompt
+        questionNumber={question.questionNumber}
+        questionText={presentation.questionEnVisible ? question.question : null}
+        questionVi={question.questionVi}
+        showBilingual={presentation.showQuestionBilingual}
+      />
       <QuestionOptions
         answerKey={presentation.answerKey}
         isLocked={presentation.isLocked}
@@ -46,7 +62,15 @@ export function PracticeQuestionBlock({
         showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
         showResult={presentation.showResult}
       />
+    </div>
+  );
 
+  return (
+    <div
+      className={classNames("flex flex-col", contentGapClassName)}
+      key={question.id}
+    >
+      {questionCard}
       <QuestionTranslationPanel
         answerKey={presentation.showResult ? presentation.answerKey : null}
         optionCount={question.optionCount}
@@ -55,35 +79,6 @@ export function PracticeQuestionBlock({
         variant={partConfig.translationVariant}
         visible={presentation.translationVisible && !isBilingual}
       />
-    </>
-  );
-
-  if (usesSplitPlainLayout) {
-    return (
-      <div className="flex flex-col gap-4" key={question.id}>
-        <PracticeQuestionPrompt
-          questionNumber={question.questionNumber}
-          questionText={presentation.questionEnVisible ? question.question : null}
-          questionVi={question.questionVi}
-          showBilingual={presentation.showQuestionBilingual}
-        />
-        {options}
-      </div>
-    );
-  }
-
-  return (
-    <section
-      className="space-y-3 rounded-xl border border-border bg-surface p-4"
-      key={question.id}
-    >
-      <PracticeQuestionPrompt
-        questionNumber={question.questionNumber}
-        questionText={presentation.questionEnVisible ? question.question : null}
-        questionVi={question.questionVi}
-        showBilingual={presentation.showQuestionBilingual}
-      />
-      {options}
-    </section>
+    </div>
   );
 }

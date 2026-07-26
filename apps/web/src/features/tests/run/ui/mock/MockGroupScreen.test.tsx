@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
 import { MockGroupScreen } from "@/features/tests/run/ui/mock/MockGroupScreen";
 import { LocaleProvider } from "@/shared/providers/LocaleProvider";
@@ -46,12 +46,21 @@ const group: ToeicQuestionGroup = {
 };
 
 describe("MockGroupScreen", () => {
+  beforeEach(() => {
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("allows answer changes, then locks when completed", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const props = {
       group,
       isFinished: false,
+      isTimerExpired: false,
       isReviewingResults: false,
       mediaError: null,
       onSelect,
@@ -71,6 +80,14 @@ describe("MockGroupScreen", () => {
 
     await user.click(optionB);
     expect(onSelect).toHaveBeenCalledWith(101, "B");
+
+    rerender(
+      <LocaleProvider>
+        <MockGroupScreen {...props} isTimerExpired />
+      </LocaleProvider>,
+    );
+
+    expect(screen.queryByRole("button", { name: /A.*Alpha/i })).not.toBeInTheDocument();
 
     rerender(
       <LocaleProvider>
@@ -98,6 +115,7 @@ describe("MockGroupScreen", () => {
     const props = {
       group: listeningGroup,
       isFinished: false,
+      isTimerExpired: false,
       isReviewingResults: false,
       mediaError: null,
       onSelect: vi.fn(),

@@ -14,12 +14,13 @@ import {
   areAllPartsSelected,
   normalizeSelectedParts,
 } from "@/features/tests/shared/lib/toeicParts";
+import { getMockTimeLimitMinutes } from "@/features/tests/shared/lib/mockTestTimer";
 
 type UsePartPickerParams = {
   intent: "practice" | "mock";
   isStarting: boolean;
   onStart: (partNumbers: number[], mode: PracticeMode) => void;
-  onStartMock?: (partNumbers: number[]) => void;
+  onStartMock?: (partNumbers: number[], timeLimitMinutes: number) => void;
   test: CatalogTestSummary;
 };
 
@@ -31,6 +32,7 @@ export function useToeicPartPicker({
   test,
 }: UsePartPickerParams) {
   const [selectedParts, setSelectedParts] = useState<number[]>([]);
+  const [mockTimeLimitInput, setMockTimeLimitInput] = useState("");
 
   const areAllPartsChecked = areAllPartsSelected(selectedParts);
   const selectedWrongCount = selectedParts.reduce((total, partNumber) => {
@@ -41,21 +43,17 @@ export function useToeicPartPicker({
   );
 
   const togglePart = (partNumber: number) => {
-    setSelectedParts((current) =>
-      current.includes(partNumber)
-        ? removePartFromSelection(current, partNumber)
-        : addPartToSelection(current, partNumber),
-    );
+    const nextParts = selectedParts.includes(partNumber)
+      ? removePartFromSelection(selectedParts, partNumber)
+      : addPartToSelection(selectedParts, partNumber);
+    setSelectedParts(nextParts);
+    setMockTimeLimitInput(String(getMockTimeLimitMinutes(nextParts)));
   };
 
   const toggleAllParts = () => {
-    setSelectedParts((current) => {
-      if (areAllPartsSelected(current)) {
-        return [];
-      }
-
-      return [...ALL_TOEIC_PART_NUMBERS];
-    });
+    const nextParts = areAllPartsChecked ? [] : [...ALL_TOEIC_PART_NUMBERS];
+    setSelectedParts(nextParts);
+    setMockTimeLimitInput(String(getMockTimeLimitMinutes(nextParts)));
   };
 
   const startWithMode = (mode: PracticeMode) => {
@@ -68,14 +66,14 @@ export function useToeicPartPicker({
     onStart(parts, mode);
   };
 
-  const startMock = () => {
+  const startMock = (timeLimitMinutes: number) => {
     const parts = normalizeSelectedParts(selectedParts);
 
     if (parts.length === 0) {
       return;
     }
 
-    onStartMock?.(parts);
+    onStartMock?.(parts, timeLimitMinutes);
   };
 
   return {
@@ -88,10 +86,12 @@ export function useToeicPartPicker({
       hasUnsupportedPart ||
       selectedWrongCount === 0,
     isStarting,
+    mockTimeLimitInput,
     selectedParts,
     selectedWrongCount,
     startMock,
     startWithMode,
+    setMockTimeLimitInput,
     toggleAllParts,
     togglePart,
   };

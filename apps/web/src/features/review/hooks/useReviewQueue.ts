@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listDueReviewWords,
   updateVocabReview,
-  type VocabReviewItem,
+  type ReviewRating,
+  type UserVocabularyEntry,
 } from "@/entities/vocab/api/vocab";
 import {
   getReviewQueueQueryKey,
@@ -16,12 +17,17 @@ import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { ApiError } from "@/shared/api/http";
-import { buildReviewUpdate, type ReviewGrade } from "../lib/reviewSchedule";
+import { randomizeReviewQueue } from "../lib/randomizeReviewQueue";
 
 type UseReviewQueueParams = {
   collectionId: string | null;
   isAuthenticated: boolean;
   userId: string | null;
+};
+
+type ReviewOrder = {
+  collectionId: string | null;
+  ranks: Map<string, number>;
 };
 
 export function useReviewQueue({
@@ -32,11 +38,27 @@ export function useReviewQueue({
   const queryClient = useQueryClient();
   const [reviewedCount, setReviewedCount] = useState(0);
   const [trackedCollectionId, setTrackedCollectionId] = useState(collectionId);
+  const [reviewOrder, setReviewOrder] = useState<ReviewOrder>(() => ({
+    collectionId,
+    ranks: new Map<string, number>(),
+  }));
 
   if (trackedCollectionId !== collectionId) {
     setTrackedCollectionId(collectionId);
     setReviewedCount(0);
   }
+
+  if (reviewOrder.collectionId !== collectionId) {
+    setReviewOrder({ collectionId, ranks: new Map<string, number>() });
+  }
+
+  const orderQueue = useCallback(
+    (queue: Awaited<ReturnType<typeof listDueReviewWords>>) => ({
+      ...queue,
+      items: randomizeReviewQueue(queue.items, reviewOrder.ranks),
+    }),
+    [reviewOrder.ranks],
+  );
 
   const { data, isLoading, error: queryError } = useQuery({
     queryKey: getReviewQueueQueryKey(userId, collectionId),
@@ -51,6 +73,7 @@ export function useReviewQueue({
       });
     },
     enabled: isAuthenticated && Boolean(userId) && Boolean(collectionId),
+    select: orderQueue,
   });
 
   const reviewItems = data?.items;
@@ -68,10 +91,10 @@ export function useReviewQueue({
     error: gradeError,
     isPending: isSubmittingGrade,
   } = useMutation({
-    mutationFn: ({ word, grade }: { word: VocabReviewItem; grade: ReviewGrade }) => {
+    mutationFn: ({ word, rating }: { word: UserVocabularyEntry; rating: ReviewRating }) => {
       return runAuthenticatedRequest({
         request: (token) =>
-          updateVocabReview(token, word.id, buildReviewUpdate(word, grade)),
+          updateVocabReview(token, word.id, { rating }),
       });
     },
     onMutate: async ({ word }) => {
@@ -106,15 +129,16 @@ export function useReviewQueue({
 
   const reload = useCallback(() => {
     setReviewedCount(0);
+    setReviewOrder({ collectionId, ranks: new Map<string, number>() });
     queryClient.invalidateQueries({
       queryKey: getReviewQueueQueryKey(userId, collectionId),
     });
   }, [collectionId, queryClient, userId]);
 
   const gradeCurrentWord = useCallback(
-    (grade: ReviewGrade) => {
+    (rating: ReviewRating) => {
       if (!currentWord) return Promise.resolve();
-      return gradeWord({ word: currentWord, grade });
+      return gradeWord({ word: currentWord, rating });
     },
     [currentWord, gradeWord],
   );

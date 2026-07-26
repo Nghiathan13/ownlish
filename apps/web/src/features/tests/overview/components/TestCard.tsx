@@ -3,6 +3,7 @@
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { CloseIcon } from "@/shared/ui/icons/CloseIcon";
 import { DeleteIcon } from "@/shared/ui/icons/DeleteIcon";
+import { HistoryIcon } from "@/shared/ui/icons/HistoryIcon";
 import { PracticeIcon } from "@/shared/ui/icons/PracticeIcon";
 import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { StartIcon } from "@/shared/ui/icons/StartIcon";
@@ -24,11 +25,13 @@ import {
 } from "@/features/tests/overview/lib/testOverviewCard";
 import { formatMessage } from "@/shared/i18n/messages";
 import { useT } from "@/shared/providers/LocaleProvider";
+import { iconButtonGroupClassName, Tooltip } from "@/shared/ui/Tooltip";
 
 type TestCardProps = {
   test: CatalogTestSummary;
   isClearingHistory?: boolean;
   onClearHistory: () => void;
+  onMockHistory: () => void;
   onMock: () => void;
   onPractice: () => void;
   onReviewWrong: () => void;
@@ -38,6 +41,7 @@ export function TestCard({
   test,
   isClearingHistory = false,
   onClearHistory,
+  onMockHistory,
   onMock,
   onPractice,
   onReviewWrong,
@@ -57,6 +61,20 @@ export function TestCard({
         </h2>
         <div className="flex shrink-0 items-center gap-2">
           <button
+            aria-label={t("tests.mockHistory")}
+            className={iconOnlyButtonClassName(
+              "relative bg-transparent text-foreground hover:bg-hover-overlay",
+              iconButtonGroupClassName,
+            )}
+            onClick={onMockHistory}
+            type="button"
+          >
+            <HistoryIcon />
+            <Tooltip group="icon-button" placement="bottom">
+              {t("tests.mockHistory")}
+            </Tooltip>
+          </button>
+          <button
             aria-label={
               testWrongCount > 0
                 ? formatMessage(t("tests.reviewWrongCount"), {
@@ -69,6 +87,7 @@ export function TestCard({
               statusColorClasses.danger.text,
               statusColorClasses.danger.backgroundHover,
               "disabled:opacity-60 disabled:hover:bg-muted",
+              iconButtonGroupClassName,
             )}
             disabled={isClearingHistory || testWrongCount === 0}
             onClick={onReviewWrong}
@@ -78,6 +97,13 @@ export function TestCard({
             {testWrongCount > 0 ? (
               <TopRightCountBadge count={testWrongCount} />
             ) : null}
+            <Tooltip group="icon-button" placement="bottom">
+              {testWrongCount > 0
+                ? formatMessage(t("tests.reviewWrongCount"), {
+                    count: testWrongCount,
+                  })
+                : t("tests.reviewWrongAllParts")}
+            </Tooltip>
           </button>
           <button
             aria-label={
@@ -86,15 +112,21 @@ export function TestCard({
                 : t("tests.clearHistory")
             }
             className={iconOnlyButtonClassName(
-              "bg-transparent",
+              "relative bg-transparent",
               statusColorClasses.danger.text,
               statusColorClasses.danger.backgroundHover,
+              iconButtonGroupClassName,
             )}
             disabled={isClearingHistory}
             onClick={onClearHistory}
             type="button"
           >
             <DeleteIcon />
+            <Tooltip group="icon-button" placement="bottom">
+              {isClearingHistory
+                ? t("tests.clearingHistory")
+                : t("tests.clearHistory")}
+            </Tooltip>
           </button>
         </div>
       </div>

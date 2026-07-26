@@ -29,6 +29,8 @@ export type RuntimeTestSession = {
   totalQuestions: number;
   correctCount: number;
   wrongCount: number;
+  timer: ToeicRuntimeRun["timer"];
+  finishStatus: ToeicRuntimeRun["finish"]["status"];
   isFinished: boolean;
   groups: ToeicQuestionGroup[];
   questionKeyById: Map<number, string>;
@@ -290,6 +292,8 @@ export function materializeTestSession(
     totalQuestions: materializedGroups.flatMap((group) => group.questions).length,
     correctCount: run.correctCount,
     wrongCount: run.wrongCount,
+    timer: run.timer,
+    finishStatus: run.finish.status,
     isFinished: run.finish.status === "completed",
     groups: materializedGroups,
     questionKeyById,

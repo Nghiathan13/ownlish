@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef } from "react";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
-import { useAutoplayMediaAudio } from "@/features/tests/run/hooks/useAutoplayMediaAudio";
+import { AudioPlayer } from "@/shared/ui/AudioPlayer";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
 import { getPartInstruction } from "@/features/tests/shared/lib/partInstruction";
 import { formatMessage } from "@/shared/i18n/messages";
@@ -51,15 +50,6 @@ export function PracticeLeftPanel({
     (partConfig.leftPanel === "audio-image" ||
       partConfig.leftPanel === "listening-group");
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  useAutoplayMediaAudio({
-    audioRef,
-    src: audioUrl,
-    enabled: showAudio && Boolean(audioUrl),
-    onBlocked: onMediaError,
-  });
-
   const mediaSection =
     instruction ||
     showAudio ||
@@ -68,7 +58,7 @@ export function PracticeLeftPanel({
   const content = (
     <>
       {mediaSection ? (
-        <div className="flex shrink-0 flex-col gap-4 bg-background">
+        <div className="flex shrink-0 flex-col gap-4">
           {instruction ? (
             <PartInstructionText
               instruction={instruction}
@@ -78,10 +68,8 @@ export function PracticeLeftPanel({
 
           {showAudio ? (
             audioUrl ? (
-              <audio
-                ref={audioRef}
-                controls
-                className="w-full"
+              <AudioPlayer
+                autoPlayStorageKey="engvocab.tests.audio.autoplay"
                 key={`audio-${group.id}`}
                 onError={onMediaError}
                 src={audioUrl}
@@ -100,7 +88,7 @@ export function PracticeLeftPanel({
                 alt={formatMessage(t("tests.questionImageAlt"), {
                   number: questionNumber,
                 })}
-                className="mx-auto max-h-[420px] w-full object-contain"
+                className="mx-auto block h-auto max-h-[420px] w-auto max-w-full rounded-xl shadow-card dark:border dark:border-border"
                 key={`image-${group.id}`}
                 onError={onMediaError}
                 src={imageUrl}

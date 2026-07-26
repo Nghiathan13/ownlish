@@ -324,9 +324,13 @@ export function MockRunView({
 
   const handleSelect = useCallback(
     (toeicQuestionId: number, selectedKey: OptionKey) => {
+      if (mock.isTimerExpired) {
+        return;
+      }
+
       selectAnswer(toeicQuestionId, selectedKey);
     },
-    [selectAnswer],
+    [mock.isTimerExpired, selectAnswer],
   );
 
   const handleFinish = useCallback(async () => {
@@ -347,8 +351,9 @@ export function MockRunView({
     isReviewingResults ? null : handleFinish,
     isReviewingResults ? null : testLabel,
     {
-      disabled: mock.isFinishing || mock.hasSyncFailures,
+      disabled: mock.isFinishing || mock.hasSyncFailures || mock.isTimerExpired,
       isPending: mock.isFinishing,
+      timerLabel: isReviewingResults ? null : mock.timerLabel,
     },
   );
 
@@ -417,7 +422,7 @@ export function MockRunView({
   }
 
   const navigation = canNavigate ? (
-    <div className="shrink-0 border-t border-border p-4">
+    <div className="relative z-50 shrink-0 bg-surface p-4 shadow-card-up dark:border-t dark:border-border">
       <PracticeNavigationButtons
         currentQuestionNumber={currentQuestionNumber}
         nextDisabled={activeGroupIndex >= groups.length - 1}
@@ -456,6 +461,7 @@ export function MockRunView({
             group={activeGroup}
             isFinished={mock.isFinished}
             isReviewingResults={isReviewingResults}
+            isTimerExpired={mock.isTimerExpired}
             mediaError={mediaMessage}
             onSelect={handleSelect}
             partNumber={activeGroup.partNumber ?? 1}

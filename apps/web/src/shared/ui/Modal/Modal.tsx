@@ -71,7 +71,7 @@ export function Modal({
             <button
               aria-label="Close"
               className={iconOnlyButtonClassName(
-                "border border-border bg-transparent text-foreground hover:border-foreground",
+                "border border-border bg-transparent text-foreground hover:bg-hover-overlay",
               )}
               onClick={onClose}
               type="button"

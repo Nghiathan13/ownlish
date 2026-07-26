@@ -26,6 +26,7 @@ type RegisterExitOptions = {
 type RegisterFinishOptions = {
   disabled?: boolean;
   isPending?: boolean;
+  timerLabel?: string | null;
 };
 
 type ImmersiveExitContextValue = {
@@ -44,6 +45,7 @@ type ImmersiveFinishContextValue = {
   disabled: boolean;
   finish: () => Promise<void>;
   isPending: boolean;
+  timerLabel: string | null;
   title: string | null;
   registerFinishHandler: (
     handler: FinishHandler | null,
@@ -78,6 +80,7 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
   const [finishTitle, setFinishTitle] = useState<string | null>(null);
   const [isFinishDisabled, setIsFinishDisabled] = useState(false);
   const [isFinishPending, setIsFinishPending] = useState(false);
+  const [finishTimerLabel, setFinishTimerLabel] = useState<string | null>(null);
   const [showBilingualAction, setShowBilingualAction] = useState(false);
   const [isBilingual, setIsBilingual] = useState(() => readBilingualEnabled());
 
@@ -110,6 +113,7 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
       setFinishTitle(handler ? title : null);
       setIsFinishDisabled(disabled);
       setIsFinishPending(Boolean(handler && options.isPending));
+      setFinishTimerLabel(handler ? options.timerLabel ?? null : null);
     },
     [],
   );
@@ -162,6 +166,7 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
       disabled: isFinishDisabled,
       finish,
       isPending: isFinishPending,
+      timerLabel: finishTimerLabel,
       registerFinishHandler,
       title: finishTitle,
     }),
@@ -170,6 +175,7 @@ export function ImmersiveToolbarProvider({ children }: { children: ReactNode }) 
       finishTitle,
       isFinishDisabled,
       isFinishPending,
+      finishTimerLabel,
       registerFinishHandler,
     ],
   );
@@ -237,16 +243,17 @@ export function useRegisterImmersiveFinish(
   const registerFinishHandler = context?.registerFinishHandler;
   const disabled = options.disabled ?? false;
   const isPending = options.isPending ?? false;
+  const timerLabel = options.timerLabel ?? null;
 
   useEffect(() => {
     if (!registerFinishHandler) {
       return;
     }
 
-    registerFinishHandler(handler, title, { disabled, isPending });
+    registerFinishHandler(handler, title, { disabled, isPending, timerLabel });
 
     return () => {
       registerFinishHandler(null, null, {});
     };
-  }, [disabled, handler, isPending, registerFinishHandler, title]);
+  }, [disabled, handler, isPending, registerFinishHandler, timerLabel, title]);
 }

@@ -42,7 +42,7 @@ function makeDefinition(overrides = {}) {
   return {
     id: "definition-id",
     vocabWordId: "word-id",
-    sourceDefinitionId: 42,
+    systemEntryId: "42",
     sourceWordId: 7,
     type: "noun",
     meaningVi: "mau",
@@ -142,11 +142,9 @@ describe("vocab word form mappers", () => {
     expect(
       toUpdateVocabWordInput(
         makeValues({ word: " changed ", definition: " updated " }),
-        "definition-id",
         { lockWord: true },
       ),
     ).toEqual({
-      definitionId: "definition-id",
       definition: "updated",
       band: undefined,
       example: undefined,

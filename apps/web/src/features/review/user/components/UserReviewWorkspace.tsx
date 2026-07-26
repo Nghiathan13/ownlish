@@ -85,17 +85,16 @@ export function UserReviewWorkspace({ onCategoryChange }: UserReviewWorkspacePro
       >
         {currentWord && !review.isLoading && !review.isEmpty ? (
           <ReviewStudySession
-            disableGood
-            disableHard
             error={review.error}
             errorHint="Choose Again or Easy to retry."
             isSubmitting={review.isSubmittingGrade}
             key={currentWord.id}
+            level={currentWord.level}
             mode={mode}
-            onAgain={() => void review.gradeCurrentWord("forgot")}
-            onEasy={() => void review.gradeCurrentWord("remember")}
-            onGood={() => {}}
-            onHard={() => {}}
+            onAgain={() => void review.gradeCurrentWord("FORGET")}
+            onEasy={() => void review.gradeCurrentWord("EASY")}
+            onGood={() => void review.gradeCurrentWord("GOOD")}
+            onHard={() => void review.gradeCurrentWord("HARD")}
             reviewedCount={review.reviewedCount}
             totalWords={review.totalWords}
             word={toReviewStudyWord(currentWord)}

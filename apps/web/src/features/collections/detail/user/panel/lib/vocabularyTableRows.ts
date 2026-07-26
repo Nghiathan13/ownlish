@@ -12,30 +12,12 @@ export type VocabularyDefinitionRow = {
 export function expandWordsToDefinitionRows(
   words: VocabWord[],
 ): VocabularyDefinitionRow[] {
-  return words.flatMap((word): VocabularyDefinitionRow[] => {
-    const definitions = word.definitions;
-    const definitionCount = definitions.length > 0 ? definitions.length : 1;
-
-    if (definitions.length === 0) {
-      return [
-        {
-          word,
-          definition: null,
-          definitionIndex: 0,
-          definitionCount: 1,
-          isFirstInWord: true,
-          isLastInWord: true,
-        },
-      ];
-    }
-
-    return definitions.map((definition, definitionIndex) => ({
+  return words.map((word) => ({
       word,
-      definition,
-      definitionIndex,
-      definitionCount,
-      isFirstInWord: definitionIndex === 0,
-      isLastInWord: definitionIndex === definitions.length - 1,
+      definition: word.definitions[0],
+      definitionIndex: 0,
+      definitionCount: 1,
+      isFirstInWord: true,
+      isLastInWord: true,
     }));
-  });
 }

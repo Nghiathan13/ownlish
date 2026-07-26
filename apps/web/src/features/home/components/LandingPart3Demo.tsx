@@ -16,6 +16,7 @@ import { QuestionTranslationPanel } from "@/features/tests/run/components/Questi
 import {
   iconTextButtonClassName,
 } from "@/shared/ui/button";
+import { AudioPlayer } from "@/shared/ui/AudioPlayer";
 import { useT } from "@/shared/providers/LocaleProvider";
 
 type Selections = Record<string, LandingOptionKey | null>;
@@ -105,14 +106,7 @@ export function LandingPart3Demo() {
             <span className="text-sm text-muted-foreground">{demo.source}</span>
           </div>
 
-          <audio
-            className="w-full"
-            controls
-            preload="metadata"
-            src={demo.audioSrc}
-          >
-            {t("landing.audioUnsupported")}
-          </audio>
+          <AudioPlayer bordered elevated={false} src={demo.audioSrc} />
 
           <div className="overflow-hidden rounded-xl border border-border bg-background">
             <Image

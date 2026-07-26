@@ -30,16 +30,17 @@ export function ImmersiveToolbar() {
   const showsBilingual = Boolean(
     exitTitle && exitContext?.showBilingualAction,
   );
+  const timerLabel = showsFinish ? finishContext?.timerLabel : null;
 
   return (
-    <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full shrink-0 bg-surface shadow-card backdrop-blur-md dark:border-b dark:border-border">
       <div
         className={classNames(
           APP_CONTAINER_CLASS,
-          "flex items-center gap-4 py-4",
+          "flex items-center justify-between gap-4 py-4",
         )}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 items-center gap-4">
           {showsFinish ? (
             <button
               aria-busy={finishContext?.isPending ?? false}
@@ -57,7 +58,7 @@ export function ImmersiveToolbar() {
           ) : (
             <button
               className={iconTextButtonClassName(
-                "border-foreground bg-foreground text-background",
+                "border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
               )}
               onClick={() => {
                 void (exitContext?.exit() ?? router.push("/tests"));
@@ -70,8 +71,8 @@ export function ImmersiveToolbar() {
           )}
 
           {title ? (
-            <div className="flex items-center gap-4">
-              <span className="text-base font-semibold text-foreground">
+            <div className="flex min-w-0 items-center gap-4">
+              <span className="truncate text-base font-semibold text-foreground">
                 {title}
               </span>
               {showsBilingual ? (
@@ -79,8 +80,8 @@ export function ImmersiveToolbar() {
                   aria-pressed={isBilingual}
                   className={iconTextButtonClassName(
                     isBilingual
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-transparent text-foreground",
+                      ? "border-primary bg-primary/5 text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+                      : "border-border bg-transparent text-foreground hover:bg-hover-overlay",
                   )}
                   onClick={() => bilingualContext?.toggleBilingual()}
                   type="button"
@@ -92,6 +93,12 @@ export function ImmersiveToolbar() {
             </div>
           ) : null}
         </div>
+
+        {timerLabel ? (
+          <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-primary bg-primary/5 px-4 py-2 text-base font-semibold tabular-nums text-primary">
+            {timerLabel}
+          </span>
+        ) : null}
       </div>
     </nav>
   );

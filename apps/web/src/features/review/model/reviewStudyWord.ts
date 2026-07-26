@@ -1,5 +1,5 @@
 import type { OxfordReviewItem } from "@/entities/review/api/oxfordReview";
-import type { VocabReviewItem } from "@/entities/vocab/api/vocab";
+import type { UserVocabularyEntry } from "@/entities/vocab/api/vocab";
 
 export type ReviewStudyDefinition = {
   id: string;
@@ -19,7 +19,7 @@ export type ReviewStudyWord = {
   word: string;
 };
 
-export function toReviewStudyWord(word: VocabReviewItem): ReviewStudyWord {
+export function toReviewStudyWord(word: UserVocabularyEntry): ReviewStudyWord {
   return {
     band: word.band,
     definitions: [
@@ -35,7 +35,7 @@ export function toReviewStudyWord(word: VocabReviewItem): ReviewStudyWord {
     id: word.id,
     ipa: word.ipaUk ?? word.ipaUs,
     types: word.type ? [word.type] : [],
-    word: word.vocabWord.word,
+    word: word.word,
   };
 }
 

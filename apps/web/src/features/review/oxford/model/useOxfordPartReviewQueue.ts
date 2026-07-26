@@ -121,21 +121,6 @@ export function useOxfordPartReviewQueue({
     },
   });
 
-  const moveCurrentWordToEnd = useCallback(() => {
-    if (!currentWord || mutation.isPending || isShowingPreviousData) return;
-
-    setQueueState((current) => {
-      const itemIds = current.sourceKey === sourceKey ? current.itemIds : activeQueueIds;
-      const remaining = itemIds.filter((itemId) => itemId !== currentWord.id);
-
-      return {
-        sourceKey,
-        itemIds: [...remaining, currentWord.id],
-        reviewedCount: current.sourceKey === sourceKey ? current.reviewedCount : 0,
-      };
-    });
-  }, [activeQueueIds, currentWord, isShowingPreviousData, mutation.isPending, sourceKey]);
-
   const gradeCurrentWord = useCallback(
     (rating: OxfordReviewRating) => {
       if (!currentWord || mutation.isPending || isShowingPreviousData) return;
@@ -164,7 +149,6 @@ export function useOxfordPartReviewQueue({
     isEmpty: !query.isPending && !isShowingPreviousData && !errorMessage && queue.length === 0,
     isLoading: query.isPending && !query.isPlaceholderData,
     isSubmitting: mutation.isPending || isShowingPreviousData,
-    moveCurrentWordToEnd,
     reload,
     reviewedCount: isCurrentQueue ? queueState.reviewedCount : 0,
     totalWords: items.length,

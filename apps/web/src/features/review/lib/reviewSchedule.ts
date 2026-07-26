@@ -1,66 +1,25 @@
-import type {
-  UpdateVocabReviewInput,
-  VocabWordDefinition,
-} from "@/entities/vocab/api/vocab";
+import type { ReviewRating } from "@/entities/vocab/api/vocab";
 
-const MAX_REVIEW_LEVEL = 7;
+const EASY_DAYS_BY_LEVEL = [2, 4, 7, 15, 30, 60, 60] as const;
 
-export type ReviewGrade = "forgot" | "remember";
-
-type ReviewProgress = Pick<VocabWordDefinition, "level" | "wrongCount">;
-
-function addDays(date: Date, days: number) {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-
-  return nextDate;
+function getEasyHours(level: number) {
+  return EASY_DAYS_BY_LEVEL[Math.min(level, EASY_DAYS_BY_LEVEL.length - 1)] * 24;
 }
 
-export function getDaysForLevel(level: number) {
-  switch (level) {
-    case 0:
-      return 2;
-    case 1:
-      return 4;
-    case 2:
-      return 7;
-    case 3:
-      return 15;
-    case 4:
-      return 30;
-    case 5:
-      return 60;
-    default:
-      return 60;
-  }
-}
+export function getReviewIntervalLabel(level: number, rating: ReviewRating) {
+  if (rating === "EASY" && level >= 6) return "∞";
 
-export function buildReviewUpdate(
-  definition: ReviewProgress,
-  grade: ReviewGrade,
-  reviewedAt = new Date(),
-): UpdateVocabReviewInput {
-  if (grade === "forgot") {
-    const nextLevel = Math.max(0, definition.level - 2);
-    const daysToAdd = nextLevel === 0 ? 1 : getDaysForLevel(nextLevel - 1);
+  const hours =
+    rating === "FORGET"
+      ? getEasyHours(Math.max(0, level - 2)) / 27
+      : rating === "HARD"
+        ? getEasyHours(level) / 9
+        : rating === "GOOD"
+          ? getEasyHours(level) / 3
+          : getEasyHours(level);
 
-    return {
-      level: nextLevel,
-      wrongCount: definition.wrongCount + 1,
-      lastReview: reviewedAt.toISOString(),
-      nextReview: addDays(reviewedAt, daysToAdd).toISOString(),
-    };
-  }
+  if (hours < 1) return `${Math.round(hours * 60)}m`;
+  if (hours < 24) return `${Math.round(hours)}h`;
 
-  const nextLevel = Math.min(MAX_REVIEW_LEVEL, definition.level + 1);
-
-  return {
-    level: nextLevel,
-    wrongCount: 0,
-    lastReview: reviewedAt.toISOString(),
-    nextReview:
-      nextLevel === MAX_REVIEW_LEVEL
-        ? null
-        : addDays(reviewedAt, getDaysForLevel(definition.level)).toISOString(),
-  };
+  return `${Math.round(hours / 24)}d`;
 }

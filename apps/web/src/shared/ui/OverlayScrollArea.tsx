@@ -44,8 +44,12 @@ function getOverlayThumb(list: HTMLDivElement): OverlayThumb | null {
 }
 
 function centerElementInScrollArea(list: HTMLDivElement, element: HTMLElement) {
+  const listRect = list.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const elementTopInContent =
+    elementRect.top - listRect.top + list.scrollTop;
   const centeredScrollTop =
-    element.offsetTop - (list.clientHeight - element.offsetHeight) / 2;
+    elementTopInContent - (list.clientHeight - element.offsetHeight) / 2;
   const maxScrollTop = list.scrollHeight - list.clientHeight;
   list.scrollTop = Math.min(
     Math.max(0, centeredScrollTop),
@@ -116,12 +120,37 @@ export function OverlayScrollArea({
       return;
     }
 
-    const observer = new ResizeObserver(() => {
+    const resizeObserver = new ResizeObserver(() => {
       syncThumb();
     });
-    observer.observe(listNode);
 
-    return () => observer.disconnect();
+    function observeScrollContent() {
+      resizeObserver.disconnect();
+      resizeObserver.observe(listNode!);
+
+      for (const child of listNode!.children) {
+        if (child instanceof Element) {
+          resizeObserver.observe(child);
+        }
+      }
+    }
+
+    observeScrollContent();
+
+    // Nested collapse/expand changes content height without resizing the viewport.
+    const mutationObserver = new MutationObserver(() => {
+      observeScrollContent();
+      syncThumb();
+    });
+    mutationObserver.observe(listNode, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
   }, [listNode, syncThumb]);
 
   useEffect(() => {

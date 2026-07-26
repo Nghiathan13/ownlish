@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ToeicPartPickerModal } from "@/features/tests/shared/components/ToeicPartPickerModal";
 import { ClearHistoryConfirmModal } from "@/features/tests/overview/components/ClearHistoryConfirmModal";
 import { TestCard } from "@/features/tests/overview/components/TestCard";
@@ -11,8 +13,14 @@ import { MockTestsTabSkeleton } from "@/features/tests/overview/components/MockT
 import { ToeicYearTabs } from "@/features/tests/overview/components/ToeicYearTabs";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
-import { formatCatalogTestLabel } from "@/features/tests/shared/model/catalogTestSummary";
+import {
+  formatCatalogTestLabel,
+  type CatalogTestSummary,
+} from "@/features/tests/shared/model/catalogTestSummary";
 import { useT } from "@/shared/providers/LocaleProvider";
+import { MockTestHistoryPanel } from "@/features/tests/overview/components/MockTestHistoryPanel";
+import { MockRunDecisionModal } from "@/features/tests/overview/components/MockRunDecisionModal";
+import { getToeicRunPath } from "@/features/tests/shared/lib/toeicRunPaths";
 
 type MockTestsTabProps = {
   availableYears: ToeicYear[];
@@ -28,8 +36,10 @@ export function MockTestsTab({
   catalogError,
 }: MockTestsTabProps) {
   const t = useT();
+  const router = useRouter();
   const overview = useTestsOverview(selectedYear, source, catalogError);
   const selectedTest = overview.selectedTest;
+  const [historyTest, setHistoryTest] = useState<CatalogTestSummary | null>(null);
 
   return (
     <>
@@ -64,6 +74,7 @@ export function MockTestsTab({
                   overview.requestClearHistory(test.catalog.id)
                 }
                 onMock={() => overview.openPartPicker(test, "mock")}
+                onMockHistory={() => setHistoryTest(test)}
                 onPractice={() => overview.openPartPicker(test, "practice")}
                 onReviewWrong={() =>
                   void overview.startTest(
@@ -87,8 +98,8 @@ export function MockTestsTab({
           onStart={(partNumbers, mode) => {
             void overview.startTest(selectedTest, partNumbers, mode);
           }}
-          onStartMock={(partNumbers) => {
-            void overview.startMock(selectedTest, partNumbers);
+          onStartMock={(partNumbers, timeLimitMinutes) => {
+            void overview.startMock(selectedTest, partNumbers, timeLimitMinutes);
           }}
           test={selectedTest}
           testLabel={formatCatalogTestLabel(selectedTest)}
@@ -102,6 +113,34 @@ export function MockTestsTab({
           onConfirm={() => void overview.confirmClearHistory()}
           subtitle={t("tests.clearHistorySubtitle")}
           title={t("tests.clearHistoryTitle")}
+        />
+      ) : null}
+
+      {historyTest ? (
+        <MockTestHistoryPanel
+          onClose={() => setHistoryTest(null)}
+          onViewResult={(sessionId, selectedParts) => {
+            router.push(
+              getToeicRunPath(
+                sessionId,
+                "mock_test",
+                selectedParts,
+                historyTest.catalog.id,
+              ),
+            );
+          }}
+          testKey={historyTest.catalog.id}
+        />
+      ) : null}
+
+      {overview.pendingMockRun ? (
+        <MockRunDecisionModal
+          isRestarting={overview.startingTestKey !== null}
+          onClose={overview.cancelMockDecision}
+          onContinue={overview.continueMock}
+          onRestart={() => void overview.restartMock()}
+          parts={overview.pendingMockRun.partNumbers}
+          status={overview.pendingMockRun.status}
         />
       ) : null}
     </>

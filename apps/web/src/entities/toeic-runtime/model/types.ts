@@ -15,6 +15,10 @@ export type ToeicRuntimeRun = {
   selectedParts: number[];
   correctCount: number;
   wrongCount: number;
+  timer: {
+    timeLimitSeconds: number;
+    remainingSeconds: number;
+  } | null;
   finish: { status: "open" | "pending" | "completed" };
   answers: ToeicRuntimeAnswer[];
 };
@@ -37,3 +41,32 @@ export type ToeicRuntimeTestPracticeSummary = {
     wrongCount: number;
   }>;
 };
+
+export type ToeicRuntimeMockHistoryItem = {
+  sessionId: string;
+  selectedParts: number[];
+} & (
+  | {
+      status: "open" | "pending";
+    }
+  | {
+      status: "completed";
+      correctCount: number;
+      wrongCount: number;
+      score: {
+        listening: number;
+        reading: number;
+        total: number;
+      };
+    }
+);
+
+export type ToeicRuntimeMockRunPreparation =
+  | { status: "available" }
+  | {
+      status: "open" | "pending";
+      run: {
+        sessionId: string;
+        selectedParts: number[];
+      };
+    };

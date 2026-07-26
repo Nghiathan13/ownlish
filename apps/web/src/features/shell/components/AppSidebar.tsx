@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, type MouseEvent } from "react";
+import { Suspense, useState, type FocusEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import { useSidebarCollapsed } from "@/features/shell/hooks/useSidebarCollapsed"
 import {
   ADMIN_NAV_LINKS,
   APP_NAV_LINKS,
+  type AppNavLink,
   getAppSidebarLinkClass,
   isAppNavLinkActive,
   isTestsSubLinkActive,
@@ -30,7 +31,8 @@ import {
   iconOnlyButtonClassName,
   primaryTextButtonClassName,
 } from "@/shared/ui/button";
-import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
+import { DownIcon } from "@/shared/ui/icons/DownIcon";
+import { UpIcon } from "@/shared/ui/icons/UpIcon";
 import { LogoIcon } from "@/shared/ui/icons/LogoIcon";
 import { PanelCloseIcon } from "@/shared/ui/icons/PanelCloseIcon";
 import { PanelOpenIcon } from "@/shared/ui/icons/PanelOpenIcon";
@@ -56,88 +58,161 @@ const sidebarOpenButtonClassName = classNames(
   "cursor-ew-resize",
 );
 
-type TestsSubNavProps = {
+const TESTS_TREE_RADIUS_PX = 12;
+const TESTS_TREE_ITEM_HEIGHT_PX = 40;
+const TESTS_TREE_ITEM_GAP_PX = 4;
+const TESTS_TREE_TRUNK_X_PX = 12;
+const TESTS_TREE_WIDTH_PX = TESTS_TREE_TRUNK_X_PX + TESTS_TREE_RADIUS_PX;
+
+type TestsNavDropdownProps = {
   collapsed: boolean;
-  testsExpanded: boolean;
+  link: AppNavLink;
 };
 
-function TestsSubNav({ collapsed, testsExpanded }: TestsSubNavProps) {
+function TestsNavDropdown({ collapsed, link }: TestsNavDropdownProps) {
   const t = useT();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = parseTestsOverviewTab(searchParams.get("tab"));
+  const [open, setOpen] = useState(false);
+  const isActive = isAppNavLinkActive(pathname, link);
+  const Icon = isActive ? link.activeIcon : link.icon;
+  const label = t(link.labelKey);
 
-  if (!testsExpanded) {
-    return null;
-  }
-
-  if (collapsed) {
-    return (
-      <div className="flex flex-col items-center gap-1">
-        {TESTS_SUB_LINKS.map((subLink) => {
-          const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
-          const label = t(subLink.labelKey);
-
-          return (
-            <Link
-              aria-current={isSubActive ? "page" : undefined}
-              aria-label={label}
-              className={classNames(
-                sidebarLinkGroupClassName,
-                "relative flex size-10 items-center justify-center rounded-lg hover:bg-hover-overlay",
-                isSubActive && "bg-muted",
-              )}
-              href={subLink.href}
-              key={subLink.tab}
-              scroll={false}
-            >
-              <span
-                className={classNames(
-                  "size-2 rounded-full",
-                  isSubActive ? "bg-foreground" : "bg-muted-foreground",
-                )}
-              />
-              <Tooltip group="sidebar-link" placement="right">
-                {label}
-              </Tooltip>
-            </Link>
-          );
-        })}
-      </div>
-    );
+  function handleBlurCapture(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setOpen(false);
+    }
   }
 
   return (
-    <div className="relative flex flex-col gap-1">
-      <span className="absolute top-8 left-5 h-6 w-px bg-border" />
-      {TESTS_SUB_LINKS.map((subLink) => {
-        const isSubActive = isTestsSubLinkActive(pathname, currentTab, subLink);
+    <div
+      className={classNames("relative", collapsed && "flex justify-center")}
+      onBlurCapture={handleBlurCapture}
+      onFocusCapture={() => setOpen(true)}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={collapsed ? label : undefined}
+        className={classNames(
+          getAppSidebarLinkClass(pathname, link),
+          sidebarLinkGroupClassName,
+          "relative flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+          collapsed && "z-10 justify-center",
+        )}
+        type="button"
+      >
+        <Icon className="size-6 shrink-0" />
+        {!collapsed ? <span className="flex-1 text-left">{label}</span> : null}
+        {!collapsed ? (
+          open ? (
+            <UpIcon className="size-6 shrink-0 text-muted-foreground" />
+          ) : (
+            <DownIcon className="size-6 shrink-0 text-muted-foreground" />
+          )
+        ) : null}
+        {collapsed && !open ? (
+          <Tooltip group="sidebar-link" placement="right">
+            {label}
+          </Tooltip>
+        ) : null}
+      </button>
 
-        return (
-          <Link
-            aria-current={isSubActive ? "page" : undefined}
+      {open ? (
+        <div
+          className={classNames(
+            "absolute top-full z-50 pt-2",
+            collapsed ? "left-0" : "left-0 right-0",
+          )}
+        >
+          <div
             className={classNames(
-              "relative flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
-              isSubActive && "bg-muted",
+              "cursor-default rounded-2xl border border-surface bg-surface p-2 shadow-card dark:border-border",
+              collapsed ? "min-w-56" : "min-w-56 w-full",
             )}
-            href={subLink.href}
-            key={subLink.tab}
-            scroll={false}
+            onClick={(event) => event.stopPropagation()}
+            role="menu"
           >
-            <span className="flex size-6 shrink-0 items-center justify-center">
-              <span
-                className={classNames(
-                  "size-2 rounded-full",
-                  isSubActive ? "bg-foreground" : "bg-muted-foreground",
-                )}
-              />
-            </span>
-            <span className="text-base font-normal text-foreground">
-              {t(subLink.labelKey)}
-            </span>
-          </Link>
-        );
-      })}
+            <div className="flex">
+              <div
+                aria-hidden
+                className="relative shrink-0 text-foreground"
+                style={{
+                  height:
+                    TESTS_TREE_ITEM_HEIGHT_PX * TESTS_SUB_LINKS.length +
+                    TESTS_TREE_ITEM_GAP_PX * (TESTS_SUB_LINKS.length - 1),
+                  width: TESTS_TREE_WIDTH_PX,
+                }}
+              >
+                <svg
+                  className="absolute inset-0 overflow-visible"
+                  fill="none"
+                  height={
+                    TESTS_TREE_ITEM_HEIGHT_PX * TESTS_SUB_LINKS.length +
+                    TESTS_TREE_ITEM_GAP_PX * (TESTS_SUB_LINKS.length - 1)
+                  }
+                  width={TESTS_TREE_WIDTH_PX}
+                >
+                  <path
+                    d={`M ${TESTS_TREE_TRUNK_X_PX} 0 L ${TESTS_TREE_TRUNK_X_PX} ${
+                      (TESTS_SUB_LINKS.length - 1) *
+                        (TESTS_TREE_ITEM_HEIGHT_PX + TESTS_TREE_ITEM_GAP_PX) +
+                      TESTS_TREE_ITEM_HEIGHT_PX / 2 -
+                      TESTS_TREE_RADIUS_PX
+                    }`}
+                    stroke="currentColor"
+                    strokeWidth={1}
+                  />
+                  {TESTS_SUB_LINKS.map((subLink, index) => {
+                    const centerY =
+                      index *
+                        (TESTS_TREE_ITEM_HEIGHT_PX + TESTS_TREE_ITEM_GAP_PX) +
+                      TESTS_TREE_ITEM_HEIGHT_PX / 2;
+
+                    return (
+                      <path
+                        d={`M ${TESTS_TREE_TRUNK_X_PX} ${centerY - TESTS_TREE_RADIUS_PX} A ${TESTS_TREE_RADIUS_PX} ${TESTS_TREE_RADIUS_PX} 0 0 0 ${TESTS_TREE_TRUNK_X_PX + TESTS_TREE_RADIUS_PX} ${centerY}`}
+                        key={`${subLink.tab}-branch`}
+                        stroke="currentColor"
+                        strokeWidth={1}
+                      />
+                    );
+                  })}
+                </svg>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                {TESTS_SUB_LINKS.map((subLink) => {
+                  const isSubActive = isTestsSubLinkActive(
+                    pathname,
+                    currentTab,
+                    subLink,
+                  );
+
+                  return (
+                    <Link
+                      aria-current={isSubActive ? "page" : undefined}
+                      className={classNames(
+                        "flex h-10 w-full cursor-pointer items-center rounded-lg p-2 text-base font-normal text-foreground hover:bg-hover-overlay",
+                        isSubActive && "bg-muted",
+                      )}
+                      href={subLink.href}
+                      key={subLink.tab}
+                      onClick={() => setOpen(false)}
+                      role="menuitem"
+                      scroll={false}
+                    >
+                      {t(subLink.labelKey)}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -151,9 +226,6 @@ export function AppSidebar() {
   const isLoading = isLoadingStatus(status);
   const isAdmin = isAdminUser(user);
   const { collapsed, setCollapsed } = useSidebarCollapsed();
-  const [testsExpanded, setTestsExpanded] = useState(() =>
-    pathname.startsWith("/tests"),
-  );
 
   const handleCollapsedSidebarClick = (event: MouseEvent<HTMLElement>) => {
     if ((event.target as HTMLElement).closest("a, button")) {
@@ -237,53 +309,9 @@ export function AppSidebar() {
 
                   if (link.activeMatch === "/tests") {
                     return (
-                      <div
-                        className={classNames(
-                          "relative flex flex-col gap-1",
-                          collapsed && "items-center",
-                        )}
-                        key={link.href}
-                      >
-                        {!collapsed && testsExpanded ? (
-                          <span className="absolute left-5 top-8 h-6 w-px bg-border" />
-                        ) : null}
-                        <button
-                          aria-expanded={testsExpanded}
-                          aria-label={collapsed ? label : undefined}
-                          className={classNames(
-                            getAppSidebarLinkClass(pathname, link),
-                            sidebarLinkGroupClassName,
-                            "relative flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
-                            collapsed && "z-10 justify-center",
-                          )}
-                          onClick={() => setTestsExpanded((value) => !value)}
-                          type="button"
-                        >
-                          <Icon className="size-6 shrink-0" />
-                          {!collapsed ? (
-                            <span className="flex-1 text-left">{label}</span>
-                          ) : null}
-                          {!collapsed ? (
-                            <ArrowForwardIcon
-                              className={classNames(
-                                "size-4 shrink-0 text-muted-foreground",
-                                testsExpanded && "rotate-90",
-                              )}
-                            />
-                          ) : null}
-                          {collapsed ? (
-                            <Tooltip group="sidebar-link" placement="right">
-                              {label}
-                            </Tooltip>
-                          ) : null}
-                        </button>
-                        <Suspense fallback={null}>
-                          <TestsSubNav
-                            collapsed={collapsed}
-                            testsExpanded={testsExpanded}
-                          />
-                        </Suspense>
-                      </div>
+                      <Suspense fallback={null} key={link.href}>
+                        <TestsNavDropdown collapsed={collapsed} link={link} />
+                      </Suspense>
                     );
                   }
 

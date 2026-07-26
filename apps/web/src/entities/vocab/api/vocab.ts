@@ -7,11 +7,15 @@ import {
   isString,
 } from "@/shared/lib/parse";
 
-export type VocabWordDefinition = {
+export type ReviewRating = "FORGET" | "HARD" | "GOOD" | "EASY";
+
+export type UserVocabularyEntry = {
   id: string;
-  vocabWordId: string;
-  sourceDefinitionId: number | null;
-  sourceWordId: number | null;
+  userId: string;
+  collectionId: string;
+  systemEntryId: string | null;
+  word: string;
+  normalizedWord: string;
   type: string | null;
   meaningVi: string | null;
   definition: string | null;
@@ -27,19 +31,17 @@ export type VocabWordDefinition = {
   nextReview: string | null;
   createdAt: string;
   updatedAt: string;
-  deletedAt: string | null;
 };
+
+// Collection-table view model. The server remains flat: one entry is rendered as one row.
+export type VocabWordDefinition = UserVocabularyEntry;
 
 export type VocabWord = {
   id: string;
   userId: string;
   word: string;
   normalizedWord: string;
-  definitions: VocabWordDefinition[];
-};
-
-export type VocabReviewItem = VocabWordDefinition & {
-  vocabWord: Omit<VocabWord, "definitions">;
+  definitions: [VocabWordDefinition];
 };
 
 export type VocabWordListResponse = {
@@ -48,7 +50,7 @@ export type VocabWordListResponse = {
 };
 
 export type VocabReviewListResponse = {
-  items: VocabReviewItem[];
+  items: UserVocabularyEntry[];
   meta: ListMeta;
 };
 
@@ -64,10 +66,7 @@ export type VocabStats = {
   due: number;
   mastered: number;
   highWrongCount: number;
-  levels: Array<{
-    level: number;
-    count: number;
-  }>;
+  levels: Array<{ level: number; count: number }>;
 };
 
 export type CreateVocabWordInput = {
@@ -85,29 +84,11 @@ export type CreateVocabWordInput = {
   wrongCount?: number;
 };
 
-export type UpdateVocabWordInput = Partial<CreateVocabWordInput> & {
-  definitionId?: string;
-};
+export type UpdateVocabWordInput = Partial<Omit<CreateVocabWordInput, "collectionId">>;
 
-export type UpdateVocabReviewInput = {
-  level: number;
-  wrongCount: number;
-  lastReview: string;
-  nextReview: string | null;
-};
+export type UpdateVocabReviewInput = { rating: ReviewRating };
 
-export type DeleteVocabDefinitionResult =
-  | {
-      deletedDefinitionId: string;
-      vocabWordId: string;
-      wordRemoved: false;
-      word: VocabWord;
-    }
-  | {
-      deletedDefinitionId: string;
-      vocabWordId: string;
-      wordRemoved: true;
-    };
+export type DeleteVocabEntryResult = { deletedEntryId: string };
 
 type ListVocabWordsParams = {
   collectionId: string;
@@ -117,19 +98,18 @@ type ListVocabWordsParams = {
   signal?: AbortSignal;
 };
 
-type VocabStatsParams = {
-  collectionId: string;
-  signal?: AbortSignal;
-};
+type VocabStatsParams = { collectionId: string; signal?: AbortSignal };
 
-function parseVocabWordDefinition(body: unknown): VocabWordDefinition {
+function parseVocabularyEntry(body: unknown): UserVocabularyEntry {
   if (!isRecord(body)) invalidApiResponse();
 
   const {
     id,
-    vocabWordId,
-    sourceDefinitionId,
-    sourceWordId,
+    userId,
+    collectionId,
+    systemEntryId,
+    word,
+    normalizedWord,
     type,
     meaningVi,
     definition,
@@ -145,14 +125,15 @@ function parseVocabWordDefinition(body: unknown): VocabWordDefinition {
     nextReview,
     createdAt,
     updatedAt,
-    deletedAt,
   } = body;
 
   if (
     !isString(id) ||
-    !isString(vocabWordId) ||
-    !(sourceDefinitionId === null || isNumber(sourceDefinitionId)) ||
-    !(sourceWordId === null || isNumber(sourceWordId)) ||
+    !isString(userId) ||
+    !isString(collectionId) ||
+    !isNullableString(systemEntryId) ||
+    !isString(word) ||
+    !isString(normalizedWord) ||
     !isNullableString(type) ||
     !isNullableString(meaningVi) ||
     !isNullableString(definition) ||
@@ -167,17 +148,18 @@ function parseVocabWordDefinition(body: unknown): VocabWordDefinition {
     !isNullableString(lastReview) ||
     !isNullableString(nextReview) ||
     !isString(createdAt) ||
-    !isString(updatedAt) ||
-    !isNullableString(deletedAt)
+    !isString(updatedAt)
   ) {
     invalidApiResponse();
   }
 
   return {
     id,
-    vocabWordId,
-    sourceDefinitionId,
-    sourceWordId,
+    userId,
+    collectionId,
+    systemEntryId,
+    word,
+    normalizedWord,
     type,
     meaningVi,
     definition,
@@ -193,114 +175,50 @@ function parseVocabWordDefinition(body: unknown): VocabWordDefinition {
     nextReview,
     createdAt,
     updatedAt,
-    deletedAt,
   };
 }
 
-function parseVocabWordSummary(body: unknown): Omit<VocabWord, "definitions"> {
-  if (!isRecord(body)) invalidApiResponse();
-
-  const { id, userId, word, normalizedWord } = body;
-
-  if (
-    !isString(id) ||
-    !isString(userId) ||
-    !isString(word) ||
-    !isString(normalizedWord)
-  ) {
-    invalidApiResponse();
-  }
-
+function toVocabWord(entry: UserVocabularyEntry): VocabWord {
   return {
-    id,
-    userId,
-    word,
-    normalizedWord,
-  };
-}
-
-function parseVocabWord(body: unknown): VocabWord {
-  if (!isRecord(body)) invalidApiResponse();
-
-  const summary = parseVocabWordSummary(body);
-  const { definitions } = body;
-
-  return {
-    ...summary,
-    definitions: Array.isArray(definitions)
-      ? definitions.map(parseVocabWordDefinition)
-      : [],
-  };
-}
-
-function parseVocabReviewItem(body: unknown): VocabReviewItem {
-  if (!isRecord(body)) invalidApiResponse();
-
-  const { vocabWord } = body;
-
-  return {
-    ...parseVocabWordDefinition(body),
-    vocabWord: parseVocabWordSummary(vocabWord),
+    id: entry.id,
+    userId: entry.userId,
+    word: entry.word,
+    normalizedWord: entry.normalizedWord,
+    definitions: [entry],
   };
 }
 
 function parseListMeta(body: unknown): ListMeta {
   if (!isRecord(body)) invalidApiResponse();
-
   const { limit, offset, total, hasMore } = body;
 
-  if (
-    !isNumber(limit) ||
-    !isNumber(offset) ||
-    !isNumber(total) ||
-    !isBoolean(hasMore)
-  ) {
+  if (!isNumber(limit) || !isNumber(offset) || !isNumber(total) || !isBoolean(hasMore)) {
     invalidApiResponse();
   }
 
-  return {
-    limit,
-    offset,
-    total,
-    hasMore,
-  };
+  return { limit, offset, total, hasMore };
 }
 
-function parseVocabWordListResponse(body: unknown): VocabWordListResponse {
-  if (!isRecord(body) || !Array.isArray(body.items)) {
-    invalidApiResponse();
-  }
+function parseVocabularyListResponse(body: unknown): VocabWordListResponse {
+  if (!isRecord(body) || !Array.isArray(body.items)) invalidApiResponse();
 
   return {
-    items: body.items.map(parseVocabWord),
+    items: body.items.map((item) => toVocabWord(parseVocabularyEntry(item))),
     meta: parseListMeta(body.meta),
   };
 }
 
-function parseVocabReviewListResponse(body: unknown): VocabReviewListResponse {
-  if (!isRecord(body) || !Array.isArray(body.items)) {
-    invalidApiResponse();
-  }
+function parseReviewListResponse(body: unknown): VocabReviewListResponse {
+  if (!isRecord(body) || !Array.isArray(body.items)) invalidApiResponse();
 
-  return {
-    items: body.items.map(parseVocabReviewItem),
-    meta: parseListMeta(body.meta),
-  };
+  return { items: body.items.map(parseVocabularyEntry), meta: parseListMeta(body.meta) };
 }
 
 function parseVocabStats(body: unknown): VocabStats {
-  if (!isRecord(body) || !Array.isArray(body.levels)) {
-    invalidApiResponse();
-  }
-
+  if (!isRecord(body) || !Array.isArray(body.levels)) invalidApiResponse();
   const { total, due, mastered, highWrongCount, levels } = body;
 
-  if (
-    !isNumber(total) ||
-    !isNumber(due) ||
-    !isNumber(mastered) ||
-    !isNumber(highWrongCount)
-  ) {
+  if (!isNumber(total) || !isNumber(due) || !isNumber(mastered) || !isNumber(highWrongCount)) {
     invalidApiResponse();
   }
 
@@ -310,89 +228,39 @@ function parseVocabStats(body: unknown): VocabStats {
     mastered,
     highWrongCount,
     levels: levels.map((levelStat) => {
-      if (!isRecord(levelStat)) invalidApiResponse();
+      if (!isRecord(levelStat) || !isNumber(levelStat.level) || !isNumber(levelStat.count)) {
+        invalidApiResponse();
+      }
 
-      const { level, count } = levelStat;
-
-      if (!isNumber(level) || !isNumber(count)) invalidApiResponse();
-
-      return { level, count };
+      return { level: levelStat.level, count: levelStat.count };
     }),
   };
 }
 
-function parseDeleteVocabDefinitionResult(
-  body: unknown,
-): DeleteVocabDefinitionResult {
-  if (!isRecord(body)) invalidApiResponse();
+function parseDeleteVocabEntryResult(body: unknown): DeleteVocabEntryResult {
+  if (!isRecord(body) || !isString(body.deletedEntryId)) invalidApiResponse();
 
-  const { deletedDefinitionId, vocabWordId, wordRemoved, word } = body;
-
-  if (
-    !isString(deletedDefinitionId) ||
-    !isString(vocabWordId) ||
-    !isBoolean(wordRemoved)
-  ) {
-    invalidApiResponse();
-  }
-
-  if (wordRemoved) {
-    if (word !== undefined) {
-      invalidApiResponse();
-    }
-
-    return {
-      deletedDefinitionId,
-      vocabWordId,
-      wordRemoved: true,
-    };
-  }
-
-  if (!isRecord(word)) {
-    invalidApiResponse();
-  }
-
-  return {
-    deletedDefinitionId,
-    vocabWordId,
-    wordRemoved: false,
-    word: parseVocabWord(word),
-  };
+  return { deletedEntryId: body.deletedEntryId };
 }
 
 function buildVocabQuery(params: ListVocabWordsParams) {
-  const searchParams = new URLSearchParams({
-    collectionId: params.collectionId,
-  });
+  const searchParams = new URLSearchParams({ collectionId: params.collectionId });
+  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
+  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
+  if (params.search) searchParams.set("search", params.search);
 
-  if (params.limit !== undefined) {
-    searchParams.set("limit", String(params.limit));
-  }
-
-  if (params.offset !== undefined) {
-    searchParams.set("offset", String(params.offset));
-  }
-
-  if (params.search) {
-    searchParams.set("search", params.search);
-  }
-
-  const query = searchParams.toString();
-
-  return query ? `?${query}` : "";
+  return `?${searchParams.toString()}`;
 }
 
 export function listVocabWords(token: string, params: ListVocabWordsParams) {
   return apiRequest(`/vocab${buildVocabQuery(params)}`, {
     signal: params.signal,
     token,
-  }).then(parseVocabWordListResponse);
+  }).then(parseVocabularyListResponse);
 }
 
 export function getVocabStats(token: string, params: VocabStatsParams) {
-  const searchParams = new URLSearchParams({
-    collectionId: params.collectionId,
-  });
+  const searchParams = new URLSearchParams({ collectionId: params.collectionId });
 
   return apiRequest(`/vocab/stats?${searchParams.toString()}`, {
     signal: params.signal,
@@ -407,76 +275,41 @@ type ListDueReviewWordsParams = {
   signal?: AbortSignal;
 };
 
-function buildDueReviewQuery(params: ListDueReviewWordsParams) {
-  const searchParams = new URLSearchParams({
-    collectionId: params.collectionId,
-  });
+export function listDueReviewWords(token: string, params: ListDueReviewWordsParams) {
+  const searchParams = new URLSearchParams({ collectionId: params.collectionId });
+  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
+  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
 
-  if (params.limit !== undefined) {
-    searchParams.set("limit", String(params.limit));
-  }
-
-  if (params.offset !== undefined) {
-    searchParams.set("offset", String(params.offset));
-  }
-
-  const query = searchParams.toString();
-
-  return query ? `?${query}` : "";
-}
-
-export function listDueReviewWords(
-  token: string,
-  params: ListDueReviewWordsParams,
-) {
-  return apiRequest(`/vocab/review/due${buildDueReviewQuery(params)}`, {
+  return apiRequest(`/vocab/review/due?${searchParams.toString()}`, {
     signal: params.signal,
     token,
-  }).then(parseVocabReviewListResponse);
+  }).then(parseReviewListResponse);
 }
 
 export function createVocabWord(token: string, input: CreateVocabWordInput) {
-  return apiRequest("/vocab", {
-    method: "POST",
-    token,
-    body: JSON.stringify(input),
-  }).then(parseVocabWord);
+  return apiRequest("/vocab", { method: "POST", token, body: JSON.stringify(input) }).then(
+    (body) => toVocabWord(parseVocabularyEntry(body)),
+  );
 }
 
-export function updateVocabReview(
-  token: string,
-  id: string,
-  input: UpdateVocabReviewInput,
-) {
+export function updateVocabReview(token: string, id: string, input: UpdateVocabReviewInput) {
   return apiRequest(`/vocab/${id}/review`, {
     method: "PATCH",
     token,
     body: JSON.stringify(input),
-  }).then(parseVocabReviewItem);
+  }).then(parseVocabularyEntry);
 }
 
-export function deleteVocabDefinition(token: string, definitionId: string) {
-  return apiRequest(`/vocab/definitions/${definitionId}`, {
-    method: "DELETE",
-    token,
-  }).then(parseDeleteVocabDefinitionResult);
+export function deleteVocabEntry(token: string, id: string) {
+  return apiRequest(`/vocab/${id}`, { method: "DELETE", token }).then(
+    parseDeleteVocabEntryResult,
+  );
 }
 
-export function deleteVocabWord(token: string, id: string) {
-  return apiRequest(`/vocab/${id}`, {
-    method: "DELETE",
-    token,
-  }).then(parseVocabWord);
-}
-
-export function updateVocabWord(
-  token: string,
-  id: string,
-  input: UpdateVocabWordInput,
-) {
+export function updateVocabWord(token: string, id: string, input: UpdateVocabWordInput) {
   return apiRequest(`/vocab/${id}`, {
     method: "PATCH",
     token,
     body: JSON.stringify(input),
-  }).then(parseVocabWord);
+  }).then((body) => toVocabWord(parseVocabularyEntry(body)));
 }

@@ -38,8 +38,9 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
         error={review.error}
         isSubmitting={review.isSubmitting}
         key={review.currentWord.id}
+        level={review.currentWord.progress?.level ?? 0}
         mode={mode}
-        onAgain={review.moveCurrentWordToEnd}
+        onAgain={() => review.gradeCurrentWord("FORGET")}
         onEasy={() => review.gradeCurrentWord("EASY")}
         onGood={() => review.gradeCurrentWord("GOOD")}
         onHard={() => review.gradeCurrentWord("HARD")}

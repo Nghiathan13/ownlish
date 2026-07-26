@@ -45,7 +45,7 @@ export function MockLeftPanel({
           alt={formatMessage(t("tests.questionImageAlt"), {
             number: group.questionStart,
           })}
-          className="mx-auto max-h-[420px] w-full object-contain"
+          className="mx-auto block h-auto max-h-[420px] w-auto max-w-full rounded-xl shadow-card dark:border dark:border-border"
           key={`image-${group.id}`}
           src={imageUrl}
         />

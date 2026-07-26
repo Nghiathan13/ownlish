@@ -6,6 +6,7 @@ import type { ToeicQuestion } from "@/entities/toeic/api/types";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { useMockRunQuery } from "@/features/tests/run/model/mock/useMockRunQuery";
 import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRunSubmission";
+import { useMockRunTimer } from "@/features/tests/run/model/mock/useMockRunTimer";
 import { readMockFinishCommand } from "@/features/tests/run/model/mock/mockFinishOutbox";
 
 type UseMockTestRunParams = {
@@ -73,15 +74,36 @@ export function useMockTestRun({
     [sessionData?.groups],
   );
 
+  const [timerFinishSessionId, setTimerFinishSessionId] = useState<string | null>(
+    null,
+  );
+  const timer = useMockRunTimer({
+    sessionId,
+    initialRemainingSeconds: sessionData?.timer?.remainingSeconds ?? null,
+    enabled:
+      finishBootstrapStatus === "ready" &&
+      !isFinished &&
+      sessionData?.finishStatus === "open",
+    onExpire: () => setTimerFinishSessionId(sessionId),
+  });
+
   const submission = useMockRunSubmission({
     sessionId,
     queryKey: runQuery.queryKey,
     questionKeyById: sessionData?.questionKeyById,
     isAuthenticated,
     isFinished,
+    getRemainingSeconds: timer.getRemainingSeconds,
     onFinishCompleted: handleFinishCompleted,
     shouldRecoverFinish: finishBootstrapStatus === "pending",
   });
+  const finishRun = submission.finishRun;
+
+  useEffect(() => {
+    if (timerFinishSessionId === sessionId && !isFinished) {
+      void finishRun();
+    }
+  }, [finishRun, isFinished, sessionId, timerFinishSessionId]);
 
   const getAnswer = useCallback(
     (toeicQuestionId: number): ToeicQuestion | undefined =>
@@ -105,12 +127,13 @@ export function useMockTestRun({
       runQuery.isFetching,
     loadError: runQuery.error,
     finishError: submission.finishError,
-    finishRun: submission.finishRun,
+    finishRun,
     hasPendingAnswers: submission.hasPendingAnswers,
     hasSyncFailures: submission.hasSyncFailures,
     isFinishAccepted: submission.isFinishAccepted,
     isFinishFailureOpen: submission.isFinishFailureOpen,
     isFinishing: submission.isFinishing,
+    isTimerExpired: timer.hasExpired,
     isQuestionPending: submission.isQuestionPending,
     isResultOpen: submission.isResultOpen,
     closeResult: submission.closeResult,
@@ -118,5 +141,6 @@ export function useMockTestRun({
     retryFailedAnswers: submission.retryFailedAnswers,
     selectAnswer: submission.selectAnswer,
     sessionData,
+    timerLabel: timer.timerLabel,
   };
 }

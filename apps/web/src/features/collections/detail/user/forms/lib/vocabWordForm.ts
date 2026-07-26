@@ -154,7 +154,6 @@ export function toCreateVocabWordInput(
 
 export function toUpdateVocabWordInput(
   values: VocabWordFormValues,
-  definitionId: string,
   options?: { lockWord?: boolean },
 ): UpdateVocabWordInput {
   const definitionFields = toDefinitionInputFields(values);
@@ -162,7 +161,6 @@ export function toUpdateVocabWordInput(
   return {
     ...(options?.lockWord ? {} : { word: values.word.trim() }),
     ...definitionFields,
-    definitionId,
   };
 }
 

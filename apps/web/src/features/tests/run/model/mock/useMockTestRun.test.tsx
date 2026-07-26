@@ -51,6 +51,8 @@ function createRun(): RuntimeTestSession {
     totalQuestions: 1,
     correctCount: 0,
     wrongCount: 0,
+    timer: { timeLimitSeconds: 600, remainingSeconds: 600 },
+    finishStatus: "open",
     isFinished: false,
     groups: [
       {

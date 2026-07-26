@@ -1,5 +1,6 @@
 export { Tooltip } from "./Tooltip";
 export {
+  iconButtonGroupClassName,
   sidebarLinkGroupClassName,
   sidebarToggleGroupClassName,
   tooltipBaseClassName,

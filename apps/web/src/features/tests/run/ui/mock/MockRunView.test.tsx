@@ -77,6 +77,7 @@ function createMockRunState(isFinishAccepted: boolean) {
     isFinishAccepted,
     isFinishFailureOpen: false,
     isFinished: false,
+    isTimerExpired: false,
     isFinishing: false,
     isLoading: false,
     isQuestionPending: () => false,
@@ -87,6 +88,7 @@ function createMockRunState(isFinishAccepted: boolean) {
     series: "ets_26",
     testNumber: 1,
     totalQuestions: 1,
+    timerLabel: "00:10:00",
     wrongCount: 1,
     year: 2024,
   };
@@ -129,6 +131,7 @@ describe("MockRunView", () => {
     expect(mocks.registerFinish).toHaveBeenLastCalledWith(null, null, {
       disabled: false,
       isPending: false,
+      timerLabel: null,
     });
     expect(mocks.registerExit).toHaveBeenLastCalledWith(
       expect.any(Function),

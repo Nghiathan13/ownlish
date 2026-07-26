@@ -29,6 +29,7 @@ describe("ReviewStudySession", () => {
       <LocaleProvider>
         <ReviewStudySession
           isSubmitting={false}
+          level={0}
           mode="flashcard"
           onAgain={() => {}}
           onEasy={onEasy}
@@ -45,6 +46,7 @@ describe("ReviewStudySession", () => {
       <LocaleProvider>
         <ReviewStudySession
           isSubmitting={false}
+          level={0}
           mode="typing"
           onAgain={() => {}}
           onEasy={onEasy}

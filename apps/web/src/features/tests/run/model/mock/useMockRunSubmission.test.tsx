@@ -143,11 +143,13 @@ function createRunWithNullableAnswerKey(): ToeicRunResult {
 function renderSubmission({
   initialData = createRunResult(),
   isAuthenticated = true,
+  getRemainingSeconds = () => null,
   onFinishCompleted = () => undefined,
   shouldRecoverFinish = false,
 }: {
   initialData?: ToeicRunResult | undefined;
   isAuthenticated?: boolean;
+  getRemainingSeconds?: () => number | null;
   onFinishCompleted?: () => void;
   shouldRecoverFinish?: boolean;
 } = {}) {
@@ -161,6 +163,7 @@ function renderSubmission({
       useMockRunSubmission({
         isAuthenticated: authenticated,
         isFinished: false,
+        getRemainingSeconds,
         onFinishCompleted,
         queryKey: QUERY_KEY,
         questionKeyById: new Map([[101, "ets26-t01-p5-q001"], [102, "ets26-t01-p5-q002"]]),
@@ -255,6 +258,30 @@ describe("useMockRunSubmission", () => {
     expect(persistedKey).toBe("B");
     expect(getQuestion(queryClient)?.selectedKey).toBe("B");
     expect(result.current.hasSyncFailures).toBe(false);
+  });
+
+  it("includes the current timer in an answer request", async () => {
+    let body: unknown = null;
+    mswServer.use(
+      http.post(ANSWER_URL, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ graded: false });
+      }),
+    );
+
+    const { result } = renderSubmission({
+      getRemainingSeconds: () => 245,
+    });
+
+    act(() => result.current.selectAnswer(101, "A"));
+
+    await waitFor(() =>
+      expect(body).toEqual({
+        questionKey: "ets26-t01-p5-q001",
+        selectedKey: "A",
+        remainingSeconds: 245,
+      }),
+    );
   });
 
   it("queues Finish until pending answers are saved", async () => {

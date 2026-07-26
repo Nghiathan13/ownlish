@@ -37,6 +37,7 @@ type UseMockRunSubmissionParams = {
   queryKey: readonly unknown[];
   isAuthenticated: boolean;
   isFinished: boolean;
+  getRemainingSeconds?: () => number | null;
   questionKeyById: Map<number, string> | undefined;
   onFinishCompleted?: () => void;
   shouldRecoverFinish?: boolean;
@@ -114,6 +115,7 @@ export function useMockRunSubmission({
   queryKey,
   isAuthenticated,
   isFinished,
+  getRemainingSeconds,
   questionKeyById,
   onFinishCompleted,
   shouldRecoverFinish = false,
@@ -232,6 +234,7 @@ export function useMockRunSubmission({
                 return submitRuntimeAnswer(token, sessionId, {
                   questionKey,
                   selectedKey: submittedKey,
+                  remainingSeconds: getRemainingSeconds?.() ?? undefined,
                 });
               },
             });
@@ -280,7 +283,7 @@ export function useMockRunSubmission({
 
       return worker;
     },
-    [questionKeyById, sessionId, setQuestionFailed],
+    [getRemainingSeconds, questionKeyById, sessionId, setQuestionFailed],
   );
 
   const selectAnswer = useCallback(

@@ -33,17 +33,10 @@ export function useUpdateVocabularyWord({
     isPending: isUpdatingWord,
     variables: updateMutationVariables,
   } = useMutation({
-    mutationFn: ({
-      wordToUpdate,
-      definitionId,
-      input,
-    }: UpdateVocabularyWordVariables) => {
+    mutationFn: ({ definitionId, input }: UpdateVocabularyWordVariables) => {
       return runAuthenticatedRequest({
         request: (token) =>
-          updateVocabWord(token, wordToUpdate.id, {
-            ...input,
-            definitionId,
-          }),
+          updateVocabWord(token, definitionId, input),
       });
     },
     onMutate: async () => {

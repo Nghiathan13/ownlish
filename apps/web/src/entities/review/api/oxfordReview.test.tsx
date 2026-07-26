@@ -53,6 +53,8 @@ describe("Oxford part review API", () => {
         await expect(request.json()).resolves.toEqual({ rating: "EASY" });
         return HttpResponse.json({
           level: 1,
+          wrongCount: 0,
+          lastReviewAt: "2026-07-23T10:00:00.000Z",
           nextReviewAt: "2026-07-26T10:00:00.000Z",
         });
       }),
@@ -67,6 +69,8 @@ describe("Oxford part review API", () => {
       }),
     ).resolves.toEqual({
       level: 1,
+      wrongCount: 0,
+      lastReviewAt: "2026-07-23T10:00:00.000Z",
       nextReviewAt: "2026-07-26T10:00:00.000Z",
     });
   });

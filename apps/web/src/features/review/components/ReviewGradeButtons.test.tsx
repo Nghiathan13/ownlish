@@ -4,16 +4,15 @@ import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { ReviewGradeButtons } from "./ReviewGradeButtons";
 
 describe("ReviewGradeButtons", () => {
-  it("disables unavailable ratings without blocking Again and Easy", () => {
+  it("keeps all four shared ratings available", () => {
     const onAgain = vi.fn();
     const onEasy = vi.fn();
 
     render(
       <LocaleProvider>
         <ReviewGradeButtons
-          disableGood
-          disableHard
           disabled={false}
+          level={0}
           onAgain={onAgain}
           onEasy={onEasy}
           onGood={() => {}}
@@ -22,10 +21,10 @@ describe("ReviewGradeButtons", () => {
       </LocaleProvider>,
     );
 
-    expect(screen.getByRole("button", { name: /^Hard/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^Good/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Hard/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Good/ })).toBeEnabled();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Again/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Forget/ }));
     fireEvent.click(screen.getByRole("button", { name: /^Easy/ }));
 
     expect(onAgain).toHaveBeenCalledOnce();

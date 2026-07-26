@@ -27,6 +27,7 @@ const run: ToeicRuntimeRun = {
   selectedParts: [3],
   correctCount: 0,
   wrongCount: 0,
+  timer: null,
   finish: { status: "open" },
   answers: [],
 };

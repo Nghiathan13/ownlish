@@ -2,8 +2,9 @@ import { classNames } from "@/shared/lib/classNames";
 
 export const sidebarLinkGroupClassName = "group/sidebar-link";
 export const sidebarToggleGroupClassName = "group/sidebar-toggle";
+export const iconButtonGroupClassName = "group/icon-button";
 
-export type TooltipGroup = "sidebar-link" | "sidebar-toggle";
+export type TooltipGroup = "sidebar-link" | "sidebar-toggle" | "icon-button";
 export type TooltipPlacement = "bottom" | "right";
 
 const tooltipVisibilityClassNames: Record<TooltipGroup, string> = {
@@ -11,6 +12,8 @@ const tooltipVisibilityClassNames: Record<TooltipGroup, string> = {
     "group-hover/sidebar-link:block group-focus-visible/sidebar-link:block",
   "sidebar-toggle":
     "group-hover/sidebar-toggle:block group-focus-visible/sidebar-toggle:block",
+  "icon-button":
+    "group-hover/icon-button:block group-focus-visible/icon-button:block",
 };
 
 const tooltipPlacementClassNames: Record<TooltipPlacement, string> = {

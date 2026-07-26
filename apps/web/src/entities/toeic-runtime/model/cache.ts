@@ -43,6 +43,13 @@ export function getRuntimeTestPracticeOverviewQueryKey(userId: string | null) {
   return ["runtime-test-practice-overview", { userId }] as const;
 }
 
+export function getRuntimeMockHistoryQueryKey(
+  userId: string | null,
+  testKey: string | null,
+) {
+  return ["runtime-mock-history", { userId, testKey }] as const;
+}
+
 export function invalidateRuntimeTestPracticeOverview(
   queryClient: QueryClient,
   userId: string | null,

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createRuntimeTestRun,
+  restartRuntimeMockRun,
 } from "@/entities/toeic-runtime/api/runtime";
 import {
   getRuntimeTestSessionQueryKey,
@@ -38,6 +39,8 @@ export type StartRuntimeTestRunVariables = {
   source: ToeicCatalogSource;
   partNumbers: number[];
   mode: RuntimeTestSessionMode;
+  restartMock?: boolean;
+  timeLimitMinutes?: number;
 };
 
 type UseStartRuntimeTestRunParams = {
@@ -73,12 +76,20 @@ export function useStartRuntimeTestRun({ userId }: UseStartRuntimeTestRunParams)
       }
 
       const runPromise = runAuthenticatedRequest({
-        request: (token) =>
-          createRuntimeTestRun(token, {
+        request: (token) => {
+          const input = {
             testKey: variables.test.id,
             partNumbers,
-            mode: variables.mode === "mock_test" ? "mock_test" : "practice",
-          }),
+            timeLimitMinutes: variables.timeLimitMinutes,
+          };
+
+          return variables.restartMock
+            ? restartRuntimeMockRun(token, input)
+            : createRuntimeTestRun(token, {
+                ...input,
+                mode: variables.mode === "mock_test" ? "mock_test" : "practice",
+              });
+        },
       });
       const documentsPromise = Promise.all(
         requestedParts.map(async (part) => ({

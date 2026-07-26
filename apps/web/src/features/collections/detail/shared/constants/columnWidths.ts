@@ -6,7 +6,7 @@ export const TABLE_COLUMN_WIDTH = {
   example: "w-[250%]",
   type: "w-[9rem]",
   band: "w-[5rem]",
-  level: "w-[4rem]",
+  level: "w-[5rem]",
   nextReview: "w-[8rem]",
-  actions: "w-[5rem]",
+  actions: "w-[5.5rem]",
 } as const;

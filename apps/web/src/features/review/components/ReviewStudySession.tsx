@@ -10,11 +10,10 @@ import { useTypingField } from "@/features/review/hooks/useTypingField";
 import { compareTypingAnswer } from "@/features/review/lib/typing";
 
 type ReviewStudySessionProps = {
-  disableGood?: boolean;
-  disableHard?: boolean;
   error?: string | null;
   errorHint?: string;
   isSubmitting: boolean;
+  level: number;
   mode: ReviewMode;
   onAgain: () => void;
   onEasy: () => void;
@@ -34,11 +33,10 @@ export function ReviewStudySession({
 }
 
 function ReviewStudySessionContent({
-  disableGood = false,
-  disableHard = false,
   error = null,
   errorHint = "Choose a rating again to retry.",
   isSubmitting,
+  level,
   onAgain,
   onEasy,
   onGood,
@@ -73,43 +71,25 @@ function ReviewStudySessionContent({
   }, [typedAnswer, typingResult, word.word]);
 
   const keydownStateRef = useRef({
-    disableGood,
-    disableHard,
     handleTypingSubmit,
     isSubmitting,
     isTypingMode,
-    onAgain,
-    onEasy,
-    onGood,
-    onHard,
     showMeaning,
     typingResult,
   });
 
   useEffect(() => {
     keydownStateRef.current = {
-      disableGood,
-      disableHard,
       handleTypingSubmit,
       isSubmitting,
       isTypingMode,
-      onAgain,
-      onEasy,
-      onGood,
-      onHard,
       showMeaning,
       typingResult,
     };
   }, [
-    disableGood,
-    disableHard,
     handleTypingSubmit,
     isSubmitting,
     isTypingMode,
-    onAgain,
-    onEasy,
-    onGood,
-    onHard,
     showMeaning,
     typingResult,
   ]);
@@ -146,28 +126,6 @@ function ReviewStudySessionContent({
         return;
       }
 
-      if (event.key === "1") {
-        event.preventDefault();
-        state.onAgain();
-        return;
-      }
-
-      if (event.key === "2" && !state.disableHard) {
-        event.preventDefault();
-        state.onHard();
-        return;
-      }
-
-      if (event.key === "3" && !state.disableGood) {
-        event.preventDefault();
-        state.onGood();
-        return;
-      }
-
-      if (event.key === "4") {
-        event.preventDefault();
-        state.onEasy();
-      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -203,9 +161,8 @@ function ReviewStudySessionContent({
       )}
       {canGrade ? (
         <ReviewGradeButtons
-          disableGood={disableGood}
-          disableHard={disableHard}
           disabled={isSubmitting}
+          level={level}
           onAgain={onAgain}
           onEasy={onEasy}
           onGood={onGood}

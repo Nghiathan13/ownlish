@@ -4,6 +4,7 @@ import { MockLeftPanel } from "@/features/tests/run/components/MockLeftPanel";
 import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftPanel";
 import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
+import { practiceSurfaceFrameClassName } from "@/features/tests/run/components/PracticeTranslationCard";
 import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
 import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
 import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
@@ -15,10 +16,12 @@ import {
 } from "@/features/tests/shared/lib/partTranslationVisibility";
 import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
+import { classNames } from "@/shared/lib/classNames";
 
 type MockGroupScreenProps = {
   group: ToeicQuestionGroup;
   isFinished: boolean;
+  isTimerExpired: boolean;
   isReviewingResults: boolean;
   mediaError: string | null;
   onSelect: (toeicQuestionId: number, selectedKey: OptionKey) => void;
@@ -28,6 +31,7 @@ type MockGroupScreenProps = {
 export function MockGroupScreen({
   group,
   isFinished,
+  isTimerExpired,
   isReviewingResults,
   mediaError,
   onSelect,
@@ -87,23 +91,30 @@ export function MockGroupScreen({
 
         return (
           <section className="flex flex-col gap-3" key={question.id}>
-            <PracticeQuestionPrompt
-              questionNumber={question.questionNumber}
-              questionText={questionEnVisible ? question.question : null}
-              questionVi={question.questionVi}
-              showBilingual={showQuestionBilingual}
-            />
-            <QuestionOptions
-              answerKey={isReviewingResults ? question.answerKey : null}
-              isLocked={isReviewingResults}
-              onSelect={(key) => onSelect(question.id, key)}
-              optionCount={question.optionCount}
-              options={question.options}
-              selectedKey={question.selectedKey}
-              showBilingual={showOptionBilingual}
-              showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
-              showResult={isReviewingResults}
-            />
+            <div
+              className={classNames(
+                practiceSurfaceFrameClassName,
+                "flex flex-col gap-3 p-4",
+              )}
+            >
+              <PracticeQuestionPrompt
+                questionNumber={question.questionNumber}
+                questionText={questionEnVisible ? question.question : null}
+                questionVi={question.questionVi}
+                showBilingual={showQuestionBilingual}
+              />
+              <QuestionOptions
+                answerKey={isReviewingResults ? question.answerKey : null}
+                isLocked={isReviewingResults || isTimerExpired}
+                onSelect={(key) => onSelect(question.id, key)}
+                optionCount={question.optionCount}
+                options={question.options}
+                selectedKey={question.selectedKey}
+                showBilingual={showOptionBilingual}
+                showEnglishTextBeforeAnswer={partConfig.showOptionTextBeforeAnswer}
+                showResult={isReviewingResults}
+              />
+            </div>
             <QuestionTranslationPanel
               answerKey={isReviewingResults ? question.answerKey : null}
               optionCount={question.optionCount}

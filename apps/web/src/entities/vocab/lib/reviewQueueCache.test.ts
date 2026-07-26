@@ -25,7 +25,7 @@ function makeItem(id: string): VocabReviewItem {
   return {
     id,
     vocabWordId: `word-${id}`,
-    sourceDefinitionId: null,
+    systemEntryId: null,
     sourceWordId: null,
     type: null,
     meaningVi: null,

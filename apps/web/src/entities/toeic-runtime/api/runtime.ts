@@ -2,6 +2,8 @@ import { apiRequest, invalidApiResponse } from "@/shared/api/http";
 import { isNumber, isRecord, isString } from "@/shared/lib/parse";
 import type {
   RuntimeAnswerStatus,
+  ToeicRuntimeMockHistoryItem,
+  ToeicRuntimeMockRunPreparation,
   ToeicRuntimePartPracticeSummary,
   ToeicRuntimeRun,
   ToeicRuntimeTestPracticeSummary,
@@ -33,6 +35,7 @@ function parseRuntimeRun(value: unknown): ToeicRuntimeRun {
     value.selectedParts.some((part) => !isNumber(part)) ||
     !isNumber(value.correctCount) ||
     !isNumber(value.wrongCount) ||
+    (value.timer !== undefined && value.timer !== null && !isRecord(value.timer)) ||
     !isRecord(value.finish) ||
     (value.finish.status !== "open" &&
       value.finish.status !== "pending" &&
@@ -62,6 +65,17 @@ function parseRuntimeRun(value: unknown): ToeicRuntimeRun {
     };
   });
 
+  const timer =
+    value.timer === undefined || value.timer === null
+      ? null
+      : isNumber(value.timer.timeLimitSeconds) &&
+          isNumber(value.timer.remainingSeconds)
+        ? {
+            timeLimitSeconds: value.timer.timeLimitSeconds,
+            remainingSeconds: value.timer.remainingSeconds,
+          }
+        : invalidApiResponse();
+
   return {
     sessionId: value.sessionId,
     scope: value.scope,
@@ -71,6 +85,7 @@ function parseRuntimeRun(value: unknown): ToeicRuntimeRun {
     selectedParts: value.selectedParts,
     correctCount: value.correctCount,
     wrongCount: value.wrongCount,
+    timer,
     finish: { status: value.finish.status },
     answers,
   };
@@ -90,9 +105,60 @@ export function createRuntimeTestRun(
     testKey: string;
     partNumbers: number[];
     mode: "practice" | "mock_test";
+    timeLimitMinutes?: number;
   },
 ) {
   return apiRequest("/tests/runtime/test-runs", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  }).then(parseRuntimeRun);
+}
+
+function parseMockRunPreparation(value: unknown): ToeicRuntimeMockRunPreparation {
+  if (!isRecord(value) || !isString(value.status)) {
+    invalidApiResponse();
+  }
+
+  if (value.status === "available") {
+    return { status: "available" };
+  }
+
+  if (
+    (value.status !== "open" && value.status !== "pending") ||
+    !isRecord(value.run) ||
+    !isString(value.run.sessionId) ||
+    !Array.isArray(value.run.selectedParts) ||
+    value.run.selectedParts.some((part) => !isNumber(part))
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    status: value.status,
+    run: {
+      sessionId: value.run.sessionId,
+      selectedParts: value.run.selectedParts,
+    },
+  };
+}
+
+export function prepareRuntimeMockRun(
+  token: string,
+  input: { testKey: string; partNumbers: number[] },
+) {
+  return apiRequest("/tests/runtime/mock-runs/prepare", {
+    method: "POST",
+    token,
+    body: JSON.stringify(input),
+  }).then(parseMockRunPreparation);
+}
+
+export function restartRuntimeMockRun(
+  token: string,
+  input: { testKey: string; partNumbers: number[]; timeLimitMinutes?: number },
+) {
+  return apiRequest("/tests/runtime/mock-runs/restart", {
     method: "POST",
     token,
     body: JSON.stringify(input),
@@ -112,6 +178,7 @@ export function submitRuntimeAnswer(
     questionKey: string;
     selectedKey: OptionKey;
     mode?: "review_wrong";
+    remainingSeconds?: number;
   },
 ) {
   return apiRequest(`/tests/runtime/runs/${sessionId}/answers`, {
@@ -124,6 +191,26 @@ export function submitRuntimeAnswer(
     }
 
     return { graded: body.graded };
+  });
+}
+
+export function updateRuntimeMockTimer(
+  token: string,
+  sessionId: string,
+  remainingSeconds: number,
+  options: { keepalive?: boolean } = {},
+) {
+  return apiRequest(`/tests/runtime/runs/${sessionId}/timer`, {
+    method: "PATCH",
+    token,
+    keepalive: options.keepalive,
+    body: JSON.stringify({ remainingSeconds }),
+  }).then((body) => {
+    if (!isRecord(body) || !isNumber(body.remainingSeconds)) {
+      invalidApiResponse();
+    }
+
+    return { remainingSeconds: body.remainingSeconds };
   });
 }
 
@@ -181,6 +268,62 @@ export function listRuntimeTestPracticeRuns(token: string) {
         correctCount: item.correctCount,
         wrongCount: item.wrongCount,
         parts,
+      };
+    });
+  });
+}
+
+export function listRuntimeMockRuns(token: string, testKey: string) {
+  return apiRequest(`/tests/runtime/mock-runs/${testKey}`, { token }).then((body) => {
+    if (!isRecord(body) || !Array.isArray(body.items)) {
+      invalidApiResponse();
+    }
+
+    return body.items.map((item): ToeicRuntimeMockHistoryItem => {
+      if (
+        !isRecord(item) ||
+        !isString(item.sessionId) ||
+        !Array.isArray(item.selectedParts) ||
+        item.selectedParts.some((part) => !isNumber(part)) ||
+        !isString(item.status)
+      ) {
+        invalidApiResponse();
+      }
+
+      if (item.status === "open" || item.status === "pending") {
+        return {
+          sessionId: item.sessionId,
+          selectedParts: item.selectedParts,
+          status: item.status,
+        };
+      }
+
+      if (item.status !== "completed") {
+        invalidApiResponse();
+      }
+
+      if (
+        !isNumber(item.correctCount) ||
+        !isNumber(item.wrongCount) ||
+        !isRecord(item.score) ||
+        !isNumber(item.score.listening) ||
+        !isNumber(item.score.reading) ||
+        !isNumber(item.score.total)
+      ) {
+        invalidApiResponse();
+      }
+
+      return {
+        sessionId: item.sessionId,
+        selectedParts: item.selectedParts,
+        status: "completed",
+        correctCount: item.correctCount,
+        wrongCount: item.wrongCount,
+        score: {
+          listening: item.score.listening,
+          reading: item.score.reading,
+          total: item.score.total,
+        },
       };
     });
   });

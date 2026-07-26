@@ -19,8 +19,8 @@
   --warning: #bc4704;
   --warning-background: color-mix(in srgb, #fde68a 15%, transparent);
   --warning-border: color-mix(in srgb, var(--warning) 65%, transparent);
-  --information: #0284c7;
-  --information-background: color-mix(in srgb, #bae6fd 15%, transparent);
+  --information: var(--primary);
+  --information-background: color-mix(in srgb, var(--primary) 7.5%, transparent);
   --information-border: color-mix(in srgb, var(--information) 65%, transparent);
   --border: rgba(0, 0, 0, 0.24);
   --focus-ring: color-mix(in srgb, var(--foreground) 36%, transparent);
@@ -29,6 +29,7 @@
   --hover-overlay-solid: rgba(255, 255, 255, 0.12);
   --hover-on-surface: color-mix(in srgb, black 6%, var(--surface));
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card-up: 0 -1px 2px rgba(0, 0, 0, 0.04), 0 -4px 12px rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] {
@@ -37,7 +38,7 @@
   --surface: #1c1c1e;
   --foreground: rgba(255, 255, 255, 0.87);
   --muted-foreground: rgba(255, 255, 255, 0.6);
-  --primary: #1f48da;
+  --primary: #4769e5;
   --primary-foreground: #ffffff;
   --danger: #ff6b6b;
   --danger-background: color-mix(in srgb, #7f1d1d 30%, transparent);
@@ -48,14 +49,15 @@
   --warning: #fde68a;
   --warning-background: color-mix(in srgb, #78350f 30%, transparent);
   --warning-border: color-mix(in srgb, var(--warning) 45%, transparent);
-  --information: #0ea5e9;
-  --information-background: color-mix(in srgb, #0c4a6e 30%, transparent);
-  --information-border: color-mix(in srgb, var(--information) 45%, transparent);
+  --information: var(--primary);
+  --information-background: color-mix(in srgb, var(--primary) 15%, transparent);
+  --information-border: color-mix(in srgb, var(--information) 60%, transparent);
   --border: rgba(255, 255, 255, 0.24);
   --hover-overlay: rgba(255, 255, 255, 0.09);
   --hover-overlay-solid: rgba(0, 0, 0, 0.09);
   --hover-on-surface: color-mix(in srgb, white 9%, var(--surface));
   --shadow-card: none;
+  --shadow-card-up: none;
 }
 
 @theme inline {
@@ -83,6 +85,7 @@
   --color-hover-overlay: var(--hover-overlay);
   --color-hover-overlay-solid: var(--hover-overlay-solid);
   --shadow-card: var(--shadow-card);
+  --shadow-card-up: var(--shadow-card-up);
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
 }

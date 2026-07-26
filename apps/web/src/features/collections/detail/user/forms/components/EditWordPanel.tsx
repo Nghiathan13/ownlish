@@ -66,7 +66,7 @@ export function EditWordPanel({
       await onUpdate(
         word,
         definitionId,
-        toUpdateVocabWordInput(values, definitionId, { lockWord }),
+        toUpdateVocabWordInput(values, { lockWord }),
       );
 
       onClose();

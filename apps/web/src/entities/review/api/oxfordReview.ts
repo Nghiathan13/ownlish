@@ -7,11 +7,13 @@ import {
   isString,
 } from "@/shared/lib/parse";
 
-export type OxfordReviewRating = "HARD" | "GOOD" | "EASY";
+export type OxfordReviewRating = "FORGET" | "HARD" | "GOOD" | "EASY";
 
 export type OxfordWordProgress = {
   level: number;
-  nextReviewAt: string;
+  wrongCount: number;
+  lastReviewAt: string | null;
+  nextReviewAt: string | null;
 };
 
 export type OxfordReviewItem = {
@@ -75,12 +77,20 @@ function parseCatalogDefinition(body: unknown): CatalogDefinition {
 
 function parseOxfordWordProgress(body: unknown): OxfordWordProgress | null {
   if (body === null) return null;
-  if (!isRecord(body) || !isNumber(body.level) || !isString(body.nextReviewAt)) {
+  if (
+    !isRecord(body) ||
+    !isNumber(body.level) ||
+    !isNumber(body.wrongCount) ||
+    !isNullableString(body.lastReviewAt) ||
+    !isNullableString(body.nextReviewAt)
+  ) {
     invalidApiResponse();
   }
 
   return {
     level: body.level,
+    wrongCount: body.wrongCount,
+    lastReviewAt: body.lastReviewAt,
     nextReviewAt: body.nextReviewAt,
   };
 }

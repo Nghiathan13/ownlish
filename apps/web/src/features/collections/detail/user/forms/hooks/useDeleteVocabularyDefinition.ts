@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useMutation, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import {
-  deleteVocabDefinition,
-  type DeleteVocabDefinitionResult,
+  deleteVocabEntry,
+  type DeleteVocabEntryResult,
   type VocabWord,
   type VocabWordDefinition,
   type VocabWordListResponse,
@@ -46,13 +46,7 @@ function countRemovedWords(
   words: VocabWord[],
   definitionIds: ReadonlySet<string>,
 ) {
-  return words.filter((word) => {
-    const activeDefinitions = word.definitions.filter(
-      (definition) => !definitionIds.has(definition.id),
-    );
-
-    return word.definitions.length > 0 && activeDefinitions.length === 0;
-  }).length;
+  return words.filter((word) => definitionIds.has(word.id)).length;
 }
 
 export function useDeleteVocabularyDefinition({
@@ -73,9 +67,8 @@ export function useDeleteVocabularyDefinition({
 
       return Promise.all(
         targets.map((target) =>
-          runAuthenticatedRequest<DeleteVocabDefinitionResult>({
-            request: (token) =>
-              deleteVocabDefinition(token, target.definition.id),
+          runAuthenticatedRequest<DeleteVocabEntryResult>({
+            request: (token) => deleteVocabEntry(token, target.definition.id),
           }),
         ),
       );
@@ -96,14 +89,9 @@ export function useDeleteVocabularyDefinition({
       queryClient.setQueryData<VocabWordListResponse>(queryKey, (oldData) => {
         if (!oldData) return oldData;
 
-        const nextItems = oldData.items
-          .map((item) => ({
-            ...item,
-            definitions: item.definitions.filter(
-              (definition) => !definitionIds.has(definition.id),
-            ),
-          }))
-          .filter((item) => item.definitions.length > 0);
+        const nextItems = oldData.items.filter(
+          (item) => !definitionIds.has(item.id),
+        );
 
         return {
           ...oldData,

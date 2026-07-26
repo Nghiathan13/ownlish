@@ -112,6 +112,8 @@ function createPracticeRun(): RuntimeTestSession {
     totalQuestions: 1,
     correctCount: 0,
     wrongCount: 0,
+    timer: null,
+    finishStatus: "open",
     isFinished: false,
     groups: [createGroup()],
     questionKeyById: new Map([[101, "ets26-t01-p3-q001"]]),

@@ -71,7 +71,7 @@ export function PracticeNavigationButtons({
           <button
             aria-label={t("tests.previous")}
             className={iconOnlyButtonClassName(
-              "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
+              "border border-border bg-transparent text-foreground enabled:hover:bg-hover-overlay",
             )}
             disabled={previousDisabled}
             onClick={onPrevious}
@@ -90,7 +90,7 @@ export function PracticeNavigationButtons({
                   : t("tests.questionList")
               }
               className={iconOnlyButtonClassName(
-                "w-auto gap-1.5 border border-border bg-transparent px-2 text-foreground hover:border-foreground",
+                "w-auto gap-1.5 border border-border bg-transparent px-2 text-foreground hover:bg-hover-overlay",
               )}
               onClick={() => setIsGridOpen(true)}
               type="button"
@@ -116,7 +116,7 @@ export function PracticeNavigationButtons({
           <button
             aria-label={resolvedNextAriaLabel}
             className={iconOnlyButtonClassName(
-              "border border-border bg-transparent text-foreground enabled:hover:border-foreground",
+              "border border-border bg-transparent text-foreground enabled:hover:bg-hover-overlay",
             )}
             disabled={nextDisabled}
             onClick={onNext}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useT } from "@/shared/providers/LocaleProvider";
+import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
 
 const DEFAULT_LEFT_PANEL_WIDTH = 50;
 const MIN_LEFT_PANEL_WIDTH = 30;
@@ -90,13 +91,16 @@ export function PracticeSplitPlainLayout({
         ref={splitContainerRef}
         style={splitLayoutStyle}
       >
-        <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
+        <OverlayScrollArea
+          className="flex h-full min-h-0 flex-col gap-4 p-4"
+          rootClassName="min-h-0 h-full"
+        >
           {left}
-        </div>
+        </OverlayScrollArea>
         <div
           aria-label={t("tests.resizePanels")}
           aria-orientation="vertical"
-          className="relative hidden cursor-col-resize touch-none select-none sm:block before:absolute before:inset-y-0 before:left-1/2 before:w-px before:-translate-x-1/2 before:bg-border hover:before:bg-foreground"
+          className="relative hidden cursor-col-resize touch-none select-none sm:block before:absolute before:inset-y-0 before:left-1/2 before:w-px before:-translate-x-1/2 before:bg-border hover:before:bg-primary"
           onDoubleClick={() => {
             dragStartRef.current = null;
             setLeftPanelWidth(DEFAULT_LEFT_PANEL_WIDTH);
@@ -129,12 +133,17 @@ export function PracticeSplitPlainLayout({
           }}
           role="separator"
         />
-        <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4">
+        <OverlayScrollArea
+          className="flex h-full min-h-0 flex-col gap-4 p-4"
+          rootClassName="min-h-0 h-full"
+        >
           {right}
-        </div>
+        </OverlayScrollArea>
       </div>
       {navigation != null ? (
-        <div className="shrink-0 border-t border-border p-4">{navigation}</div>
+        <div className="relative z-50 shrink-0 bg-surface p-4 shadow-card-up dark:border-t dark:border-border">
+          {navigation}
+        </div>
       ) : null}
     </>
   );
