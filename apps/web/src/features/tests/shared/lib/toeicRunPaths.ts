@@ -1,4 +1,4 @@
-import type { PracticeMode, ToeicRunMode } from "@/features/tests/shared/api/types";
+import type { PracticeMode, ToeicRunMode } from "@/entities/toeic-runtime/model/presentation";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 
 type ToeicRunPathMode = PracticeMode | "mock_test";
@@ -13,34 +13,6 @@ export function getToeicRunPath(
   const testParam = testKey ? `&test=${encodeURIComponent(testKey)}` : "";
 
   return `/tests/${sessionId}/${mode}?parts=${normalizedParts.join(",")}${testParam}`;
-}
-
-export function getToeicRunApiPath(
-  sessionId: string,
-  options?: {
-    mode?: PracticeMode;
-    parts?: number[];
-  },
-) {
-  const params = new URLSearchParams();
-
-  if (options?.parts?.length) {
-    params.set("parts", normalizeSelectedParts(options.parts).join(","));
-  }
-
-  if (options?.mode) {
-    params.set("mode", options.mode);
-  }
-
-  const query = params.toString();
-
-  return query
-    ? `/tests/runs/${sessionId}?${query}`
-    : `/tests/runs/${sessionId}`;
-}
-
-export function getExpandToeicRunPartsApiPath(sessionId: string) {
-  return `/tests/runs/${sessionId}/expand-parts`;
 }
 
 export function parseToeicRunPartsParam(

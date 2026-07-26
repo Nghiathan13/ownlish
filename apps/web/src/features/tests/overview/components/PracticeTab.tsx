@@ -6,7 +6,7 @@ import { PartPracticeTabs } from "@/features/tests/overview/components/PartPract
 import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
 import { usePartPracticeOverview } from "@/features/tests/overview/hooks/usePartPracticeOverview";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
-import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
+import type { PartPracticePartSummary } from "@/entities/toeic-runtime/model/presentation";
 import { useT } from "@/shared/providers/LocaleProvider";
 
 function buildPartSummary(

@@ -5,7 +5,7 @@ export function ReviewCardSkeleton() {
     <>
       <div
         aria-hidden
-        className="flex h-[480px] flex-col rounded-lg bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
+        className="flex h-[480px] flex-col rounded-lg border border-border bg-surface p-5 sm:p-8 dark:bg-[#000000]"
       >
         <div className="mb-8 shrink-0">
           <Skeleton className="mx-auto h-4 w-16" />

@@ -63,7 +63,7 @@ export function GuestLanding() {
           className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-[#1F48DA] blur-[10vw]"
         />
         <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center sm:px-16 lg:py-24">
-          <div className="flex items-center gap-3 rounded-full border-0 border-border bg-surface px-4 py-1.5 text-sm font-medium uppercase text-muted-foreground shadow-card dark:border">
+          <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium uppercase text-muted-foreground">
             <LogoIcon className="size-4 shrink-0" />
             {t("landing.badge")}
           </div>

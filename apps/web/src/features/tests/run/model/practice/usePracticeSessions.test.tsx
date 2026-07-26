@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ToeicQuestion,
   ToeicQuestionGroup,
-} from "@/entities/toeic/api/types";
+} from "@/entities/toeic-runtime/model/presentation";
 import {
   clearStoredAccessToken,
   setStoredAccessToken,

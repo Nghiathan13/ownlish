@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import { ReviewProgress } from "@/features/review/components/ReviewProgress";
+import { ReviewMasterButton } from "@/features/review/components/ReviewMasterButton";
 import type { ReviewStudyWord } from "@/features/review/model/reviewStudyWord";
 import { getTypingAnswer } from "@/features/review/lib/typing";
 import { classNames } from "@/shared/lib/classNames";
@@ -14,6 +15,8 @@ export type TypingResult = {
 };
 
 type ReviewTypingCardProps = {
+  disabled: boolean;
+  onMaster: () => void;
   onTypedAnswerChange: (value: string) => void;
   reviewedCount: number;
   totalWords: number;
@@ -27,6 +30,8 @@ type ReviewTypingCardProps = {
 };
 
 export function ReviewTypingCard({
+  disabled,
+  onMaster,
   onTypedAnswerChange,
   reviewedCount,
   totalWords,
@@ -45,9 +50,12 @@ export function ReviewTypingCard({
     .join(" · ");
 
   return (
-    <article className="flex h-[480px] flex-col rounded-lg bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border">
+    <article className="flex h-[480px] flex-col rounded-lg border border-border bg-surface p-5 sm:p-8 dark:bg-[#000000]">
       <div className="mb-8 shrink-0">
         <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
+        <div className="mt-1 flex justify-end">
+          <ReviewMasterButton disabled={disabled} onMaster={onMaster} />
+        </div>
       </div>
 
       <div className="grid min-h-0 flex-1 content-center gap-6 overflow-y-auto text-center">

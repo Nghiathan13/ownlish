@@ -47,12 +47,13 @@ export function OxfordReviewBandShell({
   const metaQuery = useOxfordCollectionMetaQuery({
     band: navigation.band,
     isAuthenticated,
+    userId: user?.id ?? null,
   });
 
   return (
     <ReviewWorkspace
       header={
-        <>
+        <div className="flex w-full flex-col gap-3 lg:gap-6">
           <ReviewCategorySelect
             activeCategory="oxford"
             onCategoryChange={onCategoryChange}
@@ -62,7 +63,7 @@ export function OxfordReviewBandShell({
             getHref={getOxfordReviewBandPath}
             onSelectBand={navigation.navigateBand}
           />
-        </>
+        </div>
       }
     >
       <ReviewWorkspaceRow

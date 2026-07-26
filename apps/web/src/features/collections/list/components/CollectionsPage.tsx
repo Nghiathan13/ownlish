@@ -67,7 +67,7 @@ function UserCollectionsPage({ onCategoryChange }: { onCategoryChange: (category
 
   return (
     <PageShell>
-      <div className="my-4 px-4 lg:my-8 lg:px-16">
+      <div className="my-3 px-4 lg:my-6 lg:px-16">
         <CollectionCategorySelect
           activeCategory="user"
           onCategoryChange={onCategoryChange}
@@ -150,7 +150,7 @@ export function CollectionsPage() {
       if (isAuthenticated && userId) {
         if (nextLocation.category === "oxford") {
           void queryClient.prefetchQuery(
-            getOxfordCollectionMetaQueryOptions(nextLocation.band),
+            getOxfordCollectionMetaQueryOptions(userId, nextLocation.band),
           );
         } else {
           void queryClient.prefetchQuery(getCollectionsListQueryOptions(userId));

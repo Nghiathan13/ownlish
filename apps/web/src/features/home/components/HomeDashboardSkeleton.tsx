@@ -2,7 +2,7 @@ import { Skeleton } from "@/shared/ui/Skeleton";
 
 function MetricCardSkeleton() {
   return (
-    <div className="min-h-32 rounded-2xl bg-surface p-5 shadow-card sm:p-6">
+    <div className="min-h-32 rounded-2xl border border-border bg-surface p-5 sm:p-6">
       <Skeleton className="h-3 w-20" />
       <Skeleton className="mt-3 h-10 w-20" />
     </div>
@@ -27,7 +27,7 @@ export function HomeDashboardSkeleton() {
             <MetricCardSkeleton key={index} />
           ))}
         </div>
-        <div className="mt-4 rounded-2xl bg-surface p-5 shadow-card sm:p-6 lg:mt-8">
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-5 sm:p-6 lg:mt-8">
           <div className="space-y-5">
             {Array.from({ length: 7 }, (_, index) => (
               <div key={index}>

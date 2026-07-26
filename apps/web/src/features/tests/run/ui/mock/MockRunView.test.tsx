@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import { MockRunView } from "@/features/tests/run/ui/mock/MockRunView";
 import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 

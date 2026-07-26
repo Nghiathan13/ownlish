@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import { MockRunView } from "@/features/tests/run/ui/mock/MockRunView";
 import { PracticeRunView } from "@/features/tests/run/components/PracticeRunView";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPath,

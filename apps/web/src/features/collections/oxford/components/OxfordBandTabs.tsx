@@ -10,6 +10,18 @@ import {
 import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
 import { useT } from "@/shared/providers/LocaleProvider";
 
+const oxfordBandButtonClassName =
+  "inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal";
+
+function getOxfordBandButtonClassName(isActive: boolean) {
+  return classNames(
+    oxfordBandButtonClassName,
+    isActive
+      ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
+      : "bg-[#f0f0f0] text-foreground hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+  );
+}
+
 type OxfordBandTabsProps = {
   activeBand: OxfordBand;
   getHref?: (band: OxfordBand) => string;
@@ -26,7 +38,7 @@ export function OxfordBandTabs({
   return (
     <nav
       aria-label={t("collections.oxfordCefrLevels")}
-      className="flex w-fit gap-1 rounded-lg bg-surface p-1 shadow-card dark:border dark:border-border"
+      className="flex w-fit max-w-full gap-3 overflow-x-auto"
     >
       {OXFORD_BANDS.map((band) => {
         const isActive = band === activeBand;
@@ -34,12 +46,7 @@ export function OxfordBandTabs({
         return (
           <Link
             aria-current={isActive ? "page" : undefined}
-            className={classNames(
-              "inline-flex cursor-pointer items-center justify-center rounded-md px-3 py-1.5 text-[15px] leading-[20px] font-normal",
-              isActive
-                ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
-                : "text-foreground hover:bg-hover-overlay",
-            )}
+            className={getOxfordBandButtonClassName(isActive)}
             href={getHref(band)}
             key={band}
             onClick={

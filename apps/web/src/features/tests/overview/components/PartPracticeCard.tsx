@@ -8,7 +8,7 @@ import { ReplayIcon } from "@/shared/ui/icons/ReplayIcon";
 import { iconOnlyButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import { TopRightCountBadge } from "@/shared/ui/TopRightCountBadge";
-import type { PartPracticePartSummary } from "@/entities/toeic/api/types";
+import type { PartPracticePartSummary } from "@/entities/toeic-runtime/model/presentation";
 import { statusColorClasses } from "@/shared/ui/theme/statusColors";
 import {
   testOverviewCardClassName,

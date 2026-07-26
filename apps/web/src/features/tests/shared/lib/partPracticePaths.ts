@@ -1,4 +1,4 @@
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import {
   DEFAULT_TOEIC_YEAR,
   parseToeicYearParam,
@@ -18,23 +18,6 @@ export function getPartPracticeRunPath(
     params.set("part", String(partNumber));
   }
   return `/tests/part-practice/${sessionId}?${params.toString()}`;
-}
-
-export function getPartPracticeRunApiPath(
-  sessionId: string,
-  options?: { mode?: PracticeMode },
-) {
-  const params = new URLSearchParams();
-
-  if (options?.mode) {
-    params.set("mode", options.mode);
-  }
-
-  const query = params.toString();
-
-  return query
-    ? `/tests/part-practice/runs/${sessionId}?${query}`
-    : `/tests/part-practice/runs/${sessionId}`;
 }
 
 export function getTestsOverviewPath(options?: {

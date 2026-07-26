@@ -75,7 +75,7 @@ export function PracticeQuestionGridPanel({
         type="button"
       />
       <aside
-        className="absolute inset-y-0 right-0 flex w-fit max-w-[85vw] flex-col border-l border-border bg-surface shadow-xl"
+        className="absolute inset-y-0 right-0 flex w-fit max-w-[85vw] flex-col border-l border-border bg-surface"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header

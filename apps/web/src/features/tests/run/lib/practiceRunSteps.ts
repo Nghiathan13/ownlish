@@ -1,4 +1,4 @@
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/run/lib/practiceGroups";
 

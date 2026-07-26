@@ -24,6 +24,7 @@ const word = {
 describe("ReviewStudySession", () => {
   it("uses Keyboard mode to show correctness without grading until a rating is selected", () => {
     const onEasy = vi.fn();
+    const onMaster = vi.fn();
 
     const { rerender } = render(
       <LocaleProvider>
@@ -35,12 +36,16 @@ describe("ReviewStudySession", () => {
           onEasy={onEasy}
           onGood={() => {}}
           onHard={() => {}}
+          onMaster={onMaster}
           reviewedCount={0}
           totalWords={20}
           word={word}
         />
       </LocaleProvider>,
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Master" }));
+    expect(onMaster).toHaveBeenCalledOnce();
 
     rerender(
       <LocaleProvider>
@@ -52,6 +57,7 @@ describe("ReviewStudySession", () => {
           onEasy={onEasy}
           onGood={() => {}}
           onHard={() => {}}
+          onMaster={onMaster}
           reviewedCount={0}
           totalWords={20}
           word={word}

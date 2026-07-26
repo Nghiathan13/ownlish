@@ -14,7 +14,7 @@ import {
   showsOptionTranslation,
   showsQuestionTranslation,
 } from "@/features/tests/shared/lib/partTranslationVisibility";
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import { classNames } from "@/shared/lib/classNames";
 

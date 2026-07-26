@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import {
   clearRuntimeTestPracticeRun,

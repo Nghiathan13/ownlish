@@ -8,9 +8,9 @@ import type { OxfordBand } from "@/features/collections/oxford/lib/oxfordNavigat
 
 export const OXFORD_QUERY_STALE_TIME = 60_000;
 
-export function getOxfordCollectionMetaQueryOptions(band: OxfordBand) {
+export function getOxfordCollectionMetaQueryOptions(userId: string, band: OxfordBand) {
   return {
-    queryKey: getOxfordCollectionMetaQueryKey(band),
+    queryKey: getOxfordCollectionMetaQueryKey(userId, band),
     queryFn: ({ signal }: { signal: AbortSignal }) =>
       runAuthenticatedRequest({
         request: (token) => getOxfordCollectionMeta(token, band, { signal }),

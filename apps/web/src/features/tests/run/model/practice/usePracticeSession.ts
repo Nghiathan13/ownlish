@@ -5,12 +5,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import type {
   PracticeMode,
   SubmitAnswerResult,
-} from "@/entities/toeic/api/types";
+} from "@/entities/toeic-runtime/model/presentation";
 import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
 import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
 import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRuntimeTestSessionQuery";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
-import { toAnswerMap } from "@/entities/toeic/lib/runState";
+import { toAnswerMap } from "@/entities/toeic-runtime/model/answerState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import {

@@ -1,4 +1,4 @@
-import type { ToeicQuestionOptions } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionOptions } from "@/entities/toeic-runtime/model/presentation";
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";
 import type { PartTranslationVariant } from "@/features/tests/shared/constants/partPracticeConfig";
 import {

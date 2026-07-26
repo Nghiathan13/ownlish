@@ -11,7 +11,7 @@ import {
   type TestRunLoadingVariant,
 } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
-import type { PracticeMode, ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { PracticeMode, ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import {
   buildPracticeRunSteps,
 } from "@/features/tests/run/lib/practiceRunSteps";

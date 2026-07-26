@@ -6,7 +6,9 @@ import {
 export function getToeicTestYears(years: number[]): ToeicYear[] {
   const available = new Set(years);
 
-  return TOEIC_YEARS.filter((year) => available.has(year));
+  return TOEIC_YEARS.filter((year) => available.has(year)).sort(
+    (left, right) => right - left,
+  );
 }
 
 export function resolveToeicSelectedYear(

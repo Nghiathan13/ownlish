@@ -49,7 +49,7 @@ export function WordsTableSkeleton({
       >
         {Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => (
           <Skeleton
-            className="h-24 min-w-0 w-full rounded-xl shadow-card"
+            className="h-24 min-w-0 w-full rounded-xl border border-border"
             key={index}
           />
         ))}

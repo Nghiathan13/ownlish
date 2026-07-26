@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 
 export function getPartPracticeOverviewQueryKey(userId: string | null) {
   return ["part-practice-overview", { userId }] as const;

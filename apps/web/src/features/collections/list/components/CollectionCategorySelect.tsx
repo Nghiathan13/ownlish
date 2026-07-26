@@ -2,24 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import {
-  collectionCategoryTabs,
   getCollectionsListPath,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
+import { CollectionCategoryTabs } from "@/features/collections/shared/components/CollectionCategoryTabs";
 import { useT } from "@/shared/providers/LocaleProvider";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 type CollectionCategorySelectProps = {
   activeCategory: CollectionCategory;
   onCategoryChange?: (category: CollectionCategory) => void;
 };
-
-function getCategoryLabel(
-  key: CollectionCategory,
-  t: ReturnType<typeof useT>,
-) {
-  return key === "user" ? t("collections.myCollections") : t("collections.oxford");
-}
 
 export function CollectionCategorySelect({
   activeCategory,
@@ -29,10 +21,10 @@ export function CollectionCategorySelect({
   const router = useRouter();
 
   return (
-    <SelectDropdown
+    <CollectionCategoryTabs
+      activeCategory={activeCategory}
       ariaLabel={t("collections.categoryAria")}
-      className="w-fit min-w-[10rem] max-w-[14rem]"
-      onChange={(category) => {
+      onCategoryChange={(category) => {
         const path = getCollectionsListPath(category);
 
         if (onCategoryChange) {
@@ -46,11 +38,6 @@ export function CollectionCategorySelect({
 
         router.push(path, { scroll: false });
       }}
-      options={collectionCategoryTabs.map((category) => ({
-        label: getCategoryLabel(category.key, t),
-        value: category.key,
-      }))}
-      value={activeCategory}
     />
   );
 }

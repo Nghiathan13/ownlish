@@ -1,6 +1,6 @@
 "use client";
 
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
 import { AudioPlayer } from "@/shared/ui/AudioPlayer";
@@ -88,7 +88,7 @@ export function PracticeLeftPanel({
                 alt={formatMessage(t("tests.questionImageAlt"), {
                   number: questionNumber,
                 })}
-                className="mx-auto block h-auto max-h-[420px] w-auto max-w-full rounded-xl shadow-card dark:border dark:border-border"
+                className="mx-auto block h-auto max-h-[420px] w-auto max-w-full"
                 key={`image-${group.id}`}
                 onError={onMediaError}
                 src={imageUrl}
@@ -145,7 +145,7 @@ export function PracticeLeftPanel({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-background p-4">
+    <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
       {content}
     </div>
   );

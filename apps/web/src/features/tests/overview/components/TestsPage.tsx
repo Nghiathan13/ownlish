@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MockTestsTab } from "@/features/tests/overview/components/MockTestsTab";
 import { PracticeTab } from "@/features/tests/overview/components/PracticeTab";
 import { TestsOverviewPageSkeleton } from "@/features/tests/overview/components/TestsOverviewPageSkeleton";
+import { TestsOverviewTabs } from "@/features/tests/overview/components/TestsOverviewTabs";
 import { resolveToeicSelectedYear } from "@/features/tests/overview/lib/toeicTestYears";
 import {
   DEFAULT_TOEIC_YEAR,
@@ -42,7 +43,12 @@ export function TestsPage() {
         new Set(
           (catalog.data?.manifest.tests ?? []).map((test) => test.year),
         ),
-      ).filter((year): year is ToeicYear => parseToeicYearParam(String(year)) !== null),
+      )
+        .filter(
+          (year): year is ToeicYear =>
+            parseToeicYearParam(String(year)) !== null,
+        )
+        .sort((left, right) => right - left),
     [catalog.data],
   );
   const isLoadingYears = catalog.isLoading;
@@ -107,6 +113,7 @@ export function TestsPage() {
 
   return (
     <PageShell>
+      <TestsOverviewTabs />
       {selectedTab === "part_practice" ? (
         <PracticeTab />
       ) : (

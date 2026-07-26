@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import type { ToeicQuestionOptions } from "@/entities/toeic/api/types";
+import type { ToeicQuestionOptions } from "@/entities/toeic-runtime/model/presentation";
 import { joinContentEvidenceSegments } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
 import {
   LANDING_PART3_DEMO,
@@ -97,7 +97,7 @@ export function LandingPart3Demo() {
         </p>
       </div>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-6 rounded-2xl bg-surface p-5 shadow-card dark:border dark:border-border lg:grid-cols-2 lg:gap-8 lg:p-8">
+      <div className="mx-auto grid w-full max-w-6xl gap-6 rounded-2xl border border-border bg-surface p-5 lg:grid-cols-2 lg:gap-8 lg:p-8">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

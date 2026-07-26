@@ -25,6 +25,7 @@ type UseOxfordNavigationParams = {
   bandParam: string | null;
   groupParam: string | null;
   isAuthenticated: boolean;
+  userId: string | null;
 };
 
 function getLocationPath({ band, group }: OxfordLocation) {
@@ -48,6 +49,7 @@ export function useOxfordNavigation({
   bandParam,
   groupParam,
   isAuthenticated,
+  userId,
 }: UseOxfordNavigationParams) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -109,10 +111,10 @@ export function useOxfordNavigation({
         window.history.pushState(null, "", nextPath);
       }
 
-      if (isAuthenticated) {
+      if (isAuthenticated && userId) {
         if (nextLocation.group === null) {
           void queryClient.prefetchQuery(
-            getOxfordCollectionMetaQueryOptions(nextLocation.band),
+            getOxfordCollectionMetaQueryOptions(userId, nextLocation.band),
           );
         } else {
           void queryClient.prefetchQuery(
@@ -123,7 +125,7 @@ export function useOxfordNavigation({
 
       router.push(nextPath, { scroll: false });
     },
-    [isAuthenticated, queryClient, router],
+    [isAuthenticated, queryClient, router, userId],
   );
 
   const navigateBand = useCallback(

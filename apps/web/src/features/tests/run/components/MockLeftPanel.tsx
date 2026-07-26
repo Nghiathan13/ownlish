@@ -1,6 +1,6 @@
 "use client";
 
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import { PassagePanel } from "@/features/tests/run/components/PassagePanel";
 import { PartInstructionText } from "@/features/tests/run/components/PartInstructionText";
 import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
@@ -45,7 +45,7 @@ export function MockLeftPanel({
           alt={formatMessage(t("tests.questionImageAlt"), {
             number: group.questionStart,
           })}
-          className="mx-auto block h-auto max-h-[420px] w-auto max-w-full rounded-xl shadow-card dark:border dark:border-border"
+          className="mx-auto block h-auto max-h-[420px] w-auto max-w-full"
           key={`image-${group.id}`}
           src={imageUrl}
         />

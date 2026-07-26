@@ -1,7 +1,7 @@
 import type {
   ToeicQuestion,
   ToeicQuestionGroup,
-} from "@/entities/toeic/api/types";
+} from "@/entities/toeic-runtime/model/presentation";
 import { resolveToeicCatalogGroupMedia } from "@/entities/toeic-catalog/model/media";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import {

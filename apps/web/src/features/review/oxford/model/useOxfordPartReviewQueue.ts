@@ -14,6 +14,7 @@ import {
   getOxfordPartReviewQueryKey,
   getOxfordPartReviewQueryOptions,
 } from "./oxfordReviewQueries";
+import { getOxfordCollectionMetaQueryKey } from "@/entities/collection/lib/collectionsCache";
 
 type UseOxfordPartReviewQueueParams = {
   band: string;
@@ -117,6 +118,9 @@ export function useOxfordPartReviewQueue({
             item.id === definitionId ? { ...item, progress } : item,
           ),
         };
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getOxfordCollectionMetaQueryKey(userId, band),
       });
     },
   });

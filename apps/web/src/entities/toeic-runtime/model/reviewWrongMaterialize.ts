@@ -1,4 +1,4 @@
-import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 import type { RuntimeAnswerStatus } from "./types";
 
 export function groupHasWrongAnswer(

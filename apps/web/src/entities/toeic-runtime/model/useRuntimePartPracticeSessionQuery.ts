@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import { getToeicCatalog, getToeicCatalogDocument } from "@/entities/toeic-catalog/api/catalog";
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { toeicCatalogQueryKey } from "@/entities/toeic-catalog/model/useToeicCatalogQuery";

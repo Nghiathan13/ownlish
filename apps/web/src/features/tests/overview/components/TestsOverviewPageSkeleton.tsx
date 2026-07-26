@@ -1,5 +1,6 @@
 import { MockTestsTabSkeleton } from "@/features/tests/overview/components/MockTestsTabSkeleton";
 import { PracticeTabSkeleton } from "@/features/tests/overview/components/PracticeTabSkeleton";
+import { TestsOverviewTabsSkeleton } from "@/features/tests/overview/components/TestsOverviewTabsSkeleton";
 import { type ToeicYear } from "@/features/tests/shared/constants/toeicYears";
 import type { TestsOverviewTab } from "@/features/tests/shared/lib/partPracticePaths";
 import { Skeleton } from "@/shared/ui/Skeleton";
@@ -23,6 +24,7 @@ export function TestsOverviewPageSkeleton({
 }: TestsOverviewPageSkeletonProps) {
   return (
     <PageShell>
+      <TestsOverviewTabsSkeleton />
       {selectedTab === "part_practice" ? (
         <PracticeTabSkeleton includePartTabs />
       ) : selectedTab === "mock_tests" ? (

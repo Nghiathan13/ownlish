@@ -1,4 +1,4 @@
-import type { ToeicQuestion, ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 
 export type PracticeItem = {
   group: ToeicQuestionGroup;

@@ -43,8 +43,6 @@ function readAutoplayPreference(storageKey: string | undefined) {
 
 export function AudioPlayer({
   autoPlayStorageKey,
-  bordered = false,
-  elevated = true,
   onError,
   src,
 }: AudioPlayerProps) {
@@ -171,9 +169,7 @@ export function AudioPlayer({
   return (
     <div
       className={classNames(
-        "rounded-xl bg-surface p-3",
-        bordered && "border border-border",
-        elevated && "shadow-card dark:border dark:border-border",
+        "rounded-xl border border-border bg-surface p-3",
       )}
       ref={playerRef}
     >
@@ -199,12 +195,12 @@ export function AudioPlayer({
 
       <input
         aria-label="Audio progress"
-        className="mt-1 block h-1 w-full cursor-pointer appearance-none rounded-full bg-background accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:[&::-moz-range-thumb]:size-3 hover:[&::-webkit-slider-thumb]:size-3 [&::-moz-range-thumb]:size-2 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-webkit-slider-thumb]:size-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+        className="mt-1 block h-1 w-full cursor-pointer appearance-none rounded-full bg-[#f0f0f0] accent-primary [--audio-track:#f0f0f0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:[&::-moz-range-thumb]:size-3 hover:[&::-webkit-slider-thumb]:size-3 dark:bg-background dark:[--audio-track:var(--background)] [&::-moz-range-thumb]:size-2 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-webkit-slider-thumb]:size-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
         max={duration || 0}
         min="0"
         onChange={(event) => seek(Number(event.target.value))}
         style={{
-          background: `linear-gradient(to right, var(--primary) 0%, var(--primary) max(0px, calc(${progress}% - 24px)), color-mix(in srgb, var(--primary) 58%, var(--background)) ${progress}%, var(--background) ${progress}%)`,
+          background: `linear-gradient(to right, var(--primary) 0%, var(--primary) max(0px, calc(${progress}% - 24px)), color-mix(in srgb, var(--primary) 58%, var(--audio-track)) ${progress}%, var(--audio-track) ${progress}%)`,
         }}
         step="0.1"
         type="range"
@@ -275,7 +271,7 @@ export function AudioPlayer({
 
           {speedMenuOpen ? (
             <div
-              className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid min-w-16 gap-1 rounded-lg bg-surface p-1 shadow-card dark:border dark:border-border"
+              className="absolute top-[calc(100%+0.5rem)] right-0 z-20 grid min-w-16 gap-1 rounded-lg border border-border bg-surface p-1"
               id={speedMenuId}
               role="listbox"
             >

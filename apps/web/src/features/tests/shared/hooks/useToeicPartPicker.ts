@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PracticeMode } from "@/features/tests/shared/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import type { CatalogTestSummary } from "@/features/tests/shared/model/catalogTestSummary";
 import { getPartProgress } from "@/features/tests/shared/lib/toeicTestProgress";
 import {

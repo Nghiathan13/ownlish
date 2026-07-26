@@ -16,7 +16,7 @@ export function PracticeContinuousShell({
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
-        <div className="relative z-50 shrink-0 bg-surface p-4 shadow-card-up dark:border-t dark:border-border">
+        <div className="relative z-50 shrink-0 border-t border-border bg-surface p-4">
           {navigation}
         </div>
       </div>

@@ -217,7 +217,7 @@ export function ReviewSideNavigation({
             value={activeItem.id}
           />
         ) : (
-          <p className="rounded-lg bg-surface px-4 py-2.5 text-center text-sm text-muted-foreground shadow-card dark:border dark:border-border">
+          <p className="rounded-lg border border-border bg-surface px-4 py-2.5 text-center text-sm text-muted-foreground dark:bg-[#000000]">
             {emptyLabel}
           </p>
         )}
@@ -226,7 +226,7 @@ export function ReviewSideNavigation({
       <nav
         aria-label={ariaLabel}
         className={classNames(
-          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg bg-surface p-1 shadow-card lg:sticky lg:top-4 lg:flex lg:self-start dark:border dark:border-border",
+          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface p-1 lg:sticky lg:top-4 lg:flex lg:self-start dark:bg-[#000000]",
           widthClassName,
         )}
         onMouseEnter={() => setIsHovering(true)}
@@ -260,8 +260,9 @@ export function ReviewSideNavigation({
                     aria-current={item.isActive ? "page" : undefined}
                     className={classNames(
                       "block rounded-md px-3 py-2 text-left text-base font-normal text-foreground",
-                      "hover:bg-hover-overlay",
-                      item.isActive && "bg-muted",
+                      item.isActive
+                        ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+                        : "hover:bg-hover-overlay",
                     )}
                     href={item.href}
                     key={item.id}

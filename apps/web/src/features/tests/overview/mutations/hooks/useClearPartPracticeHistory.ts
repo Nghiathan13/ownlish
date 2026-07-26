@@ -3,9 +3,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clearRuntimePartPracticeRun } from "@/entities/toeic-runtime/api/runtime";
 import {
-  invalidateAllPracticeSessions,
-} from "@/entities/toeic/lib/toeicCache";
-import {
   invalidateAllPartPracticeSessions,
   invalidatePartPracticeOverview,
 } from "@/entities/toeic-runtime/model/cache";
@@ -30,7 +27,6 @@ export function useClearPartPracticeHistory({
       clearPartPracticeGroupKeys(partNumber);
       await Promise.all([
         invalidatePartPracticeOverview(queryClient, userId),
-        invalidateAllPracticeSessions(queryClient),
         invalidateAllPartPracticeSessions(queryClient),
       ]);
     },

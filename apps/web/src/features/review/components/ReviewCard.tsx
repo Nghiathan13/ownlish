@@ -1,10 +1,13 @@
 "use client";
 
 import { ReviewProgress } from "@/features/review/components/ReviewProgress";
+import { ReviewMasterButton } from "@/features/review/components/ReviewMasterButton";
 import type { ReviewStudyWord } from "@/features/review/model/reviewStudyWord";
 import { useT } from "@/shared/providers/LocaleProvider";
 
 type ReviewCardProps = {
+  disabled: boolean;
+  onMaster: () => void;
   onToggleMeaning: () => void;
   reviewedCount: number;
   showMeaning: boolean;
@@ -13,6 +16,8 @@ type ReviewCardProps = {
 };
 
 export function ReviewCard({
+  disabled,
+  onMaster,
   onToggleMeaning,
   reviewedCount,
   showMeaning,
@@ -24,11 +29,14 @@ export function ReviewCard({
   return (
     <article
       aria-label={showMeaning ? t("review.clickToHide") : t("review.clickToReview")}
-      className="flex h-[480px] cursor-pointer flex-col rounded-lg bg-surface p-5 shadow-card sm:p-8 dark:border dark:border-border"
+      className="flex h-[480px] cursor-pointer flex-col rounded-lg border border-border bg-surface p-5 sm:p-8 dark:bg-[#000000]"
       onClick={onToggleMeaning}
     >
       <div className="mb-8 shrink-0">
         <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
+        <div className="mt-1 flex justify-end">
+          <ReviewMasterButton disabled={disabled} onMaster={onMaster} />
+        </div>
       </div>
 
       <div className="grid min-h-0 flex-1 content-center gap-6 overflow-y-auto text-center">

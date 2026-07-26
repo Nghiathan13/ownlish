@@ -1,4 +1,4 @@
-import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 import type { QuestionGridResult } from "@/features/tests/run/lib/practiceAnswers";
 import type { PracticeRunStep } from "@/features/tests/run/lib/practiceRunSteps";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/run/lib/practiceGroups";

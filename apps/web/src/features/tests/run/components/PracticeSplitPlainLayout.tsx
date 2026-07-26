@@ -141,7 +141,7 @@ export function PracticeSplitPlainLayout({
         </OverlayScrollArea>
       </div>
       {navigation != null ? (
-        <div className="relative z-50 shrink-0 bg-surface p-4 shadow-card-up dark:border-t dark:border-border">
+        <div className="relative z-50 shrink-0 border-t border-border bg-surface p-4">
           {navigation}
         </div>
       ) : null}

@@ -1,4 +1,4 @@
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 
 const STATIC_PART_INSTRUCTIONS: Record<number, string> = {
   1: "Select the one statement that best describes what you see in the picture.",

@@ -26,12 +26,7 @@ describe("CollectionCategorySelect", () => {
       </LocaleProvider>,
     );
 
-    await user.click(
-      screen.getByRole("button", {
-        name: "Collection category: My Collections",
-      }),
-    );
-    await user.click(screen.getByRole("option", { name: "Oxford" }));
+    await user.click(screen.getByRole("tab", { name: "Oxford" }));
 
     expect(pushState).toHaveBeenCalledWith(null, "", "/collections/oxford/A1");
     expect(mocks.push).toHaveBeenCalledWith("/collections/oxford/A1", {
@@ -55,12 +50,7 @@ describe("CollectionCategorySelect", () => {
       </LocaleProvider>,
     );
 
-    await user.click(
-      screen.getByRole("button", {
-        name: "Collection category: My Collections",
-      }),
-    );
-    await user.click(screen.getByRole("option", { name: "Oxford" }));
+    await user.click(screen.getByRole("tab", { name: "Oxford" }));
 
     expect(onCategoryChange).toHaveBeenCalledWith("oxford");
     expect(mocks.push).not.toHaveBeenCalled();

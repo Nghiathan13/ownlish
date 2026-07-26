@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { OxfordPartProgress } from "@/entities/collection/api/collections";
 import {
   getOxfordGroupRange,
   getOxfordPath,
@@ -20,12 +21,14 @@ import { StartIcon } from "@/shared/ui/icons/StartIcon";
 type OxfordWordGroupGridProps = {
   band: OxfordBand;
   itemCount: number;
+  partProgress: OxfordPartProgress[];
   onOpenPart: (part: number) => void;
 };
 
 export function OxfordWordGroupGrid({
   band,
   itemCount,
+  partProgress,
   onOpenPart,
 }: OxfordWordGroupGridProps) {
   const t = useT();
@@ -40,6 +43,13 @@ export function OxfordWordGroupGrid({
           band,
           group,
         });
+        const progress = partProgress[group - 1] ?? {
+          masteredCount: 0,
+          learningCount: 0,
+          newCount: range.wordCount,
+        };
+        const masteredWidth = (progress.masteredCount / range.wordCount) * 100;
+        const learningWidth = (progress.learningCount / range.wordCount) * 100;
 
         return (
           <article
@@ -65,9 +75,28 @@ export function OxfordWordGroupGrid({
             />
             <div className="pointer-events-none relative">
               <h2 className="text-lg font-semibold">{partTitle}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {range.wordCount} {t("collections.words")}
-              </p>
+              <div className="mt-3 flex items-center gap-4 text-sm tabular-nums">
+                <span className="text-warning">
+                  {progress.masteredCount} {t("collections.mastered")}
+                </span>
+                <span className="text-primary">
+                  {progress.learningCount} {t("collections.learning")}
+                </span>
+                <span className="text-muted-foreground">
+                  {progress.newCount} {t("collections.new")}
+                </span>
+              </div>
+              <div className="mt-2 flex h-1 overflow-hidden rounded-full bg-muted">
+                <span
+                  className="bg-warning"
+                  style={{ width: `${masteredWidth}%` }}
+                />
+                <span
+                  className="bg-primary"
+                  style={{ width: `${learningWidth}%` }}
+                />
+                <span className="flex-1 bg-muted-foreground/35" />
+              </div>
             </div>
             <Link
               className={iconTextButtonClassName(

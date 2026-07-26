@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ToeicRunResult } from "@/entities/toeic/api/types";
+import type { ToeicRunResult } from "@/entities/toeic-runtime/model/presentation";
 import {
   clearStoredAccessToken,
   setStoredAccessToken,

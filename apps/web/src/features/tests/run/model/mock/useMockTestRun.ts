@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toAnswerMap } from "@/entities/toeic/lib/runState";
-import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import { toAnswerMap } from "@/entities/toeic-runtime/model/answerState";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
 import { useMockRunQuery } from "@/features/tests/run/model/mock/useMockRunQuery";
 import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRunSubmission";

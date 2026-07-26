@@ -57,6 +57,15 @@ export type CatalogWordsPage = {
 export type OxfordCollectionMeta = {
   band: string;
   itemCount: number;
+  parts: OxfordPartProgress[];
+};
+
+export type OxfordPartProgress = {
+  part: number;
+  itemCount: number;
+  masteredCount: number;
+  learningCount: number;
+  newCount: number;
 };
 
 export type OxfordPart = {
@@ -240,13 +249,30 @@ function parseCatalogWordsPage(body: unknown): CatalogWordsPage {
 function parseOxfordCollectionMeta(body: unknown): OxfordCollectionMeta {
   if (!isRecord(body)) invalidApiResponse();
 
-  const { band, itemCount } = body;
+  const { band, itemCount, parts } = body;
 
-  if (!isString(band) || !isNumber(itemCount)) {
+  if (!isString(band) || !isNumber(itemCount) || !Array.isArray(parts)) {
     invalidApiResponse();
   }
 
-  return { band, itemCount };
+  return {
+    band,
+    itemCount,
+    parts: parts.map((part) => {
+      if (
+        !isRecord(part) ||
+        !isNumber(part.part) ||
+        !isNumber(part.itemCount) ||
+        !isNumber(part.masteredCount) ||
+        !isNumber(part.learningCount) ||
+        !isNumber(part.newCount)
+      ) {
+        invalidApiResponse();
+      }
+
+      return part as OxfordPartProgress;
+    }),
+  };
 }
 
 function parseOxfordPart(body: unknown): OxfordPart {

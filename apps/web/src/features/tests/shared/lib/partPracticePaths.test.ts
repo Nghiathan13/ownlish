@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  getPartPracticeRunApiPath,
   getPartPracticeRunPath,
   getTestsOverviewPath,
   getTestsOverviewRedirectTarget,
@@ -24,15 +23,6 @@ describe("partPracticePaths", () => {
     expect(getPartPracticeRunPath(SESSION_ID, "practice", 3)).toBe(
       `/tests/part-practice/${SESSION_ID}?mode=practice&part=3`,
     );
-  });
-
-  it("builds aggregate API paths", () => {
-    expect(getPartPracticeRunApiPath(SESSION_ID)).toBe(
-      `/tests/part-practice/runs/${SESSION_ID}`,
-    );
-    expect(
-      getPartPracticeRunApiPath(SESSION_ID, { mode: "review_wrong" }),
-    ).toBe(`/tests/part-practice/runs/${SESSION_ID}?mode=review_wrong`);
   });
 
   it("builds canonical tests overview paths", () => {

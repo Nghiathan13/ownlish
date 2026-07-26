@@ -3,7 +3,7 @@ import {
   isPracticeAnswerGraded,
   type PracticeAnswer,
 } from "@/features/tests/run/lib/practiceAnswers";
-import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 import {
   showsOptionTranslation,
   showsQuestionTranslation,

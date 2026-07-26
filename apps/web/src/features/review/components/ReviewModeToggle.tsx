@@ -7,9 +7,8 @@ import { KeyboardIcon } from "@/shared/ui/icons/KeyboardIcon";
 
 export type ReviewMode = "flashcard" | "typing";
 
-/** Fixed rail width keeps the card column stable across loading and session states. */
 export const REVIEW_MODE_RAIL_CLASS_NAME =
-  "box-border w-[84px] shrink-0 self-start border border-transparent dark:border-border";
+  "box-border w-max shrink-0 self-start";
 
 type ReviewModeToggleProps = {
   mode: ReviewMode;
@@ -19,8 +18,10 @@ type ReviewModeToggleProps = {
 
 function getModeButtonClassName(isActive: boolean) {
   return classNames(
-    "inline-flex w-full cursor-pointer flex-col items-center gap-1 rounded-md px-1 py-1.5 text-xs hover:bg-hover-overlay",
-    isActive && "bg-muted",
+    "inline-flex w-full cursor-pointer flex-col items-center gap-1 rounded-md p-2 text-xs",
+    isActive
+      ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+      : "hover:bg-hover-overlay",
   );
 }
 
@@ -35,7 +36,7 @@ export function ReviewModeToggle({
   return (
     <div
       className={classNames(
-        "flex gap-1 rounded-lg bg-surface p-1 shadow-card",
+        "flex gap-1 rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]",
         REVIEW_MODE_RAIL_CLASS_NAME,
         isVertical ? "flex-col" : "mx-auto",
       )}

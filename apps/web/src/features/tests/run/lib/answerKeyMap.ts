@@ -1,4 +1,4 @@
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 
 export type OptionKey = "A" | "B" | "C" | "D";
 

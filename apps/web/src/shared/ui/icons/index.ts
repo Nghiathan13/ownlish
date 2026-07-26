@@ -7,6 +7,7 @@ export { CameraIcon } from "./CameraIcon";
 export { DeleteIcon } from "./DeleteIcon";
 export { EditIcon } from "./EditIcon";
 export { EmailIcon } from "./EmailIcon";
+export { MasterIcon } from "./MasterIcon";
 export { PasswordIcon } from "./PasswordIcon";
 export { RemoveIcon } from "./RemoveIcon";
 export { SearchIcon } from "./SearchIcon";

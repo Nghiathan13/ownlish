@@ -2,15 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  buildPartPracticeTestIdMap,
-  PartPracticeStepContent,
-} from "@/features/tests/run/components/PartPracticeStepContent";
+import { PartPracticeStepContent } from "@/features/tests/run/components/PartPracticeStepContent";
 import { PracticeContinuousShell } from "@/features/tests/run/components/PracticeContinuousShell";
 import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import {
   buildAggregatePracticeRunSteps,
   type PracticeRunStep,
@@ -83,11 +80,6 @@ export function PartPracticeRunView({
   const selectedParts = useMemo(
     () => (partNumber > 0 ? [partNumber] : []),
     [partNumber],
-  );
-
-  const testIdByGroupId = useMemo(
-    () => buildPartPracticeTestIdMap(practice.groups),
-    [practice.groups],
   );
 
   const steps = useMemo(
@@ -299,7 +291,6 @@ export function PartPracticeRunView({
         practice={practice}
         sessionId={practice.sessionId}
         step={currentStep}
-        testIdByGroupId={testIdByGroupId}
       />
     </PracticeContinuousShell>
   );

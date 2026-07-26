@@ -23,7 +23,7 @@ export function WordsSearch({
         id="words-search"
         aria-label={t("wordsTable.searchAria")}
         className={classNames(
-          "rounded-lg border border-border bg-surface px-4 py-2 pl-11 pr-4 text-sm shadow-card focus:border-primary",
+          "rounded-lg border border-border bg-surface px-4 py-2 pl-11 pr-4 text-sm focus:border-primary",
         )}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}

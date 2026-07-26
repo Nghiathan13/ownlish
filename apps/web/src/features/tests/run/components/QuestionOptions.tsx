@@ -1,4 +1,4 @@
-import type { ToeicQuestionOptions } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionOptions } from "@/entities/toeic-runtime/model/presentation";
 import { BilingualTranslationText } from "@/features/tests/run/components/BilingualTranslationText";
 import { classNames } from "@/shared/lib/classNames";
 import { CircleIcon } from "@/shared/ui/icons/CircleIcon";

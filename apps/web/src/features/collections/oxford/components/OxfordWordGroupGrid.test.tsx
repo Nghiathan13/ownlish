@@ -4,10 +4,15 @@ import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 import { OxfordWordGroupGrid } from "./OxfordWordGroupGrid";
 
 describe("OxfordWordGroupGrid", () => {
-  it("renders 48 A1 groups and preserves the final 17-word range", () => {
+  it("renders 48 A1 groups including the final part", () => {
     render(
       <LocaleProvider>
-        <OxfordWordGroupGrid band="A1" itemCount={957} onOpenPart={() => {}} />
+        <OxfordWordGroupGrid
+          band="A1"
+          itemCount={957}
+          onOpenPart={() => {}}
+          partProgress={[]}
+        />
       </LocaleProvider>,
     );
 
@@ -24,7 +29,6 @@ describe("OxfordWordGroupGrid", () => {
     );
     expect(screen.getByRole("heading", { name: "A1 - Part 48" }))
       .toHaveTextContent("A1 - Part 48");
-    expect(screen.getByText("17 words")).toBeInTheDocument();
   });
 
   it("opens a part locally for a plain primary click", () => {
@@ -36,6 +40,7 @@ describe("OxfordWordGroupGrid", () => {
           band="A1"
           itemCount={20}
           onOpenPart={onOpenPart}
+          partProgress={[]}
         />
       </LocaleProvider>,
     );
@@ -46,5 +51,30 @@ describe("OxfordWordGroupGrid", () => {
 
     expect(onOpenPart).toHaveBeenCalledTimes(1);
     expect(onOpenPart).toHaveBeenCalledWith(1);
+  });
+
+  it("shows mastered, learning, and new counts in that order", () => {
+    render(
+      <LocaleProvider>
+        <OxfordWordGroupGrid
+          band="A1"
+          itemCount={20}
+          onOpenPart={() => {}}
+          partProgress={[
+            {
+              part: 1,
+              itemCount: 20,
+              masteredCount: 3,
+              learningCount: 5,
+              newCount: 12,
+            },
+          ]}
+        />
+      </LocaleProvider>,
+    );
+
+    expect(screen.getByText("3 Mastered")).toBeInTheDocument();
+    expect(screen.getByText("5 Learning")).toBeInTheDocument();
+    expect(screen.getByText("12 New")).toBeInTheDocument();
   });
 });

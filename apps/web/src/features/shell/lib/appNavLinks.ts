@@ -56,16 +56,6 @@ export const APP_NAV_LINKS: AppNavLink[] = [
   },
 ];
 
-export const ADMIN_NAV_LINKS: AppNavLink[] = [
-  {
-    href: "/admin/toeic",
-    labelKey: "nav.tests",
-    activeMatch: "/admin/toeic",
-    icon: TestsNavIcon,
-    activeIcon: TestsNavFillIcon,
-  },
-];
-
 export function getAppNavLinksForUser(): AppNavLink[] {
   return APP_NAV_LINKS;
 }
@@ -97,7 +87,9 @@ export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
   const isActive = isAppNavLinkActive(pathname, link);
 
   return `text-base font-normal text-foreground ${
-    isActive ? "bg-muted" : ""
+    isActive
+      ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+      : "hover:bg-hover-overlay"
   }`;
 }
 
@@ -119,15 +111,3 @@ export const TESTS_SUB_LINKS: TestsSubLink[] = [
     tab: "part_practice",
   },
 ];
-
-export function isTestsSubLinkActive(
-  pathname: string,
-  currentTab: TestsOverviewTab,
-  subLink: TestsSubLink,
-): boolean {
-  if (!pathname.startsWith("/tests")) {
-    return false;
-  }
-
-  return currentTab === subLink.tab;
-}

@@ -37,13 +37,14 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
       <ReviewStudySession
         error={review.error}
         isSubmitting={review.isSubmitting}
-        key={review.currentWord.id}
+        key={`${mode}:${review.currentWord.id}`}
         level={review.currentWord.progress?.level ?? 0}
         mode={mode}
         onAgain={() => review.gradeCurrentWord("FORGET")}
         onEasy={() => review.gradeCurrentWord("EASY")}
         onGood={() => review.gradeCurrentWord("GOOD")}
         onHard={() => review.gradeCurrentWord("HARD")}
+        onMaster={() => review.gradeCurrentWord("MASTER")}
         reviewedCount={review.reviewedCount}
         totalWords={review.totalWords}
         word={toOxfordReviewStudyWord(review.currentWord)}
@@ -59,12 +60,12 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
 }
 
 function ReviewLoading() {
-  return <div className="h-[480px] animate-pulse rounded-lg bg-surface shadow-card dark:border dark:border-border" />;
+  return <div className="h-[480px] animate-pulse rounded-lg border border-border bg-surface dark:bg-[#000000]" />;
 }
 
 function ReviewError({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
-    <div className="grid h-[480px] place-items-center rounded-lg bg-surface p-6 text-center shadow-card dark:border dark:border-border">
+    <div className="grid h-[480px] place-items-center rounded-lg border border-border bg-surface p-6 text-center dark:bg-[#000000]">
       <div className="max-w-md">
         <p className="text-sm font-semibold text-danger">Review could not load</p>
         <p className="mt-3 leading-7 text-muted-foreground">{error}</p>
@@ -82,7 +83,7 @@ function ReviewError({ error, onRetry }: { error: string; onRetry: () => void })
 
 function ReviewComplete({ band, part }: OxfordPartReviewSessionProps) {
   return (
-    <div className="grid h-[480px] place-items-center rounded-lg bg-surface p-6 text-center shadow-card dark:border dark:border-border">
+    <div className="grid h-[480px] place-items-center rounded-lg border border-border bg-surface p-6 text-center dark:bg-[#000000]">
       <div className="max-w-md">
         <p className="text-sm font-semibold text-muted-foreground">Part complete</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight">Nice work.</h1>

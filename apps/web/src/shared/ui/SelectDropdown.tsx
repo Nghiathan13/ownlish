@@ -111,8 +111,10 @@ export function SelectDropdown<T extends string | number>({
                 <button
                   aria-selected={isSelected}
                   className={classNames(
-                    "flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-hover-overlay",
-                    isSelected && "bg-muted",
+                    "flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-left text-sm text-foreground",
+                    isSelected
+                      ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+                      : "hover:bg-hover-overlay",
                   )}
                   key={String(option.value)}
                   onClick={() => {

@@ -74,7 +74,9 @@ export function ReviewRouteWorkspace() {
       if (isAuthenticated && userId) {
         if (category === "oxford") {
           void Promise.all([
-            queryClient.prefetchQuery(getOxfordCollectionMetaQueryOptions("A1")),
+            queryClient.prefetchQuery(
+              getOxfordCollectionMetaQueryOptions(userId, "A1"),
+            ),
             queryClient.prefetchQuery(
               getOxfordPartReviewQueryOptions(userId, "A1", 1),
             ),

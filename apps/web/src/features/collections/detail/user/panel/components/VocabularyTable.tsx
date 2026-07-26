@@ -115,7 +115,7 @@ export function VocabularyTable({
               <article
                 key={getDefinitionRowKey(row)}
                 className={classNames(
-                  "flex min-w-0 flex-col gap-3 rounded-xl border border-surface bg-surface p-4 shadow-card dark:border-border",
+                  "flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-surface p-4",
                   definition && "cursor-pointer",
                 )}
                 onClick={

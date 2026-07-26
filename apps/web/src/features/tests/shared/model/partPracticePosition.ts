@@ -1,4 +1,4 @@
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 
 export function getPartPracticePositionStorageKey(
   partNumber: number,

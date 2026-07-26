@@ -12,7 +12,7 @@ import {
   useRegisterImmersiveExit,
   useRegisterImmersiveFinish,
 } from "@/features/shell/providers/ImmersiveToolbarProvider";
-import type { ToeicQuestionGroup } from "@/features/tests/shared/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPathFromYearValue,
@@ -422,7 +422,7 @@ export function MockRunView({
   }
 
   const navigation = canNavigate ? (
-    <div className="relative z-50 shrink-0 bg-surface p-4 shadow-card-up dark:border-t dark:border-border">
+    <div className="relative z-50 shrink-0 border-t border-border bg-surface p-4">
       <PracticeNavigationButtons
         currentQuestionNumber={currentQuestionNumber}
         nextDisabled={activeGroupIndex >= groups.length - 1}

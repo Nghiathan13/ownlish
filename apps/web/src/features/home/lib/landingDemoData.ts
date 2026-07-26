@@ -1,4 +1,4 @@
-import type { ContentEvidenceSegment } from "@/entities/toeic/api/types";
+import type { ContentEvidenceSegment } from "@/entities/toeic-runtime/model/presentation";
 
 export const LANDING_VOCAB_DEMO_WORD = {
   word: "negotiate",

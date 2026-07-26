@@ -31,11 +31,13 @@ export function OxfordCollections({
     bandParam,
     groupParam,
     isAuthenticated,
+    userId: user?.id ?? null,
   });
   const metaQuery = useOxfordCollectionMetaQuery({
     band: navigation.band,
     enabled: navigation.group === null && !navigation.shouldResetPath,
     isAuthenticated,
+    userId: user?.id ?? null,
   });
 
   if (navigation.shouldResetPath) {
@@ -55,7 +57,7 @@ export function OxfordCollections({
   }
 
   const overviewHeader = (
-    <div className="my-4 flex flex-wrap items-center gap-4 px-4 lg:my-8 lg:px-16">
+    <div className="my-3 flex flex-col gap-3 px-4 lg:gap-6 lg:my-6 lg:px-16">
       <CollectionCategorySelect
         activeCategory="oxford"
         onCategoryChange={onCategoryChange}
@@ -103,6 +105,7 @@ export function OxfordCollections({
       <OxfordWordGroupGrid
         band={navigation.band}
         itemCount={metaQuery.meta.itemCount}
+        partProgress={metaQuery.meta.parts}
         onOpenPart={navigation.navigatePart}
       />
     </>

@@ -6,9 +6,9 @@ import {
   finishRuntimeMockRun,
   submitRuntimeAnswer,
 } from "@/entities/toeic-runtime/api/runtime";
-import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
-import { updateQuestionSelection } from "@/entities/toeic/lib/runState";
+import { updateQuestionSelection } from "@/entities/toeic-runtime/model/answerState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {

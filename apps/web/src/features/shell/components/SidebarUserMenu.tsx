@@ -143,7 +143,7 @@ export function SidebarUserMenu({
             event.stopPropagation();
           }}
           className={classNames(
-            "absolute bottom-full left-0 z-50 mb-2 min-w-56 cursor-default rounded-2xl border border-surface bg-surface p-2 shadow-card dark:border-border",
+            "absolute bottom-full left-0 z-50 mb-2 min-w-56 cursor-default rounded-2xl border border-border bg-surface p-2",
             !collapsed && "right-0",
           )}
         >

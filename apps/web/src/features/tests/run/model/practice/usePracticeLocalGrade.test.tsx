@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic/api/types";
+import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import { usePracticeLocalGrade } from "@/features/tests/run/model/practice/usePracticeLocalGrade";
 import {
   createQueryClientWrapper,

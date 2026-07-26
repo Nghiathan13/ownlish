@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import { ALL_TOEIC_PART_NUMBERS } from "@/features/tests/shared/lib/toeicParts";
 import { parsePracticeOverviewPartParam } from "@/features/tests/shared/lib/partPracticePaths";
 import { usePartPracticeOverviewList } from "@/features/tests/overview/hooks/usePartPracticeOverviewList";

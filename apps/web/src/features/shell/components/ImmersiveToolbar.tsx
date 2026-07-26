@@ -33,7 +33,7 @@ export function ImmersiveToolbar() {
   const timerLabel = showsFinish ? finishContext?.timerLabel : null;
 
   return (
-    <nav className="sticky top-0 z-50 w-full shrink-0 bg-surface shadow-card backdrop-blur-md dark:border-b dark:border-border">
+    <nav className="sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface backdrop-blur-md">
       <div
         className={classNames(
           APP_CONTAINER_CLASS,

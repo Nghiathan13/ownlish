@@ -7,7 +7,7 @@ import { DownIcon } from "@/shared/ui/icons/DownIcon";
 import { UpIcon } from "@/shared/ui/icons/UpIcon";
 
 export const practiceSurfaceFrameClassName =
-  "rounded-xl bg-surface text-base text-foreground shadow-card select-text dark:border dark:border-border";
+  "rounded-xl border border-border bg-surface text-base text-foreground select-text";
 
 type PracticeTranslationCardProps = {
   children: ReactNode;

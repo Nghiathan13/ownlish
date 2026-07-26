@@ -4,10 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
-import { isAdminUser } from "@/features/auth/lib/isAdminUser";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
 import {
-  ADMIN_NAV_LINKS,
   APP_NAV_LINKS,
   getAppSidebarLinkClass,
   isAppNavLinkActive,
@@ -65,7 +63,6 @@ export function MobileTopNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, updateProfile, user } = useAuthSession();
-  const isAdmin = isAdminUser(user);
   const navRef = useRef<HTMLElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -126,7 +123,7 @@ export function MobileTopNav() {
           isAtTop ? "top-4 mt-4" : "top-2 mt-0",
         )}
       >
-        <div className="pointer-events-auto flex items-center justify-between rounded-[16px] bg-surface p-2 shadow-card dark:border dark:border-border">
+        <div className="pointer-events-auto flex items-center justify-between rounded-[16px] border border-border bg-surface p-2">
           <Link
             aria-label="EngVocab"
             className="flex items-center px-2 hover:opacity-80"
@@ -171,7 +168,7 @@ export function MobileTopNav() {
                   aria-current={isActive ? "page" : undefined}
                   className={classNames(
                     getAppSidebarLinkClass(pathname, link),
-                    "flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
+                    "flex items-center gap-2 rounded-lg px-2 py-2",
                   )}
                   href={link.href}
                   key={link.href}
@@ -184,31 +181,6 @@ export function MobileTopNav() {
               );
             })}
 
-            {isAdmin
-              ? ADMIN_NAV_LINKS.map((link) => {
-                  const isActive = isAppNavLinkActive(pathname, link);
-                  const Icon = isActive ? link.activeIcon : link.icon;
-
-                  return (
-                    <Link
-                      aria-current={isActive ? "page" : undefined}
-                      className={classNames(
-                        getAppSidebarLinkClass(pathname, link),
-                        "flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-hover-overlay",
-                      )}
-                      href={link.href}
-                      key={link.href}
-                      onClick={() => setMenuOpen(false)}
-                      scroll={false}
-                    >
-                      <Icon className="size-6 shrink-0" />
-                      <span>
-                        {t("shell.admin")} {t(link.labelKey)}
-                      </span>
-                    </Link>
-                  );
-                })
-              : null}
           </div>
 
           {user ? (

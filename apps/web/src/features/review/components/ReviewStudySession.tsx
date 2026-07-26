@@ -19,20 +19,13 @@ type ReviewStudySessionProps = {
   onEasy: () => void;
   onGood: () => void;
   onHard: () => void;
+  onMaster: () => void;
   reviewedCount: number;
   totalWords: number;
   word: ReviewStudyWord;
 };
 
 export function ReviewStudySession({
-  mode,
-  word,
-  ...props
-}: ReviewStudySessionProps) {
-  return <ReviewStudySessionContent key={`${mode}-${word.id}`} mode={mode} word={word} {...props} />;
-}
-
-function ReviewStudySessionContent({
   error = null,
   errorHint = "Choose a rating again to retry.",
   isSubmitting,
@@ -41,6 +34,7 @@ function ReviewStudySessionContent({
   onEasy,
   onGood,
   onHard,
+  onMaster,
   reviewedCount,
   totalWords,
   mode,
@@ -139,6 +133,8 @@ function ReviewStudySessionContent({
     <>
       {isTypingMode ? (
         <ReviewTypingCard
+          disabled={isSubmitting}
+          onMaster={onMaster}
           onTypedAnswerChange={setTypedAnswer}
           reviewedCount={reviewedCount}
           totalWords={totalWords}
@@ -152,6 +148,8 @@ function ReviewStudySessionContent({
         />
       ) : (
         <ReviewCard
+          disabled={isSubmitting}
+          onMaster={onMaster}
           onToggleMeaning={() => setShowMeaning((current) => !current)}
           reviewedCount={reviewedCount}
           showMeaning={showMeaning}

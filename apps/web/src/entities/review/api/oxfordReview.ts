@@ -7,7 +7,7 @@ import {
   isString,
 } from "@/shared/lib/parse";
 
-export type OxfordReviewRating = "FORGET" | "HARD" | "GOOD" | "EASY";
+export type OxfordReviewRating = "FORGET" | "HARD" | "GOOD" | "EASY" | "MASTER";
 
 export type OxfordWordProgress = {
   level: number;

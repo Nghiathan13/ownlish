@@ -1,4 +1,4 @@
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 
 export function getTestPracticeGroupStorageKey(

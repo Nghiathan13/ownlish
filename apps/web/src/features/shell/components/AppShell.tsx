@@ -8,6 +8,8 @@ import { GuestTopNav } from "@/features/shell/components/GuestTopNav";
 import { MobileTopNav } from "@/features/shell/components/MobileTopNav";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { getShellLayoutMode } from "@/features/shell/lib/shellRoutes";
+import { isImmersiveTestPath } from "@/features/tests/shared/lib/isImmersiveTestPath";
+import { classNames } from "@/shared/lib/classNames";
 
 type AppShellProps = {
   children: ReactNode;
@@ -24,7 +26,12 @@ export function AppShell({ children }: AppShellProps) {
 
   if (layoutMode === "immersive") {
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className={classNames(
+          "flex min-h-0 flex-1 flex-col",
+          isImmersiveTestPath(pathname) && "bg-[#f0f0f0] dark:bg-background",
+        )}
+      >
         <ImmersiveToolbar />
         {children}
       </div>

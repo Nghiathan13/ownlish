@@ -8,7 +8,7 @@ import {
   invalidatePartPracticeOverview,
 } from "@/entities/toeic-runtime/model/cache";
 import { materializePartPracticeSession } from "@/entities/toeic-runtime/model/materializePartPracticeSession";
-import type { PracticeMode } from "@/entities/toeic/api/types";
+import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import {
   getToeicCatalogDocument,
 } from "@/entities/toeic-catalog/api/catalog";

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ContentEvidenceSegment } from "@/entities/toeic/api/types";
+import type { ContentEvidenceSegment } from "@/entities/toeic-runtime/model/presentation";
 import { contentEvidenceSegmentsHaveEvidence } from "@/entities/toeic-runtime/model/transcriptEvidenceSegments";
 import { PassageContent } from "@/features/tests/run/components/PassageContent";
 import { PracticeTranslationCard } from "@/features/tests/run/components/PracticeTranslationCard";

@@ -1,11 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  collectionCategoryTabs,
-  type CollectionCategory,
-} from "@/entities/collection/lib/collectionDisplay";
-import { SelectDropdown } from "@/shared/ui/SelectDropdown";
+import type { CollectionCategory } from "@/entities/collection/lib/collectionDisplay";
+import { CollectionCategoryTabs } from "@/features/collections/shared/components/CollectionCategoryTabs";
+import { useT } from "@/shared/providers/LocaleProvider";
 
 type ReviewCategorySelectProps = {
   activeCategory: CollectionCategory;
@@ -20,13 +18,14 @@ export function ReviewCategorySelect({
   activeCategory,
   onCategoryChange,
 }: ReviewCategorySelectProps) {
+  const t = useT();
   const router = useRouter();
 
   return (
-    <SelectDropdown
-      ariaLabel="Review category"
-      className="w-[200px]"
-      onChange={(category) => {
+    <CollectionCategoryTabs
+      activeCategory={activeCategory}
+      ariaLabel={t("collections.categoryAria")}
+      onCategoryChange={(category) => {
         const path = getReviewCategoryPath(category);
 
         if (onCategoryChange) {
@@ -40,11 +39,6 @@ export function ReviewCategorySelect({
 
         router.push(path, { scroll: false });
       }}
-      options={collectionCategoryTabs.map((category) => ({
-        label: category.label,
-        value: category.key,
-      }))}
-      value={activeCategory}
     />
   );
 }

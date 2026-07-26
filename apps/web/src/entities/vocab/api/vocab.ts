@@ -7,7 +7,7 @@ import {
   isString,
 } from "@/shared/lib/parse";
 
-export type ReviewRating = "FORGET" | "HARD" | "GOOD" | "EASY";
+export type ReviewRating = "FORGET" | "HARD" | "GOOD" | "EASY" | "MASTER";
 
 export type UserVocabularyEntry = {
   id: string;

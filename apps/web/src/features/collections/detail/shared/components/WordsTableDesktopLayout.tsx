@@ -21,7 +21,7 @@ export function WordsTableDesktopLayout({
   return (
     <div
       className={classNames(
-        "mx-4 mb-4 hidden h-0 min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl bg-surface shadow-card lg:flex dark:border dark:border-border",
+        "mx-4 mb-4 hidden h-0 min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-surface lg:flex",
         className,
       )}
     >

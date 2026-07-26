@@ -23,8 +23,8 @@ export function getCollectionCatalogWordsQueryKey(
   return ["collection-catalog-words", { userId, collectionId, offset, limit }] as const;
 }
 
-export function getOxfordCollectionMetaQueryKey(band: string) {
-  return ["oxford-collection-meta", { band }] as const;
+export function getOxfordCollectionMetaQueryKey(userId: string | null, band: string) {
+  return ["oxford-collection-meta", { userId, band }] as const;
 }
 
 export function getOxfordPartQueryKey(band: string, part: number) {

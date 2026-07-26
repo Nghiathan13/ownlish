@@ -1,4 +1,4 @@
-import type { ToeicQuestion } from "@/features/tests/shared/api/types";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 
 export type PracticeAnswer = Pick<
   ToeicQuestion,

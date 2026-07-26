@@ -2,11 +2,11 @@
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ToeicQuestionGroup } from "@/entities/toeic/api/types";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import {
   applyGradedAnswer,
   applySelectionOnly,
-} from "@/entities/toeic/lib/runState";
+} from "@/entities/toeic-runtime/model/answerState";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 
 type UsePracticeLocalGradeParams = {

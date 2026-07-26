@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { ToeicQuestion } from "@/entities/toeic/api/types";
+import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
 import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
 import { useDeferredGroupAnswerFlow } from "@/features/tests/run/model/practice/useDeferredGroupAnswerFlow";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";

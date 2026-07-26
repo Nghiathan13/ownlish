@@ -1,4 +1,4 @@
-import type { ContentEvidenceSegment } from "@/entities/toeic/api/types";
+import type { ContentEvidenceSegment } from "@/entities/toeic-runtime/model/presentation";
 
 export function contentEvidenceSegmentsHaveEvidence(
   segments: ContentEvidenceSegment[] | null | undefined,

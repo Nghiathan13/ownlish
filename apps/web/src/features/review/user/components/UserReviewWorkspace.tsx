@@ -88,13 +88,14 @@ export function UserReviewWorkspace({ onCategoryChange }: UserReviewWorkspacePro
             error={review.error}
             errorHint="Choose Again or Easy to retry."
             isSubmitting={review.isSubmittingGrade}
-            key={currentWord.id}
+            key={`${mode}:${currentWord.id}`}
             level={currentWord.level}
             mode={mode}
             onAgain={() => void review.gradeCurrentWord("FORGET")}
             onEasy={() => void review.gradeCurrentWord("EASY")}
             onGood={() => void review.gradeCurrentWord("GOOD")}
             onHard={() => void review.gradeCurrentWord("HARD")}
+            onMaster={() => void review.gradeCurrentWord("MASTER")}
             reviewedCount={review.reviewedCount}
             totalWords={review.totalWords}
             word={toReviewStudyWord(currentWord)}

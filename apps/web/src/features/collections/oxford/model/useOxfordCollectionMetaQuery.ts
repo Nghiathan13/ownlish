@@ -11,40 +11,43 @@ import { toQueryErrorMessage } from "@/features/collections/shared/lib/toQueryEr
 import { getOxfordCollectionMetaQueryOptions } from "./oxfordQueries";
 
 // Survives route remounts so the part rail does not flash skeleton on band changes.
-let lastOxfordCollectionMeta: OxfordCollectionMeta | null = null;
+const lastOxfordCollectionMetaByUser = new Map<string, OxfordCollectionMeta>();
 
 export function useOxfordCollectionMetaQuery({
   band,
   enabled = true,
   isAuthenticated,
+  userId,
 }: {
   band: OxfordBand;
   enabled?: boolean;
   isAuthenticated: boolean;
+  userId: string | null;
 }) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !userId) {
       return;
     }
 
     for (const nextBand of OXFORD_BANDS) {
-      void queryClient.prefetchQuery(getOxfordCollectionMetaQueryOptions(nextBand));
+      void queryClient.prefetchQuery(getOxfordCollectionMetaQueryOptions(userId, nextBand));
     }
-  }, [isAuthenticated, queryClient]);
+  }, [isAuthenticated, queryClient, userId]);
 
   const query = useQuery({
-    ...getOxfordCollectionMetaQueryOptions(band),
-    enabled: enabled && isAuthenticated,
-    placeholderData: (previousData) => previousData ?? lastOxfordCollectionMeta ?? undefined,
+    ...getOxfordCollectionMetaQueryOptions(userId ?? "", band),
+    enabled: enabled && isAuthenticated && Boolean(userId),
+    placeholderData: (previousData) =>
+      previousData ?? (userId ? lastOxfordCollectionMetaByUser.get(userId) : undefined),
   });
 
   useEffect(() => {
-    if (query.data) {
-      lastOxfordCollectionMeta = query.data;
+    if (query.data && userId) {
+      lastOxfordCollectionMetaByUser.set(userId, query.data);
     }
-  }, [query.data]);
+  }, [query.data, userId]);
 
   return {
     error: toQueryErrorMessage(query.error, "Cannot load Oxford collection."),
