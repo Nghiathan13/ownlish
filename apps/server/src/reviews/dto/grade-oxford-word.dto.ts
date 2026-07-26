@@ -1,12 +1,7 @@
 import { IsEnum } from 'class-validator';
-
-export enum OxfordReviewRating {
-  HARD = 'HARD',
-  GOOD = 'GOOD',
-  EASY = 'EASY',
-}
+import { REVIEW_RATINGS, type ReviewRating } from '../lib/review-schedule';
 
 export class GradeOxfordWordDto {
-  @IsEnum(OxfordReviewRating)
-  rating: OxfordReviewRating;
+  @IsEnum(REVIEW_RATINGS)
+  rating: ReviewRating;
 }

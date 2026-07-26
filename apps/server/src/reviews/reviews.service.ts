@@ -8,12 +8,7 @@ import {
   OXFORD_CEFR_LEVELS,
   OXFORD_DEFINITION_SOURCES,
 } from '../collections/collections.constants';
-import { OxfordReviewRating } from './dto/grade-oxford-word.dto';
-
-type OxfordReviewProgress = {
-  level: number;
-  nextReviewAt: Date;
-};
+import { type ReviewRating, scheduleReview } from './lib/review-schedule';
 
 @Injectable()
 export class ReviewsService {
@@ -33,6 +28,8 @@ export class ReviewsService {
           where: { userId },
           select: {
             level: true,
+            wrongCount: true,
+            lastReviewAt: true,
             nextReviewAt: true,
           },
         },
@@ -49,7 +46,10 @@ export class ReviewsService {
     const items = entries.flatMap((entry) => {
       const progress = entry.progress[0] ?? null;
 
-      if (progress && progress.nextReviewAt > now) {
+      if (
+        progress?.level === 7 ||
+        (progress?.nextReviewAt && progress.nextReviewAt > now)
+      ) {
         return [];
       }
 
@@ -87,7 +87,7 @@ export class ReviewsService {
     band: string,
     part: number,
     definitionId: string,
-    rating: OxfordReviewRating,
+    rating: ReviewRating,
   ) {
     this.assertOxfordPart(band, part);
 
@@ -107,18 +107,24 @@ export class ReviewsService {
     }
 
     const existingProgress =
-      await this.prisma.userDefinitionProgress.findUnique({
+      await this.prisma.userSystemVocabularyProgress.findUnique({
         where: {
           userId_systemEntryId: {
             userId,
             systemEntryId: definitionId,
           },
         },
-        select: { level: true },
+        select: { level: true, wrongCount: true },
       });
-    const progress = this.buildProgress(existingProgress?.level ?? 0, rating);
+    const progress = scheduleReview(
+      {
+        level: existingProgress?.level ?? 0,
+        wrongCount: existingProgress?.wrongCount ?? 0,
+      },
+      rating,
+    );
 
-    return this.prisma.userDefinitionProgress.upsert({
+    return this.prisma.userSystemVocabularyProgress.upsert({
       where: {
         userId_systemEntryId: {
           userId,
@@ -128,40 +134,24 @@ export class ReviewsService {
       create: {
         userId,
         systemEntryId: definitionId,
-        ...progress,
+        level: progress.level,
+        wrongCount: progress.wrongCount,
+        lastReviewAt: progress.lastReviewAt,
+        nextReviewAt: progress.nextReviewAt,
       },
-      update: progress,
+      update: {
+        level: progress.level,
+        wrongCount: progress.wrongCount,
+        lastReviewAt: progress.lastReviewAt,
+        nextReviewAt: progress.nextReviewAt,
+      },
       select: {
         level: true,
+        wrongCount: true,
+        lastReviewAt: true,
         nextReviewAt: true,
       },
     });
-  }
-
-  private buildProgress(
-    level: number,
-    rating: OxfordReviewRating,
-  ): OxfordReviewProgress {
-    const nextReviewAt = new Date();
-
-    if (rating === OxfordReviewRating.HARD) {
-      nextReviewAt.setHours(nextReviewAt.getHours() + 8);
-      return { level, nextReviewAt };
-    }
-
-    if (rating === OxfordReviewRating.GOOD) {
-      nextReviewAt.setDate(nextReviewAt.getDate() + 1);
-      return { level, nextReviewAt };
-    }
-
-    const nextLevel = Math.min(level + 1, 4);
-    if (nextLevel === 4) {
-      nextReviewAt.setFullYear(nextReviewAt.getFullYear() + 100);
-    } else {
-      nextReviewAt.setDate(nextReviewAt.getDate() + 3);
-    }
-
-    return { level: nextLevel, nextReviewAt };
   }
 
   private assertOxfordPart(band: string, part: number) {

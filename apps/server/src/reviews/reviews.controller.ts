@@ -4,7 +4,6 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  ParseUUIDPipe,
   Post,
   Req,
   UseGuards,
@@ -33,8 +32,7 @@ export class ReviewsController {
     @Req() request: AuthRequest,
     @Param('band') band: string,
     @Param('part', ParseIntPipe) part: number,
-    @Param('definitionId', new ParseUUIDPipe({ version: '4' }))
-    definitionId: string,
+    @Param('definitionId') definitionId: string,
     @Body() body: GradeOxfordWordDto,
   ): ReturnType<ReviewsService['gradeOxfordDefinition']> {
     return this.reviewsService.gradeOxfordDefinition(

@@ -201,7 +201,7 @@ describe('ToeicRunService', () => {
 
   it('delegates answer selection to the grader', async () => {
     runGraderMock.submitAnswer.mockResolvedValue({ graded: false });
-    const dto = { toeicQuestionId: 1001, selectedKey: 'B' };
+    const dto = { toeicQuestionId: 1001, selectedKey: 'B' as const };
     await expect(
       service.submitAnswer('user-id', 'run-id', dto),
     ).resolves.toEqual({ graded: false });

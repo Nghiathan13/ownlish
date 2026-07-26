@@ -1,4 +1,11 @@
-import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Matches,
+  Min,
+} from 'class-validator';
 
 export class SubmitToeicRuntimeAnswerDto {
   @IsString()
@@ -11,4 +18,9 @@ export class SubmitToeicRuntimeAnswerDto {
   @IsOptional()
   @IsIn(['review_wrong'])
   mode?: 'review_wrong';
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  remainingSeconds?: number;
 }

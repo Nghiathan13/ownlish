@@ -100,7 +100,6 @@ function entry(id: string) {
     id,
     word: 'about',
     normalizedWord: 'about',
-    sourceDefinitionId: 1001,
     sourceWordId: 101,
     type: 'adverb',
     meaningVi: 'khoảng',

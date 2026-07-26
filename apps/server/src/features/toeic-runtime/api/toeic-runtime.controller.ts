@@ -18,7 +18,9 @@ import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import type { AuthRequest } from '../../../auth/types/auth.types';
 import { CreateToeicRuntimePartPracticeRunDto } from './dto/create-part-practice-run.dto';
 import { CreateToeicRuntimeTestRunDto } from './dto/create-test-run.dto';
+import { SelectToeicRuntimeMockRunDto } from './dto/select-mock-run.dto';
 import { SubmitToeicRuntimeAnswerDto } from './dto/submit-answer.dto';
+import { UpdateMockTimerDto } from './dto/update-mock-timer.dto';
 import { ToeicRuntimeService } from '../model/toeic-runtime.service';
 
 @Controller('tests/runtime')
@@ -42,9 +44,30 @@ export class ToeicRuntimeController {
     return this.runtimeService.createPartPracticeRun(request.user.id, dto);
   }
 
+  @Post('mock-runs/prepare')
+  prepareMockRun(
+    @Req() request: AuthRequest,
+    @Body() dto: SelectToeicRuntimeMockRunDto,
+  ) {
+    return this.runtimeService.prepareMockRun(request.user.id, dto);
+  }
+
+  @Post('mock-runs/restart')
+  restartMockRun(
+    @Req() request: AuthRequest,
+    @Body() dto: SelectToeicRuntimeMockRunDto,
+  ) {
+    return this.runtimeService.restartMockRun(request.user.id, dto);
+  }
+
   @Get('test-practice-runs')
   listTestPracticeRuns(@Req() request: AuthRequest) {
     return this.runtimeService.listTestPracticeRuns(request.user.id);
+  }
+
+  @Get('mock-runs/:testKey')
+  listMockRuns(@Req() request: AuthRequest, @Param('testKey') testKey: string) {
+    return this.runtimeService.listMockRuns(request.user.id, testKey);
   }
 
   @Delete('test-practice-runs/:testKey')
@@ -102,5 +125,14 @@ export class ToeicRuntimeController {
       result.status === 'accepted' ? HttpStatus.ACCEPTED : HttpStatus.OK,
     );
     return result;
+  }
+
+  @Patch('runs/:sessionId/timer')
+  updateMockTimer(
+    @Req() request: AuthRequest,
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+    @Body() dto: UpdateMockTimerDto,
+  ) {
+    return this.runtimeService.updateMockTimer(request.user.id, sessionId, dto);
   }
 }

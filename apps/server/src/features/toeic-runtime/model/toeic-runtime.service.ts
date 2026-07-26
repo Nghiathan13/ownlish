@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -18,6 +19,8 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import type { CreateToeicRuntimePartPracticeRunDto } from '../api/dto/create-part-practice-run.dto';
 import type { CreateToeicRuntimeTestRunDto } from '../api/dto/create-test-run.dto';
 import type { SubmitToeicRuntimeAnswerDto } from '../api/dto/submit-answer.dto';
+import type { SelectToeicRuntimeMockRunDto } from '../api/dto/select-mock-run.dto';
+import type { UpdateMockTimerDto } from '../api/dto/update-mock-timer.dto';
 
 type RuntimeRun = {
   id: string;
@@ -28,6 +31,8 @@ type RuntimeRun = {
   selectedParts: number[];
   totalRight: number;
   totalWrong: number;
+  timeLimitSeconds: number | null;
+  remainingSeconds: number | null;
   finishRequestedAt: Date | null;
   completedAt: Date | null;
   answers: Array<{
@@ -38,9 +43,60 @@ type RuntimeRun = {
 };
 
 const MOCK_FINISH_RETRY_DELAYS_MS = [1_000, 2_000, 5_000] as const;
+const MOCK_PART_TIME_LIMIT_SECONDS: Record<number, number> = {
+  1: 5 * 60,
+  2: 10 * 60,
+  3: 15 * 60,
+  4: 15 * 60,
+  5: 10 * 60,
+  6: 10 * 60,
+  7: 55 * 60,
+};
 
 function normalizeParts(parts: number[]): number[] {
   return [...new Set(parts)].sort((left, right) => left - right);
+}
+
+function getMockTimeLimitSeconds(
+  parts: number[],
+  timeLimitMinutes?: number,
+): number {
+  if (timeLimitMinutes !== undefined) {
+    return timeLimitMinutes * 60;
+  }
+
+  return parts.reduce((total, partNumber) => {
+    const partTimeLimit = MOCK_PART_TIME_LIMIT_SECONDS[partNumber];
+    if (partTimeLimit === undefined) {
+      throw new BadRequestException('Selected part is unavailable.');
+    }
+
+    return total + partTimeLimit;
+  }, 0);
+}
+
+function getReadingScore(correctCount: number): number {
+  if (correctCount <= 3) {
+    return 5;
+  }
+
+  if (correctCount === 4) {
+    return 10;
+  }
+
+  return Math.min(495, correctCount * 5 - 5);
+}
+
+function getListeningScore(correctCount: number): number {
+  if (correctCount <= 0) {
+    return 5;
+  }
+
+  if (correctCount <= 75) {
+    return correctCount * 5 + 10;
+  }
+
+  return Math.min(495, correctCount * 5 + 15);
 }
 
 function formatRun(run: RuntimeRun) {
@@ -53,6 +109,15 @@ function formatRun(run: RuntimeRun) {
     selectedParts: run.selectedParts,
     correctCount: run.totalRight,
     wrongCount: run.totalWrong,
+    timer:
+      run.mode === ToeicRunMode.MOCK_TEST &&
+      run.timeLimitSeconds !== null &&
+      run.remainingSeconds !== null
+        ? {
+            timeLimitSeconds: run.timeLimitSeconds,
+            remainingSeconds: run.remainingSeconds,
+          }
+        : null,
     finish: {
       status: run.completedAt
         ? 'completed'
@@ -89,16 +154,12 @@ export class ToeicRuntimeService {
       dto.mode === 'mock_test' ? ToeicRunMode.MOCK_TEST : ToeicRunMode.PRACTICE;
     const run =
       mode === ToeicRunMode.MOCK_TEST
-        ? await this.prisma.toeicLearningRun.create({
-            data: {
-              userId,
-              scope: ToeicLearningScope.TEST,
-              testKey: dto.testKey,
-              mode,
-              selectedParts,
-            },
-            include: { answers: true },
-          })
+        ? await this.findOrCreateMockTestRun(
+            userId,
+            dto.testKey,
+            selectedParts,
+            dto.timeLimitMinutes,
+          )
         : await this.findOrCreatePracticeTestRun(
             userId,
             dto.testKey,
@@ -106,6 +167,67 @@ export class ToeicRuntimeService {
           );
 
     return formatRun(run);
+  }
+
+  async prepareMockRun(userId: string, dto: SelectToeicRuntimeMockRunDto) {
+    const selectedParts = normalizeParts(dto.partNumbers);
+    if (!(await this.gradingIndex.hasTestParts(dto.testKey, selectedParts))) {
+      throw new BadRequestException('Test or selected parts are unavailable.');
+    }
+
+    const run = await this.prisma.toeicLearningRun.findFirst({
+      where: this.openMockRunWhere(userId, dto.testKey, selectedParts),
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        selectedParts: true,
+        finishRequestedAt: true,
+      },
+    });
+    if (!run) {
+      return { status: 'available' as const };
+    }
+
+    return {
+      status: run.finishRequestedAt ? ('pending' as const) : ('open' as const),
+      run: {
+        sessionId: run.id,
+        selectedParts: run.selectedParts,
+      },
+    };
+  }
+
+  async restartMockRun(userId: string, dto: SelectToeicRuntimeMockRunDto) {
+    const selectedParts = normalizeParts(dto.partNumbers);
+    if (!(await this.gradingIndex.hasTestParts(dto.testKey, selectedParts))) {
+      throw new BadRequestException('Test or selected parts are unavailable.');
+    }
+
+    return this.prisma
+      .$transaction(async (tx) => {
+        await this.lockMockRunSelection(tx, userId, dto.testKey, selectedParts);
+        const openRuns = await tx.toeicLearningRun.findMany({
+          where: this.openMockRunWhere(userId, dto.testKey, selectedParts),
+          select: { id: true, finishRequestedAt: true },
+        });
+        if (openRuns.some((run) => run.finishRequestedAt)) {
+          throw new ConflictException('TOEIC mock test is being graded.');
+        }
+        if (openRuns.length > 0) {
+          await tx.toeicLearningRun.deleteMany({
+            where: { id: { in: openRuns.map((run) => run.id) } },
+          });
+        }
+
+        return this.createMockTestRun(
+          tx,
+          userId,
+          dto.testKey,
+          selectedParts,
+          dto.timeLimitMinutes,
+        );
+      })
+      .then(formatRun);
   }
 
   async createPartPracticeRun(
@@ -212,6 +334,68 @@ export class ToeicRuntimeService {
     return { items };
   }
 
+  async listMockRuns(userId: string, testKey: string) {
+    const runs = await this.prisma.toeicLearningRun.findMany({
+      where: {
+        userId,
+        scope: ToeicLearningScope.TEST,
+        testKey,
+        mode: ToeicRunMode.MOCK_TEST,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        selectedParts: true,
+        totalRight: true,
+        totalWrong: true,
+        finishRequestedAt: true,
+        completedAt: true,
+        answers: { select: { questionKey: true, status: true } },
+      },
+    });
+
+    return {
+      items: await Promise.all(
+        runs.map(async (run) => {
+          if (!run.completedAt) {
+            return {
+              sessionId: run.id,
+              selectedParts: run.selectedParts,
+              status: run.finishRequestedAt ? 'pending' : 'open',
+            };
+          }
+
+          const questions = await this.gradingIndex.getTestQuestions(
+            testKey,
+            run.selectedParts,
+          );
+          const listeningQuestionKeys = new Set(
+            questions
+              .filter((question) => question.partNumber <= 4)
+              .map((question) => question.questionKey),
+          );
+          const listeningCorrectCount = run.answers.filter(
+            (answer) =>
+              answer.status === ToeicRunQuestionStatus.RIGHT &&
+              listeningQuestionKeys.has(answer.questionKey),
+          ).length;
+          const readingCorrectCount = run.totalRight - listeningCorrectCount;
+          const listening = getListeningScore(listeningCorrectCount);
+          const reading = getReadingScore(readingCorrectCount);
+
+          return {
+            sessionId: run.id,
+            selectedParts: run.selectedParts,
+            correctCount: run.totalRight,
+            wrongCount: run.totalWrong,
+            score: { listening, reading, total: listening + reading },
+            status: 'completed',
+          };
+        }),
+      ),
+    };
+  }
+
   async clearTestPracticeRun(userId: string, testKey: string) {
     const result = await this.prisma.toeicLearningRun.deleteMany({
       where: {
@@ -294,7 +478,12 @@ export class ToeicRuntimeService {
     }
 
     if (run.mode === ToeicRunMode.MOCK_TEST) {
-      await this.saveMockAnswer(run.id, dto.questionKey, dto.selectedKey);
+      await this.saveMockAnswer(
+        run.id,
+        dto.questionKey,
+        dto.selectedKey,
+        dto.remainingSeconds,
+      );
       return { graded: false };
     }
 
@@ -308,25 +497,81 @@ export class ToeicRuntimeService {
   }
 
   async finishMockRun(userId: string, sessionId: string) {
+    const initial = await this.findOwnedRun(userId, sessionId);
+    if (
+      initial.scope !== ToeicLearningScope.TEST ||
+      initial.mode !== ToeicRunMode.MOCK_TEST ||
+      !initial.testKey
+    ) {
+      throw new BadRequestException('Only mock test runs can be finished.');
+    }
+    const testKey = initial.testKey;
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      await this.lockMockRunSelection(
+        tx,
+        userId,
+        testKey,
+        initial.selectedParts,
+      );
+      const run = await tx.toeicLearningRun.findFirst({
+        where: { id: sessionId, userId },
+        select: { completedAt: true, finishRequestedAt: true },
+      });
+      if (!run) {
+        throw new NotFoundException('TOEIC session not found.');
+      }
+      if (run.completedAt) {
+        return { status: 'completed' as const };
+      }
+      if (!run.finishRequestedAt) {
+        await tx.toeicLearningRun.update({
+          where: { id: sessionId },
+          data: { finishRequestedAt: new Date() },
+        });
+      }
+
+      return { status: 'accepted' as const };
+    });
+    if (result.status === 'accepted') {
+      this.scheduleMockCompletion(sessionId);
+    }
+
+    return result;
+  }
+
+  async updateMockTimer(
+    userId: string,
+    sessionId: string,
+    dto: UpdateMockTimerDto,
+  ) {
     const run = await this.findOwnedRun(userId, sessionId);
     if (
       run.scope !== ToeicLearningScope.TEST ||
       run.mode !== ToeicRunMode.MOCK_TEST
     ) {
-      throw new BadRequestException('Only mock test runs can be finished.');
-    }
-    if (run.completedAt) {
-      return { status: 'completed' as const };
+      throw new BadRequestException('Only mock test timers can be updated.');
     }
 
-    if (!run.finishRequestedAt) {
-      await this.prisma.toeicLearningRun.update({
-        where: { id: run.id },
-        data: { finishRequestedAt: new Date() },
-      });
-    }
-    this.scheduleMockCompletion(run.id);
-    return { status: 'accepted' as const };
+    return this.prisma.$transaction(async (tx) => {
+      const lockedRun = await this.lockOpenRun(tx, run.id);
+      if (lockedRun.remainingSeconds === null) {
+        throw new BadRequestException('TOEIC mock timer is unavailable.');
+      }
+
+      const remainingSeconds = Math.min(
+        lockedRun.remainingSeconds,
+        dto.remainingSeconds,
+      );
+      if (remainingSeconds !== lockedRun.remainingSeconds) {
+        await tx.toeicLearningRun.update({
+          where: { id: run.id },
+          data: { remainingSeconds },
+        });
+      }
+
+      return { remainingSeconds };
+    });
   }
 
   private async findOrCreatePracticeTestRun(
@@ -376,6 +621,85 @@ export class ToeicRuntimeService {
     });
   }
 
+  private async findOrCreateMockTestRun(
+    userId: string,
+    testKey: string,
+    selectedParts: number[],
+    timeLimitMinutes?: number,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockMockRunSelection(tx, userId, testKey, selectedParts);
+      const existing = await tx.toeicLearningRun.findFirst({
+        where: this.openMockRunWhere(userId, testKey, selectedParts),
+        orderBy: { createdAt: 'desc' },
+        include: { answers: true },
+      });
+
+      return (
+        existing ??
+        this.createMockTestRun(
+          tx,
+          userId,
+          testKey,
+          selectedParts,
+          timeLimitMinutes,
+        )
+      );
+    });
+  }
+
+  private createMockTestRun(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    testKey: string,
+    selectedParts: number[],
+    timeLimitMinutes?: number,
+  ) {
+    const timeLimitSeconds = getMockTimeLimitSeconds(
+      selectedParts,
+      timeLimitMinutes,
+    );
+
+    return tx.toeicLearningRun.create({
+      data: {
+        userId,
+        scope: ToeicLearningScope.TEST,
+        testKey,
+        mode: ToeicRunMode.MOCK_TEST,
+        selectedParts,
+        timeLimitSeconds,
+        remainingSeconds: timeLimitSeconds,
+      },
+      include: { answers: true },
+    });
+  }
+
+  private openMockRunWhere(
+    userId: string,
+    testKey: string,
+    selectedParts: number[],
+  ) {
+    return {
+      userId,
+      scope: ToeicLearningScope.TEST,
+      testKey,
+      mode: ToeicRunMode.MOCK_TEST,
+      selectedParts: { equals: selectedParts },
+      completedAt: null,
+    };
+  }
+
+  private lockMockRunSelection(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    testKey: string,
+    selectedParts: number[],
+  ) {
+    return tx.$executeRaw(
+      Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${userId}), hashtext(${`mock:${testKey}:${selectedParts.join(',')}`}))`,
+    );
+  }
+
   private findOwnedRun(userId: string, sessionId: string): Promise<RuntimeRun> {
     return this.prisma.toeicLearningRun
       .findFirst({
@@ -404,9 +728,25 @@ export class ToeicRuntimeService {
     runId: string,
     questionKey: string,
     selectedKey: string,
+    remainingSeconds?: number,
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      await this.lockOpenRun(tx, runId);
+      const run = await this.lockOpenRun(tx, runId);
+      if (run.remainingSeconds === 0) {
+        throw new BadRequestException('TOEIC mock time has expired.');
+      }
+      if (remainingSeconds !== undefined && run.remainingSeconds !== null) {
+        const nextRemainingSeconds = Math.min(
+          run.remainingSeconds,
+          remainingSeconds,
+        );
+        if (nextRemainingSeconds !== run.remainingSeconds) {
+          await tx.toeicLearningRun.update({
+            where: { id: runId },
+            data: { remainingSeconds: nextRemainingSeconds },
+          });
+        }
+      }
       await tx.toeicLearningRunAnswer.upsert({
         where: { runId_questionKey: { runId, questionKey } },
         create: {
@@ -527,9 +867,10 @@ export class ToeicRuntimeService {
         id: string;
         finishRequestedAt: Date | null;
         completedAt: Date | null;
+        remainingSeconds: number | null;
       }>
     >(
-      Prisma.sql`SELECT "id", "finish_requested_at" AS "finishRequestedAt", "completed_at" AS "completedAt" FROM "toeic_learning_runs" WHERE "id" = ${runId} FOR UPDATE`,
+      Prisma.sql`SELECT "id", "finish_requested_at" AS "finishRequestedAt", "completed_at" AS "completedAt", "remaining_seconds" AS "remainingSeconds" FROM "toeic_learning_runs" WHERE "id" = ${runId} FOR UPDATE`,
     );
     const run = rows[0];
     if (!run) {
@@ -538,6 +879,8 @@ export class ToeicRuntimeService {
     if (run.completedAt || run.finishRequestedAt) {
       throw new BadRequestException('TOEIC run is not open for answers.');
     }
+
+    return run;
   }
 
   private async recalculateTotals(tx: Prisma.TransactionClient, runId: string) {

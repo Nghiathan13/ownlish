@@ -8,7 +8,7 @@ export type VocabDefinitionBody = {
   deletedAt?: string | null;
   lastReview?: string | null;
   nextReview?: string | null;
-  sourceDefinitionId?: number;
+  systemEntryId?: string | null;
   sourceWordId?: number;
   example?: string;
   band?: string;

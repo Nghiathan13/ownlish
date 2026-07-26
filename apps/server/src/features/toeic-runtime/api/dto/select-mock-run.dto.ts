@@ -2,17 +2,16 @@ import {
   ArrayMinSize,
   ArrayUnique,
   IsArray,
-  IsIn,
   IsInt,
+  IsOptional,
   Max,
   Min,
-  IsOptional,
   IsPositive,
   IsString,
   Matches,
 } from 'class-validator';
 
-export class CreateToeicRuntimeTestRunDto {
+export class SelectToeicRuntimeMockRunDto {
   @IsString()
   @Matches(/^(ets|ybm)\d{2}-t\d{2}$/)
   testKey!: string;
@@ -23,10 +22,6 @@ export class CreateToeicRuntimeTestRunDto {
   @IsInt({ each: true })
   @IsPositive({ each: true })
   partNumbers!: number[];
-
-  @IsOptional()
-  @IsIn(['practice', 'mock_test'])
-  mode?: 'practice' | 'mock_test';
 
   @IsOptional()
   @IsInt()

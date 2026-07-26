@@ -29,8 +29,8 @@ model User {
   updatedAt           DateTime               @updatedAt @map("updated_at")
   collections         WordCollection[]
   refreshSessions     RefreshSession[]
-  vocabWords          VocabWord[]
-  definitionProgress  UserDefinitionProgress[]
+  vocabularyEntries      UserVocabularyEntry[]
+  systemVocabularyProgress UserSystemVocabularyProgress[]
   toeicRuns              ToeicRun[]
   toeicPartPracticeRuns  ToeicPartPracticeRun[]
   toeicLearningRuns      ToeicLearningRun[]
@@ -55,54 +55,38 @@ model RefreshSession {
   @@map("refresh_sessions")
 }
 
-model VocabWord {
-  id             String @id @default(uuid())
-  userId         String @map("user_id")
-  collectionId   String @map("collection_id")
+model UserVocabularyEntry {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  collectionId   String    @map("collection_id")
+  systemEntryId  String?   @map("system_entry_id")
   word           String
-  normalizedWord String @map("normalized_word")
+  normalizedWord String   @map("normalized_word")
+  type           String?
+  meaningVi      String?   @map("meaning_vi")
+  definition     String?
+  example        String?
+  exampleVi      String?   @map("example_vi")
+  ipaUk          String?   @map("ipa_uk")
+  ipaUs          String?   @map("ipa_us")
+  band           String?
+  source         String    @default("manual")
+  level          Int       @default(0)
+  wrongCount     Int       @default(0) @map("wrong_count")
+  lastReview     DateTime? @map("last_review")
+  nextReview     DateTime? @map("next_review")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  collection  WordCollection        @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  definitions VocabWordDefinition[]
+  collection  WordCollection         @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  systemEntry SystemVocabularyEntry? @relation("ImportedSystemEntry", fields: [systemEntryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([collectionId, normalizedWord])
-  @@index([userId])
-  @@index([collectionId])
-  @@index([userId, collectionId])
-  @@map("vocab_words")
-}
-
-model VocabWordDefinition {
-  id                 String    @id @default(uuid())
-  vocabWordId        String    @map("vocab_word_id")
-  sourceDefinitionId Int?      @map("source_definition_id")
-  sourceWordId       Int?      @map("source_word_id")
-  type               String?
-  meaningVi          String?   @map("meaning_vi")
-  definition         String?
-  example            String?
-  exampleVi          String?   @map("example_vi")
-  ipaUk              String?   @map("ipa_uk")
-  ipaUs              String?   @map("ipa_us")
-  band               String?
-  source             String    @default("manual")
-  level              Int       @default(0)
-  wrongCount         Int       @default(0) @map("wrong_count")
-  lastReview         DateTime? @map("last_review")
-  nextReview         DateTime? @map("next_review")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
-  deletedAt          DateTime? @map("deleted_at")
-
-  vocabWord VocabWord @relation(fields: [vocabWordId], references: [id], onDelete: Cascade)
-
-  @@unique([vocabWordId, source, sourceDefinitionId])
-  @@index([vocabWordId])
-  @@index([vocabWordId, deletedAt])
-  @@index([deletedAt, level, nextReview])
-  @@index([source, sourceDefinitionId])
-  @@map("vocab_word_definitions")
+  @@unique([collectionId, systemEntryId])
+  @@index([userId, collectionId, nextReview])
+  @@index([collectionId, normalizedWord])
+  @@index([systemEntryId])
+  @@map("user_vocabulary_entries")
 }
 
 enum WordCollectionKind {
@@ -111,10 +95,9 @@ enum WordCollectionKind {
 }
 
 model SystemVocabularyEntry {
-  id                 String   @id @default(uuid())
+  id                 String   @id
   word               String
   normalizedWord     String   @map("normalized_word")
-  sourceDefinitionId Int      @map("source_definition_id")
   sourceWordId       Int      @map("source_word_id")
   type               String
   meaningVi          String?  @map("meaning_vi")
@@ -126,12 +109,9 @@ model SystemVocabularyEntry {
   band               String
   source             String
   sortOrder          Int      @map("sort_order")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  importedEntries UserVocabularyEntry[]           @relation("ImportedSystemEntry")
+  progress        UserSystemVocabularyProgress[]
 
-  progress UserDefinitionProgress[]
-
-  @@unique([source, sourceDefinitionId])
   @@index([band, sortOrder])
   @@map("system_vocabulary_entries")
 }
@@ -150,7 +130,7 @@ model WordCollection {
   updatedAt   DateTime           @updatedAt @map("updated_at")
 
   owner        User?                   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
-  vocabWords   VocabWord[]
+  vocabularyEntries UserVocabularyEntry[]
 
   @@index([kind])
   @@index([ownerUserId])
@@ -158,18 +138,21 @@ model WordCollection {
   @@map("word_collections")
 }
 
-model UserDefinitionProgress {
-  userId              String   @map("user_id")
-  systemEntryId       String   @map("system_entry_id")
-  level               Int      @default(0) @db.SmallInt
-  nextReviewAt        DateTime @map("next_review_at") @db.Timestamptz
-  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+model UserSystemVocabularyProgress {
+  userId        String    @map("user_id")
+  systemEntryId String    @map("system_entry_id")
+  level         Int       @default(0) @db.SmallInt
+  wrongCount    Int       @default(0) @map("wrong_count")
+  lastReviewAt  DateTime? @map("last_review_at") @db.Timestamptz
+  nextReviewAt  DateTime? @map("next_review_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  systemEntry       SystemVocabularyEntry @relation(fields: [systemEntryId], references: [id], onDelete: Cascade)
+  systemEntry SystemVocabularyEntry @relation(fields: [systemEntryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, systemEntryId])
-  @@map("user_definition_progress")
+  @@index([userId, nextReviewAt])
+  @@map("user_system_vocabulary_progress")
 }
 
 enum ToeicRunMode {
@@ -203,6 +186,8 @@ model ToeicLearningRun {
   selectedParts     Int[]                    @map("selected_parts")
   totalRight        Int                      @default(0) @map("total_right")
   totalWrong        Int                      @default(0) @map("total_wrong")
+  timeLimitSeconds  Int?                     @map("time_limit_seconds")
+  remainingSeconds  Int?                     @map("remaining_seconds")
   finishRequestedAt DateTime?                @map("finish_requested_at")
   completedAt       DateTime?                @map("completed_at")
   createdAt         DateTime                 @default(now()) @map("created_at")

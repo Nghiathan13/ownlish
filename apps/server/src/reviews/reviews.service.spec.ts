@@ -1,17 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
-import { OxfordReviewRating } from './dto/grade-oxford-word.dto';
 import { ReviewsService } from './reviews.service';
 
 describe('ReviewsService', () => {
   const now = new Date('2026-07-24T10:00:00.000Z');
   const prisma = {
-    systemVocabularyEntry: {
-      findMany: jest.fn(),
-    },
-    userDefinitionProgress: {
-      findUnique: jest.fn(),
-      upsert: jest.fn(),
-    },
+    systemVocabularyEntry: { findMany: jest.fn() },
+    userSystemVocabularyProgress: { findUnique: jest.fn(), upsert: jest.fn() },
   };
   const service = new ReviewsService(prisma as never);
 
@@ -21,130 +15,116 @@ describe('ReviewsService', () => {
     jest.setSystemTime(now);
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
+  afterEach(() => jest.useRealTimers());
 
-  it('keeps the requested part fixed before filtering its due definitions', async () => {
+  it('keeps the requested part fixed before filtering due entries', async () => {
     prisma.systemVocabularyEntry.findMany.mockResolvedValue([
-      entry('definition-id', []),
-      entry('future-definition-id', [
-        { level: 2, nextReviewAt: new Date('2026-07-25T10:00:00.000Z') },
+      entry('1', []),
+      entry('2', [
+        {
+          level: 2,
+          wrongCount: 0,
+          lastReviewAt: null,
+          nextReviewAt: new Date('2026-07-25T10:00:00.000Z'),
+        },
       ]),
     ]);
 
-    await expect(service.getOxfordPart('user-id', 'A1', 2)).resolves.toEqual({
-      items: [
-        {
-          id: 'definition-id',
-          word: 'about',
-          normalizedWord: 'about',
-          definition: definitionData('definition-id'),
-          progress: null,
-        },
-      ],
+    await expect(
+      service.getOxfordPart('user-id', 'A1', 2),
+    ).resolves.toMatchObject({
+      items: [expect.objectContaining({ id: '1', progress: null })],
       limit: 20,
       offset: 20,
     });
+    expect(prisma.systemVocabularyEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 20, take: 20 }),
+    );
+  });
 
-    const calls = prisma.systemVocabularyEntry.findMany.mock
-      .calls as unknown as unknown[][];
-    const query = calls[0]?.[0] as {
-      skip: number;
-      take: number;
-      where: { band: string; source: unknown };
-    };
+  it('does not return mastered Oxford entries to the review queue', async () => {
+    prisma.systemVocabularyEntry.findMany.mockResolvedValue([
+      entry('1', [
+        {
+          level: 7,
+          wrongCount: 0,
+          lastReviewAt: new Date(),
+          nextReviewAt: null,
+        },
+      ]),
+    ]);
 
-    expect(query.skip).toBe(20);
-    expect(query.take).toBe(20);
-    expect(query.where.band).toBe('A1');
-    expect(query.where.source).toEqual({
-      in: ['oxford_3000', 'oxford_5000'],
-    });
+    await expect(
+      service.getOxfordPart('user-id', 'A1', 1),
+    ).resolves.toMatchObject({ items: [] });
   });
 
   it.each([
-    [OxfordReviewRating.HARD, 2, '2026-07-24T18:00:00.000Z'],
-    [OxfordReviewRating.GOOD, 2, '2026-07-25T10:00:00.000Z'],
-    [OxfordReviewRating.EASY, 3, '2026-07-27T10:00:00.000Z'],
-    [OxfordReviewRating.EASY, 4, '2126-07-24T10:00:00.000Z'],
-  ])(
-    'stores %s progress for one definition',
-    async (rating, expectedLevel, expectedNextReviewAt) => {
-      prisma.systemVocabularyEntry.findMany.mockResolvedValue([
-        { id: 'definition-id' },
-      ]);
-      prisma.userDefinitionProgress.findUnique.mockResolvedValue({
-        level:
-          rating === OxfordReviewRating.EASY && expectedLevel === 4 ? 3 : 2,
+    ['FORGET', 0, 3, '2026-07-24T11:46:40.000Z'],
+    ['HARD', 2, 2, '2026-07-25T04:40:00.000Z'],
+    ['GOOD', 2, 2, '2026-07-26T18:00:00.000Z'],
+    ['EASY', 3, 2, '2026-07-31T10:00:00.000Z'],
+  ] as const)(
+    'stores %s progress for a system entry',
+    async (rating, level, wrongCount, nextReviewAt) => {
+      prisma.systemVocabularyEntry.findMany.mockResolvedValue([{ id: '1' }]);
+      prisma.userSystemVocabularyProgress.findUnique.mockResolvedValue({
+        level: 2,
+        wrongCount: 2,
       });
-      prisma.userDefinitionProgress.upsert.mockResolvedValue({
-        level: expectedLevel,
-        nextReviewAt: new Date(expectedNextReviewAt),
+      prisma.userSystemVocabularyProgress.upsert.mockResolvedValue({
+        level,
+        wrongCount,
+        nextReviewAt: new Date(nextReviewAt),
       });
 
-      await service.gradeOxfordDefinition(
-        'user-id',
-        'A1',
-        1,
-        'definition-id',
-        rating,
-      );
+      await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', rating);
 
-      const calls = prisma.userDefinitionProgress.upsert.mock
-        .calls as unknown as unknown[][];
-      const input = calls[0]?.[0] as {
-        create: {
-          systemEntryId: string;
-          level: number;
-          nextReviewAt: Date;
-          userId: string;
-        };
-      };
-
+      const [input] = prisma.userSystemVocabularyProgress.upsert.mock
+        .calls[0] as unknown as [
+        {
+          create: {
+            userId: string;
+            systemEntryId: string;
+            level: number;
+            wrongCount: number;
+            nextReviewAt: Date;
+          };
+        },
+      ];
       expect(input.create).toMatchObject({
         userId: 'user-id',
-        systemEntryId: 'definition-id',
-        level: expectedLevel,
-        nextReviewAt: new Date(expectedNextReviewAt),
+        systemEntryId: '1',
+        level,
+        wrongCount,
+        nextReviewAt: new Date(nextReviewAt),
       });
     },
   );
 
-  it('does not grade a definition outside the requested Oxford part', async () => {
-    prisma.systemVocabularyEntry.findMany.mockResolvedValue([
-      { id: 'another-definition-id' },
-    ]);
+  it('does not grade an entry outside the requested Oxford part', async () => {
+    prisma.systemVocabularyEntry.findMany.mockResolvedValue([{ id: '2' }]);
 
     await expect(
-      service.gradeOxfordDefinition(
-        'user-id',
-        'A1',
-        1,
-        'definition-id',
-        OxfordReviewRating.GOOD,
-      ),
+      service.gradeOxfordDefinition('user-id', 'A1', 1, '1', 'GOOD'),
     ).rejects.toBeInstanceOf(NotFoundException);
-    expect(prisma.userDefinitionProgress.upsert).not.toHaveBeenCalled();
+    expect(prisma.userSystemVocabularyProgress.upsert).not.toHaveBeenCalled();
   });
 });
 
 function entry(
   id: string,
-  progress: Array<{ level: number; nextReviewAt: Date }>,
+  progress: Array<{
+    level: number;
+    wrongCount: number;
+    lastReviewAt: Date | null;
+    nextReviewAt: Date | null;
+  }>,
 ) {
   return {
-    ...definitionData(id),
+    id,
     word: 'about',
     normalizedWord: 'about',
-    sortOrder: 1,
-    progress,
-  };
-}
-
-function definitionData(id: string) {
-  return {
-    id,
     type: 'preposition',
     meaningVi: 'về',
     definition: null,
@@ -154,5 +134,7 @@ function definitionData(id: string) {
     ipaUs: null,
     band: 'A1',
     source: 'oxford_3000',
+    sortOrder: 1,
+    progress,
   };
 }

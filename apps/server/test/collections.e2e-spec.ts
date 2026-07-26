@@ -30,6 +30,7 @@ describe('CollectionsController (e2e)', () => {
   const email = 'collections-e2e@example.com';
   const password = 'test123456';
   const normalizedWord = 'e2e-catalog-word';
+  const systemEntryId = 'e2e-catalog-entry';
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -63,9 +64,9 @@ describe('CollectionsController (e2e)', () => {
 
     await prisma.systemVocabularyEntry.create({
       data: {
+        id: systemEntryId,
         word: 'e2e catalog word',
         normalizedWord,
-        sourceDefinitionId: 999001,
         sourceWordId: 999001,
         type: 'noun',
         meaningVi: 'tu e2e',
@@ -259,7 +260,7 @@ describe('CollectionsController (e2e)', () => {
         expect(updatedWord.definitions[0]).toMatchObject({
           id: importedDefinition.id,
           source: 'oxford_3000',
-          sourceDefinitionId: 999001,
+          systemEntryId,
           sourceWordId: 999001,
           example: 'This is an e2e catalog word.',
           band: 'A1',
@@ -353,7 +354,6 @@ describe('CollectionsController (e2e)', () => {
           id: catalogDefinitionId,
           word: partialImportWord,
           normalizedWord: partialImportNormalizedWord,
-          sourceDefinitionId: 999101,
           sourceWordId: 999101,
           type: 'noun',
           meaningVi: 'tu chon',
@@ -362,9 +362,9 @@ describe('CollectionsController (e2e)', () => {
           sortOrder: 99_901,
         },
         {
+          id: 'oxford-def-e2e-partial-import-second',
           word: partialImportWord,
           normalizedWord: partialImportNormalizedWord,
-          sourceDefinitionId: 999102,
           sourceWordId: 999101,
           type: 'verb',
           meaningVi: 'tu bo qua',
@@ -405,7 +405,7 @@ describe('CollectionsController (e2e)', () => {
       word: partialImportWord,
       definitions: [
         expect.objectContaining({
-          sourceDefinitionId: 999101,
+          systemEntryId: catalogDefinitionId,
           type: 'noun',
           meaningVi: 'tu chon',
         }),

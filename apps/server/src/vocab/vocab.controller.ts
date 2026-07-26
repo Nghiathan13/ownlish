@@ -90,19 +90,11 @@ export class VocabController {
     return this.vocabService.update(request.user.id, id, dto);
   }
 
-  @Delete('definitions/:id')
-  softDeleteDefinition(
-    @Req() request: AuthRequest,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): ReturnType<VocabService['softDeleteDefinition']> {
-    return this.vocabService.softDeleteDefinition(request.user.id, id);
-  }
-
   @Delete(':id')
-  softDelete(
+  delete(
     @Req() request: AuthRequest,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ): ReturnType<VocabService['softDelete']> {
-    return this.vocabService.softDelete(request.user.id, id);
+  ): ReturnType<VocabService['delete']> {
+    return this.vocabService.delete(request.user.id, id);
   }
 }
