@@ -136,49 +136,51 @@ export function OxfordGroupWordsPanel({
 
   return (
     <>
-      <div className="m-4 flex flex-row items-center justify-between gap-2">
-        <div className="flex flex-row items-center gap-2">
-          <Link
-            className={collectionsBackButtonClassName}
-            href={getOxfordPath(band)}
-            onClick={(event) => {
-              if (!shouldHandleOxfordNavigation(event)) {
-                return;
-              }
-
-              event.preventDefault();
-              onBack();
+      <div className="m-4 flex flex-row items-center justify-start gap-2">
+        {canImport && selectedCount > 0 ? (
+          <button
+            className={iconTextButtonClassName(
+              "w-fit shrink-0 border-success-border bg-success-background text-success hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+            )}
+            disabled={isImporting || query.isLoading || words.length === 0}
+            onClick={() => {
+              void handleImport(
+                selectedDefinitions.map((item) => item.definition.id),
+              );
             }}
-            prefetch={false}
+            type="button"
           >
-            {t("collections.back")}
-          </Link>
-          {canImport && selectedCount > 0 ? (
-            <button
-              className={iconTextButtonClassName(
-                "w-fit shrink-0",
-                "border-foreground bg-foreground text-background",
-              )}
-              disabled={isImporting || query.isLoading || words.length === 0}
-              onClick={() => {
-                void handleImport(
-                  selectedDefinitions.map((item) => item.definition.id),
-                );
+            {importLabel}
+          </button>
+        ) : (
+          <>
+            <Link
+              className={collectionsBackButtonClassName}
+              href={getOxfordPath(band)}
+              onClick={(event) => {
+                if (!shouldHandleOxfordNavigation(event)) {
+                  return;
+                }
+
+                event.preventDefault();
+                onBack();
               }}
-              type="button"
+              prefetch={false}
             >
-              {importLabel}
-            </button>
-          ) : null}
-        </div>
-        <WordsColumnPicker
-          columnVisibility={columnVisibility}
-          columns={CATALOG_TOGGLEABLE_COLUMNS.map((column) => ({
-            id: column.id,
-            label: t(column.labelKey),
-          }))}
-          onToggleColumn={toggleColumn}
-        />
+              {t("collections.back")}
+            </Link>
+            <div className="ml-auto">
+              <WordsColumnPicker
+                columnVisibility={columnVisibility}
+                columns={CATALOG_TOGGLEABLE_COLUMNS.map((column) => ({
+                  id: column.id,
+                  label: t(column.labelKey),
+                }))}
+                onToggleColumn={toggleColumn}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {resultMessage ? (

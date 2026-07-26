@@ -6,7 +6,7 @@ import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
 
 export const collectionsBackButtonClassName = iconTextButtonClassName(
-  "w-fit shrink-0 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+  "w-fit shrink-0 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:bg-[#000000]",
 );
 
 export function BackToCollectionsLink() {

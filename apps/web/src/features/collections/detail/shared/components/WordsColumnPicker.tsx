@@ -61,7 +61,7 @@ export function WordsColumnPicker<Id extends string>({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         className={iconTextButtonClassName(
-          "w-fit shrink-0 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+          "w-fit shrink-0 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:bg-[#000000]",
         )}
         onClick={() => setIsOpen((current) => !current)}
       >
@@ -74,7 +74,7 @@ export function WordsColumnPicker<Id extends string>({
           id={menuId}
           role="menu"
           aria-label={t("wordsTable.toggleColumns")}
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 min-w-[12rem] rounded-lg border border-border bg-surface p-1"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 min-w-[12rem] rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]"
         >
           {columns.map((column) => {
             const isVisible = columnVisibility[column.id];

@@ -69,34 +69,18 @@ export function CollectionWordsPanelBody({
 
   return (
     <>
-      <div className="mt-4 mb-4 flex shrink-0 flex-row flex-wrap items-center gap-2 px-4">
-        <BackToCollectionsLink />
-        <button
-          type="button"
-          className={iconTextButtonClassName(
-            "w-fit shrink-0 border-transparent text-white",
-            "[background:linear-gradient(180deg,#001651_0%,#0040F0_100%)]",
-            "[box-shadow:inset_0_-1.5px_2px_0_#638DFF,inset_0_0_10px_0_#0043FB,inset_0_0_8px_0_#0043FB]",
-            "hover:[background:linear-gradient(180deg,#001E8A_9%,#013EFF_100%)]",
-            "hover:[box-shadow:inset_0_-0.5px_1px_0_#5CCEFF,inset_0_-1px_3px_0_#5CCEFF,inset_0_-1.5px_5px_0_#5CC3FF,inset_0_0_12px_0_#0055DB,inset_0_0_10px_0_#0055DB]",
-          )}
-          onClick={() => setIsAddWordOpen(true)}
-        >
-          <AddIcon />
-          {t("wordsTable.addWord")}
-        </button>
-        <WordsSearch search={search} onSearchChange={setSearch} />
-        <WordsColumnPicker
-          columnVisibility={columnVisibility}
-          columns={columns}
-          onToggleColumn={toggleColumn}
-        />
+      <div
+        className={
+          selectedDefinitions.length > 0
+            ? "mt-4 mb-4 flex shrink-0 flex-row items-center justify-end px-4"
+            : "mt-4 mb-4 flex shrink-0 flex-row flex-wrap items-center gap-2 px-4"
+        }
+      >
         {selectedDefinitions.length > 0 ? (
           <button
             type="button"
             className={iconTextButtonClassName(
-              "w-fit shrink-0",
-              "border-foreground bg-foreground text-background",
+              "w-fit shrink-0 border-danger-border bg-danger-background text-danger hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
             )}
             onClick={() => setIsBulkDeleteOpen(true)}
           >
@@ -105,7 +89,31 @@ export function CollectionWordsPanelBody({
               count: selectedDefinitions.length,
             })}
           </button>
-        ) : null}
+        ) : (
+          <>
+            <BackToCollectionsLink />
+            <button
+              type="button"
+              className={iconTextButtonClassName(
+                "w-fit shrink-0 border-transparent text-white",
+                "[background:linear-gradient(180deg,#001651_0%,#0040F0_100%)]",
+                "[box-shadow:inset_0_-1.5px_2px_0_#638DFF,inset_0_0_10px_0_#0043FB,inset_0_0_8px_0_#0043FB]",
+                "hover:[background:linear-gradient(180deg,#001E8A_9%,#013EFF_100%)]",
+                "hover:[box-shadow:inset_0_-0.5px_1px_0_#5CCEFF,inset_0_-1px_3px_0_#5CCEFF,inset_0_-1.5px_5px_0_#5CC3FF,inset_0_0_12px_0_#0055DB,inset_0_0_10px_0_#0055DB]",
+              )}
+              onClick={() => setIsAddWordOpen(true)}
+            >
+              <AddIcon />
+              {t("wordsTable.addWord")}
+            </button>
+            <WordsSearch search={search} onSearchChange={setSearch} />
+            <WordsColumnPicker
+              columnVisibility={columnVisibility}
+              columns={columns}
+              onToggleColumn={toggleColumn}
+            />
+          </>
+        )}
       </div>
 
       {isAddWordOpen ? (

@@ -14,7 +14,7 @@ import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 const paginationSurfaceButtonClassName = iconOnlyButtonClassName(
-  "border border-border bg-surface text-foreground enabled:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+  "border border-border bg-surface text-foreground enabled:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:bg-[#000000]",
 );
 
 type WordsPaginationProps = {
@@ -83,8 +83,11 @@ export function WordsPagination({
           ariaLabel={t("wordsTable.wordsPerPage")}
           className="w-fit"
           hideIcon
+          menuAlign="left"
+          menuOrientation="horizontal"
           menuPlacement="top"
           onChange={onPageSizeChange}
+          optionClassName="h-8 rounded-md px-2.5 text-base font-normal"
           options={pageSizeOptions}
           triggerClassName="h-8 rounded-md px-2.5 text-base font-normal"
           value={pageSize}

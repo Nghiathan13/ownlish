@@ -21,9 +21,9 @@ type WordsTableHeadProps = {
 };
 
 const headerCellClassName =
-  "sticky top-0 z-10 bg-surface px-2 py-2 align-middle font-semibold shadow-[inset_0_-0.6px_0_0_var(--border)]";
+  "sticky top-0 z-10 bg-[#f0f0f0] px-2 py-2 align-middle font-semibold shadow-[inset_0_-0.6px_0_0_var(--border)] dark:bg-surface";
 const checkboxHeaderClassName =
-  "sticky top-0 z-10 bg-surface w-10 px-3 py-2 align-middle shadow-[inset_0_-0.6px_0_0_var(--border)]";
+  "sticky top-0 z-10 w-10 bg-[#f0f0f0] px-3 py-2 align-middle shadow-[inset_0_-0.6px_0_0_var(--border)] dark:bg-surface";
 
 export function WordsTableHead({
   columns,

@@ -80,35 +80,44 @@ export function SystemCollectionWordsPanelBody({
 
   return (
     <>
-      <div className="mb-4 flex shrink-0 flex-col gap-2 px-4 sm:flex-row sm:items-center">
-        {canImport ? (
+      <div className="mb-4 flex shrink-0 flex-row items-center gap-2 px-4">
+        {canImport && selectedCount > 0 ? (
           <button
             className={iconTextButtonClassName(
-              "w-fit shrink-0",
-              "border-foreground bg-foreground text-background",
+              "w-fit shrink-0 border-success-border bg-success-background text-success hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
             )}
             disabled={isImporting}
             onClick={() => {
-              if (selectedCount > 0) {
-                void handleImportSelectedClick();
-                return;
-              }
-
-              void handleImportAllClick();
+              void handleImportSelectedClick();
             }}
             type="button"
           >
             {importLabel}
           </button>
-        ) : null}
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <WordsSearch onSearchChange={setSearch} search={search} />
-          <WordsColumnPicker
-            columnVisibility={columnVisibility}
-            columns={columns}
-            onToggleColumn={toggleColumn}
-          />
-        </div>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <WordsSearch onSearchChange={setSearch} search={search} />
+            <WordsColumnPicker
+              columnVisibility={columnVisibility}
+              columns={columns}
+              onToggleColumn={toggleColumn}
+            />
+            {canImport ? (
+              <button
+                className={iconTextButtonClassName(
+                  "w-fit shrink-0 border-success-border bg-success-background text-success hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+                )}
+                disabled={isImporting}
+                onClick={() => {
+                  void handleImportAllClick();
+                }}
+                type="button"
+              >
+                {importLabel}
+              </button>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {importResultMessage ? (

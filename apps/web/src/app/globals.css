@@ -35,7 +35,7 @@
 [data-theme="dark"] {
   color-scheme: dark;
   --background: #000000;
-  --surface: #1c1c1e;
+  --surface: #272727;
   --foreground: rgba(255, 255, 255, 0.87);
   --muted-foreground: rgba(255, 255, 255, 0.6);
   --primary: #4769e5;
@@ -53,7 +53,7 @@
   --information-background: color-mix(in srgb, var(--primary) 15%, transparent);
   --information-border: color-mix(in srgb, var(--information) 60%, transparent);
   --border: rgba(255, 255, 255, 0.24);
-  --hover-overlay: rgba(255, 255, 255, 0.12);
+  --hover-overlay: rgba(255, 255, 255, 0.15);
   --hover-overlay-solid: rgba(0, 0, 0, 0.09);
   --hover-on-surface: color-mix(in srgb, white 9%, var(--surface));
   --shadow-card: none;
