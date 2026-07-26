@@ -8,7 +8,7 @@ import {
   OXFORD_CEFR_LEVELS,
   OXFORD_DEFINITION_SOURCES,
 } from '../collections/collections.constants';
-import { type ReviewRating, scheduleReview } from './lib/review-schedule';
+import { type ReviewAction, scheduleReview } from './lib/review-schedule';
 
 @Injectable()
 export class ReviewsService {
@@ -87,7 +87,7 @@ export class ReviewsService {
     band: string,
     part: number,
     definitionId: string,
-    rating: ReviewRating,
+    rating: ReviewAction,
   ) {
     this.assertOxfordPart(band, part);
 

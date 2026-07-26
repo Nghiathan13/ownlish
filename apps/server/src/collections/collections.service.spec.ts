@@ -78,14 +78,26 @@ describe('CollectionsService', () => {
   });
 
   it('loads Oxford metadata and each part from system entries', async () => {
-    prisma.systemVocabularyEntry.count.mockResolvedValue(957);
-    prisma.systemVocabularyEntry.findMany.mockResolvedValue([
-      entry('entry-id'),
-    ]);
+    prisma.systemVocabularyEntry.findMany
+      .mockResolvedValueOnce([
+        entry('new-entry'),
+        entry('learning-entry', 2),
+        entry('mastered-entry', 7),
+      ])
+      .mockResolvedValueOnce([entry('entry-id')]);
 
-    await expect(service.getOxfordMeta('A1')).resolves.toEqual({
+    await expect(service.getOxfordMeta('user-id', 'A1')).resolves.toEqual({
       band: 'A1',
-      itemCount: 957,
+      itemCount: 3,
+      parts: [
+        {
+          part: 1,
+          itemCount: 3,
+          masteredCount: 1,
+          learningCount: 1,
+          newCount: 1,
+        },
+      ],
     });
     await expect(service.getOxfordPart('A1', 2)).resolves.toMatchObject({
       items: [{ id: 'entry-id', definitions: [{ id: 'entry-id' }] }],
@@ -95,7 +107,7 @@ describe('CollectionsService', () => {
   });
 });
 
-function entry(id: string) {
+function entry(id: string, level?: number) {
   return {
     id,
     word: 'about',
@@ -111,5 +123,6 @@ function entry(id: string) {
     band: 'A1',
     source: 'oxford_3000',
     sortOrder: 1,
+    progress: level === undefined ? [] : [{ level }],
   };
 }

@@ -41,9 +41,10 @@ export class CollectionsController {
 
   @Get('oxford/:band/meta')
   getOxfordMeta(
+    @Req() request: AuthRequest,
     @Param('band') band: string,
   ): ReturnType<CollectionsService['getOxfordMeta']> {
-    return this.collectionsService.getOxfordMeta(band);
+    return this.collectionsService.getOxfordMeta(request.user.id, band);
   }
 
   @Get('oxford/:band/parts/:part')

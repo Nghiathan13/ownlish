@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import {
   Prisma,
-  ToeicLearningScope,
+  ToeicRunScope,
   ToeicRunMode,
   ToeicRunQuestionStatus,
 } from '@prisma/client';
@@ -24,7 +24,7 @@ import type { UpdateMockTimerDto } from '../api/dto/update-mock-timer.dto';
 
 type RuntimeRun = {
   id: string;
-  scope: ToeicLearningScope;
+  scope: ToeicRunScope;
   testKey: string | null;
   partNumber: number | null;
   mode: ToeicRunMode;
@@ -102,7 +102,7 @@ function getListeningScore(correctCount: number): number {
 function formatRun(run: RuntimeRun) {
   return {
     sessionId: run.id,
-    scope: run.scope === ToeicLearningScope.TEST ? 'test' : 'part_practice',
+    scope: run.scope === ToeicRunScope.TEST ? 'test' : 'part_practice',
     testKey: run.testKey,
     partNumber: run.partNumber,
     mode: run.mode === ToeicRunMode.MOCK_TEST ? 'mock_test' : 'practice',
@@ -175,7 +175,7 @@ export class ToeicRuntimeService {
       throw new BadRequestException('Test or selected parts are unavailable.');
     }
 
-    const run = await this.prisma.toeicLearningRun.findFirst({
+    const run = await this.prisma.toeicRun.findFirst({
       where: this.openMockRunWhere(userId, dto.testKey, selectedParts),
       orderBy: { createdAt: 'desc' },
       select: {
@@ -206,7 +206,7 @@ export class ToeicRuntimeService {
     return this.prisma
       .$transaction(async (tx) => {
         await this.lockMockRunSelection(tx, userId, dto.testKey, selectedParts);
-        const openRuns = await tx.toeicLearningRun.findMany({
+        const openRuns = await tx.toeicRun.findMany({
           where: this.openMockRunWhere(userId, dto.testKey, selectedParts),
           select: { id: true, finishRequestedAt: true },
         });
@@ -214,7 +214,7 @@ export class ToeicRuntimeService {
           throw new ConflictException('TOEIC mock test is being graded.');
         }
         if (openRuns.length > 0) {
-          await tx.toeicLearningRun.deleteMany({
+          await tx.toeicRun.deleteMany({
             where: { id: { in: openRuns.map((run) => run.id) } },
           });
         }
@@ -242,10 +242,10 @@ export class ToeicRuntimeService {
       await tx.$executeRaw(
         Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${userId}), hashtext(${`part:${dto.partNumber}`}))`,
       );
-      const existing = await tx.toeicLearningRun.findFirst({
+      const existing = await tx.toeicRun.findFirst({
         where: {
           userId,
-          scope: ToeicLearningScope.PART_PRACTICE,
+          scope: ToeicRunScope.PART_PRACTICE,
           partNumber: dto.partNumber,
           mode: ToeicRunMode.PRACTICE,
         },
@@ -254,10 +254,10 @@ export class ToeicRuntimeService {
 
       return (
         existing ??
-        tx.toeicLearningRun.create({
+        tx.toeicRun.create({
           data: {
             userId,
-            scope: ToeicLearningScope.PART_PRACTICE,
+            scope: ToeicRunScope.PART_PRACTICE,
             partNumber: dto.partNumber,
             selectedParts: [dto.partNumber],
           },
@@ -270,10 +270,10 @@ export class ToeicRuntimeService {
   }
 
   async listTestPracticeRuns(userId: string) {
-    const runs = await this.prisma.toeicLearningRun.findMany({
+    const runs = await this.prisma.toeicRun.findMany({
       where: {
         userId,
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         mode: ToeicRunMode.PRACTICE,
       },
       include: { answers: { select: { questionKey: true, status: true } } },
@@ -335,10 +335,10 @@ export class ToeicRuntimeService {
   }
 
   async listMockRuns(userId: string, testKey: string) {
-    const runs = await this.prisma.toeicLearningRun.findMany({
+    const runs = await this.prisma.toeicRun.findMany({
       where: {
         userId,
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey,
         mode: ToeicRunMode.MOCK_TEST,
       },
@@ -397,10 +397,10 @@ export class ToeicRuntimeService {
   }
 
   async clearTestPracticeRun(userId: string, testKey: string) {
-    const result = await this.prisma.toeicLearningRun.deleteMany({
+    const result = await this.prisma.toeicRun.deleteMany({
       where: {
         userId,
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey,
         mode: ToeicRunMode.PRACTICE,
       },
@@ -410,10 +410,10 @@ export class ToeicRuntimeService {
   }
 
   async listPartPracticeRuns(userId: string) {
-    const runs = await this.prisma.toeicLearningRun.findMany({
+    const runs = await this.prisma.toeicRun.findMany({
       where: {
         userId,
-        scope: ToeicLearningScope.PART_PRACTICE,
+        scope: ToeicRunScope.PART_PRACTICE,
         mode: ToeicRunMode.PRACTICE,
       },
       include: { answers: { select: { status: true } } },
@@ -434,10 +434,10 @@ export class ToeicRuntimeService {
       throw new BadRequestException('Part is unavailable.');
     }
 
-    const result = await this.prisma.toeicLearningRun.deleteMany({
+    const result = await this.prisma.toeicRun.deleteMany({
       where: {
         userId,
-        scope: ToeicLearningScope.PART_PRACTICE,
+        scope: ToeicRunScope.PART_PRACTICE,
         partNumber,
         mode: ToeicRunMode.PRACTICE,
       },
@@ -499,7 +499,7 @@ export class ToeicRuntimeService {
   async finishMockRun(userId: string, sessionId: string) {
     const initial = await this.findOwnedRun(userId, sessionId);
     if (
-      initial.scope !== ToeicLearningScope.TEST ||
+      initial.scope !== ToeicRunScope.TEST ||
       initial.mode !== ToeicRunMode.MOCK_TEST ||
       !initial.testKey
     ) {
@@ -514,7 +514,7 @@ export class ToeicRuntimeService {
         testKey,
         initial.selectedParts,
       );
-      const run = await tx.toeicLearningRun.findFirst({
+      const run = await tx.toeicRun.findFirst({
         where: { id: sessionId, userId },
         select: { completedAt: true, finishRequestedAt: true },
       });
@@ -525,7 +525,7 @@ export class ToeicRuntimeService {
         return { status: 'completed' as const };
       }
       if (!run.finishRequestedAt) {
-        await tx.toeicLearningRun.update({
+        await tx.toeicRun.update({
           where: { id: sessionId },
           data: { finishRequestedAt: new Date() },
         });
@@ -547,7 +547,7 @@ export class ToeicRuntimeService {
   ) {
     const run = await this.findOwnedRun(userId, sessionId);
     if (
-      run.scope !== ToeicLearningScope.TEST ||
+      run.scope !== ToeicRunScope.TEST ||
       run.mode !== ToeicRunMode.MOCK_TEST
     ) {
       throw new BadRequestException('Only mock test timers can be updated.');
@@ -564,7 +564,7 @@ export class ToeicRuntimeService {
         dto.remainingSeconds,
       );
       if (remainingSeconds !== lockedRun.remainingSeconds) {
-        await tx.toeicLearningRun.update({
+        await tx.toeicRun.update({
           where: { id: run.id },
           data: { remainingSeconds },
         });
@@ -583,10 +583,10 @@ export class ToeicRuntimeService {
       await tx.$executeRaw(
         Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${userId}), hashtext(${`test:${testKey}`}))`,
       );
-      const existing = await tx.toeicLearningRun.findFirst({
+      const existing = await tx.toeicRun.findFirst({
         where: {
           userId,
-          scope: ToeicLearningScope.TEST,
+          scope: ToeicRunScope.TEST,
           testKey,
           mode: ToeicRunMode.PRACTICE,
         },
@@ -594,10 +594,10 @@ export class ToeicRuntimeService {
       });
 
       if (!existing) {
-        return tx.toeicLearningRun.create({
+        return tx.toeicRun.create({
           data: {
             userId,
-            scope: ToeicLearningScope.TEST,
+            scope: ToeicRunScope.TEST,
             testKey,
             selectedParts,
           },
@@ -613,7 +613,7 @@ export class ToeicRuntimeService {
         return existing;
       }
 
-      return tx.toeicLearningRun.update({
+      return tx.toeicRun.update({
         where: { id: existing.id },
         data: { selectedParts: nextParts },
         include: { answers: true },
@@ -629,7 +629,7 @@ export class ToeicRuntimeService {
   ) {
     return this.prisma.$transaction(async (tx) => {
       await this.lockMockRunSelection(tx, userId, testKey, selectedParts);
-      const existing = await tx.toeicLearningRun.findFirst({
+      const existing = await tx.toeicRun.findFirst({
         where: this.openMockRunWhere(userId, testKey, selectedParts),
         orderBy: { createdAt: 'desc' },
         include: { answers: true },
@@ -660,10 +660,10 @@ export class ToeicRuntimeService {
       timeLimitMinutes,
     );
 
-    return tx.toeicLearningRun.create({
+    return tx.toeicRun.create({
       data: {
         userId,
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey,
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts,
@@ -681,7 +681,7 @@ export class ToeicRuntimeService {
   ) {
     return {
       userId,
-      scope: ToeicLearningScope.TEST,
+      scope: ToeicRunScope.TEST,
       testKey,
       mode: ToeicRunMode.MOCK_TEST,
       selectedParts: { equals: selectedParts },
@@ -701,7 +701,7 @@ export class ToeicRuntimeService {
   }
 
   private findOwnedRun(userId: string, sessionId: string): Promise<RuntimeRun> {
-    return this.prisma.toeicLearningRun
+    return this.prisma.toeicRun
       .findFirst({
         where: { id: sessionId, userId },
         include: { answers: { orderBy: { answeredAt: 'asc' } } },
@@ -718,7 +718,7 @@ export class ToeicRuntimeService {
     question: { testKey: string; partNumber: number },
     run: RuntimeRun,
   ): boolean {
-    return run.scope === ToeicLearningScope.TEST
+    return run.scope === ToeicRunScope.TEST
       ? run.testKey === question.testKey &&
           run.selectedParts.includes(question.partNumber)
       : run.partNumber === question.partNumber;
@@ -741,13 +741,13 @@ export class ToeicRuntimeService {
           remainingSeconds,
         );
         if (nextRemainingSeconds !== run.remainingSeconds) {
-          await tx.toeicLearningRun.update({
+          await tx.toeicRun.update({
             where: { id: runId },
             data: { remainingSeconds: nextRemainingSeconds },
           });
         }
       }
-      await tx.toeicLearningRunAnswer.upsert({
+      await tx.toeicRunAnswer.upsert({
         where: { runId_questionKey: { runId, questionKey } },
         create: {
           runId,
@@ -781,7 +781,7 @@ export class ToeicRuntimeService {
     let graded = false;
     await this.prisma.$transaction(async (tx) => {
       await this.lockOpenRun(tx, run.id);
-      const existing = await tx.toeicLearningRunAnswer.findUnique({
+      const existing = await tx.toeicRunAnswer.findUnique({
         where: { runId_questionKey: { runId: run.id, questionKey } },
       });
 
@@ -798,7 +798,7 @@ export class ToeicRuntimeService {
         return;
       }
 
-      await tx.toeicLearningRunAnswer.upsert({
+      await tx.toeicRunAnswer.upsert({
         where: { runId_questionKey: { runId: run.id, questionKey } },
         create: {
           runId: run.id,
@@ -815,7 +815,7 @@ export class ToeicRuntimeService {
         },
       });
 
-      const answers = await tx.toeicLearningRunAnswer.findMany({
+      const answers = await tx.toeicRunAnswer.findMany({
         where: {
           runId: run.id,
           questionKey: { in: groupQuestions.map((item) => item.questionKey) },
@@ -843,7 +843,7 @@ export class ToeicRuntimeService {
           if (!answer || answer.status === ToeicRunQuestionStatus.RIGHT) {
             return Promise.resolve();
           }
-          return tx.toeicLearningRunAnswer.update({
+          return tx.toeicRunAnswer.update({
             where: { id: answer.id },
             data: {
               status:
@@ -870,7 +870,7 @@ export class ToeicRuntimeService {
         remainingSeconds: number | null;
       }>
     >(
-      Prisma.sql`SELECT "id", "finish_requested_at" AS "finishRequestedAt", "completed_at" AS "completedAt", "remaining_seconds" AS "remainingSeconds" FROM "toeic_learning_runs" WHERE "id" = ${runId} FOR UPDATE`,
+      Prisma.sql`SELECT "id", "finish_requested_at" AS "finishRequestedAt", "completed_at" AS "completedAt", "remaining_seconds" AS "remainingSeconds" FROM "toeic_runs" WHERE "id" = ${runId} FOR UPDATE`,
     );
     const run = rows[0];
     if (!run) {
@@ -885,14 +885,14 @@ export class ToeicRuntimeService {
 
   private async recalculateTotals(tx: Prisma.TransactionClient, runId: string) {
     const [totalRight, totalWrong] = await Promise.all([
-      tx.toeicLearningRunAnswer.count({
+      tx.toeicRunAnswer.count({
         where: { runId, status: ToeicRunQuestionStatus.RIGHT },
       }),
-      tx.toeicLearningRunAnswer.count({
+      tx.toeicRunAnswer.count({
         where: { runId, status: ToeicRunQuestionStatus.WRONG },
       }),
     ]);
-    await tx.toeicLearningRun.update({
+    await tx.toeicRun.update({
       where: { id: runId },
       data: { totalRight, totalWrong },
     });
@@ -928,7 +928,7 @@ export class ToeicRuntimeService {
 
   private async completeMockRun(runId: string): Promise<boolean> {
     try {
-      const pendingRun = await this.prisma.toeicLearningRun.findUnique({
+      const pendingRun = await this.prisma.toeicRun.findUnique({
         where: { id: runId },
         select: {
           testKey: true,
@@ -952,12 +952,12 @@ export class ToeicRuntimeService {
 
       return await this.prisma.$transaction(async (tx) => {
         const rows = await tx.$queryRaw<Array<{ id: string }>>(
-          Prisma.sql`SELECT "id" FROM "toeic_learning_runs" WHERE "id" = ${runId} FOR UPDATE`,
+          Prisma.sql`SELECT "id" FROM "toeic_runs" WHERE "id" = ${runId} FOR UPDATE`,
         );
         if (!rows[0]) {
           throw new NotFoundException('TOEIC session not found.');
         }
-        const run = await tx.toeicLearningRun.findUnique({
+        const run = await tx.toeicRun.findUnique({
           where: { id: runId },
           include: { answers: true },
         });
@@ -977,7 +977,7 @@ export class ToeicRuntimeService {
               totalRight += 1;
             }
             return answer
-              ? tx.toeicLearningRunAnswer.update({
+              ? tx.toeicRunAnswer.update({
                   where: { id: answer.id },
                   data: {
                     status: isCorrect
@@ -989,7 +989,7 @@ export class ToeicRuntimeService {
               : Promise.resolve();
           }),
         );
-        await tx.toeicLearningRun.update({
+        await tx.toeicRun.update({
           where: { id: run.id },
           data: {
             totalRight,

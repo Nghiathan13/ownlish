@@ -1,10 +1,10 @@
 import { IsEnum } from 'class-validator';
 import {
-  REVIEW_RATINGS,
-  type ReviewRating,
+  REVIEW_ACTIONS,
+  type ReviewAction,
 } from '../../reviews/lib/review-schedule';
 
 export class UpdateVocabReviewDto {
-  @IsEnum(REVIEW_RATINGS)
-  rating: ReviewRating;
+  @IsEnum(REVIEW_ACTIONS)
+  rating: ReviewAction;
 }

@@ -64,6 +64,7 @@ describe('ReviewsService', () => {
     ['HARD', 2, 2, '2026-07-25T04:40:00.000Z'],
     ['GOOD', 2, 2, '2026-07-26T18:00:00.000Z'],
     ['EASY', 3, 2, '2026-07-31T10:00:00.000Z'],
+    ['MASTER', 7, 2, null],
   ] as const)(
     'stores %s progress for a system entry',
     async (rating, level, wrongCount, nextReviewAt) => {
@@ -75,7 +76,7 @@ describe('ReviewsService', () => {
       prisma.userSystemVocabularyProgress.upsert.mockResolvedValue({
         level,
         wrongCount,
-        nextReviewAt: new Date(nextReviewAt),
+        nextReviewAt: nextReviewAt ? new Date(nextReviewAt) : null,
       });
 
       await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', rating);
@@ -88,7 +89,7 @@ describe('ReviewsService', () => {
             systemEntryId: string;
             level: number;
             wrongCount: number;
-            nextReviewAt: Date;
+            nextReviewAt: Date | null;
           };
         },
       ];
@@ -97,7 +98,7 @@ describe('ReviewsService', () => {
         systemEntryId: '1',
         level,
         wrongCount,
-        nextReviewAt: new Date(nextReviewAt),
+        nextReviewAt: nextReviewAt ? new Date(nextReviewAt) : null,
       });
     },
   );

@@ -1,5 +1,5 @@
 import {
-  ToeicLearningScope,
+  ToeicRunScope,
   ToeicRunMode,
   ToeicRunQuestionStatus,
 } from '@prisma/client';
@@ -8,7 +8,7 @@ import { ToeicRuntimeService } from './toeic-runtime.service';
 function createRun(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: '11111111-1111-4111-8111-111111111111',
-    scope: ToeicLearningScope.TEST,
+    scope: ToeicRunScope.TEST,
     testKey: 'ets26-t01',
     partNumber: null,
     mode: ToeicRunMode.MOCK_TEST,
@@ -30,7 +30,7 @@ describe('ToeicRuntimeService', () => {
     const findFirst = jest.fn().mockResolvedValue(null);
     const transaction = {
       $executeRaw: jest.fn(),
-      toeicLearningRun: { create, findFirst },
+      toeicRun: { create, findFirst },
     };
     const prisma = {
       $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
@@ -53,7 +53,7 @@ describe('ToeicRuntimeService', () => {
     expect(create).toHaveBeenCalledWith({
       data: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ets26-t01',
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts: [1],
@@ -81,7 +81,7 @@ describe('ToeicRuntimeService', () => {
     );
     const transaction = {
       $executeRaw: jest.fn(),
-      toeicLearningRun: {
+      toeicRun: {
         create,
         findFirst: jest.fn().mockResolvedValue(null),
       },
@@ -103,7 +103,7 @@ describe('ToeicRuntimeService', () => {
     expect(create).toHaveBeenCalledWith({
       data: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ets26-t01',
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts: [1, 3, 7],
@@ -122,7 +122,7 @@ describe('ToeicRuntimeService', () => {
       );
     const transaction = {
       $executeRaw: jest.fn(),
-      toeicLearningRun: {
+      toeicRun: {
         create,
         findFirst: jest.fn().mockResolvedValue(null),
       },
@@ -145,7 +145,7 @@ describe('ToeicRuntimeService', () => {
     expect(create).toHaveBeenCalledWith({
       data: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ets26-t01',
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts: [1],
@@ -167,10 +167,10 @@ describe('ToeicRuntimeService', () => {
           remainingSeconds: 160,
         },
       ]),
-      toeicLearningRun: { update },
+      toeicRun: { update },
     };
     const prisma = {
-      toeicLearningRun: {
+      toeicRun: {
         findFirst: jest
           .fn()
           .mockResolvedValue(createRun({ remainingSeconds: 160 })),
@@ -220,7 +220,7 @@ describe('ToeicRuntimeService', () => {
         totalWrong: 1,
       }),
     ]);
-    const prisma = { toeicLearningRun: { findMany } };
+    const prisma = { toeicRun: { findMany } };
     const gradingIndex = {
       getQuestion: jest.fn((questionKey: string) => {
         if (questionKey === 'ets26-t01-p1-q001') {
@@ -252,7 +252,7 @@ describe('ToeicRuntimeService', () => {
     expect(findMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         mode: ToeicRunMode.PRACTICE,
       },
       include: { answers: { select: { questionKey: true, status: true } } },
@@ -261,7 +261,7 @@ describe('ToeicRuntimeService', () => {
 
   it('clears only the practice run for one catalog test key', async () => {
     const deleteMany = jest.fn().mockResolvedValue({ count: 1 });
-    const prisma = { toeicLearningRun: { deleteMany } };
+    const prisma = { toeicRun: { deleteMany } };
     const service = new ToeicRuntimeService(prisma as never, {} as never);
 
     await expect(
@@ -270,7 +270,7 @@ describe('ToeicRuntimeService', () => {
     expect(deleteMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ybm26-t01',
         mode: ToeicRunMode.PRACTICE,
       },
@@ -367,7 +367,7 @@ describe('ToeicRuntimeService', () => {
       })),
     ]);
     const service = new ToeicRuntimeService(
-      { toeicLearningRun: { findMany } } as never,
+      { toeicRun: { findMany } } as never,
       { getTestQuestions } as never,
     );
 
@@ -398,7 +398,7 @@ describe('ToeicRuntimeService', () => {
     expect(findMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ets26-t01',
         mode: ToeicRunMode.MOCK_TEST,
       },
@@ -423,7 +423,7 @@ describe('ToeicRuntimeService', () => {
       finishRequestedAt: null,
     });
     const service = new ToeicRuntimeService(
-      { toeicLearningRun: { findFirst } } as never,
+      { toeicRun: { findFirst } } as never,
       { hasTestParts: jest.fn().mockResolvedValue(true) } as never,
     );
 
@@ -442,7 +442,7 @@ describe('ToeicRuntimeService', () => {
     expect(findFirst).toHaveBeenCalledWith({
       where: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ets26-t01',
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts: { equals: [1, 2] },
@@ -462,7 +462,7 @@ describe('ToeicRuntimeService', () => {
     const deleteMany = jest.fn();
     const transaction = {
       $executeRaw: jest.fn(),
-      toeicLearningRun: {
+      toeicRun: {
         create,
         deleteMany,
         findMany: jest
@@ -493,7 +493,7 @@ describe('ToeicRuntimeService', () => {
     expect(create).toHaveBeenCalledWith({
       data: {
         userId: 'user-id',
-        scope: ToeicLearningScope.TEST,
+        scope: ToeicRunScope.TEST,
         testKey: 'ets26-t01',
         mode: ToeicRunMode.MOCK_TEST,
         selectedParts: [1],

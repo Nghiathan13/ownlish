@@ -32,8 +32,6 @@ model User {
   vocabularyEntries      UserVocabularyEntry[]
   systemVocabularyProgress UserSystemVocabularyProgress[]
   toeicRuns              ToeicRun[]
-  toeicPartPracticeRuns  ToeicPartPracticeRun[]
-  toeicLearningRuns      ToeicLearningRun[]
 
   @@map("users")
 }
@@ -160,26 +158,21 @@ enum ToeicRunMode {
   MOCK_TEST
 }
 
-enum ToeicRunGroupStatus {
-  RIGHT
-  WRONG
-}
-
 enum ToeicRunQuestionStatus {
   SELECTED
   RIGHT
   WRONG
 }
 
-enum ToeicLearningScope {
+enum ToeicRunScope {
   TEST
   PART_PRACTICE
 }
 
-model ToeicLearningRun {
+model ToeicRun {
   id                String                   @id @default(uuid())
   userId            String                   @map("user_id")
-  scope             ToeicLearningScope
+  scope             ToeicRunScope
   testKey           String?                  @map("test_key")
   partNumber        Int?                     @map("part_number")
   mode              ToeicRunMode             @default(PRACTICE)
@@ -193,15 +186,15 @@ model ToeicLearningRun {
   createdAt         DateTime                 @default(now()) @map("created_at")
   updatedAt         DateTime                 @updatedAt @map("updated_at")
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  answers           ToeicLearningRunAnswer[]
+  answers           ToeicRunAnswer[]
 
   @@index([userId])
   @@index([userId, scope, createdAt])
   @@index([finishRequestedAt, completedAt])
-  @@map("toeic_learning_runs")
+  @@map("toeic_runs")
 }
 
-model ToeicLearningRunAnswer {
+model ToeicRunAnswer {
   id          String                 @id @default(uuid())
   runId       String                 @map("run_id")
   questionKey String                 @map("question_key")
@@ -209,156 +202,9 @@ model ToeicLearningRunAnswer {
   status      ToeicRunQuestionStatus
   answeredAt  DateTime               @map("answered_at")
   gradedAt    DateTime?              @map("graded_at")
-  run         ToeicLearningRun       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run         ToeicRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@unique([runId, questionKey])
   @@index([runId, status])
-  @@map("toeic_learning_run_answers")
-}
-
-model ToeicTest {
-  id         Int                @id @default(autoincrement())
-  year       Int
-  testNumber Int                @map("test_number")
-  createdAt  DateTime           @default(now()) @map("created_at")
-  updatedAt  DateTime           @updatedAt @map("updated_at")
-  parts                    ToeicTestPart[]
-  toeicRuns                ToeicRun[]
-
-  @@unique([year, testNumber])
-  @@map("toeic_tests")
-}
-
-model ToeicTestPart {
-  id         Int                  @id @default(autoincrement())
-  testId     Int                  @map("test_id")
-  partNumber Int                  @map("part_number")
-  createdAt  DateTime             @default(now()) @map("created_at")
-  updatedAt  DateTime             @updatedAt @map("updated_at")
-  test       ToeicTest            @relation(fields: [testId], references: [id], onDelete: Cascade)
-  groups     ToeicQuestionGroup[]
-
-  @@unique([testId, partNumber])
-  @@index([testId])
-  @@map("toeic_test_parts")
-}
-
-model ToeicQuestionGroup {
-  id               Int             @id @default(autoincrement())
-  testPartId       Int             @map("test_part_id")
-  questionStart    Int             @map("question_start")
-  questionEnd      Int             @map("question_end")
-  groupType        String?         @map("group_type")
-  accent           String?
-  content          String?
-  contentVi        String?         @map("content_vi")
-  audioStoragePath String?         @map("audio_storage_path")
-  imageStoragePath String?         @map("image_storage_path")
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
-  testPart         ToeicTestPart   @relation(fields: [testPartId], references: [id], onDelete: Cascade)
-  questions             ToeicQuestion[]
-
-  @@unique([testPartId, questionStart, questionEnd])
-  @@index([testPartId])
-  @@map("toeic_question_groups")
-}
-
-model ToeicQuestion {
-  id              Int                   @id @default(autoincrement())
-  groupId         Int                   @map("group_id")
-  questionNumber  Int                   @map("question_number")
-  question        String?
-  questionVi      String?               @map("question_vi")
-  questionType    String?               @map("question_type")
-  optionA         String?               @map("option_a")
-  optionB         String?               @map("option_b")
-  optionC         String?               @map("option_c")
-  optionD         String?               @map("option_d")
-  optionAVi       String?               @map("option_a_vi")
-  optionBVi       String?               @map("option_b_vi")
-  optionCVi       String?               @map("option_c_vi")
-  optionDVi       String?               @map("option_d_vi")
-  answerKey       String?               @map("answer_key")
-  explanationVi   String?               @map("explanation_vi")
-  createdAt       DateTime              @default(now()) @map("created_at")
-  updatedAt       DateTime              @updatedAt @map("updated_at")
-  group                ToeicQuestionGroup           @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  runAnswers           ToeicRunAnswer[]
-  partPracticeAnswers  ToeicPartPracticeAnswer[]
-
-  @@unique([groupId, questionNumber])
-  @@index([groupId])
-  @@map("toeic_questions")
-}
-
-model ToeicRun {
-  id                   String             @id @default(uuid())
-  userId               String             @map("user_id")
-  toeicTestId          Int                @map("toeic_test_id")
-  mode                 ToeicRunMode       @default(PRACTICE)
-  selectedParts        Int[]              @map("selected_parts")
-  currentQuestionIndex Int                @default(0) @map("current_question_index")
-  totalRight           Int                @default(0) @map("total_right")
-  totalWrong           Int                @default(0) @map("total_wrong")
-  completedAt          DateTime?          @map("completed_at")
-  createdAt            DateTime           @default(now()) @map("created_at")
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  test                 ToeicTest          @relation(fields: [toeicTestId], references: [id], onDelete: Cascade)
-  answers              ToeicRunAnswer[]
-
-  @@index([userId])
-  @@index([userId, toeicTestId, mode, createdAt])
-  @@index([toeicTestId])
-  @@map("toeic_runs")
-}
-
-model ToeicRunAnswer {
-  id              String                  @id @default(uuid())
-  runId           String                  @map("run_id")
-  toeicQuestionId Int                     @map("toeic_question_id")
-  selectedKey     String                  @map("selected_key")
-  status          ToeicRunQuestionStatus
-  answeredAt      DateTime                @map("answered_at")
-  gradedAt        DateTime?               @map("graded_at")
-  run             ToeicRun                @relation(fields: [runId], references: [id], onDelete: Cascade)
-  toeicQuestion   ToeicQuestion           @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)
-
-  @@unique([runId, toeicQuestionId])
-  @@index([runId, status])
   @@map("toeic_run_answers")
-}
-
-model ToeicPartPracticeRun {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  partNumber  Int      @map("part_number")
-  totalRight  Int      @default(0) @map("total_right")
-  totalWrong  Int      @default(0) @map("total_wrong")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  user    User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  answers ToeicPartPracticeAnswer[]
-
-  @@unique([userId, partNumber])
-  @@index([userId])
-  @@map("toeic_part_practice_runs")
-}
-
-model ToeicPartPracticeAnswer {
-  id              String                  @id @default(uuid())
-  runId           String                  @map("run_id")
-  toeicQuestionId Int                     @map("toeic_question_id")
-  selectedKey     String                  @map("selected_key")
-  status          ToeicRunQuestionStatus
-  answeredAt      DateTime                @map("answered_at")
-  gradedAt        DateTime?               @map("graded_at")
-
-  run           ToeicPartPracticeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
-  toeicQuestion ToeicQuestion        @relation(fields: [toeicQuestionId], references: [id], onDelete: Cascade)
-
-  @@unique([runId, toeicQuestionId])
-  @@index([runId, status])
-  @@map("toeic_part_practice_answers")
 }

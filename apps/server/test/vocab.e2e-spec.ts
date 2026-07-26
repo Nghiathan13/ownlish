@@ -97,6 +97,20 @@ describe('VocabController (e2e)', () => {
       });
 
     await request(app.getHttpServer())
+      .patch(`/vocab/${entry.id}/review`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ rating: 'MASTER' })
+      .expect(200)
+      .expect((response) => {
+        expect(parseResponseBody(response)).toMatchObject({
+          id: entry.id,
+          level: 7,
+          wrongCount: 1,
+          nextReview: null,
+        });
+      });
+
+    await request(app.getHttpServer())
       .delete(`/vocab/${entry.id}`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)

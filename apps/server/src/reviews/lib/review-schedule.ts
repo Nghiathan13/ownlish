@@ -1,6 +1,8 @@
 export const REVIEW_RATINGS = ['FORGET', 'HARD', 'GOOD', 'EASY'] as const;
+export const REVIEW_ACTIONS = [...REVIEW_RATINGS, 'MASTER'] as const;
 
 export type ReviewRating = (typeof REVIEW_RATINGS)[number];
+export type ReviewAction = (typeof REVIEW_ACTIONS)[number];
 
 type ReviewProgress = {
   level: number;
@@ -24,9 +26,18 @@ function getEasyDelayMilliseconds(level: number) {
 
 export function scheduleReview(
   progress: ReviewProgress,
-  rating: ReviewRating,
+  rating: ReviewAction,
   reviewedAt = new Date(),
 ): ScheduledReviewProgress {
+  if (rating === 'MASTER') {
+    return {
+      ...progress,
+      level: MAX_REVIEW_LEVEL,
+      lastReviewAt: reviewedAt,
+      nextReviewAt: null,
+    };
+  }
+
   if (rating === 'FORGET') {
     const level = Math.max(0, progress.level - 2);
 

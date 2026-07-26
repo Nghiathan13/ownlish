@@ -64,6 +64,13 @@ type CatalogWordsPage = {
 type OxfordCollectionMeta = {
   band: string;
   itemCount: number;
+  parts: Array<{
+    part: number;
+    itemCount: number;
+    masteredCount: number;
+    learningCount: number;
+    newCount: number;
+  }>;
 };
 
 type OxfordPart = {
@@ -366,18 +373,59 @@ export class CollectionsService {
     return { items, total, offset, limit };
   }
 
-  async getOxfordMeta(band: string): Promise<OxfordCollectionMeta> {
+  async getOxfordMeta(
+    userId: string,
+    band: string,
+  ): Promise<OxfordCollectionMeta> {
     this.assertOxfordBand(band);
 
-    const itemCount = await this.prisma.systemVocabularyEntry.count({
+    const entries = await this.prisma.systemVocabularyEntry.findMany({
       where: this.systemVocabularyWhere(band),
+      select: {
+        id: true,
+        progress: {
+          where: { userId },
+          select: { level: true },
+        },
+      },
+      orderBy: { sortOrder: 'asc' },
     });
 
-    if (itemCount === 0) {
+    if (entries.length === 0) {
       throw new NotFoundException('Oxford collection not found');
     }
 
-    return { band, itemCount };
+    const parts = entries.reduce<OxfordCollectionMeta['parts']>(
+      (result, entry, index) => {
+        const partIndex = Math.floor(index / 20);
+        let part = result[partIndex];
+        if (!part) {
+          part = {
+            part: partIndex + 1,
+            itemCount: 0,
+            masteredCount: 0,
+            learningCount: 0,
+            newCount: 0,
+          };
+          result.push(part);
+        }
+
+        part.itemCount += 1;
+        const progress = entry.progress[0];
+        if (!progress) {
+          part.newCount += 1;
+        } else if (progress.level === 7) {
+          part.masteredCount += 1;
+        } else {
+          part.learningCount += 1;
+        }
+
+        return result;
+      },
+      [],
+    );
+
+    return { band, itemCount: entries.length, parts };
   }
 
   async getOxfordPart(band: string, part: number): Promise<OxfordPart> {
