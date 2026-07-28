@@ -174,6 +174,7 @@ export function YouTubeSegmentPlayer({
           width: "100%",
           height: "100%",
           playerVars: {
+            cc_load_policy: 0,
             controls: 0,
             disablekb: 1,
             fs: 0,
