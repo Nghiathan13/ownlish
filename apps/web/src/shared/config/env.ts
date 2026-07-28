@@ -3,3 +3,6 @@ export const API_BASE_URL =
 
 export const TOEIC_CATALOG_ROOT =
   process.env.NEXT_PUBLIC_TOEIC_CATALOG_ROOT ?? "";
+
+export const DICTATION_CATALOG_ROOT =
+  process.env.NEXT_PUBLIC_DICTATION_CATALOG_ROOT ?? "";

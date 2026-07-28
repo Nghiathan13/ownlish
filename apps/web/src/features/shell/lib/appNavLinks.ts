@@ -12,6 +12,8 @@ import { CollectionsNavFillIcon } from "@/shared/ui/icons/CollectionsNavFillIcon
 import { CollectionsNavIcon } from "@/shared/ui/icons/CollectionsNavIcon";
 import { DashboardNavFillIcon } from "@/shared/ui/icons/DashboardNavFillIcon";
 import { DashboardNavIcon } from "@/shared/ui/icons/DashboardNavIcon";
+import { DictationIcon } from "@/shared/ui/icons/DictationIcon";
+import { DictationFillIcon } from "@/shared/ui/icons/DictationFillIcon";
 import { ReviewNavFillIcon } from "@/shared/ui/icons/ReviewNavFillIcon";
 import { ReviewNavIcon } from "@/shared/ui/icons/ReviewNavIcon";
 import { TestsNavFillIcon } from "@/shared/ui/icons/TestsNavFillIcon";
@@ -46,6 +48,12 @@ export const APP_NAV_LINKS: AppNavLink[] = [
     labelKey: "nav.review",
     icon: ReviewNavIcon,
     activeIcon: ReviewNavFillIcon,
+  },
+  {
+    href: "/dictation",
+    labelKey: "nav.dictation",
+    icon: DictationIcon,
+    activeIcon: DictationFillIcon,
   },
   {
     href: getTestsListPath(DEFAULT_TOEIC_YEAR),

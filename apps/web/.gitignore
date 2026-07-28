@@ -19,6 +19,7 @@
 /.next/
 /out/
 /public/toeic/
+/public/dictation/
 
 # production
 /build

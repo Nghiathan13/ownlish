@@ -12,7 +12,7 @@ export function TestsOverviewTabs() {
   const activeTab = parseTestsOverviewTab(searchParams.get("tab"));
 
   return (
-    <div className="mt-4 px-4 lg:mt-8 lg:px-16">
+    <div className="mt-3 px-4 lg:mt-6 lg:px-16">
       <UnderlineTabs
         activeKey={activeTab}
         ariaLabel={t("nav.tests")}
