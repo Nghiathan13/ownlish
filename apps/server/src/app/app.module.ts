@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { CollectionsModule } from '../collections/collections.module';
+import { DictationModule } from '../dictation/dictation.module';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { ToeicRuntimeModule } from '../features/toeic-runtime/toeic-runtime.module';
 import { UsersModule } from '../users/users.module';
@@ -14,6 +15,7 @@ import { AppService } from './app.service';
     AuthModule,
     VocabModule,
     CollectionsModule,
+    DictationModule,
     ReviewsModule,
     ToeicRuntimeModule,
   ],

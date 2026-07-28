@@ -32,8 +32,25 @@ model User {
   vocabularyEntries      UserVocabularyEntry[]
   systemVocabularyProgress UserSystemVocabularyProgress[]
   toeicRuns              ToeicRun[]
+  dictationProgress      DictationProgress[]
 
   @@map("users")
+}
+
+model DictationProgress {
+  userId             String    @map("user_id")
+  videoId            String    @map("video_id")
+  currentSegmentId   String?   @map("current_segment_id")
+  answeredSegmentIds String[]  @default([]) @map("answered_segment_ids")
+  correctCount       Int       @default(0) @map("correct_count")
+  completedAt        DateTime? @map("completed_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+  @@index([userId, updatedAt])
+  @@map("dictation_progress")
 }
 
 model RefreshSession {
