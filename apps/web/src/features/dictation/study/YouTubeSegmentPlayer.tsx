@@ -41,7 +41,12 @@ type YouTubeSegmentPlayerProps = {
   onPlaybackRateChange: (playbackRate: number) => void;
   onPlaybackStateChange: (isPlaying: boolean) => void;
   onSegmentEnd: () => void;
-  onTimeChange: (timeline: { currentTime: number; duration: number }) => void;
+  onSegmentPlaybackStarted: (seekRequestId: number) => void;
+  onTimeChange: (timeline: {
+    currentTime: number;
+    duration: number;
+    isPlaying: boolean;
+  }) => void;
   playbackCommand: { action: "pause" | "play"; id: number } | null;
   playbackRate: number;
   segmentEndMsRef: MutableRefObject<number | null>;
@@ -87,6 +92,7 @@ export function YouTubeSegmentPlayer({
   onPlaybackRateChange,
   onPlaybackStateChange,
   onSegmentEnd,
+  onSegmentPlaybackStarted,
   onTimeChange,
   playbackCommand,
   playbackRate,
@@ -97,6 +103,7 @@ export function YouTubeSegmentPlayer({
   const mountRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
   const latestSeekRequestIdRef = useRef<number | null>(null);
+  const playbackStartedSeekRequestIdRef = useRef<number | null>(null);
   const playbackRateInitializedRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
 
@@ -157,12 +164,14 @@ export function YouTubeSegmentPlayer({
 
     const { endMs, id, startSeconds } = seekRequest;
     let cancelled = false;
+    playbackStartedSeekRequestIdRef.current = null;
 
     function playAtRequestedPosition() {
       if (cancelled || latestSeekRequestIdRef.current !== id) return;
 
       window.clearInterval(confirmationTimer);
       segmentEndMsRef.current = endMs;
+      playbackStartedSeekRequestIdRef.current = id;
       player.playVideo();
     }
 
@@ -223,10 +232,17 @@ export function YouTubeSegmentPlayer({
       }
 
       if (isTimeSyncEnabled) {
-        onPlaybackStateChange(player.getPlayerState?.() === 1);
+        const isPlaying = player.getPlayerState?.() === 1;
+        const playbackStartedSeekRequestId = playbackStartedSeekRequestIdRef.current;
+        if (isPlaying && playbackStartedSeekRequestId !== null) {
+          playbackStartedSeekRequestIdRef.current = null;
+          onSegmentPlaybackStarted(playbackStartedSeekRequestId);
+        }
+        onPlaybackStateChange(isPlaying);
         onTimeChange({
           currentTime,
           duration: player.getDuration(),
+          isPlaying,
         });
       }
     }
@@ -241,6 +257,7 @@ export function YouTubeSegmentPlayer({
     isTimeSyncEnabled,
     onPlaybackStateChange,
     onSegmentEnd,
+    onSegmentPlaybackStarted,
     onTimeChange,
     playbackRate,
     segmentEndMsRef,

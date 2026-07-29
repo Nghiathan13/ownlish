@@ -75,6 +75,7 @@ export const en = {
     progress: "Progress",
     transcript: "Transcript",
     videos: "Video",
+    followVideo: "Follow video",
     start: "Start",
     continue: "Continue",
     reviewAgain: "Review again",

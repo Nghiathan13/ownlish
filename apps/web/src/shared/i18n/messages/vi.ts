@@ -77,6 +77,7 @@ export const vi = {
     progress: "Tiến độ",
     transcript: "Transcript",
     videos: "Video",
+    followVideo: "Theo dõi video",
     start: "Bắt đầu",
     continue: "Tiếp tục",
     reviewAgain: "Học lại",

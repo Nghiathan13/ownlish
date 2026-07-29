@@ -23,6 +23,8 @@ type DictationSegmentNavigationProps = {
   activeVideoId: string;
   answeredSegmentIds: string[];
   disabled: boolean;
+  isFollowVideoEnabled: boolean;
+  onFollowVideoChange: (enabled: boolean) => void;
   onSelect: (segment: DictationSegment) => void;
   segments: DictationSegment[];
   videos: DictationCatalogVideo[];
@@ -68,6 +70,8 @@ export function DictationSegmentNavigation({
   activeVideoId,
   answeredSegmentIds,
   disabled,
+  isFollowVideoEnabled,
+  onFollowVideoChange,
   onSelect,
   segments,
   videos,
@@ -87,6 +91,8 @@ export function DictationSegmentNavigation({
   }, []);
 
   useLayoutEffect(() => {
+    if (activeView !== "transcript") return;
+
     const list = listRef.current;
     if (!list) return;
 
@@ -101,7 +107,7 @@ export function DictationSegmentNavigation({
       list.scrollTop = Math.min(Math.max(0, centeredScrollTop), maxScrollTop);
     }
     syncThumb();
-  }, [activeSegmentId, syncThumb]);
+  }, [activeSegmentId, activeView, syncThumb]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -182,7 +188,7 @@ export function DictationSegmentNavigation({
 
   return (
     <aside
-      className="relative flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden bg-surface dark:bg-[#000000]"
+      className="relative flex h-full min-h-0 w-full shrink-0 flex-col bg-surface dark:bg-[#000000]"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => {
         if (!isDragging) setIsHovering(false);
@@ -193,7 +199,7 @@ export function DictationSegmentNavigation({
           aria-hidden
           className="pointer-events-none absolute right-0 bottom-0 left-0 h-[0.5px] bg-border lg:-left-2"
         />
-        <div className="relative z-10 flex items-end gap-9 pl-7 lg:pl-3" role="tablist">
+        <div className="relative z-10 flex items-end gap-9 pl-7 lg:pl-5" role="tablist">
           {(["transcript", "video"] as const).map((view) => {
             const isActive = activeView === view;
 
@@ -228,7 +234,33 @@ export function DictationSegmentNavigation({
       {activeView === "transcript" ? (
         <>
           <div className="shrink-0 py-2 pl-4 pr-4 lg:pl-2">
-            <div className="flex items-center justify-between text-sm tabular-nums text-muted-foreground">
+            <button
+              aria-checked={isFollowVideoEnabled}
+              className={classNames(
+                "inline-flex cursor-pointer items-center gap-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                isFollowVideoEnabled ? "text-foreground" : "text-muted-foreground",
+              )}
+              onClick={() => onFollowVideoChange(!isFollowVideoEnabled)}
+              role="switch"
+              type="button"
+            >
+              <span
+                aria-hidden
+                className={classNames(
+                  "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-100 ease-in-out",
+                  isFollowVideoEnabled ? "bg-foreground" : "bg-neutral-300 dark:bg-neutral-600",
+                )}
+              >
+                <span
+                  className={classNames(
+                    "absolute top-1/2 size-4 -translate-y-1/2 rounded-full bg-background shadow-sm transition-[left] duration-100 ease-in-out",
+                    isFollowVideoEnabled ? "left-[calc(100%-1.125rem)]" : "left-0.5",
+                  )}
+                />
+              </span>
+              {t("dictation.followVideo")}
+            </button>
+            <div className="mt-2 flex items-center justify-between text-sm tabular-nums text-muted-foreground">
               <span>
                 {completedSegmentCount}/{segments.length}
               </span>

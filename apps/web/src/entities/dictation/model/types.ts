@@ -45,7 +45,6 @@ export type DictationProgress = {
   answeredSegmentIds: string[];
   completedAt: string | null;
   correctCount: number;
-  currentSegmentId: string | null;
   updatedAt: string;
   videoId: string;
 };

@@ -12,7 +12,6 @@ function parseProgress(value: unknown): DictationProgress | null {
 
   const {
     videoId,
-    currentSegmentId,
     answeredSegmentIds,
     correctCount,
     completedAt,
@@ -20,7 +19,6 @@ function parseProgress(value: unknown): DictationProgress | null {
   } = value;
   if (
     !isString(videoId) ||
-    !isNullableString(currentSegmentId) ||
     !isStringArray(answeredSegmentIds) ||
     !isNumber(correctCount) ||
     !isNullableString(completedAt) ||
@@ -31,7 +29,6 @@ function parseProgress(value: unknown): DictationProgress | null {
 
   return {
     videoId,
-    currentSegmentId,
     answeredSegmentIds,
     correctCount,
     completedAt,
@@ -46,7 +43,7 @@ export function getDictationProgress(token: string, videoId: string) {
 export function submitDictationAnswer(
   token: string,
   input: {
-    nextSegmentId: string | null;
+    isCompleted: boolean;
     segmentId: string;
     videoId: string;
   },
@@ -56,7 +53,7 @@ export function submitDictationAnswer(
     token,
     body: JSON.stringify({
       segmentId: input.segmentId,
-      nextSegmentId: input.nextSegmentId,
+      isCompleted: input.isCompleted,
     }),
   }).then((body) => parseProgress(body) ?? invalidApiResponse());
 }

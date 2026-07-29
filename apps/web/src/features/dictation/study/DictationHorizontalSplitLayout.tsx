@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -57,6 +58,7 @@ export function DictationHorizontalSplitLayout({
   const t = useT();
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const topPanelRef = useRef<HTMLDivElement>(null);
+  const topPanelWidthRef = useRef<number | null>(null);
   const dragStartRef = useRef<SplitDragStart | null>(null);
   const [topPanelHeight, setTopPanelHeight] = useState(getInitialTopPanelHeight);
 
@@ -67,33 +69,7 @@ export function DictationHorizontalSplitLayout({
     );
   }, [topPanelHeight]);
 
-  useLayoutEffect(() => {
-    const panel = topPanelRef.current;
-    const container = splitContainerRef.current;
-    if (!panel || !container || typeof ResizeObserver === "undefined") return;
-    const topPanel = panel;
-    const splitContainer = container;
-
-    function fitVideoFrame() {
-      const { height, width } = topPanel.getBoundingClientRect();
-      const availableHeight = Math.max(0, height - TOP_PANEL_BOTTOM_PADDING_PX);
-      if (availableHeight === 0 || width === 0) return;
-
-      topPanel.style.setProperty(
-        "--dictation-video-panel-width",
-        `${Math.min(width, (availableHeight * 16) / 9)}px`,
-      );
-    }
-
-    const observer = new ResizeObserver(fitVideoFrame);
-    observer.observe(topPanel);
-    observer.observe(splitContainer);
-    fitVideoFrame();
-
-    return () => observer.disconnect();
-  }, []);
-
-  function getBestTopPanelHeight() {
+  const getBestTopPanelHeight = useCallback(() => {
     const container = splitContainerRef.current;
     const panel = topPanelRef.current;
     if (!container || !panel) {
@@ -113,7 +89,41 @@ export function DictationHorizontalSplitLayout({
     return clampTopPanelHeight(
       (topPanelHeightAtFullWidth / containerHeight) * 100,
     );
-  }
+  }, []);
+
+  useLayoutEffect(() => {
+    const panel = topPanelRef.current;
+    const container = splitContainerRef.current;
+    if (!panel || !container || typeof ResizeObserver === "undefined") return;
+    const topPanel = panel;
+    const splitContainer = container;
+
+    function fitVideoFrame() {
+      const { height, width } = topPanel.getBoundingClientRect();
+      const previousWidth = topPanelWidthRef.current;
+      const widthChanged = previousWidth !== null && Math.abs(width - previousWidth) > 0.5;
+      topPanelWidthRef.current = width;
+
+      if (widthChanged) {
+        setTopPanelHeight(getBestTopPanelHeight());
+      }
+
+      const availableHeight = Math.max(0, height - TOP_PANEL_BOTTOM_PADDING_PX);
+      if (availableHeight === 0 || width === 0) return;
+
+      topPanel.style.setProperty(
+        "--dictation-video-panel-width",
+        `${Math.min(width, (availableHeight * 16) / 9)}px`,
+      );
+    }
+
+    const observer = new ResizeObserver(fitVideoFrame);
+    observer.observe(topPanel);
+    observer.observe(splitContainer);
+    fitVideoFrame();
+
+    return () => observer.disconnect();
+  }, [getBestTopPanelHeight]);
 
   function updateSplitFromDrag(clientY: number) {
     const container = splitContainerRef.current;

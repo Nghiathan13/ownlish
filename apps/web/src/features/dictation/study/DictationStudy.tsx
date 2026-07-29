@@ -72,9 +72,9 @@ function getActiveSegment(
   if (progress?.completedAt) return null;
 
   return (
-    segments.find((segment) => segment.id === progress?.currentSegmentId) ??
-    segments[0] ??
-    null
+    segments.find(
+      (segment) => !progress?.answeredSegmentIds.includes(segment.id),
+    ) ?? null
   );
 }
 
@@ -103,6 +103,7 @@ const extraWrongDraftClassName =
 type VideoTimeline = {
   currentTime: number;
   duration: number;
+  isPlaying: boolean;
 };
 
 const PLAYBACK_SPEED_MIN = 0.25;
@@ -110,6 +111,9 @@ const PLAYBACK_SPEED_MAX = 2;
 const PLAYBACK_SPEED_STEP = 0.05;
 const PLAYBACK_SPEED_STORAGE_KEY = "engvocab:dictation:playback-speed";
 const playbackSpeedPresets = [0.5, 0.75, 1, 1.25, 1.5];
+const FOLLOW_VIDEO_SEGMENT_START_OFFSET_MS = 300;
+const PENDING_FOLLOW_SEGMENT_START_OFFSET_MS = -100;
+const PENDING_FOLLOW_SEGMENT_END_OFFSET_MS = 400;
 
 function formatVideoTime(seconds: number) {
   const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -121,6 +125,19 @@ function formatVideoTime(seconds: number) {
 
 function formatPlaybackSpeed(speed: number) {
   return `${Number(speed.toFixed(2))}x`;
+}
+
+function getFollowVideoSegmentId(segments: DictationSegment[], currentTime: number) {
+  const currentTimeMs = currentTime * 1000;
+
+  for (let index = segments.length - 1; index >= 0; index -= 1) {
+    const segment = segments[index]!;
+    if (currentTimeMs > segment.startMs + FOLLOW_VIDEO_SEGMENT_START_OFFSET_MS) {
+      return segment.id;
+    }
+  }
+
+  return null;
 }
 
 function DictationBadgeRevealTooltip({
@@ -288,7 +305,7 @@ function DictationCollapsedPlayerControls({
           aria-label="Seek video"
           className={classNames(
             "group/timeline relative block h-1 w-full cursor-pointer rounded-full hover:-my-px hover:h-[6px] disabled:cursor-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-            "bg-[#f0f0f0] dark:bg-surface",
+            "bg-[#f0f0f0] [--timeline-hover:rgb(0_0_0)] [--timeline-hover-start:35%] [--timeline-hover-end:20%] dark:bg-surface dark:[--timeline-hover:rgb(255_255_255)] dark:[--timeline-hover-start:70%] dark:[--timeline-hover-end:40%]",
           )}
           disabled={timeline.duration <= 0}
           onClick={(event) => {
@@ -312,7 +329,7 @@ function DictationCollapsedPlayerControls({
               className="absolute inset-y-0 rounded-full"
               style={{
                 background:
-                  "linear-gradient(to right, rgb(255 255 255 / 0.7) 0%, rgb(255 255 255 / 0.7) max(0px, calc(100% - 24px)), color-mix(in srgb, rgb(255 255 255 / 0.4) 58%, rgb(255 255 255 / 0.3)) 100%)",
+                  "linear-gradient(to right, color-mix(in srgb, var(--timeline-hover) var(--timeline-hover-start), transparent) 0%, color-mix(in srgb, var(--timeline-hover) var(--timeline-hover-start), transparent) max(0px, calc(100% - 24px)), color-mix(in srgb, var(--timeline-hover) var(--timeline-hover-end), transparent) 100%)",
                 left: `${progress}%`,
                 width: `${previewProgress - progress}%`,
               }}
@@ -630,6 +647,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
   const [isMobileRightPanelOpen, setIsMobileRightPanelOpen] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isLoopEnabled, setIsLoopEnabled] = useState(false);
+  const [isFollowVideoEnabled, setIsFollowVideoEnabled] = useState(false);
   const [videoPlaybackRate, setVideoPlaybackRate] = useState(getStoredPlaybackSpeed);
   const [videoPlaybackCommand, setVideoPlaybackCommand] = useState<{
     action: "pause" | "play";
@@ -646,6 +664,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
   const [videoTimeline, setVideoTimeline] = useState<VideoTimeline>({
     currentTime: 0,
     duration: 0,
+    isPlaying: false,
   });
   const [draftSegmentId, setDraftSegmentId] = useState<string | null>(null);
   const [answerInput, setAnswerInput] = useState("");
@@ -659,6 +678,8 @@ export function DictationStudy({ videoId }: { videoId: string }) {
   const segmentEndMsRef = useRef<number | null>(null);
   const videoSeekRequestIdRef = useRef(0);
   const videoTimelineSeekRequestIdRef = useRef(0);
+  const pendingFollowSeekRef = useRef<{ id: number; startMs: number } | null>(null);
+  const pendingFollowSegmentRef = useRef<{ startMs: number } | null>(null);
   const submittingSegmentIdsRef = useRef(new Set<string>());
 
   const progress = progressQuery.data;
@@ -713,12 +734,40 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     if (pendingTimelineSeek) {
       setPendingTimelineSeek(null);
     }
+    let shouldFollowVideo = isFollowVideoEnabled;
+    const pendingFollowSegment = pendingFollowSegmentRef.current;
+    if (pendingFollowSeekRef.current) {
+      shouldFollowVideo = false;
+    } else if (pendingFollowSegment) {
+      if (!timeline.isPlaying) {
+        shouldFollowVideo = false;
+      } else {
+        const currentTimeMs = timeline.currentTime * 1000;
+        const isWithinPendingStartWindow =
+          currentTimeMs >=
+            pendingFollowSegment.startMs + PENDING_FOLLOW_SEGMENT_START_OFFSET_MS &&
+          currentTimeMs <=
+            pendingFollowSegment.startMs + PENDING_FOLLOW_SEGMENT_END_OFFSET_MS;
+
+        if (isWithinPendingStartWindow) {
+          shouldFollowVideo = false;
+        } else {
+          pendingFollowSegmentRef.current = null;
+        }
+      }
+    }
+    if (shouldFollowVideo) {
+      const segmentId = getFollowVideoSegmentId(segments, timeline.currentTime);
+      setSelectedSegmentId((current) => (current === segmentId ? current : segmentId));
+    }
     setVideoTimeline((current) =>
-      current.currentTime === timeline.currentTime && current.duration === timeline.duration
+      current.currentTime === timeline.currentTime &&
+      current.duration === timeline.duration &&
+      current.isPlaying === timeline.isPlaying
         ? current
         : timeline,
     );
-  }, [pendingTimelineSeek]);
+  }, [isFollowVideoEnabled, pendingTimelineSeek, segments]);
   const handleVideoPlaybackStateChange = useCallback((isPlaying: boolean) => {
     setIsVideoPlaying((current) => (current === isPlaying ? current : isPlaying));
   }, []);
@@ -726,27 +775,51 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     setVideoPlaybackRate((current) => (current === playbackRate ? current : playbackRate));
     window.localStorage.setItem(PLAYBACK_SPEED_STORAGE_KEY, String(playbackRate));
   }, []);
+  const handleFollowVideoChange = useCallback((enabled: boolean) => {
+    setIsFollowVideoEnabled(enabled);
+    pendingFollowSeekRef.current = null;
+    pendingFollowSegmentRef.current = null;
+    if (enabled) {
+      setSelectedSegmentId(getFollowVideoSegmentId(segments, videoTimeline.currentTime));
+    }
+  }, [segments, videoTimeline.currentTime]);
   const playSegment = useCallback((segment: DictationSegment) => {
     videoSeekRequestIdRef.current += 1;
+    const requestId = videoSeekRequestIdRef.current;
     setVideoSeekRequest({
       endMs: segment.endMs,
-      id: videoSeekRequestIdRef.current,
+      id: requestId,
       startSeconds: segment.startMs / 1000,
     });
+    return requestId;
   }, []);
+  const handleSegmentPlaybackStarted = useCallback((seekRequestId: number) => {
+    const pendingSeek = pendingFollowSeekRef.current;
+    if (!pendingSeek || pendingSeek.id !== seekRequestId) return;
+
+    pendingFollowSeekRef.current = null;
+    pendingFollowSegmentRef.current = { startMs: pendingSeek.startMs };
+  }, []);
+  const playSegmentWithFollowLock = useCallback((segment: DictationSegment) => {
+    const seekRequestId = playSegment(segment);
+    if (isFollowVideoEnabled) {
+      pendingFollowSegmentRef.current = null;
+      pendingFollowSeekRef.current = { id: seekRequestId, startMs: segment.startMs };
+    }
+  }, [isFollowVideoEnabled, playSegment]);
   const selectSegment = useCallback((segment: DictationSegment) => {
     setSelectedSegmentId(segment.id);
     setDraftSegmentId(null);
     setAnswerInput("");
     setHintedWordIndexes([]);
     setInitialHintedWordIndexes([]);
-    playSegment(segment);
-  }, [playSegment]);
+    playSegmentWithFollowLock(segment);
+  }, [playSegmentWithFollowLock]);
   const handleSegmentEnd = useCallback(() => {
     if (isLoopEnabled && activeSegment) {
-      playSegment(activeSegment);
+      playSegmentWithFollowLock(activeSegment);
     }
-  }, [activeSegment, isLoopEnabled, playSegment]);
+  }, [activeSegment, isLoopEnabled, playSegmentWithFollowLock]);
   const toggleVideoPlayback = useCallback(() => {
     videoPlaybackCommandIdRef.current += 1;
     setVideoPlaybackCommand({
@@ -763,7 +836,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     ) {
       segmentEndMsRef.current = null;
       if (isLoopEnabled && activeSegment) {
-        playSegment(activeSegment);
+        playSegmentWithFollowLock(activeSegment);
         return;
       }
     }
@@ -777,7 +850,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     setPendingTimelineSeek(request);
     setVideoTimeline((current) => ({ ...current, currentTime: targetSeconds }));
     setVideoTimelineSeekRequest(request);
-  }, [activeSegment, isLoopEnabled, playSegment]);
+  }, [activeSegment, isLoopEnabled, playSegmentWithFollowLock]);
   const badgeStates = isSegmentAnswered
     ? expectedWords.map(() => "green" as const)
     : liveEvaluation.badgeStates;
@@ -805,16 +878,6 @@ export function DictationStudy({ videoId }: { videoId: string }) {
 
     setDraftSegmentId(activeSegmentId);
     setHintedWordIndexes((current) =>
-      current.includes(index) ? current : [...current, index],
-    );
-  }
-
-  function revealInitialWordHint(index: number) {
-    if (isSegmentAnswered || !activeSegmentId) return;
-    if (badgeStates[index] === "green") return;
-
-    setDraftSegmentId(activeSegmentId);
-    setInitialHintedWordIndexes((current) =>
       current.includes(index) ? current : [...current, index],
     );
   }
@@ -872,7 +935,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
       if (event.key !== "Control") return;
 
       if (controlPressed && !controlUsedWithAnotherKey && activeSegment) {
-        playSegment(activeSegment);
+        playSegmentWithFollowLock(activeSegment);
       }
 
       controlPressed = false;
@@ -894,7 +957,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     badgeStates,
     isSegmentAnswered,
     nextSegment,
-    playSegment,
+    playSegmentWithFollowLock,
     selectSegment,
   ]);
 
@@ -919,18 +982,16 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     setAnswerInput(completedSegmentInput);
     setHintedWordIndexes([]);
 
-    const segmentIndex = segments.findIndex((segment) => segment.id === segmentId);
-    const nextSegmentId =
-      segmentIndex >= 0 && segmentIndex < segments.length - 1
-        ? segments[segmentIndex + 1]!.id
-        : null;
+    const isCompleted = segments.every(
+      (segment) => segment.id === segmentId || answeredSegmentIds.includes(segment.id),
+    );
 
     void runAuthenticatedRequest({
       request: (token) =>
         submitDictationAnswer(token, {
           videoId,
           segmentId,
-          nextSegmentId,
+          isCompleted,
         }),
     })
       .catch(() => {
@@ -980,7 +1041,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
 
   function replayActiveSegment() {
     if (activeSegment) {
-      playSegment(activeSegment);
+      playSegmentWithFollowLock(activeSegment);
     }
   }
 
@@ -1042,6 +1103,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
                         onPlaybackRateChange={handleVideoPlaybackRateChange}
                         onPlaybackStateChange={handleVideoPlaybackStateChange}
                         onSegmentEnd={handleSegmentEnd}
+                        onSegmentPlaybackStarted={handleSegmentPlaybackStarted}
                         onTimeChange={handleVideoTimeChange}
                         playbackCommand={videoPlaybackCommand}
                         playbackRate={videoPlaybackRate}
@@ -1106,9 +1168,9 @@ export function DictationStudy({ videoId }: { videoId: string }) {
                           Shift + Enter
                         </kbd>
                       </span>
-                      <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-warning">
                         <span>{t("dictation.hintShortcut")}</span>
-                        <kbd className="inline-flex h-5 items-center justify-center rounded border border-border bg-[#f0f0f0] px-1 text-[11px] font-medium text-foreground dark:bg-surface">
+                        <kbd className="inline-flex h-5 items-center justify-center rounded border border-warning-border bg-warning-background px-1 text-[11px] font-medium text-warning">
                           Ctrl + /
                         </kbd>
                       </span>
@@ -1269,10 +1331,12 @@ export function DictationStudy({ videoId }: { videoId: string }) {
           }
           right={
             <DictationSegmentNavigation
-              activeSegmentId={activeSegment?.id ?? null}
+              activeSegmentId={activeSegmentId}
               activeVideoId={videoId}
               answeredSegmentIds={answeredSegmentIds}
               disabled={false}
+              isFollowVideoEnabled={isFollowVideoEnabled}
+              onFollowVideoChange={handleFollowVideoChange}
               onSelect={selectSegment}
               segments={videoQuery.data.segments}
               videos={catalogQuery.data?.catalog.videos ?? []}
