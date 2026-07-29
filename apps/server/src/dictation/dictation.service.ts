@@ -4,9 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { SubmitDictationAnswerDto } from './dto/submit-dictation-answer.dto';
 
 type DictationProgressRecord = {
-  userId: string;
   videoId: string;
-  currentSegmentId: string | null;
   answeredSegmentIds: string[];
   correctCount: number;
   completedAt: Date | null;
@@ -16,7 +14,6 @@ type DictationProgressRecord = {
 function formatProgress(progress: DictationProgressRecord) {
   return {
     videoId: progress.videoId,
-    currentSegmentId: progress.currentSegmentId,
     answeredSegmentIds: progress.answeredSegmentIds,
     correctCount: progress.correctCount,
     completedAt: progress.completedAt?.toISOString() ?? null,
@@ -41,7 +38,7 @@ export class DictationService {
     videoId: string,
     dto: SubmitDictationAnswerDto,
   ) {
-    const nextSegmentId = dto.nextSegmentId ?? null;
+    const completedAt = dto.isCompleted ? new Date() : null;
 
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw(
@@ -56,10 +53,9 @@ export class DictationService {
           data: {
             userId,
             videoId,
-            currentSegmentId: nextSegmentId,
             answeredSegmentIds: [dto.segmentId],
             correctCount: 1,
-            completedAt: nextSegmentId ? null : new Date(),
+            completedAt,
           },
         });
 
@@ -70,14 +66,16 @@ export class DictationService {
         return formatProgress(existing);
       }
 
-      const answeredSegmentIds = [...existing.answeredSegmentIds, dto.segmentId];
+      const answeredSegmentIds = [
+        ...existing.answeredSegmentIds,
+        dto.segmentId,
+      ];
       const updated = await tx.dictationProgress.update({
         where: { userId_videoId: { userId, videoId } },
         data: {
-          currentSegmentId: nextSegmentId,
           answeredSegmentIds,
           correctCount: answeredSegmentIds.length,
-          completedAt: nextSegmentId ? null : new Date(),
+          completedAt,
         },
       });
 

@@ -40,7 +40,6 @@ model User {
 model DictationProgress {
   userId             String    @map("user_id")
   videoId            String    @map("video_id")
-  currentSegmentId   String?   @map("current_segment_id")
   answeredSegmentIds String[]  @default([]) @map("answered_segment_ids")
   correctCount       Int       @default(0) @map("correct_count")
   completedAt        DateTime? @map("completed_at")

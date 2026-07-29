@@ -135,9 +135,11 @@ describe('ToeicRuntimeController (e2e)', () => {
         timeLimitMinutes: 7,
       })
       .expect(201);
-    const run = parseResponseBody<RuntimeRunResponse & {
-      timer: { timeLimitSeconds: number; remainingSeconds: number };
-    }>(response);
+    const run = parseResponseBody<
+      RuntimeRunResponse & {
+        timer: { timeLimitSeconds: number; remainingSeconds: number };
+      }
+    >(response);
 
     expect(run.mode).toBe('mock_test');
     expect(run.timer).toEqual({ timeLimitSeconds: 420, remainingSeconds: 420 });
