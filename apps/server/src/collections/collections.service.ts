@@ -454,6 +454,7 @@ export class CollectionsService {
     band: string,
     part: number,
     catalogDefinitionIds: string[],
+    targetCollectionId?: string,
   ): Promise<ImportCollectionResult> {
     this.assertOxfordBand(band);
     const collection = await this.prisma.wordCollection.findFirst({
@@ -468,6 +469,7 @@ export class CollectionsService {
       catalogDefinitionIds,
       limit: 20,
       offset: this.getOxfordPartOffset(part),
+      targetCollectionId,
     });
   }
 

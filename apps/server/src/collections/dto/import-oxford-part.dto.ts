@@ -1,4 +1,11 @@
-import { ArrayNotEmpty, IsArray, IsNotEmpty, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class ImportOxfordPartDto {
   @IsArray()
@@ -6,4 +13,8 @@ export class ImportOxfordPartDto {
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   catalogDefinitionIds!: string[];
+
+  @IsOptional()
+  @IsUUID('4')
+  targetCollectionId?: string;
 }

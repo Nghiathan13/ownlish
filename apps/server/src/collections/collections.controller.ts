@@ -67,6 +67,7 @@ export class CollectionsController {
       band,
       part,
       body.catalogDefinitionIds,
+      body.targetCollectionId,
     );
   }
 
