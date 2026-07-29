@@ -9,9 +9,9 @@ import {
   WordsPagination,
   WordsSearch,
 } from "@/features/collections/detail/shared/components";
+import { ImportToolbarButton } from "@/features/collections/shared/components/ImportToolbarButton";
 import { formatMessage } from "@/shared/i18n/messages";
 import { useT } from "@/shared/providers/LocaleProvider";
-import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type SystemCollectionWordsPanelState = ReturnType<
   typeof useSystemCollectionWordsPanel
@@ -25,7 +25,6 @@ type SystemCollectionWordsPanelBodyProps = SystemCollectionWordsPanelState & {
   isLoading?: boolean;
   loadError?: string | null;
   onRetry?: () => void;
-  resolvedImportTargetCollectionId: string | null;
   userOwnedCollections: CollectionSummary[];
 };
 
@@ -45,7 +44,6 @@ export function SystemCollectionWordsPanelBody({
   loadError = null,
   onRetry,
   paginatedWords,
-  resolvedImportTargetCollectionId,
   search,
   selectedDefinitionIds,
   selectedDefinitions,
@@ -64,9 +62,7 @@ export function SystemCollectionWordsPanelBody({
 }: SystemCollectionWordsPanelBodyProps) {
   const t = useT();
   const canImport =
-    hasCollectionsList &&
-    userOwnedCollections.length > 0 &&
-    Boolean(resolvedImportTargetCollectionId);
+    hasCollectionsList && userOwnedCollections.length > 0;
   const selectedCount = selectedDefinitions.length;
   const importLabel = isImporting
     ? t("collections.importing")
@@ -82,18 +78,14 @@ export function SystemCollectionWordsPanelBody({
     <>
       <div className="mb-4 flex shrink-0 flex-row items-center gap-2 px-4">
         {canImport && selectedCount > 0 ? (
-          <button
-            className={iconTextButtonClassName(
-              "w-fit shrink-0 border-success-border bg-success-background text-success hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-            )}
+          <ImportToolbarButton
+            collections={userOwnedCollections}
             disabled={isImporting}
-            onClick={() => {
-              void handleImportSelectedClick();
+            label={importLabel}
+            onImport={(targetCollectionId) => {
+              void handleImportSelectedClick(targetCollectionId);
             }}
-            type="button"
-          >
-            {importLabel}
-          </button>
+          />
         ) : (
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <WordsSearch onSearchChange={setSearch} search={search} />
@@ -103,18 +95,14 @@ export function SystemCollectionWordsPanelBody({
               onToggleColumn={toggleColumn}
             />
             {canImport ? (
-              <button
-                className={iconTextButtonClassName(
-                  "w-fit shrink-0 border-success-border bg-success-background text-success hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-                )}
+              <ImportToolbarButton
+                collections={userOwnedCollections}
                 disabled={isImporting}
-                onClick={() => {
-                  void handleImportAllClick();
+                label={importLabel}
+                onImport={(targetCollectionId) => {
+                  void handleImportAllClick(targetCollectionId);
                 }}
-                type="button"
-              >
-                {importLabel}
-              </button>
+              />
             ) : null}
           </div>
         )}

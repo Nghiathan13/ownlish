@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { classNames } from "@/shared/lib/classNames";
 import {
   tooltipClassName,
   type TooltipGroup,
@@ -7,13 +8,14 @@ import {
 
 type TooltipProps = {
   children: ReactNode;
+  className?: string;
   group: TooltipGroup;
   placement: TooltipPlacement;
 };
 
-export function Tooltip({ children, group, placement }: TooltipProps) {
+export function Tooltip({ children, className, group, placement }: TooltipProps) {
   return (
-    <span aria-hidden className={tooltipClassName(group, placement)}>
+    <span aria-hidden className={classNames(tooltipClassName(group, placement), className)}>
       {children}
     </span>
   );

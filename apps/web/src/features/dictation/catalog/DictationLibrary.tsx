@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useQueries } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { getDictationProgress, getDictationThumbnailUrl } from "@/entities/dictation/api";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { getDictationCategoryPath } from "@/entities/dictation/model/categoryPath";
 import { useDictationCatalogQuery } from "@/entities/dictation/model/useDictationCatalogQuery";
 import { getDictationProgressQueryKey } from "@/entities/dictation/model/queries";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -37,7 +38,7 @@ function formatDuration(durationSeconds: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function DictationLibrary() {
+export function DictationLibrary({ category }: { category?: string }) {
   const t = useT();
   const { status, user } = useAuthSession();
   const catalogQuery = useDictationCatalogQuery();
@@ -46,9 +47,8 @@ export function DictationLibrary() {
     () => Array.from(new Set(videos.map((video) => video.category))),
     [videos],
   );
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const activeCategory = categories.includes(selectedCategory ?? "")
-    ? selectedCategory
+  const activeCategory = categories.includes(category ?? "")
+    ? category
     : (categories[0] ?? null);
   const categoryVideos = activeCategory
     ? videos.filter((video) => video.category === activeCategory)
@@ -96,16 +96,15 @@ export function DictationLibrary() {
                   const isActive = category === activeCategory;
 
                   return (
-                    <button
+                    <Link
                       aria-selected={isActive}
                       className={classNames(
                         "group/dictation-category-tab relative inline-flex cursor-pointer pb-3 text-base font-normal",
                         isActive ? "text-foreground" : "text-muted-foreground",
                       )}
+                      href={getDictationCategoryPath(category)}
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
                       role="tab"
-                      type="button"
                     >
                       {category}
                       <span
@@ -117,7 +116,7 @@ export function DictationLibrary() {
                             : "bg-transparent group-hover/dictation-category-tab:bg-border",
                         )}
                       />
-                    </button>
+                    </Link>
                   );
                 })}
               </div>

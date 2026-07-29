@@ -13,13 +13,14 @@ import { useT } from "@/shared/providers/LocaleProvider";
 const DEFAULT_TOP_PANEL_HEIGHT = 70;
 const MIN_TOP_PANEL_HEIGHT = 30;
 const MAX_TOP_PANEL_HEIGHT = 75;
-const TOP_PANEL_BOTTOM_PADDING_PX = 16;
+const TOP_PANEL_BOTTOM_PADDING_PX = 76;
 const DIVIDER_HEIGHT_PX = 1;
 const SPLIT_PANEL_STORAGE_KEY = "engvocab:dictation-split-top-panel-height";
 const DRAG_START_THRESHOLD_PX = 6;
 
 type DictationHorizontalSplitLayoutProps = {
   bottom: ReactNode;
+  isTopVisible: boolean;
   top: ReactNode;
 };
 
@@ -50,6 +51,7 @@ function getInitialTopPanelHeight() {
 
 export function DictationHorizontalSplitLayout({
   bottom,
+  isTopVisible,
   top,
 }: DictationHorizontalSplitLayoutProps) {
   const t = useT();
@@ -143,53 +145,74 @@ export function DictationHorizontalSplitLayout({
 
   return (
     <div
-      className="flex min-h-0 min-w-0 flex-col lg:grid lg:h-full lg:grid-rows-[calc(var(--dictation-split-top-panel-height)_-_0.5px)_1px_minmax(0,1fr)]"
+      className={
+        isTopVisible
+          ? "flex min-h-0 min-w-0 flex-col lg:grid lg:h-full lg:grid-rows-[calc(var(--dictation-split-top-panel-height)_-_0.5px)_1px_minmax(0,1fr)]"
+          : "flex min-h-0 min-w-0 flex-col lg:h-full"
+      }
       ref={splitContainerRef}
       style={splitLayoutStyle}
     >
       <div
-        className="min-h-0 min-w-0 lg:flex lg:items-start lg:justify-center lg:[&>div]:w-[var(--dictation-video-panel-width)]"
+        className={
+          isTopVisible
+            ? "min-h-0 min-w-0 lg:flex lg:flex-col lg:items-stretch lg:pb-[var(--dictation-video-bottom-gap)]"
+            : "h-0 overflow-hidden"
+        }
         ref={topPanelRef}
+        style={
+          {
+            "--dictation-video-bottom-gap": `${TOP_PANEL_BOTTOM_PADDING_PX}px`,
+          } as CSSProperties
+        }
       >
         {top}
       </div>
+      {isTopVisible ? (
+        <div
+          aria-label={t("tests.resizePanels")}
+          aria-orientation="horizontal"
+          className="relative mt-4 h-[1px] shrink-0 bg-border lg:mr-[var(--dictation-horizontal-divider-margin)] lg:mt-0 lg:cursor-row-resize lg:touch-none lg:select-none lg:hover:bg-primary before:hidden lg:before:absolute lg:before:inset-x-0 lg:before:-inset-y-2 lg:before:block lg:before:content-['']"
+          onDoubleClick={() => {
+            dragStartRef.current = null;
+            setTopPanelHeight(getBestTopPanelHeight());
+          }}
+          onPointerDown={(event) => {
+            if (event.pointerType === "mouse" && event.button !== 0) {
+              return;
+            }
+
+            event.currentTarget.setPointerCapture(event.pointerId);
+            dragStartRef.current = {
+              clientY: event.clientY,
+              topPanelHeight,
+            };
+          }}
+          onPointerMove={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              updateSplitFromDrag(event.clientY);
+            }
+          }}
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+
+            dragStartRef.current = null;
+          }}
+          onPointerCancel={() => {
+            dragStartRef.current = null;
+          }}
+          role="separator"
+        />
+      ) : null}
       <div
-        aria-label={t("tests.resizePanels")}
-        aria-orientation="horizontal"
-        className="relative mt-4 h-[1px] shrink-0 bg-border lg:-mr-4 lg:mt-0 lg:cursor-row-resize lg:touch-none lg:select-none lg:hover:bg-primary before:hidden lg:before:absolute lg:before:inset-x-0 lg:before:-inset-y-2 lg:before:block lg:before:content-['']"
-        onDoubleClick={() => {
-          dragStartRef.current = null;
-          setTopPanelHeight(getBestTopPanelHeight());
-        }}
-        onPointerDown={(event) => {
-          if (event.pointerType === "mouse" && event.button !== 0) {
-            return;
-          }
-
-          event.currentTarget.setPointerCapture(event.pointerId);
-          dragStartRef.current = {
-            clientY: event.clientY,
-            topPanelHeight,
-          };
-        }}
-        onPointerMove={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            updateSplitFromDrag(event.clientY);
-          }
-        }}
-        onPointerUp={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
-          }
-
-          dragStartRef.current = null;
-        }}
-        onPointerCancel={() => {
-          dragStartRef.current = null;
-        }}
-        role="separator"
-      />
-      <div className="mt-4 min-h-0 min-w-0 lg:mt-0 lg:overflow-y-auto lg:pt-4">
+        className={
+          isTopVisible
+            ? "mt-4 min-h-0 min-w-0 lg:mt-0 lg:overflow-y-auto lg:pt-4"
+            : "min-h-0 min-w-0 lg:flex-1 lg:overflow-y-auto"
+        }
+      >
         {bottom}
       </div>
     </div>

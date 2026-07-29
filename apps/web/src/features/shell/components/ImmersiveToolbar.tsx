@@ -8,6 +8,7 @@ import {
 } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import { classNames } from "@/shared/lib/classNames";
 import {
+  iconOnlyButtonClassName,
   iconTextButtonClassName,
   primaryTextButtonClassName,
 } from "@/shared/ui/button";
@@ -57,8 +58,9 @@ export function ImmersiveToolbar() {
             </button>
           ) : (
             <button
-              className={iconTextButtonClassName(
-                "border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
+              aria-label={t("tests.exit")}
+              className={iconOnlyButtonClassName(
+                "border border-foreground bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
               )}
               onClick={() => {
                 void (exitContext?.exit() ?? router.push("/tests"));
@@ -66,7 +68,6 @@ export function ImmersiveToolbar() {
               type="button"
             >
               <ArrowBackIcon />
-              {t("tests.exit")}
             </button>
           )}
 

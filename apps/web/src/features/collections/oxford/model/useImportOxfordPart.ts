@@ -14,14 +14,18 @@ export function useImportOxfordPart(userId: string | null) {
       band,
       catalogDefinitionIds,
       part,
+      targetCollectionId,
     }: {
       band: OxfordBand;
       catalogDefinitionIds: string[];
       part: number;
+      targetCollectionId?: string;
     }) =>
       runAuthenticatedRequest({
         request: (token) =>
-          importOxfordPart(token, band, part, catalogDefinitionIds),
+          importOxfordPart(token, band, part, catalogDefinitionIds, {
+            targetCollectionId,
+          }),
       }),
     onSuccess: () => {
       invalidateImportedVocabulary(queryClient, userId);

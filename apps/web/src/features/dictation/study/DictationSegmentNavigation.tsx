@@ -182,7 +182,7 @@ export function DictationSegmentNavigation({
 
   return (
     <aside
-      className="relative flex w-full shrink-0 flex-col bg-surface lg:h-full lg:min-h-0 dark:bg-[#000000]"
+      className="relative flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden bg-surface dark:bg-[#000000]"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => {
         if (!isDragging) setIsHovering(false);
@@ -191,9 +191,9 @@ export function DictationSegmentNavigation({
       <div className="relative shrink-0">
         <div
           aria-hidden
-          className="pointer-events-none absolute right-0 bottom-0 -left-2 h-[0.5px] bg-border"
+          className="pointer-events-none absolute right-0 bottom-0 left-0 h-[0.5px] bg-border lg:-left-2"
         />
-        <div className="relative z-10 flex items-end gap-9 pl-3" role="tablist">
+        <div className="relative z-10 flex items-end gap-9 pl-7 lg:pl-3" role="tablist">
           {(["transcript", "video"] as const).map((view) => {
             const isActive = activeView === view;
 
@@ -227,7 +227,7 @@ export function DictationSegmentNavigation({
 
       {activeView === "transcript" ? (
         <>
-          <div className="shrink-0 py-2 pl-2 pr-4">
+          <div className="shrink-0 py-2 pl-4 pr-4 lg:pl-2">
             <div className="flex items-center justify-between text-sm tabular-nums text-muted-foreground">
               <span>
                 {completedSegmentCount}/{segments.length}
@@ -242,11 +242,11 @@ export function DictationSegmentNavigation({
             </div>
           </div>
 
-          <div className="mx-2 mt-2 h-px shrink-0 bg-border lg:-ml-2 lg:mr-0" />
+          <div className="mx-0 mt-2 h-px shrink-0 bg-border lg:-ml-2 lg:mr-0" />
 
           <div className="relative min-h-0 flex-1">
             <div
-              className="overlay-scroll-hide flex h-full min-h-0 flex-col gap-2 overflow-y-auto py-4 pl-2 pr-4"
+              className="overlay-scroll-hide flex h-full min-h-0 flex-col gap-2 overflow-y-auto py-4 pl-4 pr-4 lg:pl-2"
               onScroll={syncThumb}
               ref={listRef}
             >
@@ -318,7 +318,7 @@ export function DictationSegmentNavigation({
         </>
       ) : (
         <OverlayScrollArea
-          className="h-full min-h-0 px-2 py-4 pr-4"
+          className="h-full min-h-0 px-4 py-4 lg:pl-2 lg:pr-4"
           rootClassName="min-h-0 flex-1"
         >
           <div className="flex flex-col gap-3">

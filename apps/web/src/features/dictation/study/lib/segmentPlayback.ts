@@ -1,0 +1,1 @@
+export const SEGMENT_END_TOLERANCE_MS = 200;

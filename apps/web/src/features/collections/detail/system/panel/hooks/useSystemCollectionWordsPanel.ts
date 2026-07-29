@@ -12,7 +12,10 @@ import {
 const EMPTY_DEFINITION_SELECTION = new Set<string>();
 
 type UseSystemCollectionWordsPanelParams = {
-  onImportClick: (catalogDefinitionIds?: string[]) => Promise<void>;
+  onImportClick: (
+    catalogDefinitionIds: string[] | undefined,
+    targetCollectionId: string,
+  ) => Promise<void>;
   words: CatalogWord[];
 };
 
@@ -114,25 +117,32 @@ export function useSystemCollectionWordsPanel({
     });
   }, [selectableDefinitions, updateSelection]);
 
-  const handleImportAllClick = useCallback(async () => {
-    try {
-      await onImportClick();
-      updateSelection(() => new Set());
-    } catch {
-      // Parent renders the import error message.
-    }
-  }, [onImportClick, updateSelection]);
+  const handleImportAllClick = useCallback(
+    async (targetCollectionId: string) => {
+      try {
+        await onImportClick(undefined, targetCollectionId);
+        updateSelection(() => new Set());
+      } catch {
+        // Parent renders the import error message.
+      }
+    },
+    [onImportClick, updateSelection],
+  );
 
-  const handleImportSelectedClick = useCallback(async () => {
-    try {
-      await onImportClick(
-        selectedDefinitions.map((item) => item.definition.id),
-      );
-      updateSelection(() => new Set());
-    } catch {
-      // Parent renders the import error message.
-    }
-  }, [onImportClick, selectedDefinitions, updateSelection]);
+  const handleImportSelectedClick = useCallback(
+    async (targetCollectionId: string) => {
+      try {
+        await onImportClick(
+          selectedDefinitions.map((item) => item.definition.id),
+          targetCollectionId,
+        );
+        updateSelection(() => new Set());
+      } catch {
+        // Parent renders the import error message.
+      }
+    },
+    [onImportClick, selectedDefinitions, updateSelection],
+  );
 
   return {
     allDefinitionsSelected,

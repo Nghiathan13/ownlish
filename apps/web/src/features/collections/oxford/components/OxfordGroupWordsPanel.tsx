@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import type { CatalogWord } from "@/entities/collection/api/collections";
+import { getUserOwnedCollections } from "@/entities/collection/lib/collectionDisplay";
 import { CatalogWordsTable } from "@/features/collections/detail/system/panel/components/CatalogWordsTable";
 import { useCatalogTableColumnVisibility } from "@/features/collections/detail/system/panel/hooks/useCatalogTableColumnVisibility";
 import {
@@ -19,9 +20,10 @@ import { useOxfordPartQuery } from "@/features/collections/oxford/model/useOxfor
 import { shouldHandleOxfordNavigation } from "@/features/collections/oxford/model/useOxfordNavigation";
 import { collectionsBackButtonClassName } from "@/features/collections/detail/page/components/BackToCollectionsLink";
 import { WordsColumnPicker } from "@/features/collections/detail/shared/components";
+import { ImportToolbarButton } from "@/features/collections/shared/components/ImportToolbarButton";
+import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { formatMessage } from "@/shared/i18n/messages";
 import { useT } from "@/shared/providers/LocaleProvider";
-import { iconTextButtonClassName } from "@/shared/ui/button";
 
 type OxfordGroupWordsPanelProps = {
   band: OxfordBand;
@@ -46,6 +48,14 @@ export function OxfordGroupWordsPanel({
     isAuthenticated,
     part: group,
   });
+  const { collections, hasCollectionsList } = useCollectionsListQuery({
+    isAuthenticated,
+    userId,
+  });
+  const userOwnedCollections = useMemo(
+    () => getUserOwnedCollections(collections),
+    [collections],
+  );
   const { columnVisibility, toggleColumn } = useCatalogTableColumnVisibility();
   const [selectedDefinitionIds, setSelectedDefinitionIds] = useState<
     ReadonlySet<string>
@@ -70,7 +80,9 @@ export function OxfordGroupWordsPanel({
   const someDefinitionsSelected = selectableDefinitions.some((item) =>
     selectedDefinitionIds.has(item.definition.id),
   );
-  const canImport = isAuthenticated;
+  const canImport =
+    isAuthenticated &&
+    (!hasCollectionsList || userOwnedCollections.length > 0);
 
   const toggleDefinition = useCallback((definitionId: string) => {
     setSelectedDefinitionIds((current) => {
@@ -100,7 +112,7 @@ export function OxfordGroupWordsPanel({
   }, [selectableDefinitions]);
 
   const handleImport = useCallback(
-    async (catalogDefinitionIds: string[]) => {
+    async (catalogDefinitionIds: string[], targetCollectionId: string) => {
       setResultMessage(null);
       resetImportState();
 
@@ -109,6 +121,7 @@ export function OxfordGroupWordsPanel({
           band,
           catalogDefinitionIds,
           part: group,
+          targetCollectionId,
         });
         setSelectedDefinitionIds(new Set());
         setResultMessage(
@@ -121,13 +134,8 @@ export function OxfordGroupWordsPanel({
       } catch {
         // The mutation error is rendered below.
       }
-    }, [
-      band,
-      group,
-      importPart,
-      resetImportState,
-      t,
-    ],
+    },
+    [band, group, importPart, resetImportState, t],
   );
   const selectedCount = selectedDefinitions.length;
   const importLabel = isImporting
@@ -138,20 +146,22 @@ export function OxfordGroupWordsPanel({
     <>
       <div className="m-4 flex flex-row items-center justify-start gap-2">
         {canImport && selectedCount > 0 ? (
-          <button
-            className={iconTextButtonClassName(
-              "w-fit shrink-0 border-success-border bg-success-background text-success hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-            )}
-            disabled={isImporting || query.isLoading || words.length === 0}
-            onClick={() => {
+          <ImportToolbarButton
+            collections={userOwnedCollections}
+            disabled={
+              isImporting ||
+              query.isLoading ||
+              words.length === 0 ||
+              userOwnedCollections.length === 0
+            }
+            label={importLabel}
+            onImport={(targetCollectionId) => {
               void handleImport(
                 selectedDefinitions.map((item) => item.definition.id),
+                targetCollectionId,
               );
             }}
-            type="button"
-          >
-            {importLabel}
-          </button>
+          />
         ) : (
           <>
             <Link

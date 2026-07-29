@@ -380,11 +380,21 @@ export function importOxfordPart(
   band: string,
   part: number,
   catalogDefinitionIds: string[],
+  options: { targetCollectionId?: string } = {},
 ) {
+  const body: {
+    catalogDefinitionIds: string[];
+    targetCollectionId?: string;
+  } = { catalogDefinitionIds };
+
+  if (options.targetCollectionId) {
+    body.targetCollectionId = options.targetCollectionId;
+  }
+
   return apiRequest(`/collections/oxford/${band}/parts/${part}/import`, {
     method: "POST",
     token,
-    body: JSON.stringify({ catalogDefinitionIds }),
+    body: JSON.stringify(body),
   }).then(parseImportCollectionResult);
 }
 
