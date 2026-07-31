@@ -79,6 +79,14 @@ type OxfordPart = {
   offset: number;
 };
 
+type OxfordProgressSummary = {
+  total: number;
+  masteredCount: number;
+  learningCount: number;
+  newCount: number;
+  levelCounts: Array<{ level: number; count: number }>;
+};
+
 type ImportCollectionResult = {
   imported: number;
   updated: number;
@@ -426,6 +434,71 @@ export class CollectionsService {
     );
 
     return { band, itemCount: entries.length, parts };
+  }
+
+  async getOxfordProgressSummary(
+    userId: string,
+    band?: string,
+  ): Promise<OxfordProgressSummary> {
+    if (band != null) {
+      this.assertOxfordBand(band);
+    }
+
+    const entries = await this.prisma.systemVocabularyEntry.findMany({
+      where: this.systemVocabularyWhere(band ?? null),
+      select: {
+        band: true,
+        progress: {
+          where: { userId },
+          select: { level: true },
+        },
+      },
+      orderBy: [{ band: 'asc' }, { sortOrder: 'asc' }],
+    });
+    const summary: OxfordProgressSummary = {
+      total: 0,
+      masteredCount: 0,
+      learningCount: 0,
+      newCount: 0,
+      levelCounts: Array.from({ length: 7 }, (_, index) => ({
+        level: index + 1,
+        count: 0,
+      })),
+    };
+    let currentBand: string | null = null;
+    let cardLevels: number[] = [];
+
+    const addCard = () => {
+      if (!cardLevels.some((level) => level > 0)) return;
+
+      summary.total += cardLevels.length;
+      for (const level of cardLevels) {
+        if (level === 7) {
+          summary.masteredCount += 1;
+        } else if (level > 0) {
+          summary.learningCount += 1;
+        } else {
+          summary.newCount += 1;
+        }
+
+        if (level >= 1 && level <= 7) {
+          summary.levelCounts[level - 1].count += 1;
+        }
+      }
+    };
+
+    for (const entry of entries) {
+      if (currentBand !== entry.band || cardLevels.length === 20) {
+        addCard();
+        currentBand = entry.band;
+        cardLevels = [];
+      }
+
+      cardLevels.push(entry.progress[0]?.level ?? 0);
+    }
+    addCard();
+
+    return summary;
   }
 
   async getOxfordPart(band: string, part: number): Promise<OxfordPart> {

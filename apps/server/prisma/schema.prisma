@@ -33,6 +33,7 @@ model User {
   systemVocabularyProgress UserSystemVocabularyProgress[]
   toeicRuns              ToeicRun[]
   dictationProgress      DictationProgress[]
+  learningDaily          UserLearningDaily[]
 
   @@map("users")
 }
@@ -50,6 +51,19 @@ model DictationProgress {
   @@id([userId, videoId])
   @@index([userId, updatedAt])
   @@map("dictation_progress")
+}
+
+model UserLearningDaily {
+  userId       String               @map("user_id")
+  learnedOn    DateTime             @db.Date @map("learned_on")
+  activityType LearningActivityType @map("activity_type")
+  seconds      Int                  @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, learnedOn, activityType])
+  @@index([userId, learnedOn])
+  @@map("user_learning_daily")
 }
 
 model RefreshSession {
@@ -172,6 +186,16 @@ model UserSystemVocabularyProgress {
 enum ToeicRunMode {
   PRACTICE
   MOCK_TEST
+}
+
+enum LearningActivityType {
+  TEST_PRACTICE
+  TEST_REVIEW_WRONG
+  TEST_PART_PRACTICE
+  TEST_PART_PRACTICE_REVIEW_WRONG
+  TEST_MOCK
+  DICTATION
+  VOCABULARY_REVIEW
 }
 
 enum ToeicRunQuestionStatus {

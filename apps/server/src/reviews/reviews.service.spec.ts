@@ -4,6 +4,7 @@ import { ReviewsService } from './reviews.service';
 describe('ReviewsService', () => {
   const now = new Date('2026-07-24T10:00:00.000Z');
   const prisma = {
+    $queryRaw: jest.fn(),
     systemVocabularyEntry: { findMany: jest.fn() },
     userSystemVocabularyProgress: { findUnique: jest.fn(), upsert: jest.fn() },
   };
@@ -57,6 +58,19 @@ describe('ReviewsService', () => {
     await expect(
       service.getOxfordPart('user-id', 'A1', 1),
     ).resolves.toMatchObject({ items: [] });
+  });
+
+  it('returns the twenty most-forgotten user and Oxford entries', async () => {
+    prisma.$queryRaw.mockResolvedValue([
+      { word: 'difficult', collectionName: 'My Vocabulary', wrongCount: 6 },
+      { word: 'hard', collectionName: 'Oxford', wrongCount: 4 },
+    ]);
+
+    await expect(service.listDifficultWords('user-id')).resolves.toEqual([
+      { word: 'difficult', collectionName: 'My Vocabulary', wrongCount: 6 },
+      { word: 'hard', collectionName: 'Oxford', wrongCount: 4 },
+    ]);
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
   });
 
   it.each([

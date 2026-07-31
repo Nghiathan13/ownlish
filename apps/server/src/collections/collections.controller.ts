@@ -47,6 +47,17 @@ export class CollectionsController {
     return this.collectionsService.getOxfordMeta(request.user.id, band);
   }
 
+  @Get('oxford/progress')
+  getOxfordProgressSummary(
+    @Req() request: AuthRequest,
+    @Query('band') band?: string,
+  ): ReturnType<CollectionsService['getOxfordProgressSummary']> {
+    return this.collectionsService.getOxfordProgressSummary(
+      request.user.id,
+      band,
+    );
+  }
+
   @Get('oxford/:band/parts/:part')
   getOxfordPart(
     @Param('band') band: string,

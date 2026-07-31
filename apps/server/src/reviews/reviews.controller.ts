@@ -18,6 +18,13 @@ import { ReviewsService } from './reviews.service';
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
+  @Get('difficult-words')
+  listDifficultWords(
+    @Req() request: AuthRequest,
+  ): ReturnType<ReviewsService['listDifficultWords']> {
+    return this.reviewsService.listDifficultWords(request.user.id);
+  }
+
   @Get('oxford/:band/parts/:part')
   getOxfordPart(
     @Req() request: AuthRequest,

@@ -105,6 +105,82 @@ describe('CollectionsService', () => {
       offset: 20,
     });
   });
+
+  it('counts only words inside Oxford cards that have been started', async () => {
+    prisma.systemVocabularyEntry.findMany.mockResolvedValue([
+      entry('learning-entry', 2),
+      entry('mastered-entry', 7),
+      ...Array.from({ length: 18 }, (_, index) => entry(`new-${index}`)),
+      entry('unstarted-entry'),
+    ]);
+
+    await expect(service.getOxfordProgressSummary('user-id')).resolves.toEqual({
+      total: 20,
+      masteredCount: 1,
+      learningCount: 1,
+      newCount: 18,
+      levelCounts: [
+        { level: 1, count: 0 },
+        { level: 2, count: 1 },
+        { level: 3, count: 0 },
+        { level: 4, count: 0 },
+        { level: 5, count: 0 },
+        { level: 6, count: 0 },
+        { level: 7, count: 1 },
+      ],
+    });
+    expect(prisma.systemVocabularyEntry.findMany).toHaveBeenCalledWith({
+      where: { source: { in: ['oxford_3000', 'oxford_5000'] } },
+      select: {
+        band: true,
+        progress: {
+          where: { userId: 'user-id' },
+          select: { level: true },
+        },
+      },
+      orderBy: [{ band: 'asc' }, { sortOrder: 'asc' }],
+    });
+  });
+
+  it('filters Oxford progress summary by band when provided', async () => {
+    prisma.systemVocabularyEntry.findMany.mockResolvedValue([
+      entry('learning-entry', 2),
+      entry('mastered-entry', 7),
+      ...Array.from({ length: 18 }, (_, index) => entry(`new-${index}`)),
+    ]);
+
+    await expect(
+      service.getOxfordProgressSummary('user-id', 'A1'),
+    ).resolves.toEqual({
+      total: 20,
+      masteredCount: 1,
+      learningCount: 1,
+      newCount: 18,
+      levelCounts: [
+        { level: 1, count: 0 },
+        { level: 2, count: 1 },
+        { level: 3, count: 0 },
+        { level: 4, count: 0 },
+        { level: 5, count: 0 },
+        { level: 6, count: 0 },
+        { level: 7, count: 1 },
+      ],
+    });
+    expect(prisma.systemVocabularyEntry.findMany).toHaveBeenCalledWith({
+      where: {
+        band: 'A1',
+        source: { in: ['oxford_3000', 'oxford_5000'] },
+      },
+      select: {
+        band: true,
+        progress: {
+          where: { userId: 'user-id' },
+          select: { level: true },
+        },
+      },
+      orderBy: [{ band: 'asc' }, { sortOrder: 'asc' }],
+    });
+  });
 });
 
 function entry(id: string, level?: number) {

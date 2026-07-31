@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   HIGH_WRONG_COUNT_THRESHOLD,
@@ -34,11 +35,16 @@ export class VocabStatsService {
 
   async getStats(
     userId: string,
-    collectionId: string,
+    collectionId?: string,
   ): Promise<VocabStatsResponse> {
-    await this.assertOwnedCollection(userId, collectionId);
+    if (collectionId) {
+      await this.assertOwnedCollection(userId, collectionId);
+    }
 
     const now = new Date();
+    const collectionFilter = collectionId
+      ? Prisma.sql`AND "collection_id" = ${collectionId}`
+      : Prisma.empty;
     const [stats] = await this.prisma.$queryRaw<RawVocabStatsRow[]>`
       WITH active AS (
         SELECT
@@ -47,7 +53,7 @@ export class VocabStatsService {
           "next_review"
         FROM "user_vocabulary_entries"
         WHERE "user_id" = ${userId}
-          AND "collection_id" = ${collectionId}
+          ${collectionFilter}
       ),
       summary AS (
         SELECT

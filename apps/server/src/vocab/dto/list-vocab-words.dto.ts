@@ -10,8 +10,9 @@ import {
 } from 'class-validator';
 
 export class GetVocabStatsDto {
+  @IsOptional()
   @IsUUID('4')
-  collectionId!: string;
+  collectionId?: string;
 }
 
 export class ListVocabWordsDto {
