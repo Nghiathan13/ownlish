@@ -147,7 +147,7 @@ function CollectionProgressTabs({
 
   return (
     <nav
-      aria-label={t("dashboard.myCollections")}
+      aria-label={t("collections.myCollections")}
       className="flex min-w-0 flex-1 gap-3 overflow-x-auto"
     >
       <button
