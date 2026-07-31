@@ -4,6 +4,7 @@ import { CollectionWordsPanel } from "@/features/collections/detail/user/panel/c
 
 type CollectionDetailBodyProps = {
   collectionId: string;
+  collectionName: string | null;
   collectionsError: string | null;
   hasCollectionsList: boolean;
   isNotFound: boolean;
@@ -12,6 +13,7 @@ type CollectionDetailBodyProps = {
 
 export function CollectionDetailBody({
   collectionId,
+  collectionName,
   collectionsError,
   hasCollectionsList,
   isNotFound,
@@ -32,5 +34,5 @@ export function CollectionDetailBody({
     return <CollectionNotFoundState />;
   }
 
-  return <CollectionWordsPanel collectionId={collectionId} />;
+  return <CollectionWordsPanel collectionId={collectionId} collectionName={collectionName} />;
 }

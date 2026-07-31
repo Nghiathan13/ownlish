@@ -2,11 +2,14 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomeDashboard } from "@/features/home/components/HomeDashboard";
+import { getVietnamDateKey } from "@/features/home/lib/learningActivityCalendar";
 
 const mocks = vi.hoisted(() => ({
   useAuthSession: vi.fn(),
   useCollectionsListQuery: vi.fn(),
-  useDashboardPartPractice: vi.fn(),
+  useDifficultReviewWords: vi.fn(),
+  useLearningActivityCalendar: vi.fn(),
+  useOxfordProgressSummary: vi.fn(),
   useVocabStats: vi.fn(),
 }));
 
@@ -20,12 +23,20 @@ vi.mock("@/features/collections/shared/data/hooks", () => ({
   useCollectionsListQuery: mocks.useCollectionsListQuery,
 }));
 
-vi.mock("@/features/home/hooks/useDashboardPartPractice", () => ({
-  useDashboardPartPractice: mocks.useDashboardPartPractice,
+vi.mock("@/features/home/hooks/useLearningActivityCalendar", () => ({
+  useLearningActivityCalendar: mocks.useLearningActivityCalendar,
+}));
+
+vi.mock("@/features/home/hooks/useDifficultReviewWords", () => ({
+  useDifficultReviewWords: mocks.useDifficultReviewWords,
 }));
 
 vi.mock("@/features/home/hooks/useVocabStats", () => ({
   useVocabStats: mocks.useVocabStats,
+}));
+
+vi.mock("@/features/home/hooks/useOxfordProgressSummary", () => ({
+  useOxfordProgressSummary: mocks.useOxfordProgressSummary,
 }));
 
 vi.mock("@/shared/providers/ThemeProvider", () => ({
@@ -87,17 +98,51 @@ describe("HomeDashboard", () => {
         due: 4,
         mastered: 8,
         highWrongCount: 3,
-        levels: [],
+        levels: [
+          { level: 0, count: 4 },
+          { level: 1, count: 8 },
+          { level: 7, count: 8 },
+        ],
       },
     });
-    mocks.useDashboardPartPractice.mockReturnValue({
+    mocks.useOxfordProgressSummary.mockReturnValue({
       error: null,
       isLoading: false,
       reload: vi.fn(),
-      summaries: [
-        { partNumber: 1, total: 20, answered: 10, correct: 8, wrong: 2 },
-        { partNumber: 3, total: 20, answered: 4, correct: 1, wrong: 3 },
+      summary: {
+        total: 20,
+        masteredCount: 5,
+        learningCount: 5,
+        newCount: 10,
+        levelCounts: Array.from({ length: 7 }, (_, index) => ({
+          level: index + 1,
+          count: index === 0 ? 5 : index === 6 ? 5 : 0,
+        })),
+      },
+    });
+    mocks.useDifficultReviewWords.mockReturnValue({
+      error: null,
+      isLoading: false,
+      reload: vi.fn(),
+      words: [
+        {
+          word: "difficult",
+          collectionName: "My Vocabulary",
+          wrongCount: 4,
+        },
       ],
+    });
+    mocks.useLearningActivityCalendar.mockReturnValue({
+      calendar: {
+        days: [
+          {
+            activityType: "TEST_PRACTICE",
+            learnedOn: getVietnamDateKey(),
+            seconds: 125,
+          },
+        ],
+      },
+      isLoading: false,
     });
   });
 
@@ -112,40 +157,74 @@ describe("HomeDashboard", () => {
     expect(screen.queryByRole("link", { name: /sign in/i })).not.toBeInTheDocument();
   });
 
-  it("shows vocabulary metrics and graded progress for all TOEIC parts", () => {
+  it("shows all learning activity with Review selected by default", () => {
     render(<HomeDashboard />);
 
-    expect(screen.getByRole("heading", { name: "Vocabulary" })).toBeInTheDocument();
-    expect(screen.getByText("Due for review")).toBeInTheDocument();
-    expect(screen.getByText("Mastered")).toBeInTheDocument();
-    expect(screen.getByText("Difficult")).toBeInTheDocument();
-    expect(screen.getByText("8")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "TOEIC" })).toBeInTheDocument();
-    expect(screen.getByText("14")).toBeInTheDocument();
-    expect(screen.getByText("8/10 (80%)")).toBeInTheDocument();
-    expect(screen.getByText("1/4 (25%)")).toBeInTheDocument();
-    expect(screen.getAllByText("0/0 (0%)")).toHaveLength(5);
+    expect(screen.getByText("Current streak").parentElement).toHaveTextContent(
+      "1",
+    );
+    expect(screen.getByText("minutes")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Study activity" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("1–15 minutes")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Vocabulary" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "TOEIC" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Review" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Practice" })).toBeInTheDocument();
+    expect(screen.getByText("Difficult words")).toBeInTheDocument();
   });
 
-  it("keeps vocabulary available when Part Practice fails", async () => {
+  it("shows collection and Oxford entry progress for Review", async () => {
     const user = userEvent.setup();
-    const reloadPartPractice = vi.fn();
-    mocks.useDashboardPartPractice.mockReturnValue({
-      error: "Cannot connect to server.",
-      isLoading: false,
-      reload: reloadPartPractice,
-      summaries: [],
-    });
 
     render(<HomeDashboard />);
 
-    expect(screen.getByRole("heading", { name: "Vocabulary" })).toBeInTheDocument();
-    expect(screen.getByText("Cannot connect to server.")).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Retry Part Practice" }),
+    expect(screen.getByRole("tab", { name: "My Collection" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Daily vocabulary" })).toBeInTheDocument();
+    expect(screen.getByText("Mastered")).toBeInTheDocument();
+    expect(screen.getByText("Learning")).toBeInTheDocument();
+    expect(screen.getByText("New")).toBeInTheDocument();
+    expect(screen.getByText("Difficult words")).toBeInTheDocument();
+    expect(screen.getByText("difficult")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show levels" })).toBeInTheDocument();
+    expect(mocks.useVocabStats).toHaveBeenLastCalledWith(
+      expect.objectContaining({ collectionId: "all", enabled: true }),
     );
-    expect(reloadPartPractice).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole("button", { name: "Daily vocabulary" }));
+
+    expect(mocks.useVocabStats).toHaveBeenLastCalledWith(
+      expect.objectContaining({ collectionId: "collection-1", enabled: true }),
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Oxford" }));
+
+    expect(mocks.useOxfordProgressSummary).toHaveBeenLastCalledWith(
+      expect.objectContaining({ band: "all", enabled: true }),
+    );
+    expect(screen.getByRole("button", { name: "A1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "C1" })).toBeInTheDocument();
+    expect(screen.getByText("10")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "A2" }));
+
+    expect(mocks.useOxfordProgressSummary).toHaveBeenLastCalledWith(
+      expect.objectContaining({ band: "A2", enabled: true }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Show levels" }));
+
+    expect(screen.getByText("Level 0")).toBeInTheDocument();
+    expect(screen.getByText("Level 7")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Practice" }));
+
+    expect(screen.queryByText("Difficult words")).not.toBeInTheDocument();
   });
 
   it("renders zero-valued metrics without invalid progress", () => {
@@ -161,18 +240,8 @@ describe("HomeDashboard", () => {
         levels: [],
       },
     });
-    mocks.useDashboardPartPractice.mockReturnValue({
-      error: null,
-      isLoading: false,
-      reload: vi.fn(),
-      summaries: [
-        { partNumber: 1, total: 40, answered: 0, correct: 0, wrong: 0 },
-      ],
-    });
-
     render(<HomeDashboard />);
 
-    expect(screen.getAllByText("0/0 (0%)")).toHaveLength(7);
     expect(document.body).not.toHaveTextContent(/NaN|Infinity/);
   });
 

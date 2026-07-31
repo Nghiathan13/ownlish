@@ -28,6 +28,8 @@ import type { DictationProgress, DictationSegment } from "@/entities/dictation/m
 import { useDictationCatalogQuery } from "@/entities/dictation/model/useDictationCatalogQuery";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
+import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -688,6 +690,15 @@ export function DictationStudy({ videoId }: { videoId: string }) {
   const activeSegment =
     segments.find((segment) => segment.id === selectedSegmentId) ?? progressSegment;
   const activeSegmentId = activeSegment?.id ?? null;
+  useLearningActivityTracker({
+    activityType: LEARNING_ACTIVITY_TYPES.DICTATION,
+    enabled:
+      status === "authenticated" &&
+      Boolean(user) &&
+      Boolean(videoQuery.data) &&
+      !progress?.completedAt &&
+      Boolean(activeSegment),
+  });
   const activeSegmentIndex = activeSegment
     ? segments.findIndex((segment) => segment.id === activeSegment.id)
     : -1;

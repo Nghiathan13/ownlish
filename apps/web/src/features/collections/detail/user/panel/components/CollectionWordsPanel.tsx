@@ -5,10 +5,11 @@ import { useCollectionWordsPanel } from "@/features/collections/detail/user/pane
 
 type CollectionWordsPanelProps = {
   collectionId: string;
+  collectionName: string | null;
 };
 
-export function CollectionWordsPanel({ collectionId }: CollectionWordsPanelProps) {
+export function CollectionWordsPanel({ collectionId, collectionName }: CollectionWordsPanelProps) {
   const panel = useCollectionWordsPanel({ collectionId });
 
-  return <CollectionWordsPanelBody {...panel} />;
+  return <CollectionWordsPanelBody {...panel} collectionName={collectionName} />;
 }

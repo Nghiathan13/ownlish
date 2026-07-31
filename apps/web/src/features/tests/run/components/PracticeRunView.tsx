@@ -35,6 +35,10 @@ import {
 import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
 import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
 import {
+  LEARNING_ACTIVITY_TYPES,
+} from "@/entities/learning-activity";
+import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
+import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPathFromYearValue,
 } from "@/features/tests/shared/constants/toeicYears";
@@ -238,6 +242,18 @@ export function PracticeRunView({
     [steps],
   );
   const totalQuestions = practice.totalQuestions;
+
+  useLearningActivityTracker({
+    activityType:
+      practiceMode === "review_wrong"
+        ? LEARNING_ACTIVITY_TYPES.TEST_REVIEW_WRONG
+        : LEARNING_ACTIVITY_TYPES.TEST_PRACTICE,
+    enabled:
+      !practice.isStarting &&
+      !practice.startError &&
+      Boolean(practice.sessionId) &&
+      steps.length > 0,
+  });
   const currentStepQuestionId = currentStep
     ? currentStep.kind === "group"
       ? currentStep.practiceGroup.questions[0]?.id

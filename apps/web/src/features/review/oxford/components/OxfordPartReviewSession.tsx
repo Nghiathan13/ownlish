@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
+import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { getOxfordPath, type OxfordBand } from "@/features/collections/oxford/lib/oxfordNavigation";
 import { ReviewStudySession } from "@/features/review/components";
 import { useReviewMode } from "@/features/review/hooks/useReviewMode";
@@ -22,6 +24,15 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
     part,
     isAuthenticated: isAuthenticatedStatus(status),
     userId: user?.id ?? null,
+  });
+  useLearningActivityTracker({
+    activityType: LEARNING_ACTIVITY_TYPES.VOCABULARY_REVIEW,
+    enabled:
+      isAuthenticatedStatus(status) &&
+      Boolean(user) &&
+      !review.isLoading &&
+      !review.isEmpty &&
+      Boolean(review.currentWord),
   });
 
   if (review.isLoading) {

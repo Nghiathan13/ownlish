@@ -27,6 +27,13 @@ export function getOxfordCollectionMetaQueryKey(userId: string | null, band: str
   return ["oxford-collection-meta", { userId, band }] as const;
 }
 
+export function getOxfordProgressSummaryQueryKey(
+  userId: string | null,
+  band: string = "all",
+) {
+  return ["oxford-progress-summary", { userId, band }] as const;
+}
+
 export function getOxfordPartQueryKey(band: string, part: number) {
   return ["oxford-part", { band, part }] as const;
 }

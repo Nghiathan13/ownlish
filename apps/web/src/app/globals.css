@@ -10,6 +10,10 @@
   --muted-foreground: rgba(0, 0, 0, 0.6);
   --primary: #1f48da;
   --primary-foreground: #ffffff;
+  --status-new: #b1bbca;
+  --status-new-background: #f1f5f9;
+  --status-new-border: #cbd5e1;
+  --status-mastered: #9D00FF;
   --danger: #d92d20;
   --danger-background: color-mix(in srgb, #fecaca 15%, transparent);
   --danger-border: color-mix(in srgb, var(--danger) 65%, transparent);
@@ -19,6 +23,8 @@
   --warning: #bc4704;
   --warning-background: color-mix(in srgb, #fde68a 15%, transparent);
   --warning-border: color-mix(in srgb, var(--warning) 65%, transparent);
+  --streak: #ea520c;
+  --streak-background: color-mix(in srgb, var(--streak) 12%, transparent);
   --information: var(--primary);
   --information-background: color-mix(in srgb, var(--primary) 7.5%, transparent);
   --information-border: color-mix(in srgb, var(--information) 65%, transparent);
@@ -40,6 +46,10 @@
   --muted-foreground: rgba(255, 255, 255, 0.6);
   --primary: #4769e5;
   --primary-foreground: #ffffff;
+  --status-new: #6e7a8a;
+  --status-new-background: #1e293b;
+  --status-new-border: #475569;
+  --status-mastered: #8c6ee7;
   --danger: #ff6b6b;
   --danger-background: color-mix(in srgb, #7f1d1d 30%, transparent);
   --danger-border: color-mix(in srgb, var(--danger) 45%, transparent);
@@ -49,6 +59,8 @@
   --warning: #fde68a;
   --warning-background: color-mix(in srgb, #78350f 30%, transparent);
   --warning-border: color-mix(in srgb, var(--warning) 45%, transparent);
+  --streak: #e2761e;
+  --streak-background: color-mix(in srgb, var(--streak) 18%, transparent);
   --information: var(--primary);
   --information-background: color-mix(in srgb, var(--primary) 15%, transparent);
   --information-border: color-mix(in srgb, var(--information) 60%, transparent);
@@ -72,6 +84,8 @@
   --color-warning: var(--warning);
   --color-warning-background: var(--warning-background);
   --color-warning-border: var(--warning-border);
+  --color-streak: var(--streak);
+  --color-streak-background: var(--streak-background);
   --color-information: var(--information);
   --color-information-background: var(--information-background);
   --color-information-border: var(--information-border);
@@ -81,6 +95,10 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-status-new: var(--status-new);
+  --color-status-new-background: var(--status-new-background);
+  --color-status-new-border: var(--status-new-border);
+  --color-status-mastered: var(--status-mastered);
   --color-surface: var(--surface);
   --color-hover-overlay: var(--hover-overlay);
   --color-hover-overlay-solid: var(--hover-overlay-solid);
@@ -94,12 +112,6 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-
-button,
-input,
-select {
-  font: inherit;
 }
 
 /* Hide native scrollbar; OverlayScrollArea draws an overlay thumb. */

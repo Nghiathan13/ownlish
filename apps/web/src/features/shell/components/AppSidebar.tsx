@@ -148,6 +148,7 @@ export function AppSidebar() {
                         getAppSidebarLinkClass(pathname, link),
                         sidebarLinkGroupClassName,
                         "relative flex items-center gap-2 rounded-lg px-2 py-2",
+                        isActive && "!bg-transparent dark:!bg-transparent",
                         collapsed && "z-10 justify-center",
                       )}
                     >

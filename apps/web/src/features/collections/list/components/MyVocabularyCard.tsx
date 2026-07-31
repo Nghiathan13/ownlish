@@ -30,6 +30,7 @@ export function MyVocabularyCard({
   const href = collection ? getCollectionPath(collection) : null;
   const { isLoading, stats } = useVocabStats({
     collectionId,
+    enabled: true,
     isAuthenticated,
     userId,
   });

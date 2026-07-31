@@ -98,7 +98,7 @@ type ListVocabWordsParams = {
   signal?: AbortSignal;
 };
 
-type VocabStatsParams = { collectionId: string; signal?: AbortSignal };
+type VocabStatsParams = { collectionId?: string; signal?: AbortSignal };
 
 function parseVocabularyEntry(body: unknown): UserVocabularyEntry {
   if (!isRecord(body)) invalidApiResponse();
@@ -259,10 +259,14 @@ export function listVocabWords(token: string, params: ListVocabWordsParams) {
   }).then(parseVocabularyListResponse);
 }
 
-export function getVocabStats(token: string, params: VocabStatsParams) {
-  const searchParams = new URLSearchParams({ collectionId: params.collectionId });
+export function getVocabStats(token: string, params: VocabStatsParams = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.collectionId) {
+    searchParams.set("collectionId", params.collectionId);
+  }
+  const query = searchParams.toString();
 
-  return apiRequest(`/vocab/stats?${searchParams.toString()}`, {
+  return apiRequest(`/vocab/stats${query ? `?${query}` : ""}`, {
     signal: params.signal,
     token,
   }).then(parseVocabStats);

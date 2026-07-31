@@ -18,7 +18,7 @@ export function ReviewMasterButton({ disabled, onMaster }: ReviewMasterButtonPro
     <button
       aria-label={t("review.master")}
       className={iconOnlyButtonClassName(
-        "relative bg-transparent text-warning hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+        "relative bg-transparent text-status-mastered hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
         iconButtonGroupClassName,
       )}
       disabled={disabled}

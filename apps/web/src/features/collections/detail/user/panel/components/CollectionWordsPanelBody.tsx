@@ -12,6 +12,7 @@ import {
 } from "@/features/collections/detail/shared/components";
 import type { useCollectionWordsPanel } from "@/features/collections/detail/user/panel/hooks/useCollectionWordsPanel";
 import { VOCABULARY_TOGGLEABLE_COLUMNS } from "@/features/collections/detail/user/panel/lib/vocabularyTableColumns";
+import { getAddWordModalTitleParts } from "@/features/collections/detail/user/panel/lib/addWordModalTitle";
 import { formatMessage } from "@/shared/i18n/messages";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { iconTextButtonClassName } from "@/shared/ui/button";
@@ -21,10 +22,13 @@ import { Modal } from "@/shared/ui/Modal";
 
 type CollectionWordsPanelState = ReturnType<typeof useCollectionWordsPanel>;
 
-type CollectionWordsPanelBodyProps = CollectionWordsPanelState;
+type CollectionWordsPanelBodyProps = CollectionWordsPanelState & {
+  collectionName: string | null;
+};
 
 export function CollectionWordsPanelBody({
   allDefinitionsSelected,
+  collectionName,
   canGoNext,
   canGoPrevious,
   columnVisibility,
@@ -62,6 +66,7 @@ export function CollectionWordsPanelBody({
   words,
 }: CollectionWordsPanelBodyProps) {
   const t = useT();
+  const addWordModalTitle = getAddWordModalTitleParts(collectionName, t);
   const columns = VOCABULARY_TOGGLEABLE_COLUMNS.map((column) => ({
     id: column.id,
     label: t(column.labelKey),
@@ -118,8 +123,18 @@ export function CollectionWordsPanelBody({
 
       {isAddWordOpen ? (
         <Modal
-          title={t("wordsTable.addWord")}
-          description={t("wordsTable.addWordDescription")}
+          title={
+            <>
+              {addWordModalTitle.prefix ? (
+                <>
+                  <span className="font-normal text-muted-foreground">
+                    {addWordModalTitle.prefix}
+                  </span>{" "}
+                </>
+              ) : null}
+              <span>{addWordModalTitle.collectionName}</span>
+            </>
+          }
           onClose={() => setIsAddWordOpen(false)}
         >
           <AddWordForm

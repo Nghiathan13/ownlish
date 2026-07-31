@@ -11,7 +11,7 @@ type ModalProps = {
   className?: string;
   onClose: () => void;
   showCloseButton?: boolean;
-  title: string;
+  title: ReactNode;
 };
 
 export function Modal({

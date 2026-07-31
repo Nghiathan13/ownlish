@@ -12,6 +12,8 @@ import {
   useRegisterImmersiveExit,
   useRegisterImmersiveFinish,
 } from "@/features/shell/providers/ImmersiveToolbarProvider";
+import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
+import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
 import {
   DEFAULT_TOEIC_YEAR,
@@ -382,6 +384,15 @@ export function MockRunView({
       onRetry={() => void mock.finishRun()}
     />
   ) : null;
+
+  useLearningActivityTracker({
+    activityType: LEARNING_ACTIVITY_TYPES.TEST_MOCK,
+    enabled:
+      !mock.isLoading &&
+      !mock.loadError &&
+      !isReviewingResults &&
+      Boolean(activeGroup),
+  });
 
   if (mock.isLoading) {
     return (

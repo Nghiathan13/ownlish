@@ -68,6 +68,14 @@ export type OxfordPartProgress = {
   newCount: number;
 };
 
+export type OxfordProgressSummary = {
+  total: number;
+  masteredCount: number;
+  learningCount: number;
+  newCount: number;
+  levelCounts: Array<{ level: number; count: number }>;
+};
+
 export type OxfordPart = {
   items: CatalogWord[];
   offset: number;
@@ -275,6 +283,40 @@ function parseOxfordCollectionMeta(body: unknown): OxfordCollectionMeta {
   };
 }
 
+function parseOxfordProgressSummary(body: unknown): OxfordProgressSummary {
+  if (!isRecord(body)) invalidApiResponse();
+
+  const { total, masteredCount, learningCount, newCount, levelCounts } = body;
+
+  if (
+    !isNumber(total) ||
+    !isNumber(masteredCount) ||
+    !isNumber(learningCount) ||
+    !isNumber(newCount) ||
+    !Array.isArray(levelCounts)
+  ) {
+    invalidApiResponse();
+  }
+
+  return {
+    total,
+    masteredCount,
+    learningCount,
+    newCount,
+    levelCounts: levelCounts.map((levelCount) => {
+      if (
+        !isRecord(levelCount) ||
+        !isNumber(levelCount.level) ||
+        !isNumber(levelCount.count)
+      ) {
+        invalidApiResponse();
+      }
+
+      return { level: levelCount.level, count: levelCount.count };
+    }),
+  };
+}
+
 function parseOxfordPart(body: unknown): OxfordPart {
   if (!isRecord(body) || !Array.isArray(body.items)) {
     invalidApiResponse();
@@ -361,6 +403,25 @@ export function getOxfordCollectionMeta(
     signal: options.signal,
     token,
   }).then(parseOxfordCollectionMeta);
+}
+
+export function getOxfordProgressSummary(
+  token: string,
+  options: { band?: string; signal?: AbortSignal } = {},
+) {
+  const params = new URLSearchParams();
+  if (options.band) {
+    params.set("band", options.band);
+  }
+  const query = params.toString();
+
+  return apiRequest(
+    `/collections/oxford/progress${query ? `?${query}` : ""}`,
+    {
+      signal: options.signal,
+      token,
+    },
+  ).then(parseOxfordProgressSummary);
 }
 
 export function getOxfordPart(

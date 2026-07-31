@@ -13,6 +13,7 @@ import {
   optimisticallyRemoveFromReviewQueue,
   restoreReviewQueue,
 } from "@/entities/vocab/lib/reviewQueueCache";
+import { invalidateDifficultReviewWords } from "@/entities/review/lib/difficultReviewWordsCache";
 import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
 import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
@@ -121,6 +122,7 @@ export function useReviewQueue({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: getVocabUserQueryKey(userId) });
+      invalidateDifficultReviewWords(queryClient, userId);
       queryClient.invalidateQueries({
         queryKey: getVocabStatsQueryKey(userId, collectionId),
       });

@@ -15,6 +15,7 @@ import {
   getOxfordPartReviewQueryOptions,
 } from "./oxfordReviewQueries";
 import { getOxfordCollectionMetaQueryKey } from "@/entities/collection/lib/collectionsCache";
+import { invalidateDifficultReviewWords } from "@/entities/review/lib/difficultReviewWordsCache";
 
 type UseOxfordPartReviewQueueParams = {
   band: string;
@@ -122,6 +123,7 @@ export function useOxfordPartReviewQueue({
       void queryClient.invalidateQueries({
         queryKey: getOxfordCollectionMetaQueryKey(userId, band),
       });
+      invalidateDifficultReviewWords(queryClient, userId);
     },
   });
 

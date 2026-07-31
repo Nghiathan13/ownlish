@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
-import type { VocabStats } from "@/entities/vocab/api/vocab";
+import { useState, type ReactNode } from "react";
+import {
+  LEARNING_ACTIVITY_CALENDAR_MODES,
+} from "@/entities/learning-activity";
 import {
   getCollectionsListPath,
   getDefaultUserCollection,
@@ -15,12 +17,13 @@ import {
 } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { GuestLanding } from "@/features/home/components/GuestLanding";
+import { DifficultReviewWordsCard } from "@/features/home/components/DifficultReviewWordsCard";
 import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
-import {
-  type DashboardPartPracticeSummary,
-  useDashboardPartPractice,
-} from "@/features/home/hooks/useDashboardPartPractice";
-import { useVocabStats } from "@/features/home/hooks/useVocabStats";
+import { LearningActivityCalendarCard } from "@/features/home/components/LearningActivityCalendarCard";
+import { ReviewProgressCard } from "@/features/home/components/ReviewProgressCard";
+import { useLearningActivityCalendar } from "@/features/home/hooks/useLearningActivityCalendar";
+import { useDifficultReviewWords } from "@/features/home/hooks/useDifficultReviewWords";
+import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import {
   primaryTextButtonClassName,
@@ -32,10 +35,31 @@ import { PageShell } from "@/shared/ui/PageShell";
 const dashboardButtonInteractionClassName =
   "gap-2 whitespace-nowrap transition duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px [&_svg]:size-5 [&_svg]:shrink-0";
 
+const dashboardModes = [
+  LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
+  LEARNING_ACTIVITY_CALENDAR_MODES.PRACTICE,
+  LEARNING_ACTIVITY_CALENDAR_MODES.PART_PRACTICE,
+  LEARNING_ACTIVITY_CALENDAR_MODES.MOCK,
+  LEARNING_ACTIVITY_CALENDAR_MODES.DICTATION,
+] as const;
+
+type DashboardMode = (typeof dashboardModes)[number];
+
+const dashboardModeLabelKeys = {
+  dictation: "dashboard.activityModeDictation",
+  mock: "dashboard.activityModeMock",
+  part_practice: "dashboard.activityModePartPractice",
+  practice: "dashboard.activityModePractice",
+  review: "dashboard.activityModeReview",
+} as const;
+
 export function HomeDashboard() {
   const t = useT();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(
+    LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
+  );
   const {
     collections,
     collectionsError,
@@ -46,22 +70,12 @@ export function HomeDashboard() {
     userId: user?.id ?? null,
   });
   const defaultCollection = getDefaultUserCollection(collections);
-  const {
-    error: vocabError,
-    isLoading: isLoadingVocab,
-    reload: reloadVocab,
-    stats,
-  } = useVocabStats({
-    collectionId: defaultCollection?.id ?? null,
+  const learningActivity = useLearningActivityCalendar({
     isAuthenticated,
     userId: user?.id ?? null,
   });
-  const {
-    error: partPracticeError,
-    isLoading: isLoadingPartPractice,
-    reload: reloadPartPractice,
-    summaries,
-  } = useDashboardPartPractice({
+  const difficultReviewWords = useDifficultReviewWords({
+    enabled: dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
     isAuthenticated,
     userId: user?.id ?? null,
   });
@@ -79,8 +93,8 @@ export function HomeDashboard() {
   }
 
   return (
-    <PageShell>
-      <div className="flex flex-col gap-4 px-8 py-8 lg:gap-8 lg:px-16">
+    <PageShell className="max-lg:overflow-y-auto" fillViewport>
+      <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 lg:gap-8 lg:px-16 lg:py-8">
         {isLoadingCollections ? (
           <HomeDashboardSkeleton />
         ) : collectionsError ? (
@@ -121,20 +135,30 @@ export function HomeDashboard() {
               <ArrowForwardIcon />
             </Link>
           </DashboardMessage>
-        ) : isLoadingVocab || isLoadingPartPractice ? (
-          <HomeDashboardSkeleton />
         ) : (
-          <div className="flex flex-col gap-8">
-            <VocabularyOverview
-              error={vocabError}
-              onRetry={() => void reloadVocab()}
-              stats={stats}
-            />
-            <PartPracticeOverview
-              error={partPracticeError}
-              onRetry={() => void reloadPartPractice()}
-              summaries={summaries}
-            />
+          <div className="flex min-h-0 flex-1 flex-col gap-8">
+            <div className="shrink-0">
+              <LearningActivityCalendarCard
+                calendar={learningActivity.calendar}
+                isLoading={learningActivity.isLoading}
+              />
+            </div>
+            <DashboardModeTabs mode={dashboardMode} onChange={setDashboardMode} />
+            {dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW ? (
+              <div className="grid min-h-[328px] grid-cols-1 gap-4 max-lg:flex-none lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1">
+                <ReviewProgressCard
+                  collections={collections}
+                  isAuthenticated={isAuthenticated}
+                  userId={user?.id ?? null}
+                />
+                <DifficultReviewWordsCard
+                  error={difficultReviewWords.error}
+                  isLoading={difficultReviewWords.isLoading}
+                  onRetry={() => void difficultReviewWords.reload()}
+                  words={difficultReviewWords.words}
+                />
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -142,181 +166,49 @@ export function HomeDashboard() {
   );
 }
 
-function VocabularyOverview({
-  error,
-  onRetry,
-  stats,
+const dashboardModeButtonClassName =
+  "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal";
+
+function getDashboardModeButtonClassName(isActive: boolean) {
+  return classNames(
+    dashboardModeButtonClassName,
+    isActive
+      ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
+      : "bg-[#f0f0f0] text-foreground hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
+  );
+}
+
+function DashboardModeTabs({
+  mode,
+  onChange,
 }: {
-  error: string | null;
-  onRetry: () => void;
-  stats: VocabStats | null;
+  mode: DashboardMode;
+  onChange: (mode: DashboardMode) => void;
 }) {
   const t = useT();
 
   return (
-    <section aria-labelledby="vocabulary-title">
-      <div className="mb-8 flex items-center gap-4">
-        <span className="h-px flex-1 bg-border" />
-        <h1
-          className="text-2xl font-semibold tracking-tight sm:text-3xl"
-          id="vocabulary-title"
-        >
-          {t("dashboard.vocabulary")}
-        </h1>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      {error ? (
-        <InlinePanelState
-          actionLabel={t("dashboard.retryVocabulary")}
-          message={error}
-          onAction={onRetry}
-        />
-      ) : (
-        <div className="grid grid-cols-2 gap-4 lg:gap-8 min-[1481px]:grid-cols-4">
-          <MetricCard label={t("dashboard.studyTime")} value="-" />
-          <MetricCard
-            label={t("dashboard.dueForReview")}
-            value={stats?.due ?? 0}
-          />
-          <MetricCard
-            label={t("dashboard.mastered")}
-            value={stats?.mastered ?? 0}
-          />
-          <MetricCard
-            label={t("dashboard.difficult")}
-            value={stats?.highWrongCount ?? 0}
-          />
-        </div>
-      )}
-    </section>
-  );
-}
+    <div
+      aria-label={t("dashboard.activityMode")}
+      className="flex w-fit max-w-full shrink-0 gap-3 overflow-x-auto"
+      role="tablist"
+    >
+      {dashboardModes.map((item) => {
+        const isActive = item === mode;
 
-function PartPracticeOverview({
-  error,
-  onRetry,
-  summaries,
-}: {
-  error: string | null;
-  onRetry: () => void;
-  summaries: DashboardPartPracticeSummary[];
-}) {
-  const t = useT();
-  const answered = summaries.reduce((total, summary) => total + summary.answered, 0);
-
-  return (
-    <section aria-labelledby="toeic-title">
-      <div className="mb-8 flex items-center gap-4">
-        <span className="h-px flex-1 bg-border" />
-        <h2
-          className="text-2xl font-semibold tracking-tight sm:text-3xl"
-          id="toeic-title"
-        >
-          {t("dashboard.toeic")}
-        </h2>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-      {error ? (
-        <InlinePanelState
-          actionLabel={t("dashboard.retryPartPractice")}
-          message={error}
-          onAction={onRetry}
-        />
-      ) : (
-        <div className="flex flex-col gap-4 lg:gap-8">
-          <div className="grid grid-cols-2 gap-4 lg:gap-8">
-            <MetricCard label={t("dashboard.answered")} value={answered} />
-            <MetricCard label={t("dashboard.studyTime")} value="-" />
-          </div>
-          <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
-            <div className="space-y-5">
-              {Array.from({ length: 7 }, (_, index) => (
-                <PartProgress
-                  key={index + 1}
-                  partNumber={index + 1}
-                  summary={summaries.find(
-                    (summary) => summary.partNumber === index + 1,
-                  )}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: number | string }) {
-  return (
-    <article className="min-h-32 rounded-2xl border border-border bg-surface p-5 sm:p-6">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-3 font-mono text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
-        {value}
-      </p>
-    </article>
-  );
-}
-
-function PartProgress({
-  partNumber,
-  summary,
-}: {
-  partNumber: number;
-  summary: DashboardPartPracticeSummary | undefined;
-}) {
-  const t = useT();
-  const correct = summary?.correct ?? 0;
-  const answered = summary?.answered ?? 0;
-  const accuracy = answered > 0 ? Math.round((correct / answered) * 100) : 0;
-
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-4 text-sm">
-        <p className="font-medium">
-          {t("dashboard.part")} {partNumber}
-        </p>
-        <p className="font-mono tabular-nums text-muted-foreground">
-          {correct}/{answered} ({accuracy}%)
-        </p>
-      </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-foreground"
-          style={{ width: `${accuracy}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function InlinePanelState({
-  actionLabel,
-  message,
-  onAction,
-}: {
-  actionLabel: string;
-  message: string;
-  onAction: () => void;
-}) {
-  const t = useT();
-
-  return (
-    <div className="mt-7 border-l-2 border-border pl-4" role="alert">
-      <p className="font-semibold text-foreground">
-        {t("dashboard.sectionDidNotLoad")}
-      </p>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{message}</p>
-      <button
-        className={secondaryTextButtonClassName(
-          dashboardButtonInteractionClassName,
-          "mt-4",
-        )}
-        onClick={onAction}
-        type="button"
-      >
-        {actionLabel}
-      </button>
+        return (
+          <button
+            aria-selected={isActive}
+            className={getDashboardModeButtonClassName(isActive)}
+            key={item}
+            onClick={() => onChange(item)}
+            role="tab"
+            type="button"
+          >
+            {t(dashboardModeLabelKeys[item])}
+          </button>
+        );
+      })}
     </div>
   );
 }

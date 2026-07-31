@@ -76,7 +76,7 @@ export function OxfordWordGroupGrid({
             <div className="pointer-events-none relative">
               <h2 className="text-lg font-semibold">{partTitle}</h2>
               <div className="mt-3 flex items-center gap-4 text-sm tabular-nums">
-                <span className="text-warning">
+                <span className="text-status-mastered">
                   {progress.masteredCount} {t("collections.mastered")}
                 </span>
                 <span className="text-primary">
@@ -88,7 +88,7 @@ export function OxfordWordGroupGrid({
               </div>
               <div className="mt-2 flex h-1 overflow-hidden rounded-full bg-muted">
                 <span
-                  className="bg-warning"
+                  className="bg-status-mastered"
                   style={{ width: `${masteredWidth}%` }}
                 />
                 <span

@@ -30,6 +30,8 @@ import {
 } from "@/features/tests/run/lib/practiceQuestionGrid";
 import { getSessionQuestionNumber } from "@/features/tests/run/lib/sessionQuestionPosition";
 import { useRegisterImmersiveExit } from "@/features/shell/providers/ImmersiveToolbarProvider";
+import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
+import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { getTestsOverviewPath } from "@/features/tests/shared/lib/partPracticePaths";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -200,6 +202,17 @@ export function PartPracticeRunView({
     [steps],
   );
   const totalQuestions = practice.totalQuestions;
+  useLearningActivityTracker({
+    activityType: isWrongMode
+      ? LEARNING_ACTIVITY_TYPES.TEST_PART_PRACTICE_REVIEW_WRONG
+      : LEARNING_ACTIVITY_TYPES.TEST_PART_PRACTICE,
+    enabled:
+      !practice.isStarting &&
+      !practice.startError &&
+      Boolean(practice.sessionId) &&
+      partNumber > 0 &&
+      steps.length > 0,
+  });
   const currentStepQuestionId = currentStep
     ? currentStep.kind === "group"
       ? currentStep.practiceGroup.questions[0]?.id

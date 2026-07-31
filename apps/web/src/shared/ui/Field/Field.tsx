@@ -1,15 +1,18 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 
 type FieldProps = {
+  as?: "label" | "div";
   children: ReactNode;
   label: string;
 };
 
-export function Field({ children, label }: FieldProps) {
+export function Field({ as = "label", children, label }: FieldProps) {
+  const Root = as as ElementType;
+
   return (
-    <label className="grid gap-2 text-sm font-semibold text-foreground">
-      {label}
+    <Root className="grid gap-2 text-sm font-semibold text-foreground">
+      {as === "label" ? label : <span>{label}</span>}
       {children}
-    </label>
+    </Root>
   );
 }

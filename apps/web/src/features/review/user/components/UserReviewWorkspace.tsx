@@ -8,6 +8,8 @@ import {
   getUserOwnedCollections,
 } from "@/entities/collection/lib/collectionDisplay";
 import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
+import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import {
   ReviewCategorySelect,
@@ -57,6 +59,14 @@ export function UserReviewWorkspace({ onCategoryChange }: UserReviewWorkspacePro
     userId: user?.id ?? null,
   });
   const currentWord = review.currentWord;
+  useLearningActivityTracker({
+    activityType: LEARNING_ACTIVITY_TYPES.VOCABULARY_REVIEW,
+    enabled:
+      isAuthenticated &&
+      !review.isLoading &&
+      !review.isEmpty &&
+      Boolean(currentWord),
+  });
 
   return (
     <ReviewWorkspace

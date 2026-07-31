@@ -14,6 +14,7 @@ import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { Skeleton } from "@/shared/ui/Skeleton";
+import { MusicIcon } from "@/shared/ui/icons/MusicIcon";
 import type { DictationCatalogVideo } from "@/entities/dictation/model/types";
 
 const EMPTY_VIDEOS: DictationCatalogVideo[] = [];
@@ -143,7 +144,8 @@ export function DictationLibrary({ category }: { category?: string }) {
                       loading="lazy"
                       src={getDictationThumbnailUrl(video.youtubeVideoId)}
                     />
-                    <span className="absolute right-2 bottom-2 rounded bg-[#f0f0f0] px-1.5 py-0.5 text-xs font-medium tabular-nums text-foreground dark:bg-surface">
+                    <span className="absolute right-2 bottom-2 inline-flex items-center gap-0.5 rounded bg-[#f0f0f0] px-1 py-0.5 text-xs font-medium tabular-nums text-foreground dark:bg-surface">
+                      {video.category === "Music" ? <MusicIcon className="size-3.5" /> : null}
                       {formatDuration(video.durationSeconds)}
                     </span>
                   </div>

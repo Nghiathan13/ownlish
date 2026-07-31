@@ -34,6 +34,7 @@ export function useCollectionDetailPage({
 
   return {
     collectionId,
+    collectionName: collectionSummary?.name ?? null,
     collectionsError,
     hasCollectionsList,
     isNotFound,
