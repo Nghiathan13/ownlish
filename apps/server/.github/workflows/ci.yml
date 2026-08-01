@@ -2,6 +2,8 @@ name: CI
 
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -36,8 +38,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,11 +58,62 @@ jobs:
       - name: Run migrations
         run: pnpm prisma migrate deploy
 
+      - name: Run lint
+        id: lint
+        run: pnpm lint:check
+
       - name: Run unit tests
-        run: pnpm test
+        id: unit-tests
+        run: |
+          mkdir -p test-results
+          pnpm test --json --outputFile=test-results/jest-unit.json
 
       - name: Run e2e tests
-        run: pnpm test:e2e
+        id: e2e-tests
+        run: pnpm test:e2e --json --outputFile=test-results/jest-e2e.json
 
       - name: Build
+        id: build
         run: pnpm build
+
+      - name: Publish test summary
+        if: always()
+        env:
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          UNIT_TESTS_OUTCOME: ${{ steps.unit-tests.outcome }}
+          E2E_TESTS_OUTCOME: ${{ steps.e2e-tests.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+        run: |
+          append_jest_row() {
+            local name="$1"
+            local report="$2"
+            local outcome="$3"
+
+            if [[ -f "$report" ]] && jq -e . "$report" >/dev/null 2>&1; then
+              local suites total passed failed pending todo
+              suites=$(jq -r '.numTotalTestSuites // 0' "$report")
+              total=$(jq -r '.numTotalTests // 0' "$report")
+              passed=$(jq -r '.numPassedTests // 0' "$report")
+              failed=$(jq -r '.numFailedTests // 0' "$report")
+              pending=$(jq -r '.numPendingTests // 0' "$report")
+              todo=$(jq -r '.numTodoTests // 0' "$report")
+              echo "| ${name} | ${suites} | ${total} | ${passed} | ${failed} | ${pending} / ${todo} | ${outcome} |"
+            else
+              echo "| ${name} | — | — | — | — | — | report unavailable (${outcome}) |"
+            fi
+          }
+
+          {
+            echo "## Server CI summary"
+            echo
+            echo "| Test suite | Suites | Total | Passed | Failed | Skipped / todo | Status |"
+            echo "| --- | ---: | ---: | ---: | ---: | ---: | --- |"
+            append_jest_row "Jest unit" "test-results/jest-unit.json" "$UNIT_TESTS_OUTCOME"
+            append_jest_row "Jest E2E" "test-results/jest-e2e.json" "$E2E_TESTS_OUTCOME"
+
+            echo
+            echo "| Quality gate | Status |"
+            echo "| --- | --- |"
+            echo "| Lint | ${LINT_OUTCOME} |"
+            echo "| Build | ${BUILD_OUTCOME} |"
+          } >> "$GITHUB_STEP_SUMMARY"
