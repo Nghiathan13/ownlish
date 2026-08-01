@@ -1,38 +1,73 @@
 # EngVocab Web
 
-EngVocab Web is the Next.js client for learning and reviewing English
-vocabulary and practicing TOEIC questions. It connects to the
-[EngVocab NestJS API](https://github.com/Nghiathan13/engvocab-server) for
-authentication, collections, review progress, test sessions, and admin data.
+EngVocab is a bilingual English-learning web app for vocabulary review, TOEIC
+practice, dictation, and learning-activity tracking. This repository contains
+the Next.js client; the companion [EngVocab API](https://github.com/Nghiathan13/engvocab-server)
+provides authentication, learning data, test sessions, and catalog management.
+
+## Product snapshots
+
+### Learning activity and vocabulary progress
+
+![Dashboard showing learning activity, vocabulary progress, and difficult words](./docs/images/dashboard-review.webp)
+
+### Dictation with YouTube-based listening practice
+
+![Dictation study screen with video, transcript segments, and answer input](./docs/images/dictation-study.webp)
+
+### TOEIC part practice
+
+![TOEIC part-practice screen with audio, questions, and bilingual transcript](./docs/images/toeic-practice.webp)
 
 ## Features
 
-- **Authentication:** email/password login and registration, optional Google
-  Identity Sign-In, session restoration, logout, and role-aware admin UI.
-- **Dashboard:** total, due, mastered, high-wrong-count, and level-distribution
-  statistics for the user's default vocabulary collection.
-- **Collections and vocabulary:** create, rename, and delete custom
-  collections; browse backend-provided Oxford, TOEIC, and IELTS system
-  catalogs; import a full catalog or selected definitions into the default
-  collection; search, paginate, add, edit, and delete vocabulary definitions.
-- **Review:** collection-specific due-word queues, Remember/Forgot scheduling,
-  and keyboard controls (`Space` to reveal, `1` for Forgot, `2` for Remember).
-- **TOEIC:** mock tests, graded practice, wrong-answer review, part selection,
-  aggregate Part 1-7 practice across tests, progress/history controls,
-  bilingual content, evidence highlighting, and signed audio/image media.
-- **TOEIC admin:** browse imported tests, preview groups and questions, edit
-  structured fields or TXT/JSON group ranges, and upload/delete supported MP3
-  and PNG media. The Users and Vocabulary Content admin areas are placeholders.
-- **Application shell:** responsive desktop/mobile navigation and immersive
-  layouts for test runs and TOEIC content editing.
+- **Vocabulary collections:** create and manage personal collections; browse
+  Oxford CEFR vocabulary by band and part; import system entries into a personal
+  collection; search, edit, and remove definitions.
+- **Spaced review:** review due vocabulary with keyboard support, levels,
+  review scheduling, wrong-count tracking, and collection-specific progress.
+- **Learning dashboard:** view study time, activity across six-month periods,
+  streaks, vocabulary progress, level distributions, and difficult words.
+- **TOEIC practice:** take graded practice, wrong-answer review, aggregate
+  Part 1-7 practice, and timed mock tests with progress, history, and TOEIC
+  listening/reading scores.
+- **Dictation:** study curated YouTube videos through transcript segments,
+  word hints, replay/loop controls, playback speed, and keyboard shortcuts.
+- **Responsive application shell:** desktop and mobile navigation, light and
+  dark themes, and focused immersive layouts for study sessions.
+- **Authentication:** email/password sign-in and registration, optional Google
+  Sign-In, session restoration, and role-aware admin access.
 
-Current boundaries: the TOEIC year picker supports 2019-2026 and defaults to
-2026; mock results report answered/correct/wrong counts without a timer or
-scaled TOEIC score; admin tools edit existing imported tests rather than
-creating, importing, or deleting tests. Catalog and test screens can be empty
-until the backend has imported the corresponding data.
+System catalogs and TOEIC content are supplied by the API and storage. A screen
+can therefore be empty until its corresponding catalog has been published.
 
-## Tech Stack
+## Built with
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/tech/nextdotjs-dark.svg">
+    <img src="./docs/tech/nextdotjs.svg" height="42" alt="Next.js">
+  </picture>
+  &nbsp;&nbsp;
+  <img src="./docs/tech/react.svg" height="42" alt="React">
+  &nbsp;&nbsp;
+  <img src="./docs/tech/typescript.svg" height="42" alt="TypeScript">
+  &nbsp;&nbsp;
+  <img src="./docs/tech/tailwindcss.svg" height="42" alt="Tailwind CSS">
+  &nbsp;&nbsp;
+  <img src="./docs/tech/supabase.svg" height="42" alt="Supabase">
+  &nbsp;&nbsp;
+  <img src="./docs/tech/vitest.svg" height="42" alt="Vitest">
+  &nbsp;&nbsp;
+  <img src="./docs/tech/playwright.svg" height="42" alt="Playwright">
+  &nbsp;&nbsp;
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/tech/vercel-dark.svg">
+    <img src="./docs/tech/vercel.svg" height="42" alt="Vercel">
+  </picture>
+</p>
+
+## Tech stack
 
 | Area | Technology |
 | --- | --- |
@@ -46,28 +81,26 @@ until the backend has imported the corresponding data.
 
 ## Prerequisites
 
-- Node.js 22 is recommended and is the version used by CI. Next.js 16 requires
-  Node.js 20.9 or newer.
-- pnpm 11.2.2.
-- A compatible EngVocab API. The local defaults expect it at
+- Node.js 22 and pnpm 11.2.2 (the versions used by CI).
+- A compatible EngVocab API. Local development expects it at
   `http://localhost:3001`, with `http://localhost:3000` allowed by CORS.
-- Docker is required only for the isolated local browser E2E database.
+- Docker only when running the isolated browser E2E database.
 
-## Local Development
+## Local development
 
-For a fresh full-stack setup, complete the API repository's
-[Local Setup](https://github.com/Nghiathan13/engvocab-server#local-setup) first.
-It starts PostgreSQL, generates the Prisma client, applies migrations, and runs
-the NestJS API on `http://localhost:3001`.
+Set up the API first by following its
+[Local Setup](https://github.com/Nghiathan13/engvocab-server#local-setup).
+That starts PostgreSQL, generates Prisma, applies migrations, and runs the API
+on `http://localhost:3001`.
 
-Install the locked dependencies and create the local environment file:
+Install dependencies and create the local environment file:
 
 ```bash
 pnpm install --frozen-lockfile
 cp .env.example .env.local
 ```
 
-Start the EngVocab API, then run the web client:
+Then run the web client:
 
 ```bash
 pnpm dev
@@ -75,40 +108,41 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-Google Sign-In is optional. To enable it, set
-`NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `.env.local` and configure the backend's
-`GOOGLE_CLIENT_ID` with the same OAuth web client ID. If the frontend variable
-is empty, the Google button is not rendered. Add `http://localhost:3000` and
-the deployed web origin to that client's Authorized JavaScript origins.
+Google Sign-In is optional. Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `.env.local`
+and configure the API's `GOOGLE_CLIENT_ID` with the same OAuth web client ID.
+When the frontend variable is empty, the Google button is hidden. Add both the
+local and deployed web origins to Google OAuth's Authorized JavaScript origins.
 
-Supabase Storage is optional for local API development. Without it, signed
-TOEIC media may be unavailable and admin media uploads will fail.
+For local Dictation content, point `NEXT_PUBLIC_DICTATION_CATALOG_ROOT` to the
+served catalog root, for example `http://localhost:3000/dictation` when the
+catalog JSON files are available under `public/dictation`.
 
-## Environment Variables
+## Environment variables
 
 | Name | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | No | `http://localhost:3001` | Browser-facing API base URL for non-BFF requests |
-| `NEXT_PUBLIC_TOEIC_CATALOG_ROOT` | Runtime Tests only | - | Public root of the current TOEIC catalog in Storage bucket `toeic` |
-| `AUTH_API_BASE_URL` | No | `NEXT_PUBLIC_API_BASE_URL`, then `http://localhost:3001` | Server-only API base URL used by the same-origin auth BFF |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Sign-In only | Empty | Google Identity Services web client ID; an empty value hides Google Sign-In |
+| `AUTH_API_BASE_URL` | No | `NEXT_PUBLIC_API_BASE_URL`, then `http://localhost:3001` | Server-only API base URL for the same-origin auth BFF |
+| `NEXT_PUBLIC_TOEIC_CATALOG_ROOT` | TOEIC runtime | Empty | Public root of the published TOEIC catalog |
+| `NEXT_PUBLIC_DICTATION_CATALOG_ROOT` | Dictation runtime | Empty | Public root containing `catalog.json` and video JSON files |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Sign-In only | Empty | Google Identity Services web client ID |
 
-Values prefixed with `NEXT_PUBLIC_` are included in the browser bundle. Do not
-put secrets in them, and set their production values before building.
+Variables prefixed with `NEXT_PUBLIC_` are part of the browser bundle. Never
+put secrets in them.
 
-## Available Scripts
+## Scripts
 
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Start the Next.js development server |
-| `pnpm test` | Run all Vitest unit and component-integration tests once |
-| `pnpm test:unit` | Run Node-based `*.test.ts` unit tests |
-| `pnpm test:component` | Run jsdom-based `*.test.tsx` component-integration tests |
+| `pnpm test` | Run all Vitest unit and component-integration tests |
+| `pnpm test:unit` | Run Node-based `*.test.ts` tests |
+| `pnpm test:component` | Run jsdom-based `*.test.tsx` tests |
 | `pnpm test:e2e` | Build and run the full-stack Playwright suite against the sibling API repository |
 | `pnpm test:e2e:db:up` | Start the isolated local E2E PostgreSQL database |
 | `pnpm test:e2e:db:down` | Remove the isolated local E2E PostgreSQL database |
-| `pnpm test:e2e:install` | Install the local Playwright Chromium browser |
-| `pnpm lint` | Run ESLint across the project |
+| `pnpm test:e2e:install` | Install Playwright Chromium |
+| `pnpm lint` | Run ESLint |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
 
@@ -120,18 +154,15 @@ pnpm lint
 pnpm build
 ```
 
-GitHub Actions uses Node.js 22 and pnpm 11.2.2, then runs these gates after a
-frozen-lockfile install for pushes and pull requests to `main`. Node unit tests
-are colocated as `*.test.ts`; React component-integration tests are colocated as
-`*.test.tsx` and exercise HTTP behavior through MSW.
+GitHub Actions uses Node.js 22 and pnpm 11.2.2, then runs these checks after a
+frozen-lockfile install for pushes and pull requests to `main`.
 
 ### Browser E2E
 
-The first Playwright golden path covers protected-route redirection, email
-login through the same-origin auth BFF, creating a word in the default
-collection, restoring the session and persisted word after reload, and logout.
-It runs production builds of both Next.js and NestJS against a separate
-PostgreSQL database.
+The Playwright golden path covers protected-route redirection, email login via
+the same-origin auth BFF, creating a vocabulary entry, session restoration
+after reload, and logout. It runs production builds of both Next.js and NestJS
+against a separate PostgreSQL database.
 
 Keep `engvocab-web` and `engvocab-server` as sibling directories, install both
 repositories' dependencies, then run:
@@ -143,66 +174,50 @@ pnpm test:e2e
 pnpm test:e2e:db:down
 ```
 
-The local E2E database listens on `localhost:5434`, uses an in-memory Docker
-filesystem, and is distinct from the API development database on port `5433`.
-Set `E2E_DATABASE_URL` to override it. `pnpm test:e2e` applies migrations,
-builds and starts the sibling API on port `3101`, and builds and starts this app
-on port `3100`. Use `localhost` for these URLs so the production `Secure`
-refresh cookie behaves like it does in a browser.
+The E2E database listens on `localhost:5434` and is distinct from the API
+development database on port `5433`. Set `E2E_DATABASE_URL` to override it.
 
-CI runs the Chromium golden path in a separate job with an ephemeral PostgreSQL
-service and checks out the API repository beside the web repository. Playwright
-traces, screenshots, and video are uploaded only when the job fails.
-
-## Main Routes
+## Main routes
 
 | Route | Access | Purpose |
 | --- | --- | --- |
-| `/` | Public | Guest landing page or authenticated vocabulary dashboard |
+| `/` | Public | Landing page or authenticated dashboard |
 | `/login` | Public | Email/password login, registration, and optional Google Sign-In |
-| `/collections/user` | Authenticated | User collections list |
-| `/collections/user/[collectionId]` | Authenticated | User collection vocabulary detail |
-| `/collections/oxford/[band]` / `/collections/oxford/[band]/part-[n]` | Authenticated | Oxford CEFR band groups and word lists |
-| `/collections/[collectionId]` | Authenticated | Legacy redirect to `/collections/user/[collectionId]` |
-| `/review?collectionId=...` | Authenticated | Due-word review for a selected collection |
-| `/tests?tab=mock_tests&year=...` | Authenticated | TOEIC test catalog and per-test progress |
-| `/tests?tab=part_practice&part=1..7` | Authenticated | Aggregate TOEIC part practice and progress |
-| `/tests/[sessionId]/practice?parts=1,2,...` | Authenticated | Graded test practice for selected parts |
-| `/tests/[sessionId]/review_wrong?parts=1,2,...` | Authenticated | Review previously missed questions |
-| `/tests/[sessionId]/mock_test?parts=1,2,...` | Authenticated | Mock run graded when the user finishes |
-| `/tests/part-practice/[sessionId]?mode=practice\|review_wrong` | Authenticated | Aggregate part practice or wrong-answer review |
-| `/admin`, `/admin/toeic`, `/admin/toeic/[testId]` | Admin | Admin landing, TOEIC catalog, and content editor |
-| `/api/auth/login\|register\|google\|refresh\|logout` | Internal BFF | Same-origin proxy endpoints for authentication |
+| `/collections/user` | Authenticated | Personal collections |
+| `/collections/user/[collectionId]` | Authenticated | Vocabulary table for a personal collection |
+| `/collections/oxford/[band]` | Authenticated | Oxford CEFR band overview |
+| `/collections/oxford/[band]/[part]` | Authenticated | Oxford vocabulary part |
+| `/review` | Authenticated | Personal vocabulary review |
+| `/review/oxford/[band]/[part]` | Authenticated | Oxford vocabulary review |
+| `/tests` | Authenticated | TOEIC mock-test and part-practice catalog |
+| `/tests/[sessionId]/practice` | Authenticated | Graded TOEIC practice |
+| `/tests/[sessionId]/review_wrong` | Authenticated | Wrong-answer review for a TOEIC test |
+| `/tests/[sessionId]/mock_test` | Authenticated | Timed TOEIC mock test |
+| `/tests/part-practice/[sessionId]` | Authenticated | Aggregate part practice or wrong-answer review |
+| `/dictation` | Authenticated | Dictation categories |
+| `/dictation/music` | Authenticated | Music dictation catalog |
+| `/dictation/bbc` | Authenticated | BBC dictation catalog |
+| `/dictation/[videoId]` | Authenticated | Dictation study session |
+| `/admin` | Admin | Admin landing page |
 
-`RequireAuth` and `RequireAdmin` provide client-side navigation guards. The API
-must still enforce authentication and authorization for protected operations.
-Admin access requires the API user role to be provisioned as `ADMIN`; the web
-app has no role-promotion flow. See the API repository's
-[Admin Access guide](https://github.com/Nghiathan13/engvocab-server#admin-access).
+## Project structure
 
-## Project Structure
-
-The codebase uses a pragmatic layered, feature-first structure:
+The app follows a pragmatic, feature-first structure:
 
 ```text
 src/
-├── app/       Next.js routes, layouts, loading UI, and auth BFF route handlers
+├── app/       Next.js routes, layouts, loading UI, and auth BFF handlers
 ├── server/    Server-only auth proxy and refresh-cookie helpers
 ├── entities/  Domain types, API clients, response parsers, and cache helpers
-├── features/  Auth, collections, review, tests, admin, home, and shell modules
-└── shared/    HTTP/config, providers, generic hooks, utilities, and UI primitives
+├── features/  Product features such as collections, review, tests, dictation, and home
+└── shared/    HTTP/config, providers, hooks, utilities, and UI primitives
 ```
 
-Most route files delegate feature behavior to `src/features`; route-local
-composition remains where it is page-specific. API clients treat JSON responses
-as `unknown` and generally validate data used by the UI with domain parsers.
-TanStack Query owns remote state, while small contexts handle auth, theme, and
-the immersive test toolbar. Internal imports use the `@/*` alias defined in
-`tsconfig.json`. New or refactored feature code uses FSD-style `model`, `ui`,
-`api`, and `lib` segments; shared component-test infrastructure lives under
-`src/shared/lib/testing`.
+Most route files delegate feature behaviour to `src/features`. TanStack Query
+owns remote state; small contexts own local UI state such as authentication,
+theme, and immersive study controls. Internal imports use the `@/*` alias.
 
-## Authentication and API Flow
+## Authentication and API flow
 
 ```text
 login / register / Google / refresh / logout
@@ -214,83 +229,53 @@ authenticated application data
 Browser -> NEXT_PUBLIC_API_BASE_URL with an in-memory Bearer access token
 ```
 
-- The BFF forwards auth requests through `AUTH_API_BASE_URL` and extracts the
-  refresh token from the upstream `Set-Cookie` response.
-- The BFF stores that token on the web origin as `engvocab.refreshToken`, with
-  `HttpOnly`, `SameSite=Lax`, `Path=/api/auth`, a 30-day maximum age matching
-  the API's default refresh-session TTL, and `Secure` in production.
-- The access token exists only in module memory. On reload or token expiry, the
-  client restores the session through `POST /api/auth/refresh`; concurrent
-  refresh attempts are deduplicated.
-- Non-auth data requests go directly from the browser to
-  `NEXT_PUBLIC_API_BASE_URL` with a Bearer token, so the backend must allow the
-  exact web origin through CORS.
-- The backend must keep its refresh cookie name as `engvocab.refreshToken`
-  because that is the upstream cookie name expected by the BFF. The browser
-  uses the cookie attributes set by the web BFF, not the backend-domain cookie.
-
-`localStorage` is used for UI preferences and local run/navigation state such
-as the collapsed sidebar, visible table columns, bilingual/evidence settings,
-the current practice step, and mock audio progress. Authentication tokens are
-not stored there.
+- The BFF forwards authentication requests through `AUTH_API_BASE_URL` and
+  stores the upstream refresh token on the web origin.
+- The access token remains in module memory. On reload or expiry, the client
+  restores the session through `POST /api/auth/refresh`.
+- Application-data requests go directly to `NEXT_PUBLIC_API_BASE_URL` with a
+  Bearer token, so the API must allow the exact web origin through CORS.
+- `localStorage` contains only UI and study preferences, never auth tokens.
 
 ## Deployment
 
-The API repository documents this recommended production topology:
+The typical production topology is:
 
 ```text
-Vercel web client -> Railway NestJS API -> Supabase Postgres
-                                          Supabase Storage (TOEIC media)
+Vercel web client -> NestJS API -> Supabase Postgres
+                                 Supabase Storage (TOEIC and Dictation catalogs/media)
 ```
 
-For the Vercel project, set these environment variables:
+Set these variables in the Vercel project:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://<backend-production-url>
 AUTH_API_BASE_URL=https://<backend-production-url>
+NEXT_PUBLIC_TOEIC_CATALOG_ROOT=https://<public-storage-root>/<toeic-prefix>
+NEXT_PUBLIC_DICTATION_CATALOG_ROOT=https://<public-storage-root>/<dictation-prefix>
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=<optional-google-web-client-id>
 ```
 
-Configure the backend for the deployed web origin:
+Configure the API for the deployed web origin:
 
 ```env
 CORS_ORIGIN=https://<web-production-url>
 REFRESH_TOKEN_COOKIE_NAME=engvocab.refreshToken
 ```
 
-When Google Sign-In is enabled, also set the backend `GOOGLE_CLIENT_ID` to the
-same web client ID. Backend database, media storage, and hosting are configured
-in the API repository; this client consumes the resulting API endpoints and
-signed media URLs. Configure the Supabase URL, service-role key, storage bucket,
-and signed-URL TTL only on the backend, as described in its
-[production deployment guide](https://github.com/Nghiathan13/engvocab-server#production-deployment).
+The API repository contains the database, storage, and backend deployment
+details in its [production deployment guide](https://github.com/Nghiathan13/engvocab-server#production-deployment).
 
-## Production Smoke Test
+## Production smoke test
 
-This checklist assumes the backend contains system catalogs and TOEIC content;
-the admin step also requires an `ADMIN` account. After deploying both apps:
+After both applications and the catalogs are deployed:
 
-- Verify `GET <backend-production-url>/health`. The API root may legitimately
-  return `404`.
-- Register or sign in, then reload; the session should restore through the
-  same-origin refresh route.
-- Verify dashboard statistics and custom collection creation, editing,
-  deletion, and system-catalog import.
-- Search and paginate vocabulary, then add, edit, and delete definitions.
-- Review due words with Remember/Forgot and verify progress updates.
-- Start practice and answer at least one question incorrectly, then verify that
-  question is available in wrong-answer review.
-- Start aggregate part practice and a mock test; finish the mock test and verify
-  its answered/correct/wrong counts.
-- With an admin account, open the TOEIC catalog and an existing test editor.
-
-While signed in, check browser DevTools:
-
-- Neither `localStorage` nor `sessionStorage` should contain an access token or
-  refresh token.
-- The web origin should have an `engvocab.refreshToken` cookie marked
-  `HttpOnly`, `Secure` in production, `SameSite=Lax`, and `Path=/api/auth`.
-- Direct data requests to the backend should complete without CORS errors.
-
-Finally, log out and reload. The previous session should not restore, and the
-refresh cookie should be absent.
+- Sign in, reload, and confirm the session restores.
+- Open the dashboard and verify activity/study time updates after learning.
+- Create, edit, delete, and review vocabulary in a personal collection.
+- Browse an Oxford band and complete a short review.
+- Start TOEIC practice, wrong-answer review, and a mock test; finish the mock
+  test and verify its result and history.
+- Open a Dictation category, play a video, select segments, and submit input.
+- Confirm direct API requests have no CORS errors and that browser storage does
+  not contain access or refresh tokens.
