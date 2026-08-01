@@ -14,7 +14,13 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [["line"], ["html", { open: "never" }]] : "list",
+  reporter: process.env.CI
+    ? [
+        ["line"],
+        ["html", { open: "never" }],
+        ["json", { outputFile: "test-results/playwright.json" }],
+      ]
+    : "list",
   outputDir: "test-results",
   use: {
     baseURL: WEB_BASE_URL,
