@@ -142,6 +142,7 @@ put secrets in them.
 | `pnpm test:e2e:db:up` | Start the isolated local E2E PostgreSQL database |
 | `pnpm test:e2e:db:down` | Remove the isolated local E2E PostgreSQL database |
 | `pnpm test:e2e:install` | Install Playwright Chromium |
+| `pnpm lighthouse` | Run mobile Lighthouse baseline audits for `/` and `/login` after a production build |
 | `pnpm lint` | Run ESLint |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
@@ -176,6 +177,21 @@ pnpm test:e2e:db:down
 
 The E2E database listens on `localhost:5434` and is distinct from the API
 development database on port `5433`. Set `E2E_DATABASE_URL` to override it.
+
+### Lighthouse
+
+Run the public-route Lighthouse baseline locally after building the application:
+
+```bash
+pnpm build
+pnpm lighthouse
+```
+
+It audits `/` and `/login` three times with the mobile profile, covering
+Performance, Accessibility, Best Practices, and SEO. Results are written to
+`.lighthouseci/`. The GitHub Actions Lighthouse job uploads the same reports as
+the private `lighthouse-reports` artifact for 7 days. This first phase is
+report-only; performance budgets are set after several stable baseline runs.
 
 ## Main routes
 
