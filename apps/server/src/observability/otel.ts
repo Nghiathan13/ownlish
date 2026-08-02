@@ -2,6 +2,7 @@ import {
   defaultResource,
   resourceFromAttributes,
 } from '@opentelemetry/resources';
+import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-proto';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
@@ -53,6 +54,8 @@ export function startObservability() {
     );
   }
 
+  diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
+
   const headers = parseHeaders(env.otel.exporterHeaders);
   const resource = defaultResource().merge(
     resourceFromAttributes({
@@ -89,6 +92,7 @@ export function startObservability() {
     }),
   });
   sdk.start();
+  console.info('[observability] OpenTelemetry export enabled');
 }
 
 export async function shutdownObservability() {
