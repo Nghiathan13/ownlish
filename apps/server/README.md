@@ -108,6 +108,10 @@ not create the bucket.
 | `TOEIC_STORAGE_BUCKET` | No | `toeic-media` | Supabase Storage bucket for TOEIC audio/images |
 | `TOEIC_SIGNED_URL_TTL_SECONDS` | No | `900` | Lifetime of signed TOEIC media URLs |
 | `TOEIC_GRADING_INDEX_URL` | Runtime API only | - | Public URL of the current `grading-index.json` in Storage |
+| `OTEL_ENABLED` | No | `false` | Enables backend OpenTelemetry export. When true, the endpoint and headers below are required |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | When OpenTelemetry is enabled | - | Grafana Cloud OTLP base endpoint, without `/v1/metrics` or `/v1/traces` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | When OpenTelemetry is enabled | - | OTLP authentication headers, for example `Authorization=Basic <base64(instance-id:token)>` |
+| `OTEL_SERVICE_NAME` | No | `engvocab-server` | Service name sent with telemetry |
 
 `NODE_ENV` is also read: when it equals `production`, the refresh cookie defaults
 to `Secure` unless `REFRESH_TOKEN_COOKIE_SECURE` overrides it.
@@ -303,12 +307,61 @@ SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
 TOEIC_STORAGE_BUCKET=toeic-media
 TOEIC_SIGNED_URL_TTL_SECONDS=900
 TOEIC_GRADING_INDEX_URL=https://<project-ref>.supabase.co/storage/v1/object/public/toeic/grading-index.json
+OTEL_ENABLED=true
+OTEL_EXPORTER_OTLP_ENDPOINT=<grafana-cloud-otlp-base-endpoint>
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic <base64(otlp-instance-id:access-policy-token)>
+OTEL_SERVICE_NAME=engvocab-server
 ```
 
 Do not set `PORT` manually on Railway unless needed; Railway provides it.
 
 The root path `/` may return `404`. Use `/health` or auth endpoints for smoke
 tests.
+
+### Grafana Cloud observability
+
+The API exports backend HTTP metrics and sampled traces directly to Grafana Cloud
+when `OTEL_ENABLED=true`. Keep it disabled in local development, test, and CI.
+
+1. In Grafana Cloud, create an access-policy token with `metrics:write` and
+   `traces:write`, then use the OpenTelemetry setup page to obtain its endpoint
+   and instance ID.
+2. Put the four `OTEL_*` variables above in Railway. The endpoint must be the
+   base OTLP endpoint: the server appends `/v1/metrics` and `/v1/traces` itself.
+   Never commit the token or header value.
+3. Create an **EngVocab API Production** dashboard. Useful PromQL panels are:
+
+```promql
+# Request rate, excluding health checks
+sum(rate(engvocab_http_server_requests_total{http_route!="/health"}[5m]))
+
+# Server-error rate
+sum(rate(engvocab_http_server_requests_total{http_response_status_class="5xx",http_route!="/health"}[5m]))
+/ sum(rate(engvocab_http_server_requests_total{http_route!="/health"}[5m]))
+
+# API p95 latency
+histogram_quantile(0.95, sum by (le) (
+  rate(engvocab_http_server_request_duration_seconds_bucket{http_route!="/health"}[5m])
+))
+```
+
+Use `http_route`, `http_request_method`, and `http_response_status_class` to
+break down the panels by route, method, and status family. Route labels use the
+Nest/Express template (for example `/vocab/:id`), never raw IDs or query
+strings. Request bodies, users, authorization headers, and other PII are not
+sent as metric labels.
+
+Create two Grafana-managed alert rules and send both to the owner email contact:
+
+- 5xx rate exceeds 2% for 5 minutes, only while there are at least 20 requests
+  in that period.
+- p95 latency exceeds 1 second for 10 minutes, only while there are at least
+  20 requests in that period.
+
+Traces use parent-based 10% root sampling. Use Grafana Explore with
+`service.name=engvocab-server` to inspect a sampled slow or failed request.
+Railway's request and container metrics remain useful as a complementary view of
+platform and network time.
 
 ### Production smoke tests
 

@@ -1,0 +1,190 @@
+{
+  "api_health_duration": {
+    "label": "Health check",
+    "p95Ms": 15
+  },
+  "api_auth_register_duration": {
+    "label": "Auth register",
+    "p95Ms": 165
+  },
+  "api_auth_login_duration": {
+    "label": "Auth login",
+    "p95Ms": 155
+  },
+  "api_auth_refresh_duration": {
+    "label": "Auth refresh",
+    "p95Ms": 50
+  },
+  "api_auth_logout_duration": {
+    "label": "Auth logout",
+    "p95Ms": 25
+  },
+  "api_auth_me_duration": {
+    "label": "Auth me",
+    "p95Ms": 25
+  },
+  "api_auth_profile_duration": {
+    "label": "Auth profile",
+    "p95Ms": 35
+  },
+  "api_vocab_list_duration": {
+    "label": "Vocabulary list",
+    "p95Ms": 35
+  },
+  "api_vocab_stats_duration": {
+    "label": "Vocabulary stats",
+    "p95Ms": 40
+  },
+  "api_vocab_due_duration": {
+    "label": "Vocabulary due review",
+    "p95Ms": 35
+  },
+  "api_vocab_get_duration": {
+    "label": "Vocabulary detail",
+    "p95Ms": 30
+  },
+  "api_vocab_create_duration": {
+    "label": "Vocabulary create",
+    "p95Ms": 35
+  },
+  "api_vocab_review_duration": {
+    "label": "Vocabulary grade",
+    "p95Ms": 40
+  },
+  "api_vocab_update_duration": {
+    "label": "Vocabulary update",
+    "p95Ms": 35
+  },
+  "api_vocab_delete_duration": {
+    "label": "Vocabulary delete",
+    "p95Ms": 35
+  },
+  "api_collections_list_duration": {
+    "label": "Collections list",
+    "p95Ms": 45
+  },
+  "api_collections_create_duration": {
+    "label": "Collection create",
+    "p95Ms": 55
+  },
+  "api_oxford_meta_duration": {
+    "label": "Oxford metadata",
+    "p95Ms": 80
+  },
+  "api_oxford_progress_duration": {
+    "label": "Oxford progress",
+    "p95Ms": 50
+  },
+  "api_oxford_part_duration": {
+    "label": "Oxford part",
+    "p95Ms": 60
+  },
+  "api_oxford_import_duration": {
+    "label": "Oxford part import",
+    "p95Ms": 65
+  },
+  "api_collection_catalog_duration": {
+    "label": "Collection catalog",
+    "p95Ms": 40
+  },
+  "api_collection_get_duration": {
+    "label": "Collection detail",
+    "p95Ms": 50
+  },
+  "api_collection_import_duration": {
+    "label": "Collection import",
+    "p95Ms": 70
+  },
+  "api_collection_update_duration": {
+    "label": "Collection update",
+    "p95Ms": 55
+  },
+  "api_collection_delete_duration": {
+    "label": "Collection delete",
+    "p95Ms": 25
+  },
+  "api_review_difficult_duration": {
+    "label": "Difficult words",
+    "p95Ms": 30
+  },
+  "api_review_part_duration": {
+    "label": "Oxford review part",
+    "p95Ms": 75
+  },
+  "api_review_grade_duration": {
+    "label": "Oxford review grade",
+    "p95Ms": 45
+  },
+  "api_dictation_progress_duration": {
+    "label": "Dictation progress",
+    "p95Ms": 25
+  },
+  "api_dictation_answer_duration": {
+    "label": "Dictation answer",
+    "p95Ms": 55
+  },
+  "api_dictation_reset_duration": {
+    "label": "Dictation reset",
+    "p95Ms": 25
+  },
+  "api_toeic_test_run_duration": {
+    "label": "TOEIC test run",
+    "p95Ms": 70
+  },
+  "api_toeic_part_run_duration": {
+    "label": "TOEIC part practice run",
+    "p95Ms": 65
+  },
+  "api_toeic_mock_prepare_duration": {
+    "label": "TOEIC mock prepare",
+    "p95Ms": 25
+  },
+  "api_toeic_mock_restart_duration": {
+    "label": "TOEIC mock restart",
+    "p95Ms": 55
+  },
+  "api_toeic_test_practice_list_duration": {
+    "label": "TOEIC test practice list",
+    "p95Ms": 25
+  },
+  "api_toeic_mock_list_duration": {
+    "label": "TOEIC mock list",
+    "p95Ms": 25
+  },
+  "api_toeic_test_practice_clear_duration": {
+    "label": "TOEIC test practice clear",
+    "p95Ms": 20
+  },
+  "api_toeic_part_practice_list_duration": {
+    "label": "TOEIC part practice list",
+    "p95Ms": 25
+  },
+  "api_toeic_part_practice_clear_duration": {
+    "label": "TOEIC part practice clear",
+    "p95Ms": 20
+  },
+  "api_toeic_run_get_duration": {
+    "label": "TOEIC run detail",
+    "p95Ms": 35
+  },
+  "api_toeic_answer_duration": {
+    "label": "TOEIC answer",
+    "p95Ms": 85
+  },
+  "api_toeic_finish_duration": {
+    "label": "TOEIC mock finish",
+    "p95Ms": 45
+  },
+  "api_toeic_timer_duration": {
+    "label": "TOEIC mock timer",
+    "p95Ms": 45
+  },
+  "api_activity_calendar_duration": {
+    "label": "Learning activity calendar",
+    "p95Ms": 60
+  },
+  "api_activity_checkpoint_duration": {
+    "label": "Learning activity checkpoint",
+    "p95Ms": 60
+  }
+}

@@ -1,13 +1,17 @@
+import './observability/otel';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import { AppModule } from './app/app.module';
 import { env } from './config/env';
+import { requestMetricsMiddleware } from './observability/request-metrics.middleware';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
+  app.use(requestMetricsMiddleware);
   app.use(helmet());
 
   app.enableCors({

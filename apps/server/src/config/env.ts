@@ -79,6 +79,7 @@ const secureRefreshTokenCookie = optionalBooleanEnv(
 );
 
 export const env = {
+  nodeEnv: process.env.NODE_ENV ?? 'development',
   databaseUrl: requiredEnv('DATABASE_URL'),
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
@@ -110,4 +111,10 @@ export const env = {
     'TOEIC_SIGNED_URL_TTL_SECONDS',
     900,
   ),
+  otel: {
+    enabled: optionalBooleanEnv('OTEL_ENABLED', false),
+    exporterEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? '',
+    exporterHeaders: process.env.OTEL_EXPORTER_OTLP_HEADERS ?? '',
+    serviceName: process.env.OTEL_SERVICE_NAME ?? 'engvocab-server',
+  },
 };

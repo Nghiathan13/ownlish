@@ -4,4 +4,5 @@ allowBuilds:
   bcrypt: true
   better-sqlite3: set this to true or false
   prisma: true
+  protobufjs: false
   unrs-resolver: true

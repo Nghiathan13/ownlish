@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "label": "Baseline",
+    "vus": 10,
+    "iterationsPerVu": 20,
+    "enforceBudgets": true
+  },
+  "moderate": {
+    "label": "Moderate load",
+    "vus": 25,
+    "iterationsPerVu": 20,
+    "enforceBudgets": false
+  }
+}
