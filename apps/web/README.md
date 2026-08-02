@@ -144,6 +144,9 @@ put secrets in them.
 | `pnpm test:e2e:install` | Install Playwright Chromium |
 | `pnpm lighthouse` | Run mobile Lighthouse baseline audits for `/` and `/login` after a production build |
 | `pnpm lighthouse:summary` | Print the median and range from existing Lighthouse reports |
+| `pnpm lighthouse:desktop` | Run desktop Lighthouse baseline audits for `/` and `/login` after a production build |
+| `pnpm lighthouse:desktop:summary` | Print the desktop Lighthouse median and range from existing reports |
+| `pnpm lighthouse:assert` | Check route-specific Lighthouse budgets using the median of three runs |
 | `pnpm lint` | Run ESLint |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
@@ -181,7 +184,7 @@ development database on port `5433`. Set `E2E_DATABASE_URL` to override it.
 
 ### Lighthouse
 
-Run the public-route Lighthouse baseline locally after building the application:
+Run the mobile public-route Lighthouse checks locally after building the application:
 
 ```bash
 pnpm build
@@ -192,8 +195,21 @@ It audits `/` and `/login` three times with the mobile profile, covering
 Performance, Accessibility, Best Practices, and SEO. Results are written to
 `.lighthouseci/`. The GitHub Actions Lighthouse job uploads the same reports as
 the private `lighthouse-reports` artifact for 7 days and writes the median and
-range to the Job Summary. This first phase is report-only; performance budgets
-are set after several stable baseline runs.
+range to the Job Summary. CI checks route-specific budgets against the median
+of all three runs, so a single noisy GitHub runner audit does not fail the job.
+
+Desktop uses the same public routes and three-run median, but starts as a
+report-only `Lighthouse Desktop` CI job. Run it locally with:
+
+```bash
+pnpm build
+pnpm lighthouse:desktop
+pnpm lighthouse:desktop:summary
+```
+
+Its reports are stored in `.lighthouseci-desktop/` and uploaded as the private
+`lighthouse-desktop-reports` artifact for 7 days. Desktop budgets are added
+after five completed GitHub Actions baseline runs.
 
 ## Main routes
 

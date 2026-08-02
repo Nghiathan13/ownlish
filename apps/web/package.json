@@ -16,7 +16,10 @@
     "test:e2e:db:down": "docker compose -f e2e/docker-compose.yml down --volumes",
     "test:e2e:install": "playwright install chromium",
     "lighthouse": "lhci autorun",
-    "lighthouse:summary": "node scripts/lighthouse/write-summary.mjs"
+    "lighthouse:summary": "node scripts/lighthouse/write-summary.mjs",
+    "lighthouse:desktop": "lhci autorun --config=.lighthouserc.desktop.cjs",
+    "lighthouse:desktop:summary": "node scripts/lighthouse/write-summary.mjs --report-directory .lighthouseci-desktop --profile desktop",
+    "lighthouse:assert": "node scripts/lighthouse/assert-budgets.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

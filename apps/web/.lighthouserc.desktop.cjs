@@ -3,6 +3,6 @@
 const createLighthouseConfig = require("./lighthouse.config.cjs");
 
 module.exports = createLighthouseConfig({
-  outputDir: ".lighthouseci",
-  settings: { formFactor: "mobile" },
+  outputDir: ".lighthouseci-desktop",
+  settings: { preset: "desktop" },
 });

@@ -1,17 +1,14 @@
 import fs from "node:fs";
-import path from "node:path";
+import { median, readResultsByRoute } from "./reports.mjs";
 
-const reportDirectory = path.resolve(".lighthouseci");
-const manifestPath = path.join(reportDirectory, "manifest.json");
+const option = (name, fallback) => {
+  const index = process.argv.indexOf(name);
 
-const median = (values) => {
-  const sorted = [...values].sort((left, right) => left - right);
-  const middle = Math.floor(sorted.length / 2);
-
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
+  return index === -1 ? fallback : process.argv[index + 1];
 };
+
+const reportDirectory = option("--report-directory", ".lighthouseci");
+const profile = option("--profile", "mobile");
 
 const formatRange = (values, format) => {
   if (values.length === 0) return "—";
@@ -39,36 +36,13 @@ const writeSummary = (content) => {
   process.stdout.write(`${content}\n`);
 };
 
-if (!fs.existsSync(manifestPath)) {
-  writeSummary("## Lighthouse baseline\n\nNo Lighthouse reports were generated.");
-  process.exit(0);
-}
+const resultsByRoute = readResultsByRoute(reportDirectory);
 
-const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-const resultsByRoute = new Map();
-
-for (const entry of manifest) {
-  if (!fs.existsSync(entry.jsonPath)) continue;
-
-  const report = JSON.parse(fs.readFileSync(entry.jsonPath, "utf8"));
-  const route = new URL(report.finalUrl).pathname || "/";
-  const result = {
-    performance: report.categories.performance.score,
-    accessibility: report.categories.accessibility.score,
-    bestPractices: report.categories["best-practices"].score,
-    seo: report.categories.seo.score,
-    lcp: report.audits["largest-contentful-paint"].numericValue,
-    cls: report.audits["cumulative-layout-shift"].numericValue,
-    tbt: report.audits["total-blocking-time"].numericValue,
-  };
-
-  const results = resultsByRoute.get(route) ?? [];
-  results.push(result);
-  resultsByRoute.set(route, results);
-}
+const heading = profile === "mobile" ? "Lighthouse baseline" : `Lighthouse ${profile} baseline`;
+const artifactName = profile === "desktop" ? "lighthouse-desktop-reports" : "lighthouse-reports";
 
 if (resultsByRoute.size === 0) {
-  writeSummary("## Lighthouse baseline\n\nNo readable Lighthouse reports were generated.");
+  writeSummary(`## ${heading}\n\nNo readable Lighthouse reports were generated.`);
   process.exit(0);
 }
 
@@ -90,7 +64,7 @@ const rows = [...resultsByRoute.entries()]
     ].join(" | ");
   });
 
-writeSummary(`## Lighthouse baseline
+writeSummary(`## ${heading}
 
 Median with min–max range across each route's runs.
 
@@ -98,4 +72,4 @@ Median with min–max range across each route's runs.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | ${rows.join(" |\n| ")} |
 
-Detailed HTML and JSON reports are available in the \`lighthouse-reports\` artifact for 7 days.`);
+Detailed HTML and JSON reports are available in the \`${artifactName}\` artifact for 7 days.`);

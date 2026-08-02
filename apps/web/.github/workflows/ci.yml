@@ -210,12 +210,57 @@ jobs:
         if: always()
         run: pnpm lighthouse:summary
 
+      - name: Assert Lighthouse budgets
+        run: pnpm lighthouse:assert
+
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
           path: .lighthouseci
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 7
+
+  lighthouse-desktop:
+    name: Lighthouse Desktop
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run Lighthouse desktop
+        run: pnpm lighthouse:desktop
+
+      - name: Write Lighthouse desktop summary
+        if: always()
+        run: pnpm lighthouse:desktop:summary
+
+      - name: Upload Lighthouse desktop reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-desktop-reports
+          path: .lighthouseci-desktop
           if-no-files-found: ignore
           include-hidden-files: true
           retention-days: 7
