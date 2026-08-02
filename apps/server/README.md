@@ -110,7 +110,7 @@ not create the bucket.
 | `TOEIC_GRADING_INDEX_URL` | Runtime API only | - | Public URL of the current `grading-index.json` in Storage |
 | `OTEL_ENABLED` | No | `false` | Enables backend OpenTelemetry export. When true, the endpoint and headers below are required |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | When OpenTelemetry is enabled | - | Grafana Cloud OTLP base endpoint, without `/v1/metrics` or `/v1/traces` |
-| `OTEL_EXPORTER_OTLP_HEADERS` | When OpenTelemetry is enabled | - | OTLP authentication headers, for example `Authorization=Basic <base64(instance-id:token)>` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | When OpenTelemetry is enabled | - | OTLP authentication headers copied from Grafana, for example `Authorization=Basic%20<base64(instance-id:token)>` |
 | `OTEL_SERVICE_NAME` | No | `engvocab-server` | Service name sent with telemetry |
 
 `NODE_ENV` is also read: when it equals `production`, the refresh cookie defaults
@@ -309,7 +309,7 @@ TOEIC_SIGNED_URL_TTL_SECONDS=900
 TOEIC_GRADING_INDEX_URL=https://<project-ref>.supabase.co/storage/v1/object/public/toeic/grading-index.json
 OTEL_ENABLED=true
 OTEL_EXPORTER_OTLP_ENDPOINT=<grafana-cloud-otlp-base-endpoint>
-OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic <base64(otlp-instance-id:access-policy-token)>
+OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20<base64(otlp-instance-id:access-policy-token)>
 OTEL_SERVICE_NAME=engvocab-server
 ```
 
@@ -328,7 +328,8 @@ when `OTEL_ENABLED=true`. Keep it disabled in local development, test, and CI.
    and instance ID.
 2. Put the four `OTEL_*` variables above in Railway. The endpoint must be the
    base OTLP endpoint: the server appends `/v1/metrics` and `/v1/traces` itself.
-   Never commit the token or header value.
+   The Grafana-provided `Basic%20` form is supported and decoded before the
+   request is sent. Never commit the token or header value.
 3. Create an **EngVocab API Production** dashboard. Useful PromQL panels are:
 
 ```promql

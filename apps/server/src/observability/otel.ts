@@ -19,9 +19,17 @@ function parseHeaders(value: string) {
   return Object.fromEntries(
     value.split(',').map((header) => {
       const [name, ...valueParts] = header.trim().split('=');
-      const headerValue = valueParts.join('=');
+      const encodedHeaderValue = valueParts.join('=');
 
-      if (!name || !headerValue) {
+      if (!name || !encodedHeaderValue) {
+        throw new Error('OTEL_EXPORTER_OTLP_HEADERS is invalid');
+      }
+
+      let headerValue: string;
+
+      try {
+        headerValue = decodeURIComponent(encodedHeaderValue);
+      } catch {
         throw new Error('OTEL_EXPORTER_OTLP_HEADERS is invalid');
       }
 
