@@ -5,7 +5,7 @@ practice, dictation, and learning-activity tracking. This repository contains
 the Next.js client; the companion [EngVocab API](https://github.com/Nghiathan13/engvocab-server)
 provides authentication, learning data, test sessions, and catalog management.
 
-## Product snapshots
+## Product snapshot
 
 ### Learning activity and vocabulary progress
 
