@@ -143,6 +143,7 @@ put secrets in them.
 | `pnpm test:e2e:db:down` | Remove the isolated local E2E PostgreSQL database |
 | `pnpm test:e2e:install` | Install Playwright Chromium |
 | `pnpm lighthouse` | Run mobile Lighthouse baseline audits for `/` and `/login` after a production build |
+| `pnpm lighthouse:summary` | Print the median and range from existing Lighthouse reports |
 | `pnpm lint` | Run ESLint |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
@@ -190,8 +191,9 @@ pnpm lighthouse
 It audits `/` and `/login` three times with the mobile profile, covering
 Performance, Accessibility, Best Practices, and SEO. Results are written to
 `.lighthouseci/`. The GitHub Actions Lighthouse job uploads the same reports as
-the private `lighthouse-reports` artifact for 7 days. This first phase is
-report-only; performance budgets are set after several stable baseline runs.
+the private `lighthouse-reports` artifact for 7 days and writes the median and
+range to the Job Summary. This first phase is report-only; performance budgets
+are set after several stable baseline runs.
 
 ## Main routes
 

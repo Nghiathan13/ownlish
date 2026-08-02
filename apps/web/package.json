@@ -15,7 +15,8 @@
     "test:e2e:db:up": "docker compose -f e2e/docker-compose.yml up -d --wait",
     "test:e2e:db:down": "docker compose -f e2e/docker-compose.yml down --volumes",
     "test:e2e:install": "playwright install chromium",
-    "lighthouse": "lhci autorun"
+    "lighthouse": "lhci autorun",
+    "lighthouse:summary": "node scripts/lighthouse/write-summary.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
