@@ -26,6 +26,7 @@
     "performance:seed": "ts-node performance/seed.ts",
     "performance:seed:baseline": "PERFORMANCE_VUS=10 pnpm performance:seed",
     "performance:seed:moderate": "PERFORMANCE_VUS=25 pnpm performance:seed",
+    "lighthouse:seed": "PERFORMANCE_VUS=1 ts-node scripts/seed-lighthouse-fixture.ts",
     "performance:run": "mkdir -p test-results/performance && docker run --rm --user \"$(id -u):$(id -g)\" --network host -v \"$PWD:/work\" -w /work -e PERFORMANCE_BASE_URL -e PERFORMANCE_EMAIL_PREFIX -e PERFORMANCE_PASSWORD -e PERFORMANCE_PROFILE grafana/k6:1.7.1 run --summary-trend-stats 'med,p(95),p(99),count' /work/performance/core-api.js",
     "performance:run:baseline": "PERFORMANCE_PROFILE=baseline pnpm performance:run",
     "performance:run:moderate": "PERFORMANCE_PROFILE=moderate pnpm performance:run",
