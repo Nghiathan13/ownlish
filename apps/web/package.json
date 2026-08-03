@@ -19,7 +19,12 @@
     "lighthouse:summary": "node scripts/lighthouse/write-summary.mjs",
     "lighthouse:desktop": "lhci autorun --config=.lighthouserc.desktop.cjs",
     "lighthouse:desktop:summary": "node scripts/lighthouse/write-summary.mjs --report-directory .lighthouseci-desktop --profile desktop",
-    "lighthouse:assert": "node scripts/lighthouse/assert-budgets.mjs"
+    "lighthouse:authenticated": "lhci autorun --config=.lighthouserc.authenticated.cjs",
+    "lighthouse:authenticated:summary": "node scripts/lighthouse/write-summary.mjs --profile authenticated",
+    "lighthouse:authenticated:desktop": "lhci autorun --config=.lighthouserc.authenticated.desktop.cjs",
+    "lighthouse:authenticated:desktop:summary": "node scripts/lighthouse/write-summary.mjs --profile authenticated-desktop",
+    "lighthouse:assert": "node scripts/lighthouse/assert-budgets.mjs",
+    "lighthouse:desktop:assert": "node scripts/lighthouse/assert-budgets.mjs --profile desktop"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
@@ -31,6 +36,7 @@
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.1",
+    "puppeteer-core": "^24.31.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

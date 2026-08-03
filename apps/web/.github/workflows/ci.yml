@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -255,12 +256,145 @@ jobs:
         if: always()
         run: pnpm lighthouse:desktop:summary
 
+      - name: Assert Lighthouse desktop budgets
+        run: pnpm lighthouse:desktop:assert
+
       - name: Upload Lighthouse desktop reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-desktop-reports
           path: .lighthouseci-desktop
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 7
+
+  lighthouse-authenticated:
+    name: Lighthouse Authenticated (${{ matrix.profile }})
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: mobile
+            command: lighthouse:authenticated
+            summary_command: lighthouse:authenticated:summary
+            artifact: lighthouse-authenticated-reports
+            report_directory: .lighthouseci-authenticated
+          - profile: desktop
+            command: lighthouse:authenticated:desktop
+            summary_command: lighthouse:authenticated:desktop:summary
+            artifact: lighthouse-authenticated-desktop-reports
+            report_directory: .lighthouseci-authenticated-desktop
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: engvocab
+          POSTGRES_PASSWORD: engvocab
+          POSTGRES_DB: engvocab_lighthouse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U engvocab -d engvocab_lighthouse"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      LIGHTHOUSE_DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab_lighthouse
+      LIGHTHOUSE_AUTH_EMAIL: performance-benchmark-vu-01@engvocab.local
+      LIGHTHOUSE_AUTH_PASSWORD: performance-benchmark-password
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:3101
+      AUTH_API_BASE_URL: http://localhost:3101
+      NEXT_PUBLIC_TOEIC_CATALOG_ROOT: http://localhost:3100/toeic
+      NEXT_PUBLIC_DICTATION_CATALOG_ROOT: http://localhost:3100/dictation
+
+    steps:
+      - name: Checkout web
+        uses: actions/checkout@v4
+
+      - name: Checkout API
+        uses: actions/checkout@v4
+        with:
+          repository: Nghiathan13/engvocab-server
+          path: engvocab-server
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            engvocab-server/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install API dependencies
+        working-directory: engvocab-server
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Migrate, seed, and start API
+        working-directory: engvocab-server
+        env:
+          DATABASE_URL: ${{ env.LIGHTHOUSE_DATABASE_URL }}
+          PERFORMANCE_DATABASE_URL: ${{ env.LIGHTHOUSE_DATABASE_URL }}
+          NODE_ENV: test
+          JWT_SECRET: lighthouse-jwt-secret-at-least-32-characters
+          PORT: 3101
+          CORS_ORIGIN: http://localhost:3100
+          BCRYPT_SALT_ROUNDS: 4
+          AUTH_RATE_LIMIT_LIMIT: 100
+          AUTH_RATE_LIMIT_TTL_SECONDS: 60
+          REFRESH_TOKEN_COOKIE_SECURE: "false"
+          REFRESH_TOKEN_COOKIE_SAME_SITE: lax
+          GOOGLE_CLIENT_ID: ""
+          SUPABASE_URL: ""
+          SUPABASE_SERVICE_ROLE_KEY: ""
+        run: |
+          pnpm prisma generate
+          pnpm prisma migrate deploy
+          pnpm lighthouse:seed
+          pnpm build
+          pnpm start:prod > ../lighthouse-api.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://localhost:3101/health >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat ../lighthouse-api.log
+          exit 1
+
+      - name: Build web
+        run: pnpm build
+
+      - name: Run Lighthouse authenticated audit
+        run: pnpm ${{ matrix.command }}
+
+      - name: Write Lighthouse authenticated summary
+        if: always()
+        run: pnpm ${{ matrix.summary_command }}
+
+      - name: Upload Lighthouse authenticated reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.report_directory }}
           if-no-files-found: ignore
           include-hidden-files: true
           retention-days: 7

@@ -1,26 +1,69 @@
 import { median, readResultsByRoute } from "./reports.mjs";
 
 const RUNS_PER_ROUTE = 3;
-const budgets = {
-  "/": {
-    performance: { min: 0.85 },
-    accessibility: { min: 0.98 },
-    bestPractices: { min: 0.95 },
-    seo: { min: 0.98 },
-    lcp: { max: 4_300 },
-    cls: { max: 0.05 },
-    tbt: { max: 175 },
+const profiles = {
+  mobile: {
+    reportDirectory: ".lighthouseci",
+    budgets: {
+      "/": {
+        performance: { min: 0.85 },
+        accessibility: { min: 0.98 },
+        bestPractices: { min: 0.95 },
+        seo: { min: 0.98 },
+        lcp: { max: 4_300 },
+        cls: { max: 0.05 },
+        tbt: { max: 175 },
+      },
+      "/login": {
+        performance: { min: 0.89 },
+        accessibility: { min: 0.98 },
+        bestPractices: { min: 0.95 },
+        seo: { min: 0.98 },
+        lcp: { max: 3_800 },
+        cls: { max: 0.05 },
+        tbt: { max: 200 },
+      },
+    },
   },
-  "/login": {
-    performance: { min: 0.89 },
-    accessibility: { min: 0.98 },
-    bestPractices: { min: 0.95 },
-    seo: { min: 0.98 },
-    lcp: { max: 3_800 },
-    cls: { max: 0.05 },
-    tbt: { max: 200 },
+  desktop: {
+    reportDirectory: ".lighthouseci-desktop",
+    budgets: {
+      "/": {
+        performance: { min: 0.95 },
+        accessibility: { min: 0.98 },
+        bestPractices: { min: 0.95 },
+        seo: { min: 0.98 },
+        lcp: { max: 1_000 },
+        cls: { max: 0.05 },
+        tbt: { max: 50 },
+      },
+      "/login": {
+        performance: { min: 0.95 },
+        accessibility: { min: 0.98 },
+        bestPractices: { min: 0.95 },
+        seo: { min: 0.98 },
+        lcp: { max: 900 },
+        cls: { max: 0.05 },
+        tbt: { max: 50 },
+      },
+    },
   },
 };
+
+const option = (name, fallback) => {
+  const index = process.argv.indexOf(name);
+
+  return index === -1 ? fallback : process.argv[index + 1];
+};
+
+const profileName = option("--profile", "mobile");
+const profile = profiles[profileName];
+
+if (!profile) {
+  throw new Error(`Unknown Lighthouse profile: ${profileName}`);
+}
+
+const reportDirectory = option("--report-directory", profile.reportDirectory);
 
 const format = {
   performance: (value) => `${Math.round(value * 100)}`,
@@ -32,10 +75,10 @@ const format = {
   tbt: (value) => `${Math.round(value)} ms`,
 };
 
-const resultsByRoute = readResultsByRoute();
+const resultsByRoute = readResultsByRoute(reportDirectory);
 const failures = [];
 
-for (const [route, routeBudgets] of Object.entries(budgets)) {
+for (const [route, routeBudgets] of Object.entries(profile.budgets)) {
   const results = resultsByRoute.get(route) ?? [];
 
   if (results.length !== RUNS_PER_ROUTE) {
@@ -65,4 +108,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("Lighthouse median budgets passed.");
+console.log(`Lighthouse ${profileName} median budgets passed.`);

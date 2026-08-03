@@ -7,8 +7,39 @@ const option = (name, fallback) => {
   return index === -1 ? fallback : process.argv[index + 1];
 };
 
-const reportDirectory = option("--report-directory", ".lighthouseci");
 const profile = option("--profile", "mobile");
+const profiles = {
+  mobile: {
+    artifactName: "lighthouse-reports",
+    heading: "Lighthouse baseline",
+    reportDirectory: ".lighthouseci",
+  },
+  desktop: {
+    artifactName: "lighthouse-desktop-reports",
+    heading: "Lighthouse desktop baseline",
+    reportDirectory: ".lighthouseci-desktop",
+  },
+  authenticated: {
+    artifactName: "lighthouse-authenticated-reports",
+    heading: "Lighthouse authenticated baseline",
+    reportDirectory: ".lighthouseci-authenticated",
+  },
+  "authenticated-desktop": {
+    artifactName: "lighthouse-authenticated-desktop-reports",
+    heading: "Lighthouse authenticated desktop baseline",
+    reportDirectory: ".lighthouseci-authenticated-desktop",
+  },
+};
+const selectedProfile = profiles[profile];
+
+if (!selectedProfile) {
+  throw new Error(`Unknown Lighthouse profile: ${profile}`);
+}
+
+const reportDirectory = option(
+  "--report-directory",
+  selectedProfile.reportDirectory,
+);
 
 const formatRange = (values, format) => {
   if (values.length === 0) return "—";
@@ -38,8 +69,7 @@ const writeSummary = (content) => {
 
 const resultsByRoute = readResultsByRoute(reportDirectory);
 
-const heading = profile === "mobile" ? "Lighthouse baseline" : `Lighthouse ${profile} baseline`;
-const artifactName = profile === "desktop" ? "lighthouse-desktop-reports" : "lighthouse-reports";
+const { heading, artifactName } = selectedProfile;
 
 if (resultsByRoute.size === 0) {
   writeSummary(`## ${heading}\n\nNo readable Lighthouse reports were generated.`);

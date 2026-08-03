@@ -66,6 +66,9 @@ importers:
       msw:
         specifier: ^2.15.0
         version: 2.15.0(@types/node@20.19.41)(typescript@5.9.3)
+      puppeteer-core:
+        specifier: ^24.31.0
+        version: 24.43.1
       tailwindcss:
         specifier: ^4
         version: 4.3.0

@@ -146,7 +146,12 @@ put secrets in them.
 | `pnpm lighthouse:summary` | Print the median and range from existing Lighthouse reports |
 | `pnpm lighthouse:desktop` | Run desktop Lighthouse baseline audits for `/` and `/login` after a production build |
 | `pnpm lighthouse:desktop:summary` | Print the desktop Lighthouse median and range from existing reports |
+| `pnpm lighthouse:authenticated` | Run mobile Lighthouse baseline audits for authenticated stable routes |
+| `pnpm lighthouse:authenticated:summary` | Print the authenticated mobile Lighthouse median and range |
+| `pnpm lighthouse:authenticated:desktop` | Run desktop Lighthouse baseline audits for authenticated stable routes |
+| `pnpm lighthouse:authenticated:desktop:summary` | Print the authenticated desktop Lighthouse median and range |
 | `pnpm lighthouse:assert` | Check route-specific Lighthouse budgets using the median of three runs |
+| `pnpm lighthouse:desktop:assert` | Check route-specific desktop Lighthouse budgets using the median of three runs |
 | `pnpm lint` | Run ESLint |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
@@ -198,18 +203,66 @@ the private `lighthouse-reports` artifact for 7 days and writes the median and
 range to the Job Summary. CI checks route-specific budgets against the median
 of all three runs, so a single noisy GitHub runner audit does not fail the job.
 
-Desktop uses the same public routes and three-run median, but starts as a
-report-only `Lighthouse Desktop` CI job. Run it locally with:
+Desktop uses the same public routes and three-run median. Run it locally with:
 
 ```bash
 pnpm build
 pnpm lighthouse:desktop
 pnpm lighthouse:desktop:summary
+pnpm lighthouse:desktop:assert
 ```
 
 Its reports are stored in `.lighthouseci-desktop/` and uploaded as the private
-`lighthouse-desktop-reports` artifact for 7 days. Desktop budgets are added
-after five completed GitHub Actions baseline runs.
+`lighthouse-desktop-reports` artifact for 7 days. CI checks its route-specific
+desktop budgets using the median of all three runs.
+
+### Authenticated Lighthouse baseline
+
+Authenticated Lighthouse runs separately from the guest-route budgets. It uses
+an isolated PostgreSQL database, the local API, and a deterministic fixture
+account to audit the dashboard; Collections and Review user/Oxford views;
+both Tests tabs; and Dictation library, Music, and BBC pages. Each route runs
+three times for mobile and desktop. Mock-test sessions and the YouTube player
+remain covered by browser E2E and production observability instead.
+
+Install Chromium and start the isolated database first:
+
+```bash
+pnpm test:e2e:install
+pnpm test:e2e:db:up
+```
+
+In the sibling API repository, migrate, seed, and start the local API:
+
+```bash
+export DATABASE_URL=postgresql://engvocab:engvocab@localhost:5434/engvocab_e2e
+export PERFORMANCE_DATABASE_URL="$DATABASE_URL"
+export JWT_SECRET=lighthouse-jwt-secret-at-least-32-characters
+export PORT=3101 CORS_ORIGIN=http://localhost:3100
+export REFRESH_TOKEN_COOKIE_SECURE=false REFRESH_TOKEN_COOKIE_SAME_SITE=lax
+pnpm prisma generate && pnpm prisma migrate deploy && pnpm lighthouse:seed
+pnpm build && pnpm start:prod
+```
+
+Then, in this repository, set the local API and catalog roots before building:
+
+```bash
+export LIGHTHOUSE_AUTH_EMAIL=performance-benchmark-vu-01@engvocab.local
+export LIGHTHOUSE_AUTH_PASSWORD=performance-benchmark-password
+export NEXT_PUBLIC_API_BASE_URL=http://localhost:3101 AUTH_API_BASE_URL=http://localhost:3101
+export NEXT_PUBLIC_TOEIC_CATALOG_ROOT=http://localhost:3100/toeic
+export NEXT_PUBLIC_DICTATION_CATALOG_ROOT=http://localhost:3100/dictation
+pnpm build
+pnpm lighthouse:authenticated
+pnpm lighthouse:authenticated:summary
+```
+
+Use `pnpm lighthouse:authenticated:desktop` and
+`pnpm lighthouse:authenticated:desktop:summary` for the desktop profile.
+Reports are stored in `.lighthouseci-authenticated/` and
+`.lighthouseci-authenticated-desktop/`; CI uploads the corresponding private
+artifacts for seven days. These jobs are report-only until five successful
+`main` runs establish route-specific budgets.
 
 ## Main routes
 
