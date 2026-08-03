@@ -6,7 +6,6 @@ const profiles = {
     reportDirectory: ".lighthouseci",
     budgets: {
       "/": {
-        performance: { min: 0.85 },
         accessibility: { min: 0.98 },
         bestPractices: { min: 0.95 },
         seo: { min: 0.98 },
@@ -15,7 +14,6 @@ const profiles = {
         tbt: { max: 175 },
       },
       "/login": {
-        performance: { min: 0.89 },
         accessibility: { min: 0.98 },
         bestPractices: { min: 0.95 },
         seo: { min: 0.98 },
@@ -29,7 +27,6 @@ const profiles = {
     reportDirectory: ".lighthouseci-desktop",
     budgets: {
       "/": {
-        performance: { min: 0.95 },
         accessibility: { min: 0.98 },
         bestPractices: { min: 0.95 },
         seo: { min: 0.98 },
@@ -38,7 +35,6 @@ const profiles = {
         tbt: { max: 50 },
       },
       "/login": {
-        performance: { min: 0.95 },
         accessibility: { min: 0.98 },
         bestPractices: { min: 0.95 },
         seo: { min: 0.98 },

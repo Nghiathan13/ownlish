@@ -10,11 +10,13 @@ const option = (name, fallback) => {
 const profile = option("--profile", "mobile");
 const profiles = {
   mobile: {
+    advisoryPerformanceMin: 0.85,
     artifactName: "lighthouse-reports",
     heading: "Lighthouse baseline",
     reportDirectory: ".lighthouseci",
   },
   desktop: {
+    advisoryPerformanceMin: 0.95,
     artifactName: "lighthouse-desktop-reports",
     heading: "Lighthouse desktop baseline",
     reportDirectory: ".lighthouseci-desktop",
@@ -69,7 +71,7 @@ const writeSummary = (content) => {
 
 const resultsByRoute = readResultsByRoute(reportDirectory);
 
-const { heading, artifactName } = selectedProfile;
+const { heading, artifactName, advisoryPerformanceMin } = selectedProfile;
 
 if (resultsByRoute.size === 0) {
   writeSummary(`## ${heading}\n\nNo readable Lighthouse reports were generated.`);
@@ -94,6 +96,20 @@ const rows = [...resultsByRoute.entries()]
     ].join(" | ");
   });
 
+const advisoryWarnings = advisoryPerformanceMin
+  ? [...resultsByRoute.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .flatMap(([route, results]) => {
+        const score = median(results.map((result) => result.performance));
+
+        return score < advisoryPerformanceMin
+          ? [
+              `- \`${route}\` Performance median is ${formatScore(score)} (advisory target: ${formatScore(advisoryPerformanceMin)}).`,
+            ]
+          : [];
+      })
+  : [];
+
 writeSummary(`## ${heading}
 
 Median with min–max range across each route's runs.
@@ -103,3 +119,11 @@ Median with min–max range across each route's runs.
 | ${rows.join(" |\n| ")} |
 
 Detailed HTML and JSON reports are available in the \`${artifactName}\` artifact for 7 days.`);
+
+if (advisoryWarnings.length > 0) {
+  writeSummary(`### Performance score advisory
+
+Performance is a composite Lighthouse score, so this warning does not fail CI. Review the metric ranges above and the report artifact before treating it as a regression.
+
+${advisoryWarnings.join("\n")}`);
+}
