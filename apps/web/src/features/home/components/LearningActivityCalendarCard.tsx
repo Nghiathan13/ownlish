@@ -336,7 +336,7 @@ export function LearningActivityCalendarCard({
 
                           return (
                             <span
-                              aria-hidden={!day.isInPeriod}
+                              aria-hidden={day.isInPeriod ? undefined : true}
                               aria-label={
                                 day.isInPeriod
                                   ? `${formatDayLabel(day, locale)}, ${formatActivityDuration(seconds, locale)}`
@@ -379,6 +379,7 @@ export function LearningActivityCalendarCard({
                                 });
                               }}
                               onPointerLeave={() => setDayTooltip(null)}
+                              role={day.isInPeriod ? "img" : undefined}
                               style={
                                 day.isInPeriod
                                   ? getIntensityStyle(seconds)
@@ -401,6 +402,7 @@ export function LearningActivityCalendarCard({
                   aria-label={t(entry.label)}
                   className="group/icon-button relative block size-4 rounded-sm"
                   key={entry.label}
+                  role="img"
                 >
                   <span
                     aria-hidden="true"

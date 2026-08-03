@@ -197,14 +197,14 @@ export function VocabularyTable({
                   />
                 ) : null}
                 {showColumn("level") ? (
-                  <div>
+                  <dl>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {t("wordsTable.level")}
                     </dt>
                     <dd className="mt-1">
                       <DefinitionLevelCell definition={definition} />
                     </dd>
-                  </div>
+                  </dl>
                 ) : null}
                 {showColumn("example") ? (
                   <div className="text-muted-foreground">
@@ -212,14 +212,14 @@ export function VocabularyTable({
                   </div>
                 ) : null}
                 {showColumn("nextReview") ? (
-                  <div>
+                  <dl>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {t("wordsTable.nextReview")}
                     </dt>
                     <dd className="mt-1 text-muted-foreground">
                       <DefinitionNextReviewCell definition={definition} />
                     </dd>
-                  </div>
+                  </dl>
                 ) : null}
               </article>
             );

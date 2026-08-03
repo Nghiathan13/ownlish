@@ -1,6 +1,11 @@
 import { median, readResultsByRoute } from "./reports.mjs";
 
 const RUNS_PER_ROUTE = 3;
+const authenticatedCategoryBudgets = {
+  accessibility: { min: 0.98 },
+  bestPractices: { min: 0.95 },
+  seo: { min: 0.98 },
+};
 const profiles = {
   mobile: {
     reportDirectory: ".lighthouseci",
@@ -42,6 +47,40 @@ const profiles = {
         cls: { max: 0.05 },
         tbt: { max: 50 },
       },
+    },
+  },
+  authenticated: {
+    reportDirectory: ".lighthouseci-authenticated",
+    budgets: {
+      "/": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 225 } },
+      "/collections/user": { ...authenticatedCategoryBudgets, lcp: { max: 4_500 }, cls: { max: 0.05 }, tbt: { max: 125 } },
+      "/collections/user/20000000-0000-4000-8000-000000000001": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 200 } },
+      "/collections/oxford/A1": { ...authenticatedCategoryBudgets, lcp: { max: 4_900 }, cls: { max: 0.05 }, tbt: { max: 200 } },
+      "/collections/oxford/A1/part-1": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 250 } },
+      "/review": { ...authenticatedCategoryBudgets, lcp: { max: 4_500 }, cls: { max: 0.05 }, tbt: { max: 175 } },
+      "/review/oxford/A1/part-1": { ...authenticatedCategoryBudgets, lcp: { max: 5_100 }, cls: { max: 0.05 }, tbt: { max: 200 } },
+      "/tests?tab=mock_tests&year=2019": { ...authenticatedCategoryBudgets, lcp: { max: 4_300 }, cls: { max: 0.05 }, tbt: { max: 125 } },
+      "/tests?tab=part_practice&part=1": { ...authenticatedCategoryBudgets, lcp: { max: 4_400 }, cls: { max: 0.05 }, tbt: { max: 175 } },
+      "/dictation": { ...authenticatedCategoryBudgets, lcp: { max: 4_100 }, cls: { max: 0.05 }, tbt: { max: 175 } },
+      "/dictation/music": { ...authenticatedCategoryBudgets, lcp: { max: 4_100 }, cls: { max: 0.05 }, tbt: { max: 175 } },
+      "/dictation/bbc": { ...authenticatedCategoryBudgets, lcp: { max: 4_100 }, cls: { max: 0.05 }, tbt: { max: 175 } },
+    },
+  },
+  "authenticated-desktop": {
+    reportDirectory: ".lighthouseci-authenticated-desktop",
+    budgets: {
+      "/": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.08 }, tbt: { max: 50 } },
+      "/collections/user": { ...authenticatedCategoryBudgets, lcp: { max: 1_100 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/collections/user/20000000-0000-4000-8000-000000000001": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/collections/oxford/A1": { ...authenticatedCategoryBudgets, lcp: { max: 1_100 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/collections/oxford/A1/part-1": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/review": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/review/oxford/A1/part-1": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/tests?tab=mock_tests&year=2019": { ...authenticatedCategoryBudgets, lcp: { max: 1_000 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/tests?tab=part_practice&part=1": { ...authenticatedCategoryBudgets, lcp: { max: 1_000 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/dictation": { ...authenticatedCategoryBudgets, lcp: { max: 1_100 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/dictation/music": { ...authenticatedCategoryBudgets, lcp: { max: 1_000 }, cls: { max: 0.05 }, tbt: { max: 50 } },
+      "/dictation/bbc": { ...authenticatedCategoryBudgets, lcp: { max: 1_100 }, cls: { max: 0.05 }, tbt: { max: 50 } },
     },
   },
 };

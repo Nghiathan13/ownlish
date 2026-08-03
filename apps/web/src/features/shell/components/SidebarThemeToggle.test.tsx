@@ -31,7 +31,9 @@ describe("SidebarThemeToggle", () => {
     renderToggle(false);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Switch to dark theme" }),
+      screen.getByRole("button", {
+        name: "Dark mode: Switch to dark theme",
+      }),
     );
 
     expect(screen.getByText("Dark mode")).toBeInTheDocument();

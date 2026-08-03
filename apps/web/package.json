@@ -21,8 +21,10 @@
     "lighthouse:desktop:summary": "node scripts/lighthouse/write-summary.mjs --report-directory .lighthouseci-desktop --profile desktop",
     "lighthouse:authenticated": "lhci autorun --config=.lighthouserc.authenticated.cjs",
     "lighthouse:authenticated:summary": "node scripts/lighthouse/write-summary.mjs --profile authenticated",
+    "lighthouse:authenticated:assert": "node scripts/lighthouse/assert-budgets.mjs --profile authenticated",
     "lighthouse:authenticated:desktop": "lhci autorun --config=.lighthouserc.authenticated.desktop.cjs",
     "lighthouse:authenticated:desktop:summary": "node scripts/lighthouse/write-summary.mjs --profile authenticated-desktop",
+    "lighthouse:authenticated:desktop:assert": "node scripts/lighthouse/assert-budgets.mjs --profile authenticated-desktop",
     "lighthouse:assert": "node scripts/lighthouse/assert-budgets.mjs",
     "lighthouse:desktop:assert": "node scripts/lighthouse/assert-budgets.mjs --profile desktop"
   },

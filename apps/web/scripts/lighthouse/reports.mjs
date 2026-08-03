@@ -22,7 +22,8 @@ export const readResultsByRoute = (reportDirectory = ".lighthouseci") => {
     if (!fs.existsSync(entry.jsonPath)) continue;
 
     const report = JSON.parse(fs.readFileSync(entry.jsonPath, "utf8"));
-    const route = new URL(report.finalUrl).pathname || "/";
+    const { pathname, search } = new URL(report.finalUrl);
+    const route = `${pathname || "/"}${search}`;
     const result = {
       performance: report.categories.performance.score,
       accessibility: report.categories.accessibility.score,

@@ -17,7 +17,9 @@ describe("SidebarLocaleToggle", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Switch to Vietnamese" }),
+      screen.getByRole("button", {
+        name: "Vietnamese: Switch to Vietnamese",
+      }),
     );
 
     expect(screen.getByText("Tiếng Anh")).toBeInTheDocument();

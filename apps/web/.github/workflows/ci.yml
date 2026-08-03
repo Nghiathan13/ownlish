@@ -281,11 +281,13 @@ jobs:
           - profile: mobile
             command: lighthouse:authenticated
             summary_command: lighthouse:authenticated:summary
+            assert_command: lighthouse:authenticated:assert
             artifact: lighthouse-authenticated-reports
             report_directory: .lighthouseci-authenticated
           - profile: desktop
             command: lighthouse:authenticated:desktop
             summary_command: lighthouse:authenticated:desktop:summary
+            assert_command: lighthouse:authenticated:desktop:assert
             artifact: lighthouse-authenticated-desktop-reports
             report_directory: .lighthouseci-authenticated-desktop
 
@@ -395,6 +397,10 @@ jobs:
         if: always()
         working-directory: engvocab-web
         run: pnpm ${{ matrix.summary_command }}
+
+      - name: Assert Lighthouse authenticated budgets
+        working-directory: engvocab-web
+        run: pnpm ${{ matrix.assert_command }}
 
       - name: Upload Lighthouse authenticated reports
         if: always()

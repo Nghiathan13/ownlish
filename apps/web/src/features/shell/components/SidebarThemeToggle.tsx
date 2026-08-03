@@ -25,7 +25,7 @@ export function SidebarThemeToggle({ collapsed }: SidebarThemeToggleProps) {
   return (
     <button
       type="button"
-      aria-label={tooltip}
+      aria-label={collapsed ? tooltip : `${label}: ${tooltip}`}
       onClick={() => setTheme(targetTheme)}
       className={classNames(
         "flex w-full cursor-pointer items-center rounded-lg px-2 py-2 text-foreground hover:bg-hover-overlay",

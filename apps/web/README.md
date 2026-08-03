@@ -148,8 +148,10 @@ put secrets in them.
 | `pnpm lighthouse:desktop:summary` | Print the desktop Lighthouse median and range from existing reports |
 | `pnpm lighthouse:authenticated` | Run mobile Lighthouse baseline audits for authenticated stable routes |
 | `pnpm lighthouse:authenticated:summary` | Print the authenticated mobile Lighthouse median and range |
+| `pnpm lighthouse:authenticated:assert` | Check authenticated mobile route budgets using the median of three runs |
 | `pnpm lighthouse:authenticated:desktop` | Run desktop Lighthouse baseline audits for authenticated stable routes |
 | `pnpm lighthouse:authenticated:desktop:summary` | Print the authenticated desktop Lighthouse median and range |
+| `pnpm lighthouse:authenticated:desktop:assert` | Check authenticated desktop route budgets using the median of three runs |
 | `pnpm lighthouse:assert` | Check route-specific Lighthouse budgets using the median of three runs |
 | `pnpm lighthouse:desktop:assert` | Check route-specific desktop Lighthouse budgets using the median of three runs |
 | `pnpm lint` | Run ESLint |
@@ -261,8 +263,8 @@ Use `pnpm lighthouse:authenticated:desktop` and
 `pnpm lighthouse:authenticated:desktop:summary` for the desktop profile.
 Reports are stored in `.lighthouseci-authenticated/` and
 `.lighthouseci-authenticated-desktop/`; CI uploads the corresponding private
-artifacts for seven days. These jobs are report-only until five successful
-`main` runs establish route-specific budgets.
+artifacts for seven days. CI checks separate authenticated mobile and desktop
+route budgets from the median of three runs.
 
 ## Main routes
 
