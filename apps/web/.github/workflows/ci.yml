@@ -316,6 +316,8 @@ jobs:
     steps:
       - name: Checkout web
         uses: actions/checkout@v4
+        with:
+          path: engvocab-web
 
       - name: Checkout API
         uses: actions/checkout@v4
@@ -334,10 +336,11 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: |
-            pnpm-lock.yaml
+            engvocab-web/pnpm-lock.yaml
             engvocab-server/pnpm-lock.yaml
 
       - name: Install web dependencies
+        working-directory: engvocab-web
         run: pnpm install --frozen-lockfile
 
       - name: Install API dependencies
@@ -345,6 +348,7 @@ jobs:
         run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
 
       - name: Install Chromium
+        working-directory: engvocab-web
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Migrate, seed, and start API
@@ -380,13 +384,16 @@ jobs:
           exit 1
 
       - name: Build web
+        working-directory: engvocab-web
         run: pnpm build
 
       - name: Run Lighthouse authenticated audit
+        working-directory: engvocab-web
         run: pnpm ${{ matrix.command }}
 
       - name: Write Lighthouse authenticated summary
         if: always()
+        working-directory: engvocab-web
         run: pnpm ${{ matrix.summary_command }}
 
       - name: Upload Lighthouse authenticated reports
@@ -394,7 +401,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.report_directory }}
+          path: engvocab-web/${{ matrix.report_directory }}
           if-no-files-found: ignore
           include-hidden-files: true
           retention-days: 7
