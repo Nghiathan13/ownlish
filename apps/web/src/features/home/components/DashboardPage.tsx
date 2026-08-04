@@ -2,27 +2,25 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import {
-  LEARNING_ACTIVITY_CALENDAR_MODES,
-} from "@/entities/learning-activity";
+import { LEARNING_ACTIVITY_CALENDAR_MODES } from "@/entities/learning-activity";
 import {
   getCollectionsListPath,
   getDefaultUserCollection,
 } from "@/entities/collection/lib/collectionDisplay";
-import { SessionLoadingSkeleton } from "@/features/auth/components/SessionLoadingSkeleton";
+import { RequireAuth } from "@/features/auth/components/RequireAuth";
 import {
   isAuthenticatedStatus,
-  isLoadingStatus,
   useAuthSession,
 } from "@/features/auth/hooks/useAuthSession";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
-import { GuestLanding } from "@/features/home/components/GuestLanding";
+import { DashboardTitleTabs } from "@/features/home/components/DashboardTitleTabs";
 import { DifficultReviewWordsCard } from "@/features/home/components/DifficultReviewWordsCard";
 import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
 import { LearningActivityCalendarCard } from "@/features/home/components/LearningActivityCalendarCard";
 import { ReviewProgressCard } from "@/features/home/components/ReviewProgressCard";
-import { useLearningActivityCalendar } from "@/features/home/hooks/useLearningActivityCalendar";
 import { useDifficultReviewWords } from "@/features/home/hooks/useDifficultReviewWords";
+import { useLearningActivityCalendar } from "@/features/home/hooks/useLearningActivityCalendar";
+import type { DashboardSection } from "@/features/home/lib/dashboardPaths";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import {
@@ -53,7 +51,19 @@ const dashboardModeLabelKeys = {
   review: "dashboard.activityModeReview",
 } as const;
 
-export function HomeDashboard() {
+type DashboardPageProps = {
+  section: DashboardSection;
+};
+
+export function DashboardPage({ section }: DashboardPageProps) {
+  return (
+    <RequireAuth>
+      <DashboardPageContent section={section} />
+    </RequireAuth>
+  );
+}
+
+function DashboardPageContent({ section }: DashboardPageProps) {
   const t = useT();
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
@@ -75,29 +85,22 @@ export function HomeDashboard() {
     userId: user?.id ?? null,
   });
   const difficultReviewWords = useDifficultReviewWords({
-    enabled: dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
+    enabled:
+      section === "progress" &&
+      dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
     isAuthenticated,
     userId: user?.id ?? null,
   });
 
-  if (isLoadingStatus(status)) {
-    return <SessionLoadingSkeleton centered />;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <PageShell className="overflow-visible sm:overflow-x-visible sm:overflow-y-visible">
-        <GuestLanding />
-      </PageShell>
-    );
-  }
-
   return (
     <PageShell className="max-lg:overflow-y-auto" fillViewport>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 lg:gap-8 lg:px-16 lg:py-8">
-        {isLoadingCollections ? (
+      <DashboardTitleTabs />
+      {isLoadingCollections ? (
+        <div className="mt-6 px-4 lg:px-16">
           <HomeDashboardSkeleton />
-        ) : collectionsError ? (
+        </div>
+      ) : collectionsError ? (
+        <div className="mt-6 px-4 lg:px-16">
           <DashboardMessage role="alert">
             <div>
               <p className="font-semibold text-foreground">
@@ -115,7 +118,9 @@ export function HomeDashboard() {
               {t("dashboard.tryAgain")}
             </button>
           </DashboardMessage>
-        ) : !defaultCollection ? (
+        </div>
+      ) : !defaultCollection ? (
+        <div className="mt-6 px-4 lg:px-16">
           <DashboardMessage>
             <div className="max-w-xl">
               <p className="font-semibold text-foreground">
@@ -135,33 +140,34 @@ export function HomeDashboard() {
               <ArrowForwardIcon />
             </Link>
           </DashboardMessage>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col gap-8">
-            <div className="shrink-0">
-              <LearningActivityCalendarCard
-                calendar={learningActivity.calendar}
-                isLoading={learningActivity.isLoading}
+        </div>
+      ) : section === "activity" ? (
+        <div className="mt-6 min-h-0 flex-1 px-4 pb-4 lg:px-16 lg:pb-8">
+          <LearningActivityCalendarCard
+            calendar={learningActivity.calendar}
+            isLoading={learningActivity.isLoading}
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <DashboardModeTabs mode={dashboardMode} onChange={setDashboardMode} />
+          {dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW ? (
+            <div className="grid min-h-[328px] grid-cols-1 gap-4 px-4 pb-4 max-lg:flex-none lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1 lg:px-16 lg:pb-8">
+              <ReviewProgressCard
+                collections={collections}
+                isAuthenticated={isAuthenticated}
+                userId={user?.id ?? null}
+              />
+              <DifficultReviewWordsCard
+                error={difficultReviewWords.error}
+                isLoading={difficultReviewWords.isLoading}
+                onRetry={() => void difficultReviewWords.reload()}
+                words={difficultReviewWords.words}
               />
             </div>
-            <DashboardModeTabs mode={dashboardMode} onChange={setDashboardMode} />
-            {dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW ? (
-              <div className="grid min-h-[328px] grid-cols-1 gap-4 max-lg:flex-none lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1">
-                <ReviewProgressCard
-                  collections={collections}
-                  isAuthenticated={isAuthenticated}
-                  userId={user?.id ?? null}
-                />
-                <DifficultReviewWordsCard
-                  error={difficultReviewWords.error}
-                  isLoading={difficultReviewWords.isLoading}
-                  onRetry={() => void difficultReviewWords.reload()}
-                  words={difficultReviewWords.words}
-                />
-              </div>
-            ) : null}
-          </div>
-        )}
-      </div>
+          ) : null}
+        </div>
+      )}
     </PageShell>
   );
 }
@@ -190,7 +196,7 @@ function DashboardModeTabs({
   return (
     <div
       aria-label={t("dashboard.activityMode")}
-      className="flex w-fit max-w-full shrink-0 gap-3 overflow-x-auto"
+      className="mx-4 my-6 flex w-fit max-w-[calc(100%-2rem)] shrink-0 gap-3 overflow-x-auto lg:mx-16 lg:max-w-[calc(100%-8rem)]"
       role="tablist"
     >
       {dashboardModes.map((item) => {

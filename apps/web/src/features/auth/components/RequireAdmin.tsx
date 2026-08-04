@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { SessionLoadingSkeleton } from "@/features/auth/components/SessionLoadingSkeleton";
 import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import { useAuthSession, isLoadingStatus } from "../hooks/useAuthSession";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
@@ -25,7 +26,10 @@ function AdminForbidden() {
         <p className="mb-6 text-muted-foreground">
           You need admin privileges to view this page.
         </p>
-        <Link className={secondaryTextButtonClassName()} href="/">
+        <Link
+          className={secondaryTextButtonClassName()}
+          href={DASHBOARD_MY_ACTIVITY_PATH}
+        >
           Back to dashboard
         </Link>
       </Panel>

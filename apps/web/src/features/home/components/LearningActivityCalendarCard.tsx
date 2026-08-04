@@ -4,15 +4,18 @@ import { useLayoutEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { type LearningActivityCalendar } from "@/entities/learning-activity";
 import {
+  formatLearningActivityPeriodRange,
   getCurrentLearningStreak,
   getLearningActivityPeriod,
-  getLearningActivityPeriods,
   getLearningActivitySecondsByDate,
+  getNavigableLearningActivityPeriods,
   getVietnamDateKey,
 } from "@/features/home/lib/learningActivityCalendar";
 import { classNames } from "@/shared/lib/classNames";
 import { useLocale } from "@/shared/providers/LocaleProvider";
 import { Tooltip } from "@/shared/ui/Tooltip";
+import { ChevronLeftIcon } from "@/shared/ui/icons/ChevronLeftIcon";
+import { ChevronRightIcon } from "@/shared/ui/icons/ChevronRightIcon";
 import { FireIcon } from "@/shared/ui/icons/FireIcon";
 import { ExperienceIcon } from "@/shared/ui/icons/ExperienceIcon";
 import { ScheduleIcon } from "@/shared/ui/icons/ScheduleIcon";
@@ -31,17 +34,8 @@ const activityLegend = [
   { label: "dashboard.activityOver60", maxSeconds: Number.POSITIVE_INFINITY },
 ] as const;
 
-const periodButtonClassName =
-  "inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal";
-
-function getPeriodButtonClassName(isActive: boolean) {
-  return classNames(
-    periodButtonClassName,
-    isActive
-      ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
-      : "bg-[#f0f0f0] text-foreground hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-  );
-}
+const periodNavButtonClassName =
+  "relative inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground before:pointer-events-none before:absolute before:inset-0 before:rounded-md hover:before:bg-hover-overlay";
 
 function getIntensityStyle(seconds: number) {
   if (seconds === 0) {
@@ -135,14 +129,6 @@ function formatMonth(month: number, locale: "en" | "vi") {
   }).format(new Date(Date.UTC(2026, month - 1, 1)));
 }
 
-function formatPeriod(period: string, locale: "en" | "vi") {
-  const [year, periodNumber] = period.split("-");
-
-  return locale === "vi"
-    ? `Kỳ ${periodNumber} - ${year}`
-    : `Term ${periodNumber} - ${year}`;
-}
-
 function LearningActivityDayTooltip({ tooltip }: { tooltip: DayTooltip | null }) {
   const [tooltipElement, setTooltipElement] = useState<HTMLSpanElement | null>(null);
   const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
@@ -216,11 +202,19 @@ export function LearningActivityCalendarCard({
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
   const [dayTooltip, setDayTooltip] = useState<DayTooltip | null>(null);
   const activityDays = calendar?.days ?? [];
-  const availablePeriods = getLearningActivityPeriods(activityDays);
-  const period =
-    selectedPeriod ??
-    availablePeriods[0] ??
-    getLearningActivityPeriod(getVietnamDateKey());
+  const currentPeriod = getLearningActivityPeriod(getVietnamDateKey());
+  const navigablePeriods = getNavigableLearningActivityPeriods(
+    activityDays,
+    currentPeriod,
+  );
+  const period = selectedPeriod ?? currentPeriod;
+  const periodIndex = navigablePeriods.indexOf(period);
+  const previousPeriod =
+    periodIndex > 0 ? navigablePeriods[periodIndex - 1] : null;
+  const nextPeriod =
+    periodIndex >= 0 && periodIndex < navigablePeriods.length - 1
+      ? navigablePeriods[periodIndex + 1]
+      : null;
   const activityByDay = getLearningActivitySecondsByDate(activityDays);
   const activityByMode = [
     {
@@ -260,9 +254,12 @@ export function LearningActivityCalendarCard({
   ];
 
   return (
-    <section>
-      <div className="flex w-full flex-wrap items-stretch gap-3">
-        <div className="grid min-w-[250px] shrink-0 grow grid-cols-2 gap-3 max-[419px]:grid-cols-1">
+    <section className="flex w-full flex-col gap-8">
+      <div className="flex w-full flex-col gap-4">
+        <h2 className="h-7 text-[21px] leading-7 font-semibold text-foreground">
+          {t("dashboard.learningOverview")}
+        </h2>
+        <div className="grid w-full gap-4 min-[604px]:grid-cols-2 min-[1232px]:grid-cols-4">
           <LearningActivityMetricCard
             icon={<FireIcon className="size-7" />}
             iconBackgroundClassName="bg-streak-background"
@@ -296,151 +293,166 @@ export function LearningActivityCalendarCard({
             value="—"
           />
         </div>
+      </div>
 
-        <div className="ml-auto flex min-w-0 max-w-full shrink-0 items-stretch gap-3 max-[640px]:w-full max-[640px]:flex-col-reverse">
-          <article className="min-w-0 w-fit max-w-full rounded-2xl border border-border bg-surface p-4 dark:bg-background max-[640px]:w-full">
-            {isLoading ? (
-              <CalendarSkeleton />
-            ) : (
-              <div className="overflow-x-auto pb-2">
-                <div className="flex w-max gap-3">
-                  <div className="grid grid-rows-7 gap-1 pt-6 text-xs font-medium leading-4 text-foreground">
-                    {Array.from({ length: 7 }, (_, index) => (
-                      <span key={index}>{weekdayAxis[index]}</span>
-                    ))}
+      <div className="flex w-full flex-col gap-4">
+        <h2 className="h-7 text-[21px] leading-7 font-semibold text-foreground">
+          {t("dashboard.studyActivity")}
+        </h2>
+        <article className="mx-auto max-w-full min-w-[250px] rounded-2xl border border-border bg-surface p-4 dark:bg-background">
+          <div
+            aria-label={t("dashboard.activityPeriod")}
+            className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2"
+          >
+            <div className="flex justify-end">
+              {previousPeriod ? (
+                <button
+                  aria-label={
+                    locale === "vi" ? "Kỳ học trước" : "Previous period"
+                  }
+                  className={periodNavButtonClassName}
+                  onClick={() => setSelectedPeriod(previousPeriod)}
+                  type="button"
+                >
+                  <ChevronLeftIcon className="size-5" />
+                </button>
+              ) : null}
+            </div>
+            <p className="h-6 text-center text-[18px] leading-6 font-medium whitespace-nowrap text-foreground">
+              {formatLearningActivityPeriodRange(period, locale)}
+            </p>
+            <div className="flex justify-start">
+              {nextPeriod ? (
+                <button
+                  aria-label={locale === "vi" ? "Kỳ học sau" : "Next period"}
+                  className={periodNavButtonClassName}
+                  onClick={() => setSelectedPeriod(nextPeriod)}
+                  type="button"
+                >
+                  <ChevronRightIcon className="size-5" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <CalendarSkeleton />
+          ) : (
+            <div className="overflow-x-auto pb-2">
+              <div className="mx-auto flex w-max max-w-full gap-3">
+                <div className="grid grid-rows-7 gap-1 pt-6 text-xs font-medium leading-4 text-foreground">
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <span key={index}>{weekdayAxis[index]}</span>
+                  ))}
+                </div>
+                <div>
+                  <div className="grid h-4 grid-flow-col auto-cols-[1rem] gap-1">
+                    {weeks.map((week, index) => {
+                      const monthStart = week.find(
+                        (day) => day.isInPeriod && day.day === 1,
+                      );
+
+                      return (
+                        <span className="relative" key={index}>
+                          {monthStart ? (
+                            <span className="absolute left-0 whitespace-nowrap text-xs font-medium text-foreground">
+                              {formatMonth(monthStart.month, locale)}
+                            </span>
+                          ) : null}
+                        </span>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <div className="grid h-4 grid-flow-col auto-cols-[1rem] gap-1">
-                      {weeks.map((week, index) => {
-                        const monthStart = week.find(
-                          (day) => day.isInPeriod && day.day === 1,
-                        );
+                  <div className="mt-2 grid grid-flow-col grid-rows-7 auto-cols-[1rem] gap-1">
+                    {weeks.flatMap((week) =>
+                      week.map((day) => {
+                        const seconds = day.isInPeriod
+                          ? (activityByDay.get(getCalendarDayKey(day)) ?? 0)
+                          : 0;
 
                         return (
-                          <span className="relative" key={index}>
-                            {monthStart ? (
-                              <span className="absolute left-0 whitespace-nowrap text-xs font-medium text-foreground">
-                                {formatMonth(monthStart.month, locale)}
-                              </span>
-                            ) : null}
-                          </span>
+                          <span
+                            aria-hidden={day.isInPeriod ? undefined : true}
+                            aria-label={
+                              day.isInPeriod
+                                ? `${formatDayLabel(day, locale)}, ${formatActivityDuration(seconds, locale)}`
+                                : undefined
+                            }
+                            className="size-4 rounded-sm"
+                            key={`${day.month}-${day.day}`}
+                            onPointerEnter={(event) => {
+                              if (!day.isInPeriod) return;
+                              const dayKey = getCalendarDayKey(day);
+                              const largestMode = activityByMode.reduce<{
+                                label: string;
+                                seconds: number;
+                              } | null>((current, { label, secondsByDay }) => {
+                                const modeSeconds = secondsByDay.get(dayKey) ?? 0;
+
+                                return modeSeconds > (current?.seconds ?? 0)
+                                  ? { label, seconds: modeSeconds }
+                                  : current;
+                              }, null);
+
+                              setDayTooltip({
+                                anchor: event.currentTarget,
+                                dateLabel: formatDayLabel(day, locale),
+                                durations: [
+                                  {
+                                    label: t("dashboard.activityModeAll"),
+                                    value: formatActivityDuration(seconds, locale),
+                                  },
+                                  ...(largestMode
+                                    ? [{
+                                        label: largestMode.label,
+                                        value: formatActivityDuration(
+                                          largestMode.seconds,
+                                          locale,
+                                        ),
+                                      }]
+                                    : []),
+                                ],
+                              });
+                            }}
+                            onPointerLeave={() => setDayTooltip(null)}
+                            role={day.isInPeriod ? "img" : undefined}
+                            style={
+                              day.isInPeriod
+                                ? getIntensityStyle(seconds)
+                                : undefined
+                            }
+                          />
                         );
-                      })}
-                    </div>
-                    <div className="mt-2 grid grid-flow-col grid-rows-7 auto-cols-[1rem] gap-1">
-                      {weeks.flatMap((week) =>
-                        week.map((day) => {
-                          const seconds = day.isInPeriod
-                            ? (activityByDay.get(getCalendarDayKey(day)) ?? 0)
-                            : 0;
-
-                          return (
-                            <span
-                              aria-hidden={day.isInPeriod ? undefined : true}
-                              aria-label={
-                                day.isInPeriod
-                                  ? `${formatDayLabel(day, locale)}, ${formatActivityDuration(seconds, locale)}`
-                                  : undefined
-                              }
-                              className="size-4 rounded-sm"
-                              key={`${day.month}-${day.day}`}
-                              onPointerEnter={(event) => {
-                                if (!day.isInPeriod) return;
-                                const dayKey = getCalendarDayKey(day);
-                                const largestMode = activityByMode.reduce<{
-                                  label: string;
-                                  seconds: number;
-                                } | null>((current, { label, secondsByDay }) => {
-                                  const modeSeconds = secondsByDay.get(dayKey) ?? 0;
-
-                                  return modeSeconds > (current?.seconds ?? 0)
-                                    ? { label, seconds: modeSeconds }
-                                    : current;
-                                }, null);
-
-                                setDayTooltip({
-                                  anchor: event.currentTarget,
-                                  dateLabel: formatDayLabel(day, locale),
-                                  durations: [
-                                    {
-                                      label: t("dashboard.activityModeAll"),
-                                      value: formatActivityDuration(seconds, locale),
-                                    },
-                                    ...(largestMode
-                                      ? [{
-                                          label: largestMode.label,
-                                          value: formatActivityDuration(
-                                            largestMode.seconds,
-                                            locale,
-                                          ),
-                                        }]
-                                      : []),
-                                  ],
-                                });
-                              }}
-                              onPointerLeave={() => setDayTooltip(null)}
-                              role={day.isInPeriod ? "img" : undefined}
-                              style={
-                                day.isInPeriod
-                                  ? getIntensityStyle(seconds)
-                                  : undefined
-                              }
-                            />
-                          );
-                        }),
-                      )}
-                    </div>
+                      }),
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="mt-2 flex w-full items-center justify-end gap-2 text-xs text-muted-foreground">
-              <span>{t("dashboard.activityLess")}</span>
-              {activityLegend.map((entry) => (
+          <div className="mt-2 flex w-full items-center justify-end gap-2 text-xs text-muted-foreground">
+            <span>{t("dashboard.activityLess")}</span>
+            {activityLegend.map((entry) => (
+              <span
+                aria-label={t(entry.label)}
+                className="group/icon-button relative block size-4 rounded-sm"
+                key={entry.label}
+                role="img"
+              >
                 <span
-                  aria-label={t(entry.label)}
-                  className="group/icon-button relative block size-4 rounded-sm"
-                  key={entry.label}
-                  role="img"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="block size-full rounded-sm"
-                    style={getIntensityStyle(entry.maxSeconds)}
-                  />
-                  <Tooltip group="icon-button" placement="bottom">
-                    {t(entry.label)}
-                  </Tooltip>
-                </span>
-              ))}
-              <span>{t("dashboard.activityMore")}</span>
-            </div>
-          </article>
-
-          {availablePeriods.length ? (
-            <div
-              aria-label={t("dashboard.activityPeriod")}
-              className="flex w-fit shrink-0 flex-col gap-3 max-[640px]:w-full max-[640px]:flex-row max-[640px]:flex-wrap"
-            >
-            {availablePeriods.map((value) => {
-              const isActive = value === period;
-
-              return (
-                <button
-                  aria-pressed={isActive}
-                  className={getPeriodButtonClassName(isActive)}
-                  key={value}
-                  onClick={() => setSelectedPeriod(value)}
-                  type="button"
-                >
-                  {formatPeriod(value, locale)}
-                </button>
-              );
-            })}
-            </div>
-          ) : null}
-        </div>
+                  aria-hidden="true"
+                  className="block size-full rounded-sm"
+                  style={getIntensityStyle(entry.maxSeconds)}
+                />
+                <Tooltip group="icon-button" placement="bottom">
+                  {t(entry.label)}
+                </Tooltip>
+              </span>
+            ))}
+            <span>{t("dashboard.activityMore")}</span>
+          </div>
+        </article>
       </div>
       <LearningActivityDayTooltip tooltip={dayTooltip} />
     </section>
@@ -463,7 +475,7 @@ function LearningActivityMetricCard({
   value: number | string;
 }) {
   return (
-    <article className="flex min-h-24 flex-1 items-center gap-4 rounded-2xl border border-border bg-surface p-4 dark:bg-background">
+    <article className="flex min-w-[250px] flex-1 items-center gap-4 rounded-2xl border border-border bg-surface p-4 dark:bg-background">
       <span
         className={classNames(
           "inline-flex size-12 shrink-0 items-center justify-center rounded-xl",
@@ -487,7 +499,7 @@ function LearningActivityMetricCard({
 function CalendarSkeleton() {
   return (
     <div className="overflow-x-auto pb-2" aria-label="Loading study activity">
-      <div className="grid w-max grid-flow-col grid-rows-7 auto-cols-[1rem] gap-1">
+      <div className="mx-auto grid w-max max-w-full grid-flow-col grid-rows-7 auto-cols-[1rem] gap-1">
         {Array.from({ length: 189 }, (_, index) => (
           <span className="size-4 rounded-sm bg-muted" key={index} />
         ))}

@@ -45,6 +45,40 @@ export function getLearningActivityPeriod(learnedOn: string) {
   return `${year}-${month <= 6 ? 1 : 2}`;
 }
 
+/** Periods the heatmap can navigate: activity periods plus the current half-year. Ascending. */
+export function getNavigableLearningActivityPeriods(
+  days: LearningActivityCalendarDay[],
+  currentPeriod = getLearningActivityPeriod(getVietnamDateKey()),
+) {
+  return [
+    ...new Set([...getLearningActivityPeriods(days), currentPeriod]),
+  ].sort((left, right) => left.localeCompare(right));
+}
+
+export function formatLearningActivityPeriodRange(
+  period: string,
+  locale: "en" | "vi",
+) {
+  const [year, periodNumber] = period.split("-").map(Number);
+  const startMonth = periodNumber === 1 ? 1 : 7;
+  const endMonth = periodNumber === 1 ? 6 : 12;
+
+  if (locale === "vi") {
+    return `Thg ${startMonth} đến Thg ${endMonth} ${year}`;
+  }
+
+  const startLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, startMonth - 1, 1)));
+  const endLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, endMonth - 1, 1)));
+
+  return `${startLabel} to ${endLabel} ${year}`;
+}
+
 export function getLearningActivitySecondsByDate(
   days: LearningActivityCalendarDay[],
   mode: LearningActivityCalendarMode = LEARNING_ACTIVITY_CALENDAR_MODES.ALL,

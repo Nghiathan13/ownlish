@@ -1,5 +1,9 @@
 import type { ComponentType, SVGProps } from "react";
 import {
+  DASHBOARD_MY_ACTIVITY_PATH,
+  DASHBOARD_ROOT_PATH,
+} from "@/features/home/lib/dashboardPaths";
+import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPath,
 } from "@/features/tests/shared/constants/toeicYears";
@@ -31,8 +35,9 @@ export type AppNavLink = {
 
 export const APP_NAV_LINKS: AppNavLink[] = [
   {
-    href: "/",
+    href: DASHBOARD_MY_ACTIVITY_PATH,
     labelKey: "nav.dashboard",
+    activeMatch: DASHBOARD_ROOT_PATH,
     icon: DashboardNavIcon,
     activeIcon: DashboardNavFillIcon,
   },

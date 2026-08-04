@@ -19,6 +19,7 @@ import {
   getAppSidebarLinkClass,
   isAppNavLinkActive,
 } from "@/features/shell/lib/appNavLinks";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import {
@@ -104,7 +105,7 @@ export function AppSidebar() {
           ) : (
             <div className="flex items-center justify-between gap-2">
               <Link
-                href="/"
+                href={DASHBOARD_MY_ACTIVITY_PATH}
                 className="flex items-center gap-2 pl-2 text-base font-bold hover:opacity-80"
               >
                 <LogoIcon className="size-6 shrink-0" />
@@ -152,7 +153,12 @@ export function AppSidebar() {
                         collapsed && "z-10 justify-center",
                       )}
                     >
-                      <Icon className="size-6 shrink-0" />
+                      <Icon
+                        className={classNames(
+                          "size-6 shrink-0",
+                          isActive && "text-primary",
+                        )}
+                      />
                       {!collapsed ? <span>{label}</span> : null}
                       {collapsed ? (
                         <Tooltip group="sidebar-link" placement="right">

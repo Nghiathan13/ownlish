@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
 import {
+  formatLearningActivityPeriodRange,
   getCurrentLearningStreak,
   getLearningActivityPeriods,
   getLearningActivitySecondsByDate,
+  getNavigableLearningActivityPeriods,
 } from "./learningActivityCalendar";
 
 const days = [
@@ -54,5 +56,31 @@ describe("learning activity calendar selectors", () => {
 
   it("derives every available half-year locally", () => {
     expect(getLearningActivityPeriods(days)).toEqual(["2026-2", "2026-1"]);
+  });
+
+  it("includes the current empty half-year among navigable periods", () => {
+    expect(getNavigableLearningActivityPeriods(days, "2027-1")).toEqual([
+      "2026-1",
+      "2026-2",
+      "2027-1",
+    ]);
+    expect(getNavigableLearningActivityPeriods([], "2026-2")).toEqual([
+      "2026-2",
+    ]);
+  });
+
+  it("formats half-year ranges for heatmap navigation", () => {
+    expect(formatLearningActivityPeriodRange("2026-2", "en")).toBe(
+      "Jul to Dec 2026",
+    );
+    expect(formatLearningActivityPeriodRange("2026-1", "en")).toBe(
+      "Jan to Jun 2026",
+    );
+    expect(formatLearningActivityPeriodRange("2026-2", "vi")).toBe(
+      "Thg 7 đến Thg 12 2026",
+    );
+    expect(formatLearningActivityPeriodRange("2026-1", "vi")).toBe(
+      "Thg 1 đến Thg 6 2026",
+    );
   });
 });

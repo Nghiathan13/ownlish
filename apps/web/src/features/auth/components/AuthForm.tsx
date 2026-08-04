@@ -7,6 +7,7 @@ import {
   isGoogleSignInConfigured,
 } from "@/features/auth/components/GoogleSignInButton";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import { ApiError } from "@/shared/api/http";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
@@ -20,7 +21,9 @@ type AuthFormProps = {
 
 type EmailPasswordMode = "login" | "register";
 
-export function AuthForm({ redirectTo = "/" }: AuthFormProps) {
+export function AuthForm({
+  redirectTo = DASHBOARD_MY_ACTIVITY_PATH,
+}: AuthFormProps) {
   const t = useT();
   const router = useRouter();
   const { googleLogin, login, register } = useAuthSession();

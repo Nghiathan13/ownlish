@@ -1,5 +1,5 @@
-import { HomeDashboard } from "@/features/home/components/HomeDashboard";
+import { HomePage } from "@/features/home/components/HomePage";
 
-export default function HomePage() {
-  return <HomeDashboard />;
+export default function Page() {
+  return <HomePage />;
 }

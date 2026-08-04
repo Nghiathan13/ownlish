@@ -4,7 +4,8 @@ const createLighthouseConfig = require("./lighthouse.config.cjs");
 
 const FIXTURE_COLLECTION_ID = "20000000-0000-4000-8000-000000000001";
 const urls = [
-  "http://localhost:3100/",
+  "http://localhost:3100/dashboard/my-activity",
+  "http://localhost:3100/dashboard/progress",
   "http://localhost:3100/collections/user",
   `http://localhost:3100/collections/user/${FIXTURE_COLLECTION_ID}`,
   "http://localhost:3100/collections/oxford/A1",

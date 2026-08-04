@@ -1,8 +1,19 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HomeDashboard } from "@/features/home/components/HomeDashboard";
+import { DashboardPage } from "@/features/home/components/DashboardPage";
 import { getVietnamDateKey } from "@/features/home/lib/learningActivityCalendar";
+
+function renderDashboard(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
 
 const mocks = vi.hoisted(() => ({
   useAuthSession: vi.fn(),
@@ -10,7 +21,14 @@ const mocks = vi.hoisted(() => ({
   useDifficultReviewWords: vi.fn(),
   useLearningActivityCalendar: vi.fn(),
   useOxfordProgressSummary: vi.fn(),
+  usePathname: vi.fn(),
+  useRouter: vi.fn(),
   useVocabStats: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: mocks.usePathname,
+  useRouter: mocks.useRouter,
 }));
 
 vi.mock("@/features/auth/hooks/useAuthSession", () => ({
@@ -72,8 +90,10 @@ const defaultCollection = {
   updatedAt: "2026-07-01T00:00:00.000Z",
 };
 
-describe("HomeDashboard", () => {
+describe("DashboardPage", () => {
   beforeEach(() => {
+    mocks.usePathname.mockReturnValue("/dashboard/progress");
+    mocks.useRouter.mockReturnValue({ replace: vi.fn() });
     mocks.useAuthSession.mockReturnValue({
       status: "authenticated",
       user: {
@@ -146,78 +166,105 @@ describe("HomeDashboard", () => {
     });
   });
 
-  it("keeps the guest home body empty", () => {
-    mocks.useAuthSession.mockReturnValue({ status: "guest", user: null });
+  it("shows activity metrics on the activity section", () => {
+    mocks.usePathname.mockReturnValue("/dashboard/my-activity");
+    renderDashboard(<DashboardPage section="activity" />);
 
-    render(<HomeDashboard />);
-
-    expect(
-      screen.queryByText("Build your English with a clear daily routine."),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /sign in/i })).not.toBeInTheDocument();
-  });
-
-  it("shows all learning activity with Review selected by default", () => {
-    render(<HomeDashboard />);
-
+    expect(screen.getByRole("tab", { name: "My activity" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Progress" })).toHaveAttribute(
+      "href",
+      "/dashboard/progress",
+    );
     expect(screen.getByText("Current streak").parentElement).toHaveTextContent(
       "1",
     );
     expect(screen.getByText("minutes")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Study activity" }),
-    ).not.toBeInTheDocument();
     expect(screen.getByText("1–15 minutes")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Vocabulary" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "TOEIC" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Review" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Difficult words")).not.toBeInTheDocument();
+  });
+
+  it("shows progress modes with Review selected by default", () => {
+    renderDashboard(<DashboardPage section="progress" />);
+
+    expect(screen.getByRole("tab", { name: "Progress" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(screen.getByRole("tab", { name: "Review" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
     expect(screen.getByRole("tab", { name: "Practice" })).toBeInTheDocument();
     expect(screen.getByText("Difficult words")).toBeInTheDocument();
+    expect(screen.queryByText("Current streak")).not.toBeInTheDocument();
   });
 
   it("shows collection and Oxford entry progress for Review", async () => {
     const user = userEvent.setup();
 
-    render(<HomeDashboard />);
+    renderDashboard(<DashboardPage section="progress" />);
 
     expect(screen.getByRole("tab", { name: "My Collection" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Daily vocabulary" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Filter collections" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Mastered")).toBeInTheDocument();
     expect(screen.getByText("Learning")).toBeInTheDocument();
     expect(screen.getByText("New")).toBeInTheDocument();
     expect(screen.getByText("Difficult words")).toBeInTheDocument();
     expect(screen.getByText("difficult")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show levels" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Switch to levels chart" }),
+    ).toBeInTheDocument();
     expect(mocks.useVocabStats).toHaveBeenLastCalledWith(
       expect.objectContaining({ collectionId: "all", enabled: true }),
     );
 
-    await user.click(screen.getByRole("button", { name: "Daily vocabulary" }));
+    await user.click(screen.getByRole("button", { name: "Filter collections" }));
+    expect(
+      screen.getByRole("menuitemcheckbox", { name: "Daily vocabulary" }),
+    ).toHaveAttribute("aria-checked", "true");
 
-    expect(mocks.useVocabStats).toHaveBeenLastCalledWith(
-      expect.objectContaining({ collectionId: "collection-1", enabled: true }),
+    await user.click(
+      screen.getByRole("menuitemcheckbox", { name: "Daily vocabulary" }),
     );
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("0");
 
     await user.click(screen.getByRole("tab", { name: "Oxford" }));
 
     expect(mocks.useOxfordProgressSummary).toHaveBeenLastCalledWith(
       expect.objectContaining({ band: "all", enabled: true }),
     );
-    expect(screen.getByRole("button", { name: "A1" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "C1" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Filter bands" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("10")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "A2" }));
-
-    expect(mocks.useOxfordProgressSummary).toHaveBeenLastCalledWith(
-      expect.objectContaining({ band: "A2", enabled: true }),
+    await user.click(screen.getByRole("button", { name: "Filter bands" }));
+    expect(screen.getByRole("menuitemcheckbox", { name: "A1" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("menuitemcheckbox", { name: "C1" })).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "A2" }));
+    expect(screen.getByRole("menuitemcheckbox", { name: "A2" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    // Restore full selection so progress stays on the single "all" query mock.
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "A2" }));
+    expect(screen.getByRole("menuitemcheckbox", { name: "A2" })).toHaveAttribute(
+      "aria-checked",
+      "true",
     );
 
-    await user.click(screen.getByRole("button", { name: "Show levels" }));
+    await user.click(
+      screen.getByRole("button", { name: "Switch to levels chart" }),
+    );
 
     expect(screen.getByText("Level 0")).toBeInTheDocument();
     expect(screen.getByText("Level 7")).toBeInTheDocument();
@@ -240,7 +287,7 @@ describe("HomeDashboard", () => {
         levels: [],
       },
     });
-    render(<HomeDashboard />);
+    renderDashboard(<DashboardPage section="progress" />);
 
     expect(document.body).not.toHaveTextContent(/NaN|Infinity/);
   });
@@ -255,7 +302,7 @@ describe("HomeDashboard", () => {
       reloadCollections,
     });
 
-    render(<HomeDashboard />);
+    renderDashboard(<DashboardPage section="activity" />);
 
     expect(
       screen.getByText("We couldn't load your collections."),

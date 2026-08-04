@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import {
   APP_NAV_LINKS,
   getAppSidebarLinkClass,
@@ -127,7 +128,7 @@ export function MobileTopNav() {
           <Link
             aria-label="EngVocab"
             className="flex items-center px-2 hover:opacity-80"
-            href="/"
+            href={DASHBOARD_MY_ACTIVITY_PATH}
           >
             <LogoIcon className="size-6 shrink-0" />
           </Link>
@@ -175,7 +176,12 @@ export function MobileTopNav() {
                   onClick={() => setMenuOpen(false)}
                   scroll={false}
                 >
-                  <Icon className="size-6 shrink-0" />
+                  <Icon
+                    className={classNames(
+                      "size-6 shrink-0",
+                      isActive && "text-primary",
+                    )}
+                  />
                   <span>{t(link.labelKey)}</span>
                 </Link>
               );

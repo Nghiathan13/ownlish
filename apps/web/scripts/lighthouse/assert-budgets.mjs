@@ -52,7 +52,8 @@ const profiles = {
   authenticated: {
     reportDirectory: ".lighthouseci-authenticated",
     budgets: {
-      "/": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 225 } },
+      "/dashboard/my-activity": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 225 } },
+      "/dashboard/progress": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 225 } },
       "/collections/user": { ...authenticatedCategoryBudgets, lcp: { max: 4_500 }, cls: { max: 0.05 }, tbt: { max: 125 } },
       "/collections/user/20000000-0000-4000-8000-000000000001": { ...authenticatedCategoryBudgets, lcp: { max: 5_300 }, cls: { max: 0.05 }, tbt: { max: 200 } },
       "/collections/oxford/A1": { ...authenticatedCategoryBudgets, lcp: { max: 4_900 }, cls: { max: 0.05 }, tbt: { max: 200 } },
@@ -69,7 +70,8 @@ const profiles = {
   "authenticated-desktop": {
     reportDirectory: ".lighthouseci-authenticated-desktop",
     budgets: {
-      "/": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.08 }, tbt: { max: 50 } },
+      "/dashboard/my-activity": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.08 }, tbt: { max: 50 } },
+      "/dashboard/progress": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.08 }, tbt: { max: 50 } },
       "/collections/user": { ...authenticatedCategoryBudgets, lcp: { max: 1_100 }, cls: { max: 0.05 }, tbt: { max: 50 } },
       "/collections/user/20000000-0000-4000-8000-000000000001": { ...authenticatedCategoryBudgets, lcp: { max: 1_200 }, cls: { max: 0.05 }, tbt: { max: 50 } },
       "/collections/oxford/A1": { ...authenticatedCategoryBudgets, lcp: { max: 1_100 }, cls: { max: 0.05 }, tbt: { max: 50 } },
