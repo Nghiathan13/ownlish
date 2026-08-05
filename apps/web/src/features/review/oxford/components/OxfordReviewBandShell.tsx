@@ -8,11 +8,9 @@ import {
 import { useOxfordCollectionMetaQuery } from "@/features/collections/oxford/model/useOxfordCollectionMetaQuery";
 import {
   ReviewCategorySelect,
-  ReviewModeToggle,
   ReviewWorkspace,
   ReviewWorkspaceRow,
 } from "@/features/review/components";
-import { useReviewMode } from "@/features/review/hooks/useReviewMode";
 import { OxfordPartReviewNavigation } from "./OxfordPartReviewNavigation";
 import { OxfordPartReviewSession } from "./OxfordPartReviewSession";
 import {
@@ -36,7 +34,6 @@ export function OxfordReviewBandShell({
   partParam,
 }: OxfordReviewBandShellProps) {
   const { status, user } = useAuthSession();
-  const { mode, setMode } = useReviewMode();
   const isAuthenticated = isAuthenticatedStatus(status);
   const navigation = useOxfordReviewNavigation({
     bandParam,
@@ -74,13 +71,6 @@ export function OxfordReviewBandShell({
             itemCount={metaQuery.meta?.itemCount ?? null}
             loading={metaQuery.isLoading}
             onSelectPart={navigation.navigatePart}
-          />
-        }
-        rail={
-          <ReviewModeToggle
-            mode={mode}
-            onModeChange={setMode}
-            orientation="vertical"
           />
         }
       >

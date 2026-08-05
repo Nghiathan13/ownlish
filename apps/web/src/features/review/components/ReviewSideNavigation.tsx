@@ -72,7 +72,7 @@ export function ReviewSideNavigation({
   loading,
   onNavigate,
   scrollKey,
-  widthClassName = "lg:w-[200px]",
+  widthClassName = "@min-[1216px]/review-row:w-[200px]",
 }: ReviewSideNavigationProps) {
   const router = useRouter();
   const hasItems = !loading && items.length > 0;
@@ -187,7 +187,7 @@ export function ReviewSideNavigation({
 
   return (
     <>
-      <div className="w-[200px] lg:hidden">
+      <div className="w-[200px] @min-[1216px]/review-row:hidden">
         {loading ? (
           <div
             aria-label={`Loading ${ariaLabel}`}
@@ -226,7 +226,7 @@ export function ReviewSideNavigation({
       <nav
         aria-label={ariaLabel}
         className={classNames(
-          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface p-1 lg:sticky lg:top-4 lg:flex lg:self-start dark:bg-[#000000]",
+          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface p-1 dark:bg-[#000000] @min-[1216px]/review-row:sticky @min-[1216px]/review-row:top-4 @min-[1216px]/review-row:flex @min-[1216px]/review-row:self-start",
           widthClassName,
         )}
         onMouseEnter={() => setIsHovering(true)}

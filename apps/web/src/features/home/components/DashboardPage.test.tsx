@@ -208,7 +208,11 @@ describe("DashboardPage", () => {
 
     renderDashboard(<DashboardPage section="progress" />);
 
-    expect(screen.getByRole("tab", { name: "My Collection" })).toBeInTheDocument();
+    expect(screen.getByText("My Collection")).toBeInTheDocument();
+    expect(screen.getByText("Collection progress")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Switch progress source" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Filter collections" }),
     ).toBeInTheDocument();
@@ -234,7 +238,10 @@ describe("DashboardPage", () => {
     );
     expect(screen.getByText("Total").parentElement).toHaveTextContent("0");
 
-    await user.click(screen.getByRole("tab", { name: "Oxford" }));
+    await user.click(
+      screen.getByRole("button", { name: "Switch progress source" }),
+    );
+    await user.click(screen.getByRole("menuitemradio", { name: "Oxford" }));
 
     expect(mocks.useOxfordProgressSummary).toHaveBeenLastCalledWith(
       expect.objectContaining({ band: "all", enabled: true }),

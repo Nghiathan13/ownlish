@@ -37,6 +37,7 @@ describe("ReviewStudySession", () => {
           onGood={() => {}}
           onHard={() => {}}
           onMaster={onMaster}
+          onModeChange={() => {}}
           reviewedCount={0}
           totalWords={20}
           word={word}
@@ -58,6 +59,7 @@ describe("ReviewStudySession", () => {
           onGood={() => {}}
           onHard={() => {}}
           onMaster={onMaster}
+          onModeChange={() => {}}
           reviewedCount={0}
           totalWords={20}
           word={word}

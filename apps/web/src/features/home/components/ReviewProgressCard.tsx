@@ -29,18 +29,20 @@ import { classNames } from "@/shared/lib/classNames";
 import { ApiError } from "@/shared/api/http";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { BarChartIcon } from "@/shared/ui/icons/BarChartIcon";
+import { ChevronRightIcon } from "@/shared/ui/icons/ChevronRightIcon";
 import { CheckIcon } from "@/shared/ui/icons/CheckIcon";
 import { DonutChartIcon } from "@/shared/ui/icons/DonutChartIcon";
 import { FilterIcon } from "@/shared/ui/icons/FilterIcon";
 import { Tooltip } from "@/shared/ui/Tooltip";
 import { iconButtonGroupClassName } from "@/shared/ui/Tooltip/tooltipTheme";
 
-type ProgressSource = "collection" | "oxford";
+export type ProgressSource = "collection" | "oxford";
 type ProgressView = "summary" | "levels";
 
 type ReviewProgressCardProps = {
   collections: CollectionSummary[];
   isAuthenticated: boolean;
+  source: ProgressSource;
   userId: string | null;
 };
 
@@ -52,10 +54,10 @@ type FilterOption = {
 export function ReviewProgressCard({
   collections,
   isAuthenticated,
+  source,
   userId,
 }: ReviewProgressCardProps) {
   const t = useT();
-  const [source, setSource] = useState<ProgressSource>("collection");
   const [view, setView] = useState<ProgressView>("summary");
   const userCollections = getUserOwnedCollections(collections);
   const collectionOptions = useMemo<FilterOption[]>(
@@ -247,24 +249,11 @@ export function ReviewProgressCard({
 
   return (
     <article className="flex h-full min-h-[328px] min-w-[250px] w-full flex-col rounded-2xl border border-border bg-surface pt-3 pr-3 pb-4 pl-4 dark:bg-background lg:min-h-0">
-      <div className="flex shrink-0 items-end gap-3">
-        <div
-          aria-label={t("dashboard.reviewProgress")}
-          className="relative flex min-w-0 flex-1 items-end gap-9 px-3"
-          role="tablist"
-        >
-          <ProgressTab
-            isActive={source === "collection"}
-            label={t("dashboard.myCollection")}
-            onClick={() => setSource("collection")}
-          />
-          <ProgressTab
-            isActive={source === "oxford"}
-            label={t("collections.oxford")}
-            onClick={() => setSource("oxford")}
-          />
-        </div>
-        <div className="flex shrink-0 items-center gap-2 pb-2">
+      <div className="flex shrink-0 items-center gap-3">
+        <h2 className="min-w-0 flex-1 truncate text-base font-semibold leading-6 text-foreground">
+          {t("dashboard.collectionProgress")}
+        </h2>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <ProgressViewButton
             onClick={() =>
               setView((currentView) =>
@@ -829,18 +818,53 @@ function SegmentRadialSideBorder({
   );
 }
 
+/**
+ * Minimum visual share for any non-zero donut segment (degrees ≈ percent of ring).
+ * Purely cosmetic so tiny parts stay readable; legend still uses real counts.
+ */
+const DONUT_MIN_SEGMENT_PERCENT = 2;
+
 function getRingSegments(parts: DonutRingPart[]): DonutRingSegment[] {
   const visibleParts = parts.filter((part) => part.percent > 0);
   if (visibleParts.length === 0) return [];
 
-  const totalPercent = visibleParts.reduce(
-    (total, part) => total + part.percent,
+  // Cap the floor so n tiny parts cannot exceed a full ring.
+  const minPercent = Math.min(
+    DONUT_MIN_SEGMENT_PERCENT,
+    100 / visibleParts.length,
+  );
+
+  let visualPercents = visibleParts.map((part) =>
+    Math.max(part.percent, minPercent),
+  );
+  let totalPercent = visualPercents.reduce(
+    (total, percent) => total + percent,
     0,
   );
+
+  // Flooring small slices can push the sum past 100% — take the excess
+  // proportionally from slices still above the minimum.
+  if (totalPercent > 100) {
+    const excess = totalPercent - 100;
+    const flexible = visualPercents.map((percent) =>
+      Math.max(0, percent - minPercent),
+    );
+    const flexibleTotal = flexible.reduce((total, value) => total + value, 0);
+
+    visualPercents =
+      flexibleTotal > 0
+        ? visualPercents.map(
+            (percent, index) =>
+              percent - (excess * flexible[index]) / flexibleTotal,
+          )
+        : visualPercents.map(() => 100 / visibleParts.length);
+    totalPercent = 100;
+  }
+
   let cursor = 0;
 
-  return visibleParts.map((part) => {
-    const size = (part.percent / totalPercent) * 360;
+  return visibleParts.map((part, index) => {
+    const size = (visualPercents[index] / totalPercent) * 360;
     const startDeg = cursor;
     const endDeg = cursor + size;
     cursor = endDeg;
@@ -981,37 +1005,162 @@ function LevelDistributionRow({
   );
 }
 
-function ProgressTab({
-  isActive,
-  label,
-  onClick,
+const PROGRESS_SOURCE_OPTIONS: Array<{
+  id: ProgressSource;
+  labelKey: "dashboard.myCollection" | "collections.oxford";
+}> = [
+  { id: "collection", labelKey: "dashboard.myCollection" },
+  { id: "oxford", labelKey: "collections.oxford" },
+];
+
+function useHoverCapableMenu() {
+  const [isHoverCapable, setIsHoverCapable] = useState(false);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const media = window.matchMedia("(hover: hover) and (pointer: fine)");
+    function sync() {
+      setIsHoverCapable(media.matches);
+    }
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return isHoverCapable;
+}
+
+export function ProgressSourceMenu({
+  onSourceChange,
+  source,
 }: {
-  isActive: boolean;
-  label: string;
-  onClick: () => void;
+  onSourceChange: (source: ProgressSource) => void;
+  source: ProgressSource;
 }) {
+  const t = useT();
+  const menuId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const isHoverCapable = useHoverCapableMenu();
+
+  function clearCloseTimer() {
+    if (closeTimerRef.current != null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }
+
+  function openMenu() {
+    clearCloseTimer();
+    setIsOpen(true);
+  }
+
+  function scheduleCloseMenu() {
+    clearCloseTimer();
+    closeTimerRef.current = setTimeout(() => {
+      setIsOpen(false);
+      closeTimerRef.current = null;
+    }, 120);
+  }
+
+  useEffect(() => {
+    return () => clearCloseTimer();
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
   return (
-    <button
-      aria-selected={isActive}
-      className={classNames(
-        "group/progress-tab relative inline-flex shrink-0 cursor-pointer whitespace-nowrap pb-3 text-base font-normal",
-        isActive ? "text-foreground" : "text-muted-foreground",
-      )}
-      onClick={onClick}
-      role="tab"
-      type="button"
+    <div
+      className="relative flex w-fit max-w-full items-center"
+      ref={rootRef}
     >
-      {label}
-      <span
-        aria-hidden
+      <span className="h-7 min-w-0 truncate text-[21px] leading-7 font-semibold text-foreground">
+        {source === "collection"
+          ? t("dashboard.myCollection")
+          : t("collections.oxford")}
+      </span>
+      <button
+        aria-controls={menuId}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        aria-label={t("dashboard.switchProgressSource")}
         className={classNames(
-          "absolute -right-3 -left-3 bottom-[1px] h-[2.5px]",
-          isActive
-            ? "bg-foreground"
-            : "bg-transparent group-hover/progress-tab:bg-border",
+          "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-[#bdbdbd] dark:text-muted-foreground",
+          "hover:text-foreground",
+          isOpen && "text-foreground",
         )}
-      />
-    </button>
+        onClick={() => {
+          if (isHoverCapable) return;
+          setIsOpen((current) => !current);
+        }}
+        onMouseEnter={isHoverCapable ? openMenu : undefined}
+        onMouseLeave={isHoverCapable ? scheduleCloseMenu : undefined}
+        type="button"
+      >
+        <ChevronRightIcon className="size-5" />
+      </button>
+
+      {isOpen ? (
+        <div
+          aria-label={t("dashboard.switchProgressSource")}
+          className="absolute top-0 left-full z-20 ml-1 flex min-w-[12rem] flex-col gap-1 rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]"
+          id={menuId}
+          onMouseEnter={isHoverCapable ? openMenu : undefined}
+          onMouseLeave={isHoverCapable ? scheduleCloseMenu : undefined}
+          role="menu"
+        >
+          {PROGRESS_SOURCE_OPTIONS.map((option) => {
+            const isSelected = source === option.id;
+
+            return (
+              <button
+                aria-checked={isSelected}
+                className={classNames(
+                  "relative flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-left text-[15px] leading-5",
+                  "before:pointer-events-none before:absolute before:inset-0 before:rounded-md hover:before:bg-hover-overlay",
+                  isSelected && "bg-[#f0f0f0] dark:bg-surface",
+                )}
+                key={option.id}
+                onClick={() => {
+                  onSourceChange(option.id);
+                  setIsOpen(false);
+                }}
+                role="menuitemradio"
+                type="button"
+              >
+                <span className="relative truncate">{t(option.labelKey)}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 

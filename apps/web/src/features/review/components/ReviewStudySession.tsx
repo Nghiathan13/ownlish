@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ReviewCard } from "@/features/review/components/ReviewCard";
 import { ReviewGradeButtons } from "@/features/review/components/ReviewGradeButtons";
+import { ReviewModeCardStack } from "@/features/review/components/ReviewModeCardStack";
 import type { ReviewMode } from "@/features/review/components/ReviewModeToggle";
 import { ReviewTypingCard, type TypingResult } from "@/features/review/components/ReviewTypingCard";
 import type { ReviewStudyWord } from "@/features/review/model/reviewStudyWord";
@@ -20,6 +21,7 @@ type ReviewStudySessionProps = {
   onGood: () => void;
   onHard: () => void;
   onMaster: () => void;
+  onModeChange: (mode: ReviewMode) => void;
   reviewedCount: number;
   totalWords: number;
   word: ReviewStudyWord;
@@ -35,6 +37,7 @@ export function ReviewStudySession({
   onGood,
   onHard,
   onMaster,
+  onModeChange,
   reviewedCount,
   totalWords,
   mode,
@@ -131,32 +134,34 @@ export function ReviewStudySession({
 
   return (
     <>
-      {isTypingMode ? (
-        <ReviewTypingCard
-          disabled={isSubmitting}
-          onMaster={onMaster}
-          onTypedAnswerChange={setTypedAnswer}
-          reviewedCount={reviewedCount}
-          totalWords={totalWords}
-          typedAnswer={typedAnswer}
-          typingFieldRef={typingFieldRef}
-          typingFieldText={typingFieldText}
-          typingInputRef={typingInputRef}
-          typingMeasureRef={typingMeasureRef}
-          typingResult={typingResult}
-          word={word}
-        />
-      ) : (
-        <ReviewCard
-          disabled={isSubmitting}
-          onMaster={onMaster}
-          onToggleMeaning={() => setShowMeaning((current) => !current)}
-          reviewedCount={reviewedCount}
-          showMeaning={showMeaning}
-          totalWords={totalWords}
-          word={word}
-        />
-      )}
+      <ReviewModeCardStack mode={mode} onModeChange={onModeChange}>
+        {isTypingMode ? (
+          <ReviewTypingCard
+            disabled={isSubmitting}
+            onMaster={onMaster}
+            onTypedAnswerChange={setTypedAnswer}
+            reviewedCount={reviewedCount}
+            totalWords={totalWords}
+            typedAnswer={typedAnswer}
+            typingFieldRef={typingFieldRef}
+            typingFieldText={typingFieldText}
+            typingInputRef={typingInputRef}
+            typingMeasureRef={typingMeasureRef}
+            typingResult={typingResult}
+            word={word}
+          />
+        ) : (
+          <ReviewCard
+            disabled={isSubmitting}
+            onMaster={onMaster}
+            onToggleMeaning={() => setShowMeaning((current) => !current)}
+            reviewedCount={reviewedCount}
+            showMeaning={showMeaning}
+            totalWords={totalWords}
+            word={word}
+          />
+        )}
+      </ReviewModeCardStack>
       {canGrade ? (
         <ReviewGradeButtons
           disabled={isSubmitting}

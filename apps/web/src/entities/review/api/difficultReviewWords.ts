@@ -18,11 +18,19 @@ function parseDifficultReviewWord(body: unknown): DifficultReviewWord {
   return { collectionName, word, wrongCount };
 }
 
+export type DifficultReviewWordsSource = "collection" | "oxford";
+
 export function getDifficultReviewWords(
   token: string,
-  options: { signal?: AbortSignal } = {},
+  options: {
+    signal?: AbortSignal;
+    source?: DifficultReviewWordsSource;
+  } = {},
 ) {
-  return apiRequest("/reviews/difficult-words", {
+  const source = options.source ?? "collection";
+  const search = new URLSearchParams({ source });
+
+  return apiRequest(`/reviews/difficult-words?${search.toString()}`, {
     signal: options.signal,
     token,
   }).then((body) => {

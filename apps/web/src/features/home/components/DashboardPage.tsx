@@ -17,7 +17,11 @@ import { DashboardTitleTabs } from "@/features/home/components/DashboardTitleTab
 import { DifficultReviewWordsCard } from "@/features/home/components/DifficultReviewWordsCard";
 import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
 import { LearningActivityCalendarCard } from "@/features/home/components/LearningActivityCalendarCard";
-import { ReviewProgressCard } from "@/features/home/components/ReviewProgressCard";
+import {
+  ProgressSourceMenu,
+  ReviewProgressCard,
+  type ProgressSource,
+} from "@/features/home/components/ReviewProgressCard";
 import { useDifficultReviewWords } from "@/features/home/hooks/useDifficultReviewWords";
 import { useLearningActivityCalendar } from "@/features/home/hooks/useLearningActivityCalendar";
 import type { DashboardSection } from "@/features/home/lib/dashboardPaths";
@@ -70,6 +74,8 @@ function DashboardPageContent({ section }: DashboardPageProps) {
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>(
     LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
   );
+  const [progressSource, setProgressSource] =
+    useState<ProgressSource>("collection");
   const {
     collections,
     collectionsError,
@@ -89,6 +95,7 @@ function DashboardPageContent({ section }: DashboardPageProps) {
       section === "progress" &&
       dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW,
     isAuthenticated,
+    source: progressSource,
     userId: user?.id ?? null,
   });
 
@@ -152,18 +159,25 @@ function DashboardPageContent({ section }: DashboardPageProps) {
         <div className="flex min-h-0 flex-1 flex-col">
           <DashboardModeTabs mode={dashboardMode} onChange={setDashboardMode} />
           {dashboardMode === LEARNING_ACTIVITY_CALENDAR_MODES.REVIEW ? (
-            <div className="grid min-h-[328px] grid-cols-1 gap-4 px-4 pb-4 max-lg:flex-none lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1 lg:px-16 lg:pb-8">
-              <ReviewProgressCard
-                collections={collections}
-                isAuthenticated={isAuthenticated}
-                userId={user?.id ?? null}
+            <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 max-lg:flex-none lg:pb-8 lg:px-16">
+              <ProgressSourceMenu
+                onSourceChange={setProgressSource}
+                source={progressSource}
               />
-              <DifficultReviewWordsCard
-                error={difficultReviewWords.error}
-                isLoading={difficultReviewWords.isLoading}
-                onRetry={() => void difficultReviewWords.reload()}
-                words={difficultReviewWords.words}
-              />
+              <div className="grid min-h-[328px] grid-cols-1 gap-4 max-lg:flex-none lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1">
+                <ReviewProgressCard
+                  collections={collections}
+                  isAuthenticated={isAuthenticated}
+                  source={progressSource}
+                  userId={user?.id ?? null}
+                />
+                <DifficultReviewWordsCard
+                  error={difficultReviewWords.error}
+                  isLoading={difficultReviewWords.isLoading}
+                  onRetry={() => void difficultReviewWords.reload()}
+                  words={difficultReviewWords.words}
+                />
+              </div>
             </div>
           ) : null}
         </div>

@@ -13,7 +13,7 @@ import { useLearningActivityTracker } from "@/features/learning-activity/model/u
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import {
   ReviewCategorySelect,
-  ReviewModeToggle,
+  ReviewModeCardStack,
   ReviewStateBlock,
   ReviewStudySession,
   ReviewUserCollectionNavigation,
@@ -85,13 +85,6 @@ export function UserReviewWorkspace({ onCategoryChange }: UserReviewWorkspacePro
             isLoading={isLoadingCollections}
           />
         }
-        rail={
-          <ReviewModeToggle
-            mode={mode}
-            onModeChange={setMode}
-            orientation="vertical"
-          />
-        }
       >
         {currentWord && !review.isLoading && !review.isEmpty ? (
           <ReviewStudySession
@@ -106,17 +99,20 @@ export function UserReviewWorkspace({ onCategoryChange }: UserReviewWorkspacePro
             onGood={() => void review.gradeCurrentWord("GOOD")}
             onHard={() => void review.gradeCurrentWord("HARD")}
             onMaster={() => void review.gradeCurrentWord("MASTER")}
+            onModeChange={setMode}
             reviewedCount={review.reviewedCount}
             totalWords={review.totalWords}
             word={toReviewStudyWord(currentWord)}
           />
         ) : (
-          <ReviewStateBlock
-            error={review.error}
-            isEmpty={review.isEmpty}
-            isLoading={review.isLoading || isLoadingCollections || !collectionId}
-            onRetry={review.reload}
-          />
+          <ReviewModeCardStack mode={mode} onModeChange={setMode}>
+            <ReviewStateBlock
+              error={review.error}
+              isEmpty={review.isEmpty}
+              isLoading={review.isLoading || isLoadingCollections || !collectionId}
+              onRetry={review.reload}
+            />
+          </ReviewModeCardStack>
         )}
       </ReviewWorkspaceRow>
     </ReviewWorkspace>

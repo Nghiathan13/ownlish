@@ -5,7 +5,10 @@ import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/use
 import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
 import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { getOxfordPath, type OxfordBand } from "@/features/collections/oxford/lib/oxfordNavigation";
-import { ReviewStudySession } from "@/features/review/components";
+import {
+  ReviewModeCardStack,
+  ReviewStudySession,
+} from "@/features/review/components";
 import { useReviewMode } from "@/features/review/hooks/useReviewMode";
 import { toOxfordReviewStudyWord } from "@/features/review/model/reviewStudyWord";
 import { primaryTextButtonClassName, secondaryTextButtonClassName } from "@/shared/ui/button";
@@ -18,7 +21,7 @@ type OxfordPartReviewSessionProps = {
 
 export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionProps) {
   const { status, user } = useAuthSession();
-  const { mode } = useReviewMode();
+  const { mode, setMode } = useReviewMode();
   const review = useOxfordPartReviewQueue({
     band,
     part,
@@ -36,11 +39,19 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
   });
 
   if (review.isLoading) {
-    return <ReviewLoading />;
+    return (
+      <ReviewModeCardStack mode={mode} onModeChange={setMode}>
+        <ReviewLoading />
+      </ReviewModeCardStack>
+    );
   }
 
   if (review.error && !review.currentWord) {
-    return <ReviewError error={review.error} onRetry={review.reload} />;
+    return (
+      <ReviewModeCardStack mode={mode} onModeChange={setMode}>
+        <ReviewError error={review.error} onRetry={review.reload} />
+      </ReviewModeCardStack>
+    );
   }
 
   if (review.currentWord) {
@@ -56,6 +67,7 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
         onGood={() => review.gradeCurrentWord("GOOD")}
         onHard={() => review.gradeCurrentWord("HARD")}
         onMaster={() => review.gradeCurrentWord("MASTER")}
+        onModeChange={setMode}
         reviewedCount={review.reviewedCount}
         totalWords={review.totalWords}
         word={toOxfordReviewStudyWord(review.currentWord)}
@@ -64,7 +76,11 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
   }
 
   if (review.isEmpty) {
-    return <ReviewComplete band={band} part={part} />;
+    return (
+      <ReviewModeCardStack mode={mode} onModeChange={setMode}>
+        <ReviewComplete band={band} part={part} />
+      </ReviewModeCardStack>
+    );
   }
 
   return null;

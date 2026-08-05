@@ -5,10 +5,11 @@ import { useT } from "@/shared/providers/LocaleProvider";
 import { FlashcardIcon } from "@/shared/ui/icons/FlashcardIcon";
 import { KeyboardIcon } from "@/shared/ui/icons/KeyboardIcon";
 
-export type ReviewMode = "flashcard" | "typing";
+export const REVIEW_MODES = ["flashcard", "typing"] as const;
 
-export const REVIEW_MODE_RAIL_CLASS_NAME =
-  "box-border w-max shrink-0 self-start";
+export type ReviewMode = (typeof REVIEW_MODES)[number];
+
+export const REVIEW_MODE_COUNT = REVIEW_MODES.length;
 
 type ReviewModeToggleProps = {
   mode: ReviewMode;
@@ -36,11 +37,17 @@ export function ReviewModeToggle({
   return (
     <div
       className={classNames(
-        "flex gap-1 rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]",
-        REVIEW_MODE_RAIL_CLASS_NAME,
-        isVertical ? "flex-col" : "mx-auto",
+        "box-border gap-2 rounded-lg border border-border bg-surface p-2 dark:bg-[#000000]",
+        isVertical
+          ? "flex w-max shrink-0 flex-col self-start"
+          : "grid w-full",
       )}
       role="tablist"
+      style={
+        isVertical
+          ? undefined
+          : { gridTemplateColumns: `repeat(${REVIEW_MODE_COUNT}, minmax(0, 1fr))` }
+      }
     >
       <button
         aria-selected={mode === "flashcard"}
