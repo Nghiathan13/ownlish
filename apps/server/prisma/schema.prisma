@@ -1,0 +1,250 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id                  String                 @id @default(uuid())
+  email               String                 @unique
+  passwordHash        String?                @map("password_hash")
+  googleSub           String?                @unique @map("google_sub")
+  name                String?
+  avatarUrl           String?                @map("avatar_url")
+  avatarStoragePath   String?                @map("avatar_storage_path")
+  role                UserRole               @default(USER)
+  createdAt           DateTime               @default(now()) @map("created_at")
+  updatedAt           DateTime               @updatedAt @map("updated_at")
+  collections         WordCollection[]
+  refreshSessions     RefreshSession[]
+  vocabularyEntries      UserVocabularyEntry[]
+  systemVocabularyProgress UserSystemVocabularyProgress[]
+  toeicRuns              ToeicRun[]
+  dictationProgress      DictationProgress[]
+  learningDaily          UserLearningDaily[]
+
+  @@map("users")
+}
+
+model DictationProgress {
+  userId             String    @map("user_id")
+  videoId            String    @map("video_id")
+  answeredSegmentIds String[]  @default([]) @map("answered_segment_ids")
+  correctCount       Int       @default(0) @map("correct_count")
+  completedAt        DateTime? @map("completed_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+  @@index([userId, updatedAt])
+  @@map("dictation_progress")
+}
+
+model UserLearningDaily {
+  userId       String               @map("user_id")
+  learnedOn    DateTime             @db.Date @map("learned_on")
+  activityType LearningActivityType @map("activity_type")
+  seconds      Int                  @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, learnedOn, activityType])
+  @@index([userId, learnedOn])
+  @@map("user_learning_daily")
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("refresh_sessions")
+}
+
+model UserVocabularyEntry {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  collectionId   String    @map("collection_id")
+  systemEntryId  String?   @map("system_entry_id")
+  word           String
+  normalizedWord String   @map("normalized_word")
+  type           String?
+  meaningVi      String?   @map("meaning_vi")
+  definition     String?
+  example        String?
+  exampleVi      String?   @map("example_vi")
+  ipaUk          String?   @map("ipa_uk")
+  ipaUs          String?   @map("ipa_us")
+  band           String?
+  source         String    @default("manual")
+  level          Int       @default(0)
+  wrongCount     Int       @default(0) @map("wrong_count")
+  lastReview     DateTime? @map("last_review")
+  nextReview     DateTime? @map("next_review")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  collection  WordCollection         @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  systemEntry SystemVocabularyEntry? @relation("ImportedSystemEntry", fields: [systemEntryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, systemEntryId])
+  @@index([userId, collectionId, nextReview])
+  @@index([collectionId, normalizedWord])
+  @@index([systemEntryId])
+  @@map("user_vocabulary_entries")
+}
+
+enum WordCollectionKind {
+  SYSTEM
+  USER
+}
+
+model SystemVocabularyEntry {
+  id                 String   @id
+  word               String
+  normalizedWord     String   @map("normalized_word")
+  sourceWordId       Int      @map("source_word_id")
+  type               String
+  meaningVi          String?  @map("meaning_vi")
+  definition         String?
+  example            String?
+  exampleVi          String?  @map("example_vi")
+  ipaUk              String?  @map("ipa_uk")
+  ipaUs              String?  @map("ipa_us")
+  band               String
+  source             String
+  sortOrder          Int      @map("sort_order")
+  importedEntries UserVocabularyEntry[]           @relation("ImportedSystemEntry")
+  progress        UserSystemVocabularyProgress[]
+
+  @@index([band, sortOrder])
+  @@map("system_vocabulary_entries")
+}
+
+model WordCollection {
+  id          String             @id @default(uuid())
+  ownerUserId String?            @map("owner_user_id")
+  name        String
+  description String?
+  kind        WordCollectionKind @default(USER)
+  source      String?
+  cefrLevel   String?            @map("cefr_level")
+  isDefault   Boolean            @default(false) @map("is_default")
+  isPublic    Boolean            @default(false) @map("is_public")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  owner        User?                   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  vocabularyEntries UserVocabularyEntry[]
+
+  @@index([kind])
+  @@index([ownerUserId])
+  @@index([source, cefrLevel])
+  @@map("word_collections")
+}
+
+model UserSystemVocabularyProgress {
+  userId        String    @map("user_id")
+  systemEntryId String    @map("system_entry_id")
+  level         Int       @default(0) @db.SmallInt
+  wrongCount    Int       @default(0) @map("wrong_count")
+  lastReviewAt  DateTime? @map("last_review_at") @db.Timestamptz
+  nextReviewAt  DateTime? @map("next_review_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  systemEntry SystemVocabularyEntry @relation(fields: [systemEntryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, systemEntryId])
+  @@index([userId, nextReviewAt])
+  @@map("user_system_vocabulary_progress")
+}
+
+enum ToeicRunMode {
+  PRACTICE
+  MOCK_TEST
+}
+
+enum LearningActivityType {
+  TEST_PRACTICE
+  TEST_REVIEW_WRONG
+  TEST_PART_PRACTICE
+  TEST_PART_PRACTICE_REVIEW_WRONG
+  TEST_MOCK
+  DICTATION
+  VOCABULARY_REVIEW
+}
+
+enum ToeicRunQuestionStatus {
+  SELECTED
+  RIGHT
+  WRONG
+}
+
+enum ToeicRunScope {
+  TEST
+  PART_PRACTICE
+}
+
+model ToeicRun {
+  id                String                   @id @default(uuid())
+  userId            String                   @map("user_id")
+  scope             ToeicRunScope
+  testKey           String?                  @map("test_key")
+  partNumber        Int?                     @map("part_number")
+  mode              ToeicRunMode             @default(PRACTICE)
+  selectedParts     Int[]                    @map("selected_parts")
+  totalRight        Int                      @default(0) @map("total_right")
+  totalWrong        Int                      @default(0) @map("total_wrong")
+  timeLimitSeconds  Int?                     @map("time_limit_seconds")
+  remainingSeconds  Int?                     @map("remaining_seconds")
+  finishRequestedAt DateTime?                @map("finish_requested_at")
+  completedAt       DateTime?                @map("completed_at")
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers           ToeicRunAnswer[]
+
+  @@index([userId])
+  @@index([userId, scope, createdAt])
+  @@index([finishRequestedAt, completedAt])
+  @@map("toeic_runs")
+}
+
+model ToeicRunAnswer {
+  id          String                 @id @default(uuid())
+  runId       String                 @map("run_id")
+  questionKey String                 @map("question_key")
+  selectedKey String                 @map("selected_key")
+  status      ToeicRunQuestionStatus
+  answeredAt  DateTime               @map("answered_at")
+  gradedAt    DateTime?              @map("graded_at")
+  run         ToeicRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, questionKey])
+  @@index([runId, status])
+  @@map("toeic_run_answers")
+}

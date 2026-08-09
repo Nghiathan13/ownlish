@@ -1,0 +1,89 @@
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import { JwtService } from '@nestjs/jwt';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import type { AuthRequest } from './types/auth.types';
+
+describe('JwtAuthGuard', () => {
+  const jwtServiceMock = {
+    verifyAsync: jest.fn(),
+  };
+
+  const createContext = (request: Partial<AuthRequest>): ExecutionContext =>
+    ({
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+    }) as ExecutionContext;
+
+  let guard: JwtAuthGuard;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    guard = new JwtAuthGuard(jwtServiceMock as unknown as JwtService);
+  });
+
+  it('throws unauthorized when authorization header is missing', async () => {
+    const context = createContext({ headers: {} });
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
+
+  it('throws unauthorized when token is invalid', async () => {
+    jwtServiceMock.verifyAsync.mockRejectedValue(new Error('invalid token'));
+
+    const context = createContext({
+      headers: {
+        authorization: 'Bearer invalid-token',
+      },
+    });
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
+
+  it('sets request user when token is valid', async () => {
+    jwtServiceMock.verifyAsync.mockResolvedValue({
+      sub: 'user-id',
+      email: 'test@example.com',
+      role: UserRole.USER,
+    });
+
+    const request = {
+      headers: {
+        authorization: 'Bearer valid-token',
+      },
+    } as Partial<AuthRequest>;
+    const context = createContext(request);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(jwtServiceMock.verifyAsync).toHaveBeenCalledWith('valid-token');
+    expect(request.user).toEqual({
+      id: 'user-id',
+      email: 'test@example.com',
+      role: UserRole.USER,
+    });
+  });
+
+  it('throws unauthorized when role payload is invalid', async () => {
+    jwtServiceMock.verifyAsync.mockResolvedValue({
+      sub: 'user-id',
+      email: 'test@example.com',
+      role: 'SUPERADMIN',
+    });
+
+    const request = {
+      headers: {
+        authorization: 'Bearer valid-token',
+      },
+    } as Partial<AuthRequest>;
+    const context = createContext(request);
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
+});

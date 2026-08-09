@@ -1,0 +1,143 @@
+name: API Performance Baseline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 20 * * 0'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: engvocab
+          POSTGRES_PASSWORD: engvocab
+          POSTGRES_DB: engvocab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U engvocab -d engvocab"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab
+      PERFORMANCE_DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab
+      PERFORMANCE_BASE_URL: http://127.0.0.1:3001
+      PERFORMANCE_EMAIL_PREFIX: performance-benchmark-vu-
+      PERFORMANCE_PASSWORD: performance-benchmark-password
+      JWT_SECRET: test-jwt-secret-at-least-32-characters
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+      BCRYPT_SALT_ROUNDS: 10
+      AUTH_RATE_LIMIT_LIMIT: 1000
+      AUTH_RATE_LIMIT_TTL_SECONDS: 60
+      TOEIC_GRADING_INDEX_URL: http://127.0.0.1:3101/grading-index.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Run migrations
+        run: pnpm prisma migrate deploy
+
+      - name: Build server
+        run: pnpm build
+
+      - name: Start TOEIC grading index fixture
+        run: |
+          mkdir -p test-results/performance
+          pnpm performance:grading-index > test-results/performance/grading-index.log 2>&1 &
+          echo $! > test-results/performance/grading-index.pid
+
+          for attempt in {1..10}; do
+            if curl --fail --silent http://127.0.0.1:3101/grading-index.json > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat test-results/performance/grading-index.log
+          exit 1
+
+      - name: Start server
+        run: |
+          pnpm start:prod > test-results/performance/server.log 2>&1 &
+          echo $! > test-results/performance/server.pid
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3001/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat test-results/performance/server.log
+          exit 1
+
+      - name: Seed baseline fixture
+        run: pnpm performance:seed:baseline
+
+      - name: Run baseline benchmark
+        id: run_baseline
+        continue-on-error: true
+        run: pnpm performance:run:baseline
+
+      - name: Clean up baseline fixture
+        if: always()
+        run: pnpm performance:cleanup
+
+      - name: Seed moderate fixture
+        if: always()
+        run: pnpm performance:seed:moderate
+
+      - name: Run moderate benchmark
+        id: run_moderate
+        if: always()
+        continue-on-error: true
+        run: pnpm performance:run:moderate
+
+      - name: Clean up moderate fixture
+        if: always()
+        run: pnpm performance:cleanup
+
+      - name: Publish performance summary
+        if: always()
+        run: |
+          pnpm performance:summary -- --profile baseline >> "$GITHUB_STEP_SUMMARY"
+          pnpm performance:summary -- --profile moderate >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce benchmark result
+        if: always()
+        run: |
+          test "${{ steps.run_baseline.outcome }}" = "success"
+          test "${{ steps.run_moderate.outcome }}" = "success"
+
+      - name: Upload performance artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-performance-baseline
+          path: test-results/performance
+          retention-days: 30
