@@ -1100,7 +1100,7 @@ export function ProgressSourceMenu({
       className="relative flex w-fit max-w-full items-center"
       ref={rootRef}
     >
-      <span className="h-7 min-w-0 truncate text-[21px] leading-7 font-semibold text-foreground">
+      <span className="min-w-0 truncate text-[21px] leading-8 font-semibold text-foreground">
         {source === "collection"
           ? t("dashboard.myCollection")
           : t("collections.oxford")}

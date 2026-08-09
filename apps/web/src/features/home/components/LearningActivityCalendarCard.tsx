@@ -256,7 +256,7 @@ export function LearningActivityCalendarCard({
   return (
     <section className="flex w-full flex-col gap-8">
       <div className="flex w-full flex-col gap-4">
-        <h2 className="h-7 text-[21px] leading-7 font-semibold text-foreground">
+        <h2 className="text-[21px] leading-8 font-semibold text-foreground">
           {t("dashboard.learningOverview")}
         </h2>
         <div className="grid w-full gap-4 min-[604px]:grid-cols-2 min-[1232px]:grid-cols-4">
@@ -296,7 +296,7 @@ export function LearningActivityCalendarCard({
       </div>
 
       <div className="flex w-full flex-col gap-4">
-        <h2 className="h-7 text-[21px] leading-7 font-semibold text-foreground">
+        <h2 className="text-[21px] leading-8 font-semibold text-foreground">
           {t("dashboard.studyActivity")}
         </h2>
         <article className="mx-auto max-w-full min-w-[250px] rounded-2xl border border-border bg-surface p-4 dark:bg-background">
