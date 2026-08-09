@@ -60,14 +60,25 @@ describe('ReviewsService', () => {
     ).resolves.toMatchObject({ items: [] });
   });
 
-  it('returns the twenty most-forgotten user and Oxford entries', async () => {
+  it('returns the twenty most-forgotten user collection entries by default', async () => {
     prisma.$queryRaw.mockResolvedValue([
       { word: 'difficult', collectionName: 'My Vocabulary', wrongCount: 6 },
-      { word: 'hard', collectionName: 'Oxford', wrongCount: 4 },
     ]);
 
     await expect(service.listDifficultWords('user-id')).resolves.toEqual([
       { word: 'difficult', collectionName: 'My Vocabulary', wrongCount: 6 },
+    ]);
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns only Oxford entries when source is oxford', async () => {
+    prisma.$queryRaw.mockResolvedValue([
+      { word: 'hard', collectionName: 'Oxford', wrongCount: 4 },
+    ]);
+
+    await expect(
+      service.listDifficultWords('user-id', 'oxford'),
+    ).resolves.toEqual([
       { word: 'hard', collectionName: 'Oxford', wrongCount: 4 },
     ]);
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);

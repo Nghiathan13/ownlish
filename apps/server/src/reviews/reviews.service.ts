@@ -88,7 +88,27 @@ export class ReviewsService {
     };
   }
 
-  async listDifficultWords(userId: string): Promise<DifficultReviewWord[]> {
+  async listDifficultWords(
+    userId: string,
+    source: 'collection' | 'oxford' = 'collection',
+  ): Promise<DifficultReviewWord[]> {
+    if (source === 'oxford') {
+      return this.prisma.$queryRaw<DifficultReviewWord[]>`
+        SELECT
+          entry."word" AS "word",
+          'Oxford' AS "collectionName",
+          progress."wrong_count" AS "wrongCount"
+        FROM "user_system_vocabulary_progress" progress
+        INNER JOIN "system_vocabulary_entries" entry
+          ON entry."id" = progress."system_entry_id"
+        WHERE progress."user_id" = ${userId}
+          AND entry."source" IN ('oxford_3000', 'oxford_5000')
+          AND progress."wrong_count" > 3
+        ORDER BY "wrongCount" DESC, "word" ASC
+        LIMIT 20
+      `;
+    }
+
     return this.prisma.$queryRaw<DifficultReviewWord[]>`
       SELECT
         entry."word" AS "word",
@@ -100,20 +120,6 @@ export class ReviewsService {
       WHERE entry."user_id" = ${userId}
         AND collection."owner_user_id" = ${userId}
         AND entry."wrong_count" > 3
-
-      UNION ALL
-
-      SELECT
-        entry."word" AS "word",
-        'Oxford' AS "collectionName",
-        progress."wrong_count" AS "wrongCount"
-      FROM "user_system_vocabulary_progress" progress
-      INNER JOIN "system_vocabulary_entries" entry
-        ON entry."id" = progress."system_entry_id"
-      WHERE progress."user_id" = ${userId}
-        AND entry."source" IN ('oxford_3000', 'oxford_5000')
-        AND progress."wrong_count" > 3
-
       ORDER BY "wrongCount" DESC, "word" ASC
       LIMIT 20
     `;

@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -21,8 +23,27 @@ export class ReviewsController {
   @Get('difficult-words')
   listDifficultWords(
     @Req() request: AuthRequest,
+    @Query('source') source?: string,
   ): ReturnType<ReviewsService['listDifficultWords']> {
-    return this.reviewsService.listDifficultWords(request.user.id);
+    const resolvedSource = this.parseDifficultWordsSource(source);
+    return this.reviewsService.listDifficultWords(
+      request.user.id,
+      resolvedSource,
+    );
+  }
+
+  private parseDifficultWordsSource(
+    source: string | undefined,
+  ): 'collection' | 'oxford' {
+    if (source == null || source === '' || source === 'collection') {
+      return 'collection';
+    }
+    if (source === 'oxford') {
+      return 'oxford';
+    }
+    throw new BadRequestException(
+      'source must be "collection" or "oxford"',
+    );
   }
 
   @Get('oxford/:band/parts/:part')
