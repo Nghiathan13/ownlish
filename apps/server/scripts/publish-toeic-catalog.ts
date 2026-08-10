@@ -77,8 +77,8 @@ async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
   const bucketName = process.argv.includes('--bucket')
     ? readArgument('--bucket')
-    : process.env.R2_CONTENT_BUCKET ??
-      (dryRun ? 'ownlish-content-prod' : requiredEnv('R2_CONTENT_BUCKET'));
+    : (process.env.R2_CONTENT_BUCKET ??
+      (dryRun ? 'ownlish-content-prod' : requiredEnv('R2_CONTENT_BUCKET')));
   const prefix = process.argv.includes('--prefix')
     ? readArgument('--prefix').replace(/^\/+|\/+$/g, '')
     : 'toeic';
@@ -111,7 +111,7 @@ async function main(): Promise<void> {
           : leftPath.localeCompare(rightPath);
     });
 
-    for (const filePath of files) {
+    const objects = files.map((filePath) => {
       const relativePath = relative(outputDirectory, filePath).replaceAll(
         '\\',
         '/',
@@ -120,18 +120,38 @@ async function main(): Promise<void> {
         relativePath === 'server/grading-index.json'
           ? 'grading-index.json'
           : relativePath;
-      const objectPath = prefix
-        ? `${prefix}/${relativeObjectPath}`
-        : relativeObjectPath;
 
-      if (dryRun) {
+      return {
+        filePath,
+        objectPath: prefix
+          ? `${prefix}/${relativeObjectPath}`
+          : relativeObjectPath,
+      };
+    });
+
+    if (dryRun) {
+      for (const { objectPath } of objects) {
         console.log(objectPath);
-      } else {
-        if (!client) {
-          throw new Error('R2 client is unavailable.');
-        }
-        await publishFile(client, bucketName, objectPath, filePath);
       }
+    } else {
+      if (!client) {
+        throw new Error('R2 client is unavailable.');
+      }
+
+      let nextIndex = 0;
+      await Promise.all(
+        Array.from({ length: 12 }, async () => {
+          while (nextIndex < objects.length) {
+            const object = objects[nextIndex++];
+            await publishFile(
+              client,
+              bucketName,
+              object.objectPath,
+              object.filePath,
+            );
+          }
+        }),
+      );
     }
 
     console.log(
