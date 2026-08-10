@@ -59,11 +59,11 @@ jobs:
 
       - name: Prepare SSH
         env:
-          VPS_DEPLOY_PRIVATE_KEY: ${{ secrets.VPS_DEPLOY_PRIVATE_KEY }}
+          VPS_DEPLOY_PRIVATE_KEY_BASE64: ${{ secrets.VPS_DEPLOY_PRIVATE_KEY_BASE64 }}
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$VPS_DEPLOY_PRIVATE_KEY" > ~/.ssh/ownlish_deploy
+          printf '%s' "$VPS_DEPLOY_PRIVATE_KEY_BASE64" | base64 --decode > ~/.ssh/ownlish_deploy
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/ownlish_deploy
 
