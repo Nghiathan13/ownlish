@@ -95,7 +95,8 @@ jobs:
         run: |
           target="$VPS_DEPLOY_USER@$VPS_DEPLOY_HOST"
           ssh_options=(-i ~/.ssh/ownlish_deploy -p "$VPS_DEPLOY_PORT" -o StrictHostKeyChecking=yes)
-          scp "${ssh_options[@]}" "/tmp/ownlish-$RELEASE_ID.tar.gz" "$target:/tmp/ownlish-$RELEASE_ID.tar.gz"
+          scp_options=(-i ~/.ssh/ownlish_deploy -P "$VPS_DEPLOY_PORT" -o StrictHostKeyChecking=yes)
+          scp "${scp_options[@]}" "/tmp/ownlish-$RELEASE_ID.tar.gz" "$target:/tmp/ownlish-$RELEASE_ID.tar.gz"
           ssh "${ssh_options[@]}" "$target" "
             set -euo pipefail
             sudo mkdir -p /opt/ownlish/releases/$RELEASE_ID
