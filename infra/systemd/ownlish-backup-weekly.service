@@ -5,4 +5,4 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/opt/ownlish/current/infra/scripts/backup-postgres.sh weekly
+ExecStart=/opt/ownlish/current/production/infra/scripts/backup-postgres.sh weekly

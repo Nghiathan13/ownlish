@@ -24,10 +24,13 @@ without a reviewer; require approval for production.
 Copy `infra/env/staging.env.example` and
 `infra/env/production.env.example` to `/opt/ownlish/env/`. Fill secrets there
 with mode `0600`; never put them in GitHub Actions secrets or the repository.
+Keep the backup token in the separate host-only
+`/opt/ownlish/env/production-backup.env` file.
 
 ```bash
 sudo install -m 0600 -o deploy -g deploy staging.env /opt/ownlish/env/staging.env
 sudo install -m 0600 -o deploy -g deploy production.env /opt/ownlish/env/production.env
+sudo install -m 0600 -o deploy -g deploy production-backup.env /opt/ownlish/env/production-backup.env
 ```
 
 Use the assets R2 token in each application environment because Nest only

@@ -9,11 +9,13 @@ esac
 
 root="/opt/ownlish/current/production"
 env_file="/opt/ownlish/env/production.env"
+backup_env_file="/opt/ownlish/env/production-backup.env"
 compose_file="$root/infra/compose/app.compose.yml"
 project="ownlish-production"
 
 set -a
 source "$env_file"
+source "$backup_env_file"
 set +a
 
 : "${R2_ENDPOINT:?R2_ENDPOINT is required}"

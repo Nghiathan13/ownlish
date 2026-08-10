@@ -3,6 +3,7 @@ set -euo pipefail
 
 root="/opt/ownlish/current/production"
 test -f /opt/ownlish/env/production.env
+test -f /opt/ownlish/env/production-backup.env
 
 install -m 0644 "$root/infra/systemd/ownlish-backup-daily.service" /etc/systemd/system/ownlish-backup-daily.service
 install -m 0644 "$root/infra/systemd/ownlish-backup-daily.timer" /etc/systemd/system/ownlish-backup-daily.timer
