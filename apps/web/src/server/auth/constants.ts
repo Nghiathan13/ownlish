@@ -1,4 +1,4 @@
-export const REFRESH_COOKIE_NAME = "engvocab.refreshToken";
+export const REFRESH_COOKIE_NAME = "ownlish.refreshToken";
 
 export const REFRESH_COOKIE_PATH = "/api/auth";
 

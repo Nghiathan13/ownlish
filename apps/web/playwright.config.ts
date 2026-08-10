@@ -6,7 +6,7 @@ const WEB_BASE_URL = `http://localhost:${WEB_PORT}`;
 const API_BASE_URL = `http://localhost:${API_PORT}`;
 const E2E_DATABASE_URL =
   process.env.E2E_DATABASE_URL ??
-  "postgresql://engvocab:engvocab@localhost:5434/engvocab_e2e";
+  "postgresql://ownlish:ownlish@localhost:5434/ownlish_e2e";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -40,7 +40,7 @@ export default defineConfig({
   webServer: [
     {
       name: "api",
-      cwd: "../engvocab-server",
+      cwd: "../server",
       command:
         "pnpm prisma generate && pnpm prisma migrate deploy && pnpm build && pnpm start:prod",
       url: `${API_BASE_URL}/health`,
@@ -58,8 +58,6 @@ export default defineConfig({
         REFRESH_TOKEN_COOKIE_SECURE: "false",
         REFRESH_TOKEN_COOKIE_SAME_SITE: "lax",
         GOOGLE_CLIENT_ID: "",
-        SUPABASE_URL: "",
-        SUPABASE_SERVICE_ROLE_KEY: "",
       },
     },
     {

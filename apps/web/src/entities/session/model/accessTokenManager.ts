@@ -14,7 +14,7 @@ let refreshPromise: Promise<AuthResponse> | null = null;
 let sessionInvalidHandler: (() => void) | null = null;
 let sessionGeneration = 0;
 
-const REFRESH_LOCK_NAME = "engvocab-refresh";
+const REFRESH_LOCK_NAME = "ownlish-refresh";
 const REFRESH_CONFLICT_RETRY_DELAY_MS = 100;
 const MAX_REFRESH_CONFLICT_RETRIES = 2;
 

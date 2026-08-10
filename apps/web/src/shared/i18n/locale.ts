@@ -1,4 +1,4 @@
-export const LOCALE_STORAGE_KEY = "engvocab-locale";
+export const LOCALE_STORAGE_KEY = "ownlish-locale";
 
 export type Locale = "en" | "vi";
 

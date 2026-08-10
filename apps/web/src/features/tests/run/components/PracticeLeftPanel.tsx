@@ -69,7 +69,7 @@ export function PracticeLeftPanel({
           {showAudio ? (
             audioUrl ? (
               <AudioPlayer
-                autoPlayStorageKey="engvocab.tests.audio.autoplay"
+                autoPlayStorageKey="ownlish.tests.audio.autoplay"
                 key={`audio-${group.id}`}
                 onError={onMediaError}
                 src={audioUrl}
@@ -83,7 +83,7 @@ export function PracticeLeftPanel({
 
           {showImage ? (
             imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
+              // eslint-disable-next-line @next/next/no-img-element -- external catalog URLs are dynamic
               <img
                 alt={formatMessage(t("tests.questionImageAlt"), {
                   number: questionNumber,

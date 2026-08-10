@@ -4,7 +4,7 @@ export type MockFinishCommand = {
 };
 
 export function getMockFinishOutboxStorageKey(sessionId: string) {
-  return `engvocab.mockFinish.${sessionId}`;
+  return `ownlish.mockFinish.${sessionId}`;
 }
 
 export function readMockFinishCommand(

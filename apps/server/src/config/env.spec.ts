@@ -3,7 +3,7 @@ const originalEnv = process.env;
 function setRequiredEnv(overrides: NodeJS.ProcessEnv = {}) {
   process.env = {
     ...originalEnv,
-    DATABASE_URL: 'postgresql://user:password@localhost:5432/engvocab',
+    DATABASE_URL: 'postgresql://user:password@localhost:5432/ownlish',
     JWT_SECRET: 'a'.repeat(32),
     ...overrides,
   };

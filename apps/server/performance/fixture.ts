@@ -17,7 +17,7 @@ export const PERFORMANCE_SYSTEM_ENTRY_ID_PREFIX = 'performance-oxford-a1-';
 const BENCHMARK_DAYS = 180;
 
 export function getPerformanceEmail(vu: number) {
-  return `${PERFORMANCE_EMAIL_PREFIX}${String(vu).padStart(2, '0')}@engvocab.local`;
+  return `${PERFORMANCE_EMAIL_PREFIX}${String(vu).padStart(2, '0')}@ownlish.local`;
 }
 
 export function getPerformanceCollectionId(vu: number) {

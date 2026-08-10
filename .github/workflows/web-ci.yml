@@ -1,4 +1,4 @@
-name: CI
+name: Web CI
 
 on:
   workflow_dispatch:
@@ -13,6 +13,9 @@ jobs:
   web:
     name: Web
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
 
     steps:
       - name: Checkout
@@ -28,8 +31,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: .
         run: pnpm install --frozen-lockfile
 
       - name: Run tests
@@ -81,36 +86,31 @@ jobs:
   browser-e2e:
     name: Browser E2E
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
 
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: engvocab
-          POSTGRES_PASSWORD: engvocab
-          POSTGRES_DB: engvocab_e2e
+          POSTGRES_USER: ownlish
+          POSTGRES_PASSWORD: ownlish
+          POSTGRES_DB: ownlish_e2e
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U engvocab -d engvocab_e2e"
+          --health-cmd "pg_isready -U ownlish -d ownlish_e2e"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      E2E_DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab_e2e
+      E2E_DATABASE_URL: postgresql://ownlish:ownlish@localhost:5432/ownlish_e2e
 
     steps:
-      - name: Checkout web
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: engvocab-web
-
-      - name: Checkout API
-        uses: actions/checkout@v4
-        with:
-          repository: Nghiathan13/engvocab-server
-          path: engvocab-server
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -122,30 +122,21 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: |
-            engvocab-web/pnpm-lock.yaml
-            engvocab-server/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install web dependencies
-        working-directory: engvocab-web
-        run: pnpm install --frozen-lockfile
-
-      - name: Install API dependencies
-        working-directory: engvocab-server
+      - name: Install dependencies
+        working-directory: .
         run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
 
       - name: Install Chromium
-        working-directory: engvocab-web
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run browser E2E
         id: playwright
-        working-directory: engvocab-web
         run: pnpm test:e2e
 
       - name: Publish test summary
         if: always()
-        working-directory: engvocab-web
         env:
           PLAYWRIGHT_OUTCOME: ${{ steps.playwright.outcome }}
         run: |
@@ -174,14 +165,17 @@ jobs:
         with:
           name: playwright-artifacts
           path: |
-            engvocab-web/playwright-report
-            engvocab-web/test-results
+            apps/web/playwright-report
+            apps/web/test-results
           if-no-files-found: ignore
           retention-days: 7
 
   lighthouse:
     name: Lighthouse
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
 
     steps:
       - name: Checkout
@@ -197,8 +191,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: .
         run: pnpm install --frozen-lockfile
 
       - name: Build
@@ -219,7 +215,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
-          path: .lighthouseci
+          path: apps/web/.lighthouseci
           if-no-files-found: ignore
           include-hidden-files: true
           retention-days: 7
@@ -227,6 +223,9 @@ jobs:
   lighthouse-desktop:
     name: Lighthouse Desktop
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
 
     steps:
       - name: Checkout
@@ -242,8 +241,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: .
         run: pnpm install --frozen-lockfile
 
       - name: Build
@@ -264,7 +265,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-desktop-reports
-          path: .lighthouseci-desktop
+          path: apps/web/.lighthouseci-desktop
           if-no-files-found: ignore
           include-hidden-files: true
           retention-days: 7
@@ -295,20 +296,20 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: engvocab
-          POSTGRES_PASSWORD: engvocab
-          POSTGRES_DB: engvocab_lighthouse
+          POSTGRES_USER: ownlish
+          POSTGRES_PASSWORD: ownlish
+          POSTGRES_DB: ownlish_lighthouse
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U engvocab -d engvocab_lighthouse"
+          --health-cmd "pg_isready -U ownlish -d ownlish_lighthouse"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      LIGHTHOUSE_DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab_lighthouse
-      LIGHTHOUSE_AUTH_EMAIL: performance-benchmark-vu-01@engvocab.local
+      LIGHTHOUSE_DATABASE_URL: postgresql://ownlish:ownlish@localhost:5432/ownlish_lighthouse
+      LIGHTHOUSE_AUTH_EMAIL: performance-benchmark-vu-01@ownlish.local
       LIGHTHOUSE_AUTH_PASSWORD: performance-benchmark-password
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3101
       AUTH_API_BASE_URL: http://localhost:3101
@@ -316,16 +317,8 @@ jobs:
       NEXT_PUBLIC_DICTATION_CATALOG_ROOT: http://localhost:3100/dictation
 
     steps:
-      - name: Checkout web
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: engvocab-web
-
-      - name: Checkout API
-        uses: actions/checkout@v4
-        with:
-          repository: Nghiathan13/engvocab-server
-          path: engvocab-server
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -337,24 +330,18 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: |
-            engvocab-web/pnpm-lock.yaml
-            engvocab-server/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install web dependencies
-        working-directory: engvocab-web
-        run: pnpm install --frozen-lockfile
-
-      - name: Install API dependencies
-        working-directory: engvocab-server
+      - name: Install dependencies
+        working-directory: .
         run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
 
       - name: Install Chromium
-        working-directory: engvocab-web
+        working-directory: apps/web
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Migrate, seed, and start API
-        working-directory: engvocab-server
+        working-directory: apps/server
         env:
           DATABASE_URL: ${{ env.LIGHTHOUSE_DATABASE_URL }}
           PERFORMANCE_DATABASE_URL: ${{ env.LIGHTHOUSE_DATABASE_URL }}
@@ -368,38 +355,36 @@ jobs:
           REFRESH_TOKEN_COOKIE_SECURE: "false"
           REFRESH_TOKEN_COOKIE_SAME_SITE: lax
           GOOGLE_CLIENT_ID: ""
-          SUPABASE_URL: ""
-          SUPABASE_SERVICE_ROLE_KEY: ""
         run: |
           pnpm prisma generate
           pnpm prisma migrate deploy
           pnpm lighthouse:seed
           pnpm build
-          pnpm start:prod > ../lighthouse-api.log 2>&1 &
+          pnpm start:prod > ../../lighthouse-api.log 2>&1 &
           for attempt in {1..30}; do
             if curl --fail --silent http://localhost:3101/health >/dev/null; then
               exit 0
             fi
             sleep 1
           done
-          cat ../lighthouse-api.log
+          cat ../../lighthouse-api.log
           exit 1
 
       - name: Build web
-        working-directory: engvocab-web
+        working-directory: apps/web
         run: pnpm build
 
       - name: Run Lighthouse authenticated audit
-        working-directory: engvocab-web
+        working-directory: apps/web
         run: pnpm ${{ matrix.command }}
 
       - name: Write Lighthouse authenticated summary
         if: always()
-        working-directory: engvocab-web
+        working-directory: apps/web
         run: pnpm ${{ matrix.summary_command }}
 
       - name: Assert Lighthouse authenticated budgets
-        working-directory: engvocab-web
+        working-directory: apps/web
         run: pnpm ${{ matrix.assert_command }}
 
       - name: Upload Lighthouse authenticated reports
@@ -407,7 +392,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: engvocab-web/${{ matrix.report_directory }}
+          path: apps/web/${{ matrix.report_directory }}
           if-no-files-found: ignore
           include-hidden-files: true
           retention-days: 7

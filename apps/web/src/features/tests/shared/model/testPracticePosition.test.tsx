@@ -13,7 +13,7 @@ describe("test practice position", () => {
 
   it("keeps only the current group key per test, mode, and selected parts", () => {
     expect(getTestPracticeGroupStorageKey("ets26-t01", "practice", [3, 1]))
-      .toBe("engvocab.practiceRun.group.ets26-t01.practice.1,3");
+      .toBe("ownlish.practiceRun.group.ets26-t01.practice.1,3");
 
     writeTestPracticeGroupKey(
       "ets26-t01",

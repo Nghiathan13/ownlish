@@ -92,12 +92,12 @@ export function GuestTopNav() {
     >
       <div className="pointer-events-auto flex items-center justify-between rounded-[16px] border border-border bg-surface p-2">
         <Link
-          aria-label="EngVocab"
+          aria-label="Ownlish"
           className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"
           href="/"
         >
           <LogoIcon className="size-6 shrink-0" />
-          <span className="hidden sm:inline">EngVocab</span>
+          <span className="hidden sm:inline">Ownlish</span>
         </Link>
         <div className="flex items-center gap-2">
           <GuestNavLocaleToggle />

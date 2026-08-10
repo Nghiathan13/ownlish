@@ -44,7 +44,7 @@ describe("AuthForm", () => {
     renderAuthForm();
 
     expect(
-      screen.getByRole("heading", { name: "Get started with Engvocab" }),
+      screen.getByRole("heading", { name: "Get started with Ownlish" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Continue with Google" }),
@@ -69,7 +69,7 @@ describe("AuthForm", () => {
       email: "linh@example.com",
       password: "test123456",
     });
-    expect(mocks.replace).toHaveBeenCalledWith("/");
+    expect(mocks.replace).toHaveBeenCalledWith("/dashboard/my-activity");
   });
 
   it("switches to account creation without asking for a username", async () => {

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AudioPlayer } from "./AudioPlayer";
 
-const AUTO_PLAY_STORAGE_KEY = "engvocab.tests.audio.autoplay";
+const AUTO_PLAY_STORAGE_KEY = "ownlish.tests.audio.autoplay";
 
 describe("AudioPlayer", () => {
   beforeEach(() => {

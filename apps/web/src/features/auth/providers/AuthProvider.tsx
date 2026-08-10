@@ -48,7 +48,7 @@ type AuthSessionContextValue = {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 const BOOTSTRAP_RETRY_DELAY_MS = 1_000;
-const AUTH_SESSION_CHANNEL_NAME = "engvocab-auth";
+const AUTH_SESSION_CHANNEL_NAME = "ownlish-auth";
 
 type AuthSessionMessage =
   | { type: "session-changed" }

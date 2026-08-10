@@ -91,7 +91,7 @@ export const env = {
   bcryptSaltRounds: optionalNumberEnv('BCRYPT_SALT_ROUNDS', 10),
   refreshTokenTtlDays: optionalNumberEnv('REFRESH_TOKEN_TTL_DAYS', 30),
   refreshTokenCookie: {
-    name: process.env.REFRESH_TOKEN_COOKIE_NAME ?? 'engvocab.refreshToken',
+    name: process.env.REFRESH_TOKEN_COOKIE_NAME ?? 'ownlish.refreshToken',
     secure: secureRefreshTokenCookie,
     sameSite: optionalCookieSameSiteEnv(
       secureRefreshTokenCookie ? 'none' : 'lax',
@@ -101,20 +101,16 @@ export const env = {
     limit: optionalNumberEnv('AUTH_RATE_LIMIT_LIMIT', 10),
     ttlMs: optionalNumberEnv('AUTH_RATE_LIMIT_TTL_SECONDS', 60) * 1000,
   },
-  supabaseUrl: process.env.SUPABASE_URL ?? '',
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
-  toeicStorageBucket: process.env.TOEIC_STORAGE_BUCKET ?? 'toeic-media',
   toeicGradingIndexUrl: process.env.TOEIC_GRADING_INDEX_URL ?? '',
-  profileAvatarStorageBucket:
-    process.env.PROFILE_AVATAR_STORAGE_BUCKET ?? 'profile-avatars',
-  toeicSignedUrlTtlSeconds: optionalNumberEnv(
-    'TOEIC_SIGNED_URL_TTL_SECONDS',
-    900,
-  ),
+  r2Endpoint: process.env.R2_ENDPOINT ?? '',
+  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
+  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? '',
+  r2AssetsBucket: process.env.R2_ASSETS_BUCKET ?? '',
+  publicAssetsRoot: process.env.PUBLIC_ASSETS_ROOT ?? '',
   otel: {
     enabled: optionalBooleanEnv('OTEL_ENABLED', false),
     exporterEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? '',
     exporterHeaders: process.env.OTEL_EXPORTER_OTLP_HEADERS ?? '',
-    serviceName: process.env.OTEL_SERVICE_NAME ?? 'engvocab-server',
+    serviceName: process.env.OTEL_SERVICE_NAME ?? 'ownlish-server',
   },
 };

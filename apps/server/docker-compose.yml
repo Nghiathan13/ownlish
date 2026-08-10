@@ -1,16 +1,16 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: engvocab-postgres
+    container_name: ownlish-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: engvocab
-      POSTGRES_PASSWORD: engvocab
-      POSTGRES_DB: engvocab
+      POSTGRES_USER: ownlish
+      POSTGRES_PASSWORD: ownlish
+      POSTGRES_DB: ownlish
     ports:
       - '5433:5432'
     volumes:
-      - engvocab_postgres_data:/var/lib/postgresql/data
+      - ownlish_postgres_data:/var/lib/postgresql/data
 
 volumes:
-  engvocab_postgres_data:
+  ownlish_postgres_data:

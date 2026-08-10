@@ -1,4 +1,4 @@
-const BILINGUAL_STORAGE_KEY = "engvocab.tests.bilingual";
+const BILINGUAL_STORAGE_KEY = "ownlish.tests.bilingual";
 
 export function parseBilingualEnabled(raw: string | null) {
   return raw === "true";

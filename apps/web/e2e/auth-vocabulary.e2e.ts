@@ -43,7 +43,7 @@ test("persists a protected vocabulary session and clears it on logout", async ({
   await expect(page).toHaveURL((url) => url.pathname === "/collections/user");
 
   const refreshCookie = (await context.cookies()).find(
-    (cookie) => cookie.name === "engvocab.refreshToken",
+    (cookie) => cookie.name === "ownlish.refreshToken",
   );
   expect(refreshCookie).toMatchObject({
     httpOnly: true,
@@ -121,7 +121,7 @@ test("persists a protected vocabulary session and clears it on logout", async ({
   );
   expect(
     (await context.cookies()).find(
-      (cookie) => cookie.name === "engvocab.refreshToken",
+      (cookie) => cookie.name === "ownlish.refreshToken",
     ),
   ).toBeUndefined();
 

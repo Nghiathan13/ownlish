@@ -64,7 +64,7 @@ describe('AuthController (e2e)', () => {
     expect(typeof registerBody.accessToken).toBe('string');
     expect(registerBody).not.toHaveProperty('refreshToken');
     expect(getRefreshCookie(registerResponse)).toEqual(
-      expect.stringContaining('engvocab.refreshToken='),
+      expect.stringContaining('ownlish.refreshToken='),
     );
     expect(registerBody.user).toMatchObject({
       email,
@@ -85,7 +85,7 @@ describe('AuthController (e2e)', () => {
     expect(typeof loginBody.accessToken).toBe('string');
     expect(loginBody).not.toHaveProperty('refreshToken');
     expect(getRefreshCookie(loginResponse)).toEqual(
-      expect.stringContaining('engvocab.refreshToken='),
+      expect.stringContaining('ownlish.refreshToken='),
     );
     expect(loginBody.user).not.toHaveProperty('passwordHash');
 
@@ -109,7 +109,7 @@ describe('AuthController (e2e)', () => {
     expect(typeof refreshBody.accessToken).toBe('string');
     expect(refreshBody).not.toHaveProperty('refreshToken');
     expect(getRefreshCookie(refreshResponse)).toEqual(
-      expect.stringContaining('engvocab.refreshToken='),
+      expect.stringContaining('ownlish.refreshToken='),
     );
 
     await agent
@@ -169,7 +169,7 @@ describe('AuthController (e2e)', () => {
         expect(typeof refreshBody.accessToken).toBe('string');
         expect(refreshBody).not.toHaveProperty('refreshToken');
         expect(getRefreshCookie(response)).toEqual(
-          expect.stringContaining('engvocab.refreshToken='),
+          expect.stringContaining('ownlish.refreshToken='),
         );
       });
   });
@@ -210,7 +210,7 @@ describe('AuthController (e2e)', () => {
       name: 'Auth E2E',
     });
     expect(getRefreshCookie(googleResponse)).toEqual(
-      expect.stringContaining('engvocab.refreshToken='),
+      expect.stringContaining('ownlish.refreshToken='),
     );
 
     const linkedUser = await prisma.user.findUnique({

@@ -22,4 +22,4 @@ export type VocabularyColumnVisibility = Record<
 >;
 
 export const VOCABULARY_COLUMN_VISIBILITY_STORAGE_KEY =
-  "engvocab:vocabulary-table-columns";
+  "ownlish:vocabulary-table-columns";

@@ -1,11 +1,11 @@
 const TOEIC_PART_COUNT = 7;
 
 function getPracticeIndexStorageKey(testId: number, partNumber: number) {
-  return `engvocab.toeicPractice.index.${testId}.${partNumber}`;
+  return `ownlish.toeicPractice.index.${testId}.${partNumber}`;
 }
 
 function getPracticeSessionStorageKey(testId: number, partNumber: number) {
-  return `engvocab.toeicPractice.session.${testId}.${partNumber}`;
+  return `ownlish.toeicPractice.session.${testId}.${partNumber}`;
 }
 
 function clearPracticeProgress(testId: number, partNumber: number) {

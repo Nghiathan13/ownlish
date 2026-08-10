@@ -126,7 +126,7 @@ export function MobileTopNav() {
       >
         <div className="pointer-events-auto flex items-center justify-between rounded-[16px] border border-border bg-surface p-2">
           <Link
-            aria-label="EngVocab"
+            aria-label="Ownlish"
             className="flex items-center px-2 hover:opacity-80"
             href={DASHBOARD_MY_ACTIVITY_PATH}
           >
