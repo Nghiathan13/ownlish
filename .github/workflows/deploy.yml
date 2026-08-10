@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
 
+      - name: Generate Prisma client
+        run: pnpm --filter ownlish-server exec prisma generate
+
       - name: Run release quality gates
         run: |
           pnpm lint
