@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 
 describe('ReviewsService', () => {
@@ -58,6 +58,20 @@ describe('ReviewsService', () => {
     await expect(
       service.getOxfordPart('user-id', 'A1', 1),
     ).resolves.toMatchObject({ items: [] });
+  });
+
+  it('rejects invalid Oxford coordinates and a missing part', async () => {
+    await expect(
+      service.getOxfordPart('user-id', 'C3', 1),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.getOxfordPart('user-id', 'A1', 0),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    prisma.systemVocabularyEntry.findMany.mockResolvedValueOnce([]);
+    await expect(
+      service.getOxfordPart('user-id', 'A1', 1),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('returns the twenty most-forgotten user collection entries by default', async () => {
@@ -135,6 +149,21 @@ describe('ReviewsService', () => {
       service.gradeOxfordDefinition('user-id', 'A1', 1, '1', 'GOOD'),
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.userSystemVocabularyProgress.upsert).not.toHaveBeenCalled();
+  });
+
+  it('creates new progress when the Oxford word has not been graded before', async () => {
+    prisma.systemVocabularyEntry.findMany.mockResolvedValue([{ id: '1' }]);
+    prisma.userSystemVocabularyProgress.findUnique.mockResolvedValue(null);
+    prisma.userSystemVocabularyProgress.upsert.mockResolvedValue({
+      level: 1,
+      wrongCount: 0,
+      lastReviewAt: now,
+      nextReviewAt: now,
+    });
+
+    await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', 'GOOD');
+
+    expect(prisma.userSystemVocabularyProgress.upsert).toHaveBeenCalledTimes(1);
   });
 });
 

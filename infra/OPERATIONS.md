@@ -59,7 +59,8 @@ the content-publisher token.
 Configure each R2 bucket with the token scoped to it:
 
 ```bash
-pnpm --filter ownlish-server storage:configure-cors -- --bucket ownlish-content-staging
+pnpm --filter ownlish-server storage:configure-cors -- \
+  --bucket ownlish-content-staging --allow-localhost
 pnpm --filter ownlish-server storage:configure-cors -- --bucket ownlish-assets-staging
 ```
 

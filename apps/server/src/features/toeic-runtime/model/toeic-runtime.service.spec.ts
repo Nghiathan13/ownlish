@@ -1,4 +1,9 @@
 import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
+import {
   ToeicRunScope,
   ToeicRunMode,
   ToeicRunQuestionStatus,
@@ -502,5 +507,206 @@ describe('ToeicRuntimeService', () => {
       },
       include: { answers: true },
     });
+  });
+
+  it('rejects unavailable test and part selections before persisting a run', async () => {
+    const hasTestParts = jest.fn().mockResolvedValue(false);
+    const hasPart = jest.fn().mockResolvedValue(false);
+    const service = new ToeicRuntimeService(
+      {} as never,
+      { hasTestParts, hasPart } as never,
+    );
+
+    await expect(
+      service.createTestRun('user-id', {
+        testKey: 'missing-test',
+        partNumbers: [1],
+        mode: 'practice',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      service.createPartPracticeRun('user-id', { partNumber: 7 }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('returns an available mock selection when no owned open run exists', async () => {
+    const findFirst = jest.fn().mockResolvedValue(null);
+    const service = new ToeicRuntimeService(
+      { toeicRun: { findFirst } } as never,
+      { hasTestParts: jest.fn().mockResolvedValue(true) } as never,
+    );
+
+    await expect(
+      service.prepareMockRun('user-id', {
+        testKey: 'ets26-t01',
+        partNumbers: [1],
+      }),
+    ).resolves.toEqual({ status: 'available' });
+  });
+
+  it('reuses and extends an owned practice test run without duplicating it', async () => {
+    const existing = createRun({
+      id: 'practice-run-id',
+      mode: ToeicRunMode.PRACTICE,
+      selectedParts: [1],
+    });
+    const update = jest.fn().mockResolvedValue(
+      createRun({
+        id: 'practice-run-id',
+        mode: ToeicRunMode.PRACTICE,
+        selectedParts: [1, 2],
+      }),
+    );
+    const transaction = {
+      $executeRaw: jest.fn(),
+      toeicRun: { findFirst: jest.fn().mockResolvedValue(existing), update },
+    };
+    const service = new ToeicRuntimeService(
+      {
+        $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+          callback(transaction),
+      } as never,
+      { hasTestParts: jest.fn().mockResolvedValue(true) } as never,
+    );
+
+    await expect(
+      service.createTestRun('user-id', {
+        testKey: 'ets26-t01',
+        partNumbers: [2, 1],
+        mode: 'practice',
+      }),
+    ).resolves.toMatchObject({ selectedParts: [1, 2] });
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'practice-run-id' },
+      data: { selectedParts: [1, 2] },
+      include: { answers: true },
+    });
+  });
+
+  it('creates or reuses an owned part-practice run', async () => {
+    const created = createRun({
+      scope: ToeicRunScope.PART_PRACTICE,
+      partNumber: 3,
+      testKey: null,
+      mode: ToeicRunMode.PRACTICE,
+      selectedParts: [3],
+    });
+    const create = jest.fn().mockResolvedValue(created);
+    const transaction = {
+      $executeRaw: jest.fn(),
+      toeicRun: { findFirst: jest.fn().mockResolvedValue(null), create },
+    };
+    const service = new ToeicRuntimeService(
+      {
+        $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+          callback(transaction),
+      } as never,
+      { hasPart: jest.fn().mockResolvedValue(true) } as never,
+    );
+
+    await expect(
+      service.createPartPracticeRun('user-id', { partNumber: 3 }),
+    ).resolves.toMatchObject({
+      scope: 'part_practice',
+      partNumber: 3,
+      selectedParts: [3],
+    });
+    expect(create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-id',
+        scope: ToeicRunScope.PART_PRACTICE,
+        partNumber: 3,
+        selectedParts: [3],
+      },
+      include: { answers: true },
+    });
+  });
+
+  it('lists part-practice progress and validates the reset part number', async () => {
+    const findMany = jest.fn().mockResolvedValue([
+      {
+        partNumber: 2,
+        totalRight: 3,
+        totalWrong: 1,
+        answers: [{ status: ToeicRunQuestionStatus.RIGHT }],
+      },
+    ]);
+    const service = new ToeicRuntimeService(
+      { toeicRun: { findMany } } as never,
+      {} as never,
+    );
+
+    await expect(service.listPartPracticeRuns('user-id')).resolves.toEqual({
+      items: [
+        {
+          partNumber: 2,
+          answeredCount: 1,
+          correctCount: 3,
+          wrongCount: 1,
+        },
+      ],
+    });
+    await expect(service.clearPartPracticeRun('user-id', 8)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('rejects missing, foreign-question, closed, and invalid timer operations', async () => {
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(createRun())
+      .mockResolvedValueOnce(createRun({ completedAt: new Date() }))
+      .mockResolvedValueOnce(createRun({ mode: ToeicRunMode.PRACTICE }));
+    const service = new ToeicRuntimeService(
+      { toeicRun: { findFirst } } as never,
+      { getQuestion: jest.fn().mockResolvedValue(null) } as never,
+    );
+
+    await expect(service.getRun('user-id', 'missing')).rejects.toThrow(
+      NotFoundException,
+    );
+    await expect(
+      service.submitAnswer('user-id', 'run-id', {
+        questionKey: 'foreign-question',
+        selectedKey: 'A',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      service.submitAnswer('user-id', 'run-id', {
+        questionKey: 'foreign-question',
+        selectedKey: 'A',
+      }),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      service.updateMockTimer('user-id', 'run-id', { remainingSeconds: 10 }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('does not restart a mock selection that is already pending grading', async () => {
+    const transaction = {
+      $executeRaw: jest.fn(),
+      toeicRun: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { id: 'pending-run', finishRequestedAt: new Date() },
+          ]),
+      },
+    };
+    const service = new ToeicRuntimeService(
+      {
+        $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+          callback(transaction),
+      } as never,
+      { hasTestParts: jest.fn().mockResolvedValue(true) } as never,
+    );
+
+    await expect(
+      service.restartMockRun('user-id', {
+        testKey: 'ets26-t01',
+        partNumbers: [1],
+      }),
+    ).rejects.toThrow(ConflictException);
   });
 });

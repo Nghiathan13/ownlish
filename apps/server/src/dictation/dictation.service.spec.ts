@@ -64,6 +64,35 @@ describe('DictationService', () => {
         completedAt: null,
       },
     });
+    expect(transaction.$executeRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns formatted progress when it exists', async () => {
+    const { service, prisma } = createService(null);
+    const completedAt = new Date('2026-07-27T01:00:00.000Z');
+    prisma.dictationProgress.findUnique.mockResolvedValue(
+      createProgress({ completedAt }),
+    );
+
+    await expect(service.getProgress('user-id', 'video-id')).resolves.toEqual({
+      videoId: 'video-id',
+      answeredSegmentIds: ['s1'],
+      correctCount: 1,
+      completedAt: completedAt.toISOString(),
+      updatedAt: now.toISOString(),
+    });
+    expect(prisma.dictationProgress.findUnique).toHaveBeenCalledWith({
+      where: { userId_videoId: { userId: 'user-id', videoId: 'video-id' } },
+    });
+  });
+
+  it('returns null when the user has not started a video', async () => {
+    const { service, prisma } = createService(null);
+    prisma.dictationProgress.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.getProgress('user-id', 'video-id'),
+    ).resolves.toBeNull();
   });
 
   it('records an answer for a new segment', async () => {

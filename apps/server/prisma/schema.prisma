@@ -29,6 +29,7 @@ model User {
   updatedAt           DateTime               @updatedAt @map("updated_at")
   collections         WordCollection[]
   refreshSessions     RefreshSession[]
+  emailOtpChallenges  EmailOtpChallenge[]
   vocabularyEntries      UserVocabularyEntry[]
   systemVocabularyProgress UserSystemVocabularyProgress[]
   toeicRuns              ToeicRun[]
@@ -81,6 +82,29 @@ model RefreshSession {
   @@index([userId, revokedAt])
   @@index([expiresAt])
   @@map("refresh_sessions")
+}
+
+model EmailOtpChallenge {
+  id                   String    @id @default(uuid())
+  email                String
+  codeHash             String    @map("code_hash")
+  expiresAt            DateTime  @map("expires_at")
+  attempts             Int       @default(0)
+  lastSentAt           DateTime  @default(now()) @map("last_sent_at")
+  verifiedAt           DateTime? @map("verified_at")
+  consumedAt           DateTime? @map("consumed_at")
+  enrollmentTokenHash  String?   @map("enrollment_token_hash")
+  enrollmentExpiresAt  DateTime? @map("enrollment_expires_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @map("user_id")
+
+  @@index([email, lastSentAt])
+  @@index([email, expiresAt])
+  @@index([enrollmentTokenHash])
+  @@map("email_otp_challenges")
 }
 
 model UserVocabularyEntry {

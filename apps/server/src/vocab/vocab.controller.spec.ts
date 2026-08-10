@@ -63,4 +63,47 @@ describe('VocabController', () => {
     );
     expect(vocabService.delete).toHaveBeenCalledWith('user-id', 'entry-id');
   });
+
+  it('delegates every read and update endpoint with the authenticated user id', async () => {
+    const listQuery = { collectionId: 'collection-id', search: 'hello' };
+    const dueQuery = { collectionId: 'collection-id', limit: 10 };
+    const update = { meaningVi: 'xin chào' };
+    vocabService.list.mockResolvedValue({ items: [] });
+    vocabService.listDueReviewWords.mockResolvedValue({ items: [] });
+    vocabService.get.mockResolvedValue({ id: 'entry-id' });
+    vocabService.update.mockResolvedValue({ id: 'entry-id' });
+    statsService.getStats.mockResolvedValue({ total: 1 });
+
+    await expect(controller.list(request, listQuery)).resolves.toEqual({
+      items: [],
+    });
+    await expect(
+      controller.getStats(request, { collectionId: 'collection-id' }),
+    ).resolves.toEqual({ total: 1 });
+    await expect(
+      controller.listDueReviewWords(request, dueQuery),
+    ).resolves.toEqual({ items: [] });
+    await expect(controller.get(request, 'entry-id')).resolves.toEqual({
+      id: 'entry-id',
+    });
+    await expect(
+      controller.update(request, 'entry-id', update),
+    ).resolves.toEqual({ id: 'entry-id' });
+
+    expect(vocabService.list).toHaveBeenCalledWith('user-id', listQuery);
+    expect(statsService.getStats).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+    );
+    expect(vocabService.listDueReviewWords).toHaveBeenCalledWith(
+      'user-id',
+      dueQuery,
+    );
+    expect(vocabService.get).toHaveBeenCalledWith('user-id', 'entry-id');
+    expect(vocabService.update).toHaveBeenCalledWith(
+      'user-id',
+      'entry-id',
+      update,
+    );
+  });
 });

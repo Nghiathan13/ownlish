@@ -27,3 +27,12 @@ export async function handleCredentialAuth(
 
   return response;
 }
+
+export async function handlePublicAuth(
+  upstreamPath: string,
+  body: string,
+): Promise<NextResponse> {
+  const { json, upstream } = await postUpstreamAuth(upstreamPath, body);
+
+  return NextResponse.json(json, { status: upstream.status });
+}

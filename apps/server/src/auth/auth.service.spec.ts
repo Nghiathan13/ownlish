@@ -8,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { ProfileAvatarStorageService } from '../users/profile-avatar-storage.service';
 import { AuthService } from './auth.service';
 import { GoogleTokenService } from './google-token.service';
+import { EmailOtpService } from './email-otp.service';
 import { RefreshSessionsService } from './refresh-sessions.service';
 import { getMockCallArg } from '../testing/jest-mock-call';
 
@@ -50,6 +51,12 @@ describe('AuthService', () => {
     verifyAuthorizationCode: jest.fn(),
   };
 
+  const emailOtpServiceMock = {
+    consumeEnrollmentToken: jest.fn(),
+    request: jest.fn(),
+    verify: jest.fn(),
+  };
+
   const user = {
     id: 'user-id',
     email: 'test@example.com',
@@ -90,6 +97,10 @@ describe('AuthService', () => {
           provide: ProfileAvatarStorageService,
           useValue: profileAvatarStorageServiceMock,
         },
+        {
+          provide: EmailOtpService,
+          useValue: emailOtpServiceMock,
+        },
       ],
     }).compile();
 
@@ -98,6 +109,46 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('logs an existing Google-linked user in after a verified email code', async () => {
+    const googleLinkedUser = { ...user, googleSub: 'google-sub' };
+    emailOtpServiceMock.verify.mockResolvedValue({
+      email: googleLinkedUser.email,
+      kind: 'authenticated',
+    });
+    usersServiceMock.findByEmail.mockResolvedValue(googleLinkedUser);
+    jwtServiceMock.signAsync.mockResolvedValue('access-token');
+
+    const result = await service.verifyEmailOtp({
+      challengeId: 'f1bb6a0d-5e47-4a4d-93bf-6d3aebfae35a',
+      code: '123456',
+    });
+
+    expect(usersServiceMock.findByEmail).toHaveBeenCalledWith(
+      googleLinkedUser.email,
+    );
+    expect(result).toMatchObject({ accessToken: 'access-token' });
+  });
+
+  it('creates an OTP-only user after valid enrollment', async () => {
+    emailOtpServiceMock.consumeEnrollmentToken.mockResolvedValue(
+      'new@example.com',
+    );
+    usersServiceMock.findByEmail.mockResolvedValueOnce(null);
+    usersServiceMock.create.mockResolvedValue(user);
+    jwtServiceMock.signAsync.mockResolvedValue('access-token');
+
+    await service.completeEmailOtpProfile({
+      enrollmentToken: 'token',
+      name: ' Linh ',
+    });
+
+    expect(usersServiceMock.create).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      name: 'Linh',
+      passwordHash: null,
+    });
   });
 
   it('registers a user with normalized email and hashed password', async () => {

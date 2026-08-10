@@ -26,6 +26,32 @@ export type GoogleLoginInput = {
   code: string;
 };
 
+export type EmailOtpRequestInput = {
+  email: string;
+};
+
+export type EmailOtpRequestResponse = {
+  challengeId: string;
+  resendAvailableAt: string;
+};
+
+export type VerifyEmailOtpInput = {
+  challengeId: string;
+  code: string;
+};
+
+export type EmailOtpProfileRequired = {
+  enrollmentToken: string;
+  status: "profile_required";
+};
+
+export type EmailOtpVerification = AuthResponse | EmailOtpProfileRequired;
+
+export type CompleteEmailOtpProfileInput = {
+  enrollmentToken: string;
+  name: string;
+};
+
 export type UpdateProfileInput = {
   avatar?: File;
   name: string;

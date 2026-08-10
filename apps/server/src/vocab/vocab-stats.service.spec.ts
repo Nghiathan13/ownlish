@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
 import { VocabStatsService } from './vocab-stats.service';
@@ -111,5 +112,26 @@ describe('VocabStatsService', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('returns zero-filled stats when the aggregate query has no row', async () => {
+    prismaMock.$queryRaw.mockResolvedValue([]);
+
+    await expect(service.getStats('user-id')).resolves.toEqual({
+      total: 0,
+      due: 0,
+      mastered: 0,
+      highWrongCount: 0,
+      levels: Array.from({ length: 8 }, (_, level) => ({ level, count: 0 })),
+    });
+  });
+
+  it('rejects stats for a collection that is not owned by the user', async () => {
+    prismaMock.wordCollection.findFirst.mockResolvedValue(null);
+
+    await expect(
+      service.getStats('user-id', collectionId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
   });
 });

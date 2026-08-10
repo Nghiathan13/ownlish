@@ -8,6 +8,9 @@
     "dev:server": "pnpm --filter ownlish-server start:dev",
     "build": "pnpm --filter ownlish-web build && pnpm --filter ownlish-server build",
     "lint": "pnpm --filter ownlish-web lint && pnpm --filter ownlish-server lint:check",
-    "test": "pnpm --filter ownlish-web test && pnpm --filter ownlish-server test"
+    "test": "pnpm --filter ownlish-web test && pnpm --filter ownlish-server test",
+    "test:cov": "pnpm --filter ownlish-web test:cov && pnpm --filter ownlish-server test:cov",
+    "coverage:summary": "node scripts/testing/coverage-summary.mjs",
+    "coverage:assert": "node scripts/testing/assert-coverage.mjs"
   }
 }

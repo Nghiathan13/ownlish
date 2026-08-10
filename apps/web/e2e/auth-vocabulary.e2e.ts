@@ -61,6 +61,11 @@ test("persists a protected vocabulary session and clears it on logout", async ({
   );
 
   const collectionUrl = page.url();
+  const wordResult =
+    test.info().project.name === "chromium-mobile"
+      ? page.getByRole("heading", { name: word, exact: true })
+      : page.getByRole("cell", { name: word, exact: true });
+
   await page
     .getByRole("button", { name: "Add word", exact: true })
     .click();
@@ -84,9 +89,7 @@ test("persists a protected vocabulary session and clears it on logout", async ({
   await expect(addWordDialog).toBeHidden();
 
   await page.getByLabel("Search the word").fill(word);
-  await expect(
-    page.getByRole("cell", { name: word, exact: true }),
-  ).toBeVisible();
+  await expect(wordResult).toBeVisible();
 
   const refreshResponse = page.waitForResponse(
     (response) =>
@@ -98,13 +101,13 @@ test("persists a protected vocabulary session and clears it on logout", async ({
   await expect(page).toHaveURL(collectionUrl);
 
   await page.getByLabel("Search the word").fill(word);
-  await expect(
-    page.getByRole("cell", { name: word, exact: true }),
-  ).toBeVisible();
+  await expect(wordResult).toBeVisible();
 
-  await page
-    .getByRole("button", { name: E2E_USER_NAME, exact: true })
-    .click();
+  if (test.info().project.name === "chromium-mobile") {
+    await page.getByRole("button", { name: "Open menu" }).click();
+  }
+
+  await page.getByRole("button", { name: E2E_USER_NAME, exact: true }).click();
   const logoutResponse = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/auth/logout") &&

@@ -1,3 +1,4 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { WordCollectionKind } from '@prisma/client';
 import { CollectionsService } from './collections.service';
 
@@ -22,7 +23,14 @@ describe('CollectionsService', () => {
       groupBy: jest.fn(),
     },
     wordCollection: {
+      create: jest.fn(),
+      delete: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    userVocabularyEntry: {
+      createMany: jest.fn(),
       findMany: jest.fn(),
     },
   };
@@ -43,6 +51,162 @@ describe('CollectionsService', () => {
     await expect(service.list('user-id')).resolves.toEqual([
       { ...collection, itemCount: 957 },
     ]);
+  });
+
+  it('creates a trimmed user collection and rejects an empty name', async () => {
+    const userCollection = {
+      ...collection,
+      kind: WordCollectionKind.USER,
+      ownerUserId: 'user-id',
+      name: 'My words',
+      description: 'Personal words',
+      _count: { vocabularyEntries: 0 },
+    };
+    prisma.wordCollection.create.mockResolvedValue(userCollection);
+
+    await expect(
+      service.createUserCollection('user-id', {
+        name: '  My words  ',
+        description: ' Personal words ',
+      }),
+    ).resolves.toMatchObject({ name: 'My words', itemCount: 0 });
+    expect(prisma.wordCollection.create).toHaveBeenCalledTimes(1);
+
+    await expect(
+      service.createUserCollection('user-id', { name: '   ' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('updates only an owned user collection and validates its name', async () => {
+    const userCollection = {
+      ...collection,
+      kind: WordCollectionKind.USER,
+      ownerUserId: 'user-id',
+      _count: { vocabularyEntries: 3 },
+    };
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      service.updateUserCollection('user-id', 'missing', { name: 'Words' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(userCollection);
+    await expect(
+      service.updateUserCollection('user-id', 'collection-id', { name: ' ' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.wordCollection.update).not.toHaveBeenCalled();
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(userCollection);
+    prisma.wordCollection.update.mockResolvedValue({
+      ...userCollection,
+      name: 'Updated words',
+      description: null,
+    });
+    await expect(
+      service.updateUserCollection('user-id', 'collection-id', {
+        name: ' Updated words ',
+        description: ' ',
+      }),
+    ).resolves.toMatchObject({ name: 'Updated words', description: null });
+  });
+
+  it('deletes a non-default owned collection only', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      service.deleteUserCollection('user-id', 'missing'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce({
+      ...collection,
+      kind: WordCollectionKind.USER,
+      isDefault: true,
+    });
+    await expect(
+      service.deleteUserCollection('user-id', 'collection-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce({
+      ...collection,
+      kind: WordCollectionKind.USER,
+      isDefault: false,
+    });
+    await service.deleteUserCollection('user-id', 'collection-id');
+    expect(prisma.wordCollection.delete).toHaveBeenCalledWith({
+      where: { id: 'collection-id' },
+    });
+  });
+
+  it('loads visible system and owned user collection details', async () => {
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(null);
+    await expect(service.get('user-id', 'missing')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(collection);
+    prisma.systemVocabularyEntry.findMany.mockResolvedValueOnce([entry('one')]);
+    await expect(
+      service.get('user-id', 'collection-id'),
+    ).resolves.toMatchObject({
+      itemCount: 1,
+      catalogWords: [{ id: 'one' }],
+      vocabularyEntries: [],
+    });
+
+    const userCollection = {
+      ...collection,
+      id: 'user-collection-id',
+      kind: WordCollectionKind.USER,
+      ownerUserId: 'user-id',
+    };
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(userCollection);
+    prisma.userVocabularyEntry.findMany.mockResolvedValueOnce([
+      { id: 'entry' },
+    ]);
+    await expect(
+      service.get('user-id', 'user-collection-id'),
+    ).resolves.toMatchObject({ itemCount: 1, catalogWords: [] });
+  });
+
+  it('imports selected catalog definitions, and reports skipped duplicates', async () => {
+    prisma.wordCollection.findFirst
+      .mockResolvedValueOnce(collection)
+      .mockResolvedValueOnce({
+        ...collection,
+        id: 'target-id',
+        kind: WordCollectionKind.USER,
+        ownerUserId: 'user-id',
+      });
+    prisma.systemVocabularyEntry.findMany.mockResolvedValueOnce([
+      entry('one'),
+      { ...entry('two'), word: 'able' },
+    ]);
+    prisma.userVocabularyEntry.createMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      service.importToVocabulary('user-id', 'collection-id', {
+        targetCollectionId: 'target-id',
+        catalogDefinitionIds: ['two'],
+      }),
+    ).resolves.toEqual({ imported: 1, updated: 0, skipped: 0 });
+    expect(prisma.userVocabularyEntry.createMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('validates imports and rejects unavailable or non-system collections', async () => {
+    await expect(
+      service.importToVocabulary('user-id', 'collection-id', { offset: 0 }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      service.importToVocabulary('user-id', 'missing'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.wordCollection.findFirst.mockResolvedValueOnce({
+      ...collection,
+      kind: WordCollectionKind.USER,
+    });
+    await expect(
+      service.importToVocabulary('user-id', 'collection-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('loads a catalog page from the requested system entry range', async () => {
@@ -104,6 +268,25 @@ describe('CollectionsService', () => {
       limit: 20,
       offset: 20,
     });
+  });
+
+  it('rejects unsupported Oxford bands, invalid parts, and missing Oxford data', async () => {
+    await expect(service.getOxfordMeta('user-id', 'C3')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    await expect(service.getOxfordPart('A1', 0)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+
+    prisma.systemVocabularyEntry.findMany.mockResolvedValueOnce([]);
+    await expect(service.getOxfordMeta('user-id', 'A1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+
+    prisma.systemVocabularyEntry.findMany.mockResolvedValueOnce([]);
+    await expect(service.getOxfordPart('A1', 1)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('counts only words inside Oxford cards that have been started', async () => {

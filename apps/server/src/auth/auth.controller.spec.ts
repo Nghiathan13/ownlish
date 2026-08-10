@@ -21,6 +21,9 @@ describe('AuthController', () => {
     logout: jest.fn(),
     me: jest.fn(),
     updateProfile: jest.fn(),
+    requestEmailOtp: jest.fn(),
+    verifyEmailOtp: jest.fn(),
+    completeEmailOtpProfile: jest.fn(),
   };
 
   const jwtServiceMock = {
@@ -62,6 +65,36 @@ describe('AuthController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('returns a challenge without setting a refresh cookie', async () => {
+    const dto = { email: 'test@example.com' };
+    authServiceMock.requestEmailOtp.mockResolvedValue({
+      challengeId: 'challenge-id',
+      resendAvailableAt: '2026-08-10T00:01:00.000Z',
+    });
+
+    await expect(controller.requestEmailOtp(dto)).resolves.toEqual({
+      challengeId: 'challenge-id',
+      resendAvailableAt: '2026-08-10T00:01:00.000Z',
+    });
+    expect(responseMock.cookie).not.toHaveBeenCalled();
+  });
+
+  it('keeps profile enrollment responses cookie-free', async () => {
+    const dto = { challengeId: 'challenge-id', code: '123456' };
+    authServiceMock.verifyEmailOtp.mockResolvedValue({
+      enrollmentToken: 'enrollment-token',
+      status: 'profile_required',
+    });
+
+    await expect(
+      controller.verifyEmailOtp(dto, responseMock as Response),
+    ).resolves.toEqual({
+      enrollmentToken: 'enrollment-token',
+      status: 'profile_required',
+    });
+    expect(responseMock.cookie).not.toHaveBeenCalled();
   });
 
   it('delegates register to AuthService', async () => {

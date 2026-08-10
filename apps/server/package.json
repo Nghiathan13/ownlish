@@ -16,8 +16,10 @@
     "migrate:deploy": "prisma migrate deploy",
     "lint": "eslint \"{src,apps,libs,test,performance}/**/*.ts\" --fix",
     "lint:check": "eslint \"{src,apps,libs,test,performance}/**/*.ts\"",
+    "pretest": "prisma generate",
     "test": "jest",
     "test:watch": "jest --watch",
+    "pretest:cov": "prisma generate",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
@@ -65,6 +67,7 @@
     "google-auth-library": "^10.9.0",
     "helmet": "^8.2.0",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.18.1",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
@@ -109,6 +112,15 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "coverageReporters": [
+      "text",
+      "json-summary",
+      "lcov",
+      "html"
+    ],
+    "setupFiles": [
+      "<rootDir>/testing/jest.setup.ts"
+    ],
     "testEnvironment": "node"
   }
 }

@@ -15,12 +15,21 @@ import { GoogleLoginDto } from './dto/google-login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { CompleteEmailOtpProfileDto } from './dto/complete-email-otp-profile.dto';
+import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
+import { VerifyEmailOtpDto } from './dto/verify-email-otp.dto';
+import { EmailOtpService } from './email-otp.service';
 import { GoogleTokenService } from './google-token.service';
 import { RefreshSessionsService } from './refresh-sessions.service';
 import type { AuthResponse, AuthUser, PublicUser } from './types/auth.types';
 
 type LogoutResponse = {
   success: true;
+};
+
+export type EmailOtpProfileRequiredResponse = {
+  enrollmentToken: string;
+  status: 'profile_required';
 };
 
 @Injectable()
@@ -31,7 +40,63 @@ export class AuthService {
     private readonly refreshSessionsService: RefreshSessionsService,
     private readonly googleTokenService: GoogleTokenService,
     private readonly profileAvatarStorageService: ProfileAvatarStorageService,
+    private readonly emailOtpService: EmailOtpService,
   ) {}
+
+  requestEmailOtp(dto: RequestEmailOtpDto) {
+    return this.emailOtpService.request(dto.email);
+  }
+
+  async verifyEmailOtp(
+    dto: VerifyEmailOtpDto,
+  ): Promise<AuthResponse | EmailOtpProfileRequiredResponse> {
+    const result = await this.emailOtpService.verify(dto.challengeId, dto.code);
+
+    if (result.kind === 'profile_required') {
+      return {
+        enrollmentToken: result.enrollmentToken,
+        status: 'profile_required',
+      };
+    }
+
+    const user = await this.usersService.findByEmail(result.email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired code');
+    }
+
+    return this.createAuthResponse(user);
+  }
+
+  async completeEmailOtpProfile(
+    dto: CompleteEmailOtpProfileDto,
+  ): Promise<AuthResponse> {
+    const email = await this.emailOtpService.consumeEnrollmentToken(
+      dto.enrollmentToken,
+    );
+    const name = dto.name.trim();
+
+    if (!name) {
+      throw new BadRequestException('Display name is required');
+    }
+
+    let user = await this.usersService.findByEmail(email);
+    if (!user) {
+      try {
+        user = await this.usersService.create({
+          email,
+          name,
+          passwordHash: null,
+        });
+      } catch (error) {
+        user = await this.usersService.findByEmail(email);
+        if (!user) {
+          throw error;
+        }
+      }
+    }
+
+    return this.createAuthResponse(user);
+  }
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
     const email = dto.email.trim().toLowerCase();

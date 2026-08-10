@@ -34,6 +34,22 @@ pnpm test
 pnpm build
 ```
 
+## Coverage
+
+Run coverage for both applications locally with:
+
+```bash
+pnpm test:cov
+pnpm coverage:summary
+```
+
+Reports are generated separately in `apps/web/coverage` and
+`apps/server/coverage`, including text, HTML, LCOV and JSON summaries. CI
+uploads each report for seven days and keeps the Web and Server percentages
+separate. The `pnpm coverage:assert` command enforces the future 90% lines,
+statements and functions / 80% branches gate; it remains report-only in CI
+until three stable `main` runs establish the expanded-test baseline.
+
 ## Environments
 
 | Environment | Web | API | Content |
@@ -42,6 +58,25 @@ pnpm build
 | Staging | `https://staging.ownlish.com` | `https://api.staging.ownlish.com` | `https://content.staging.ownlish.com` |
 
 R2 assets use `assets.ownlish.com` and `assets.staging.ownlish.com`.
+
+## Passwordless email sign-in
+
+The primary sign-in flow uses a six-digit email code sent by Resend. Codes expire
+after 10 minutes, are single-use, have a 60-second resend cooldown, and are
+limited to three sends per email every 15 minutes. Existing password records
+remain server-side only as a temporary rollback path; the web UI no longer
+accepts passwords.
+
+Before deploying, verify `ownlish.com` in Resend and set these server variables
+in each VPS environment file:
+
+```text
+RESEND_API_KEY=...
+EMAIL_FROM=Ownlish <auth@ownlish.com>
+EMAIL_OTP_PEPPER=<unique secret of at least 32 characters>
+```
+
+Never expose these values to the web application or commit them to Git.
 
 ## Deployment
 

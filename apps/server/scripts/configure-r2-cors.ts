@@ -31,6 +31,7 @@ async function main(): Promise<void> {
     },
   });
   const selectedBucket = readArgument('--bucket');
+  const allowLocalhost = process.argv.includes('--allow-localhost');
   const buckets = selectedBucket
     ? [selectedBucket]
     : [requiredEnv('R2_CONTENT_BUCKET'), requiredEnv('R2_ASSETS_BUCKET')];
@@ -45,6 +46,7 @@ async function main(): Promise<void> {
               AllowedOrigins: [
                 'https://ownlish.com',
                 'https://staging.ownlish.com',
+                ...(allowLocalhost ? ['http://localhost:3000'] : []),
               ],
               AllowedMethods: ['GET', 'HEAD'],
               AllowedHeaders: ['Range'],

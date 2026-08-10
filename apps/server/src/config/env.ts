@@ -101,6 +101,11 @@ export const env = {
     limit: optionalNumberEnv('AUTH_RATE_LIMIT_LIMIT', 10),
     ttlMs: optionalNumberEnv('AUTH_RATE_LIMIT_TTL_SECONDS', 60) * 1000,
   },
+  emailOtp: {
+    resendApiKey: process.env.RESEND_API_KEY ?? '',
+    from: process.env.EMAIL_FROM ?? 'Ownlish <auth@ownlish.com>',
+    pepper: process.env.EMAIL_OTP_PEPPER ?? '',
+  },
   toeicGradingIndexUrl: process.env.TOEIC_GRADING_INDEX_URL ?? '',
   r2Endpoint: process.env.R2_ENDPOINT ?? '',
   r2AccessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',

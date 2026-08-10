@@ -134,4 +134,27 @@ describe('LearningActivityService', () => {
       jest.useRealTimers();
     }
   });
+
+  it('splits a flush checkpoint across Vietnam midnight before upserting it', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-07-30T17:00:30.000Z'));
+    const { prisma, service } = createService();
+
+    try {
+      await expect(
+        service.submitCheckpoint('user-id', {
+          activityType: 'REVIEW' as LearningActivityType,
+          kind: 'flush',
+          elapsedSeconds: 60,
+        }),
+      ).resolves.toEqual({ acceptedSeconds: 60 });
+
+      expect(prisma.userLearningDaily.upsert).toHaveBeenCalledTimes(2);
+      expect(prisma.$transaction).toHaveBeenCalledWith(
+        expect.arrayContaining([undefined, undefined]),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

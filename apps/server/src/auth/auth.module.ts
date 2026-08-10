@@ -10,6 +10,8 @@ import { AuthService } from './auth.service';
 import { GoogleTokenService } from './google-token.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RefreshSessionsService } from './refresh-sessions.service';
+import { EmailOtpService } from './email-otp.service';
+import { ResendEmailService } from './resend-email.service';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { RefreshSessionsService } from './refresh-sessions.service';
     AdminGuard,
     JwtAuthGuard,
     RefreshSessionsService,
+    EmailOtpService,
+    ResendEmailService,
   ],
   exports: [JwtModule, AdminGuard, JwtAuthGuard],
 })

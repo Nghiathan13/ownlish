@@ -34,4 +34,29 @@ describe('env', () => {
       expect(env.refreshTokenCookie.secure).toBe(expected);
     });
   });
+
+  it('uses the secure cookie defaults in production', () => {
+    jest.resetModules();
+    setRequiredEnv({ NODE_ENV: 'production' });
+
+    jest.isolateModules(() => {
+      const { env } = jest.requireActual<typeof import('./env')>('./env');
+
+      expect(env.refreshTokenCookie).toMatchObject({
+        secure: true,
+        sameSite: 'none',
+      });
+    });
+  });
+
+  it.each([
+    ['ACCESS_TOKEN_TTL_SECONDS', '0'],
+    ['BCRYPT_SALT_ROUNDS', 'not-a-number'],
+    ['REFRESH_TOKEN_COOKIE_SECURE', 'yes'],
+  ])('rejects invalid %s', (key, value) => {
+    jest.resetModules();
+    setRequiredEnv({ [key]: value });
+
+    expect(() => jest.requireActual<typeof import('./env')>('./env')).toThrow();
+  });
 });

@@ -11,14 +11,20 @@ import {
   type ReactNode,
 } from "react";
 import {
+  completeEmailOtpProfile as completeEmailOtpProfileRequest,
   googleLogin as googleLoginRequest,
   login as loginRequest,
   logoutSession,
   register as registerRequest,
+  verifyEmailOtp as verifyEmailOtpRequest,
+  type CompleteEmailOtpProfileInput,
+  type EmailOtpProfileRequired,
+  type EmailOtpVerification,
   type GoogleLoginInput,
   type LoginInput,
   type RegisterInput,
   type UpdateProfileInput,
+  type VerifyEmailOtpInput,
   updateProfile as updateProfileRequest,
 } from "@/entities/auth/api/auth";
 import type { AuthUser } from "@/entities/auth/types";
@@ -37,6 +43,7 @@ export type { AuthStatus } from "@/features/auth/lib/authStatus";
 
 type AuthSessionContextValue = {
   clearSession: () => void;
+  completeEmailOtpProfile: (input: CompleteEmailOtpProfileInput) => Promise<void>;
   googleLogin: (input: GoogleLoginInput) => Promise<void>;
   login: (input: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
@@ -44,6 +51,7 @@ type AuthSessionContextValue = {
   status: AuthStatus;
   updateProfile: (input: UpdateProfileInput) => Promise<void>;
   user: AuthUser | null;
+  verifyEmailOtp: (input: VerifyEmailOtpInput) => Promise<EmailOtpVerification>;
 };
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
@@ -188,6 +196,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     notifyOtherTabs({ type: "session-changed" });
   }, [notifyOtherTabs]);
 
+  const establishAuthenticatedSession = useCallback(
+    (response: { accessToken: string; user: AuthUser }) => {
+      establishSession({ accessToken: response.accessToken });
+      setUser(response.user);
+      setStatus("authenticated");
+      notifyOtherTabs({ type: "session-changed" });
+    },
+    [notifyOtherTabs],
+  );
+
   const register = useCallback(async (input: RegisterInput) => {
     const response = await registerRequest(input);
     establishSession({ accessToken: response.accessToken });
@@ -203,6 +221,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("authenticated");
     notifyOtherTabs({ type: "session-changed" });
   }, [notifyOtherTabs]);
+
+  const verifyEmailOtp = useCallback(
+    async (input: VerifyEmailOtpInput): Promise<EmailOtpVerification> => {
+      const response = await verifyEmailOtpRequest(input);
+
+      if ("status" in response) {
+        return response as EmailOtpProfileRequired;
+      }
+
+      establishAuthenticatedSession(response);
+      return response;
+    },
+    [establishAuthenticatedSession],
+  );
+
+  const completeEmailOtpProfile = useCallback(
+    async (input: CompleteEmailOtpProfileInput) => {
+      const response = await completeEmailOtpProfileRequest(input);
+      establishAuthenticatedSession(response);
+    },
+    [establishAuthenticatedSession],
+  );
 
   const logout = useCallback(async () => {
     clearSession();
@@ -227,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthSessionContextValue>(
     () => ({
       clearSession,
+      completeEmailOtpProfile,
       googleLogin,
       login,
       logout,
@@ -234,9 +275,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       updateProfile,
       user,
+      verifyEmailOtp,
     }),
     [
       clearSession,
+      completeEmailOtpProfile,
       googleLogin,
       login,
       logout,
@@ -244,6 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       updateProfile,
       user,
+      verifyEmailOtp,
     ],
   );
 

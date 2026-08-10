@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
 import { VocabService } from './vocab.service';
@@ -64,6 +64,138 @@ describe('VocabService', () => {
         where: { userId: 'user-id', collectionId: 'collection-id' },
       }),
     );
+  });
+
+  it('normalizes search text and reports another page when entries remain', async () => {
+    prisma.userVocabularyEntry.findMany.mockResolvedValue([entry]);
+    prisma.userVocabularyEntry.count.mockResolvedValue(3);
+
+    await expect(
+      service.list('user-id', {
+        collectionId: 'collection-id',
+        search: '  HEL  ',
+        limit: 1,
+        offset: 1,
+      }),
+    ).resolves.toMatchObject({
+      meta: { limit: 1, offset: 1, total: 3, hasMore: true },
+    });
+    expect(prisma.userVocabularyEntry.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId: 'user-id',
+          collectionId: 'collection-id',
+          normalizedWord: { contains: 'hel' },
+        },
+        take: 1,
+        skip: 1,
+      }),
+    );
+  });
+
+  it('lists non-mastered entries that have no review date or are due', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-24T10:00:00.000Z'));
+    prisma.userVocabularyEntry.findMany.mockResolvedValue([entry]);
+    prisma.userVocabularyEntry.count.mockResolvedValue(1);
+
+    try {
+      await expect(
+        service.listDueReviewWords('user-id', {
+          collectionId: 'collection-id',
+          limit: 20,
+          offset: 3,
+        }),
+      ).resolves.toMatchObject({
+        meta: { limit: 20, offset: 3, total: 1, hasMore: false },
+      });
+      expect(prisma.userVocabularyEntry.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            level: { lt: 7 },
+            OR: [
+              { nextReview: null },
+              { nextReview: { lte: expect.any(Date) as unknown as Date } },
+            ],
+          }) as never,
+          take: 20,
+          skip: 3,
+        }),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('creates a manual entry with normalized optional fields', async () => {
+    prisma.userVocabularyEntry.create.mockResolvedValue(entry);
+
+    await expect(
+      service.create('user-id', {
+        collectionId: 'collection-id',
+        word: '  Hello  ',
+        type: ' noun ',
+        meaningVi: ' ',
+        level: 3,
+        wrongCount: 2,
+      }),
+    ).resolves.toBe(entry);
+    expect(prisma.userVocabularyEntry.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-id',
+        collectionId: 'collection-id',
+        word: 'Hello',
+        normalizedWord: 'hello',
+        source: 'manual',
+        type: 'noun',
+        meaningVi: null,
+        level: 3,
+        wrongCount: 2,
+      }) as never,
+    });
+  });
+
+  it('rejects blank words and collections that do not belong to the user', async () => {
+    await expect(
+      service.create('user-id', { collectionId: 'collection-id', word: '  ' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    prisma.wordCollection.findFirst.mockResolvedValue(null);
+    await expect(
+      service.list('user-id', { collectionId: 'other-collection' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('updates editable manual words but preserves Oxford definitions', async () => {
+    prisma.userVocabularyEntry.findFirst.mockResolvedValue(entry);
+    prisma.userVocabularyEntry.update.mockResolvedValue(entry);
+
+    await service.update('user-id', 'entry-id', {
+      word: '  World ',
+      meaningVi: ' thế giới ',
+      wrongCount: 4,
+    });
+    expect(prisma.userVocabularyEntry.update).toHaveBeenLastCalledWith({
+      where: { id: 'entry-id' },
+      data: {
+        word: 'World',
+        normalizedWord: 'world',
+        meaningVi: 'thế giới',
+        wrongCount: 4,
+      },
+    });
+
+    prisma.userVocabularyEntry.findFirst.mockResolvedValue({
+      ...entry,
+      source: 'oxford_3000',
+    });
+    await service.update('user-id', 'entry-id', {
+      word: 'Ignored',
+      band: ' B2 ',
+    });
+    expect(prisma.userVocabularyEntry.update).toHaveBeenLastCalledWith({
+      where: { id: 'entry-id' },
+      data: { band: 'B2' },
+    });
   });
 
   it('grades an owned entry from its server-side progress', async () => {

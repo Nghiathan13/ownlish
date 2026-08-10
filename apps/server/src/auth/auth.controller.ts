@@ -22,6 +22,10 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { CompleteEmailOtpProfileDto } from './dto/complete-email-otp-profile.dto';
+import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
+import { VerifyEmailOtpDto } from './dto/verify-email-otp.dto';
+import type { EmailOtpProfileRequiredResponse } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { AuthRequest, AuthResponse } from './types/auth.types';
 
@@ -102,6 +106,53 @@ export class AuthController {
     }
 
     const authResponse = await this.authService.googleLogin(dto);
+
+    return this.setRefreshCookie(response, authResponse);
+  }
+
+  @Post('email-otp/request')
+  @Throttle({
+    default: {
+      limit: env.authRateLimit.limit,
+      ttl: env.authRateLimit.ttlMs,
+    },
+  })
+  requestEmailOtp(@Body() dto: RequestEmailOtpDto) {
+    return this.authService.requestEmailOtp(dto);
+  }
+
+  @Post('email-otp/verify')
+  @Throttle({
+    default: {
+      limit: env.authRateLimit.limit,
+      ttl: env.authRateLimit.ttlMs,
+    },
+  })
+  async verifyEmailOtp(
+    @Body() dto: VerifyEmailOtpDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ClientAuthResponse | EmailOtpProfileRequiredResponse> {
+    const result = await this.authService.verifyEmailOtp(dto);
+
+    if ('status' in result) {
+      return result;
+    }
+
+    return this.setRefreshCookie(response, result);
+  }
+
+  @Post('email-otp/complete-profile')
+  @Throttle({
+    default: {
+      limit: env.authRateLimit.limit,
+      ttl: env.authRateLimit.ttlMs,
+    },
+  })
+  async completeEmailOtpProfile(
+    @Body() dto: CompleteEmailOtpProfileDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ClientAuthResponse> {
+    const authResponse = await this.authService.completeEmailOtpProfile(dto);
 
     return this.setRefreshCookie(response, authResponse);
   }

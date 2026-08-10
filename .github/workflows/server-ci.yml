@@ -71,7 +71,21 @@ jobs:
         id: unit-tests
         run: |
           mkdir -p test-results
-          pnpm test --json --outputFile=test-results/jest-unit.json
+          pnpm test:cov --json --outputFile=test-results/jest-unit.json
+
+      - name: Publish coverage summary
+        if: always()
+        working-directory: .
+        run: node scripts/testing/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage-report
+          path: apps/server/coverage
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Run e2e tests
         id: e2e-tests
