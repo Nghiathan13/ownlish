@@ -1,0 +1,19 @@
+www.ownlish.com {
+	redir https://ownlish.com{uri} permanent
+}
+
+ownlish.com {
+	reverse_proxy ownlish-production-web:3000
+}
+
+api.ownlish.com {
+	reverse_proxy ownlish-production-server:3001
+}
+
+staging.ownlish.com {
+	reverse_proxy ownlish-staging-web:3000
+}
+
+api.staging.ownlish.com {
+	reverse_proxy ownlish-staging-server:3001
+}

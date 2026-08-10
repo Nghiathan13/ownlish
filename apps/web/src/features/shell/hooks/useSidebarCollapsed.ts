@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "engvocab.sidebar.collapsed";
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "ownlish.sidebar.collapsed";
 
 const sidebarCollapsedListeners = new Set<() => void>();
 

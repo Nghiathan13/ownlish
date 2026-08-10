@@ -6,7 +6,7 @@ describe("extractRefreshTokenFromResponse", () => {
     const response = new Response(null, {
       headers: {
         "set-cookie":
-          "engvocab.refreshToken=token-value; Path=/auth; HttpOnly; Secure; SameSite=None",
+          "ownlish.refreshToken=token-value; Path=/auth; HttpOnly; Secure; SameSite=None",
       },
     });
 
@@ -16,7 +16,7 @@ describe("extractRefreshTokenFromResponse", () => {
   it("decodes encoded refresh token values", () => {
     const response = new Response(null, {
       headers: {
-        "set-cookie": "engvocab.refreshToken=abc%2F123; Path=/auth; HttpOnly",
+        "set-cookie": "ownlish.refreshToken=abc%2F123; Path=/auth; HttpOnly",
       },
     });
 

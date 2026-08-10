@@ -1,0 +1,8 @@
+[Unit]
+Description=Ownlish weekly PostgreSQL backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/ownlish/current/infra/scripts/backup-postgres.sh weekly

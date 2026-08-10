@@ -38,7 +38,7 @@ describe('buildToeicCatalog', () => {
   });
 
   it('builds a partial manifest and grading index from valid part JSON', () => {
-    const root = mkdtempSync(join(tmpdir(), 'engvocab-toeic-'));
+    const root = mkdtempSync(join(tmpdir(), 'ownlish-toeic-'));
     temporaryDirectories.push(root);
     const testDirectory = join(root, 'ets_26', 'test_01');
     mkdirSync(testDirectory, { recursive: true });
@@ -151,7 +151,7 @@ describe('buildToeicCatalog', () => {
   });
 
   it('writes both generated artifacts', () => {
-    const root = mkdtempSync(join(tmpdir(), 'engvocab-toeic-'));
+    const root = mkdtempSync(join(tmpdir(), 'ownlish-toeic-'));
     temporaryDirectories.push(root);
     const testDirectory = join(root, 'ets_26', 'test_01');
     const outputDirectory = join(root, 'out');
@@ -190,7 +190,7 @@ describe('buildToeicCatalog', () => {
   });
 
   it('copies source media while preserving its relative paths', () => {
-    const root = mkdtempSync(join(tmpdir(), 'engvocab-toeic-'));
+    const root = mkdtempSync(join(tmpdir(), 'ownlish-toeic-'));
     temporaryDirectories.push(root);
     const sourceDirectory = join(root, 'source');
     const outputDirectory = join(root, 'out');
@@ -224,7 +224,7 @@ describe('buildToeicCatalog', () => {
   });
 
   it('reports a missing option translation', () => {
-    const root = mkdtempSync(join(tmpdir(), 'engvocab-toeic-'));
+    const root = mkdtempSync(join(tmpdir(), 'ownlish-toeic-'));
     temporaryDirectories.push(root);
     const testDirectory = join(root, 'ets_26', 'test_01');
     mkdirSync(testDirectory, { recursive: true });

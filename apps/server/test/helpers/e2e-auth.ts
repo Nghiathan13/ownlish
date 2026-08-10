@@ -55,6 +55,6 @@ export function getRefreshCookie(
   response: request.Response,
 ): string | undefined {
   return getSetCookieValues(response).find((cookie) =>
-    cookie.startsWith('engvocab.refreshToken='),
+    cookie.startsWith('ownlish.refreshToken='),
   );
 }

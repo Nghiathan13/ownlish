@@ -22,8 +22,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EngVocab",
-  description: "English vocabulary learning app",
+  title: "Ownlish",
+  description: "Make English your own.",
 };
 
 export default function RootLayout({

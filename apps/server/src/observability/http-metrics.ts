@@ -7,14 +7,14 @@ export type HttpMetricAttributes = {
 };
 
 export function createHttpMetricRecorder(meter: Meter) {
-  const requests = meter.createCounter('engvocab.http.server.requests', {
-    description: 'Completed HTTP requests handled by the EngVocab API.',
+  const requests = meter.createCounter('ownlish.http.server.requests', {
+    description: 'Completed HTTP requests handled by the Ownlish API.',
   });
   const duration = meter.createHistogram(
-    'engvocab.http.server.request.duration',
+    'ownlish.http.server.request.duration',
     {
       description:
-        'Completed HTTP request duration handled by the EngVocab API.',
+        'Completed HTTP request duration handled by the Ownlish API.',
       unit: 's',
     },
   );
@@ -26,5 +26,5 @@ export function createHttpMetricRecorder(meter: Meter) {
 }
 
 export const recordHttpMetrics = createHttpMetricRecorder(
-  metrics.getMeter('engvocab-server'),
+  metrics.getMeter('ownlish-server'),
 );

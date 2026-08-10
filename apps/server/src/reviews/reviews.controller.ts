@@ -41,9 +41,7 @@ export class ReviewsController {
     if (source === 'oxford') {
       return 'oxford';
     }
-    throw new BadRequestException(
-      'source must be "collection" or "oxford"',
-    );
+    throw new BadRequestException('source must be "collection" or "oxford"');
   }
 
   @Get('oxford/:band/parts/:part')

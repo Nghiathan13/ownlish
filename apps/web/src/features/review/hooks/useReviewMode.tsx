@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { ReviewMode } from "@/features/review/components/ReviewModeToggle";
 
-const REVIEW_MODE_STORAGE_KEY = "engvocab.reviewMode";
+const REVIEW_MODE_STORAGE_KEY = "ownlish.reviewMode";
 
 type ReviewModeContextValue = {
   isTypingMode: boolean;

@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import {
   existsSync,
   mkdtempSync,
@@ -45,7 +45,7 @@ function listFiles(directory: string): string[] {
 }
 
 async function publishFile(
-  bucket: ReturnType<typeof createClient>['storage'],
+  client: S3Client,
   bucketName: string,
   objectPath: string,
   filePath: string,
@@ -59,33 +59,40 @@ async function publishFile(
         : extension === '.avif'
           ? 'image/avif'
           : 'application/json';
-  const { error } = await bucket
-    .from(bucketName)
-    .upload(objectPath, readFileSync(filePath), {
-      upsert: true,
-      contentType,
-      cacheControl: '0',
-    });
-
-  if (error) {
-    throw new Error(`Cannot upload ${objectPath}: ${error.message}`);
-  }
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucketName,
+      Key: objectPath,
+      Body: readFileSync(filePath),
+      ContentType: contentType,
+      CacheControl: objectPath.endsWith('.json')
+        ? 'no-cache'
+        : 'public, max-age=31536000, immutable',
+    }),
+  );
 }
 
 async function main(): Promise<void> {
   const sourceDirectory = readArgument('--source');
+  const dryRun = process.argv.includes('--dry-run');
   const bucketName = process.argv.includes('--bucket')
     ? readArgument('--bucket')
+    : process.env.R2_CONTENT_BUCKET ??
+      (dryRun ? 'ownlish-content-prod' : requiredEnv('R2_CONTENT_BUCKET'));
+  const prefix = process.argv.includes('--prefix')
+    ? readArgument('--prefix').replace(/^\/+|\/+$/g, '')
     : 'toeic';
-  const dryRun = process.argv.includes('--dry-run');
-  const supabase = dryRun
+  const client = dryRun
     ? null
-    : createClient(
-        requiredEnv('SUPABASE_URL'),
-        requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
-        { auth: { autoRefreshToken: false, persistSession: false } },
-      );
-  const outputDirectory = mkdtempSync(join(tmpdir(), 'engvocab-toeic-'));
+    : new S3Client({
+        region: 'auto',
+        endpoint: requiredEnv('R2_ENDPOINT'),
+        credentials: {
+          accessKeyId: requiredEnv('R2_ACCESS_KEY_ID'),
+          secretAccessKey: requiredEnv('R2_SECRET_ACCESS_KEY'),
+        },
+      });
+  const outputDirectory = mkdtempSync(join(tmpdir(), 'ownlish-toeic-'));
 
   try {
     writeToeicCatalogArtifacts(
@@ -109,18 +116,21 @@ async function main(): Promise<void> {
         '\\',
         '/',
       );
-      const objectPath =
+      const relativeObjectPath =
         relativePath === 'server/grading-index.json'
           ? 'grading-index.json'
           : relativePath;
+      const objectPath = prefix
+        ? `${prefix}/${relativeObjectPath}`
+        : relativeObjectPath;
 
       if (dryRun) {
         console.log(objectPath);
       } else {
-        if (!supabase) {
-          throw new Error('Supabase client is unavailable.');
+        if (!client) {
+          throw new Error('R2 client is unavailable.');
         }
-        await publishFile(supabase.storage, bucketName, objectPath, filePath);
+        await publishFile(client, bucketName, objectPath, filePath);
       }
     }
 

@@ -44,7 +44,7 @@ function ProfileAvatar({
   }
 
   return (
-    // Avatar URLs can be from Google or Supabase Storage and do not use Next image optimization.
+    // Avatar URLs can be from Google or R2 and do not use Next image optimization.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       alt=""

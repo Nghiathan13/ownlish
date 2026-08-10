@@ -1,4 +1,4 @@
-name: CI
+name: Server CI
 
 on:
   pull_request:
@@ -11,24 +11,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/server
 
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: engvocab
-          POSTGRES_PASSWORD: engvocab
-          POSTGRES_DB: engvocab
+          POSTGRES_USER: ownlish
+          POSTGRES_PASSWORD: ownlish
+          POSTGRES_DB: ownlish
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U engvocab -d engvocab"
+          --health-cmd "pg_isready -U ownlish -d ownlish"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://engvocab:engvocab@localhost:5432/engvocab
+      DATABASE_URL: postgresql://ownlish:ownlish@localhost:5432/ownlish
       JWT_SECRET: test-jwt-secret-at-least-32-characters
       PORT: 3001
       CORS_ORIGIN: http://localhost:3000
@@ -48,8 +51,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: .
         run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
 
       - name: Generate Prisma client

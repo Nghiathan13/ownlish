@@ -6,7 +6,7 @@ export function getTestPracticeGroupStorageKey(
   mode: PracticeMode,
   selectedParts: number[],
 ) {
-  return `engvocab.practiceRun.group.${testKey}.${mode}.${normalizeSelectedParts(selectedParts).join(",")}`;
+  return `ownlish.practiceRun.group.${testKey}.${mode}.${normalizeSelectedParts(selectedParts).join(",")}`;
 }
 
 export function readTestPracticeGroupKey(
@@ -44,7 +44,7 @@ export function clearTestPracticeGroupKeys(testKey: string) {
     return;
   }
 
-  const prefix = `engvocab.practiceRun.group.${testKey}.`;
+  const prefix = `ownlish.practiceRun.group.${testKey}.`;
   const keys = Array.from({ length: window.localStorage.length }, (_, index) =>
     window.localStorage.key(index),
   ).filter((key): key is string => key?.startsWith(prefix) ?? false);

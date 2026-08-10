@@ -84,15 +84,15 @@ function requireJson(response, path) {
 }
 
 function getRefreshToken(response) {
-  return response.cookies['engvocab.refreshToken']?.[0]?.value;
+  return response.cookies['ownlish.refreshToken']?.[0]?.value;
 }
 
 function benchmarkEmail(vu) {
-  return `${emailPrefix}${String(vu).padStart(2, '0')}@engvocab.local`;
+  return `${emailPrefix}${String(vu).padStart(2, '0')}@ownlish.local`;
 }
 
 function authUserEmail(vu, iteration) {
-  return `${emailPrefix}${profileName}-${String(vu).padStart(2, '0')}-auth-${String(iteration).padStart(2, '0')}@engvocab.local`;
+  return `${emailPrefix}${profileName}-${String(vu).padStart(2, '0')}-auth-${String(iteration).padStart(2, '0')}@ownlish.local`;
 }
 
 function testKey(iteration) {

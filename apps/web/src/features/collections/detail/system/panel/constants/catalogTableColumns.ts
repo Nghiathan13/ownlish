@@ -18,4 +18,4 @@ export type CatalogToggleableColumnId =
 export type CatalogColumnVisibility = Record<CatalogToggleableColumnId, boolean>;
 
 export const CATALOG_COLUMN_VISIBILITY_STORAGE_KEY =
-  "engvocab:catalog-table-columns";
+  "ownlish:catalog-table-columns";

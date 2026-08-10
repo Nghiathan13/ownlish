@@ -1,6 +1,6 @@
 # API performance baseline
 
-This directory contains a controlled k6 benchmark for EngVocab first-party API flows. It measures backend request duration only; it does not represent browser rendering, Internet latency, or production traffic.
+This directory contains a controlled k6 benchmark for Ownlish first-party API flows. It measures backend request duration only; it does not represent browser rendering, Internet latency, or production traffic.
 
 ## What it measures
 

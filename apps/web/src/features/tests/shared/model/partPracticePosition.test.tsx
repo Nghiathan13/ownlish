@@ -15,7 +15,7 @@ describe("part practice position storage", () => {
     writePartPracticeGroupKey(3, "practice", "ets26-t01-p3-g032-034");
 
     expect(getPartPracticePositionStorageKey(3, "practice")).toBe(
-      "engvocab:part-practice:practice:part:3",
+      "ownlish:part-practice:practice:part:3",
     );
     expect(readPartPracticeGroupKey(3, "practice")).toBe(
       "ets26-t01-p3-g032-034",

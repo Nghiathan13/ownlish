@@ -189,7 +189,7 @@ describe("AuthProvider", () => {
 
     expect(screen.getByText("authenticated:user-a")).toBeInTheDocument();
 
-    const otherTabChannel = new BroadcastChannelMock("engvocab-auth");
+    const otherTabChannel = new BroadcastChannelMock("ownlish-auth");
     await act(async () => {
       otherTabChannel.postMessage({ type: "session-changed" });
       await Promise.resolve();
@@ -221,7 +221,7 @@ describe("AuthProvider", () => {
       await Promise.resolve();
     });
 
-    const otherTabChannel = new BroadcastChannelMock("engvocab-auth");
+    const otherTabChannel = new BroadcastChannelMock("ownlish-auth");
     await act(async () => {
       otherTabChannel.postMessage({ type: "session-signed-out" });
     });

@@ -16,7 +16,7 @@ const MIN_TOP_PANEL_HEIGHT = 30;
 const MAX_TOP_PANEL_HEIGHT = 75;
 const TOP_PANEL_BOTTOM_PADDING_PX = 76;
 const DIVIDER_HEIGHT_PX = 1;
-const SPLIT_PANEL_STORAGE_KEY = "engvocab:dictation-split-top-panel-height";
+const SPLIT_PANEL_STORAGE_KEY = "ownlish:dictation-split-top-panel-height";
 const DRAG_START_THRESHOLD_PX = 6;
 
 type DictationHorizontalSplitLayoutProps = {

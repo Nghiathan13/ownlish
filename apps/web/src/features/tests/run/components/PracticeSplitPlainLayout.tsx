@@ -7,7 +7,7 @@ import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
 const DEFAULT_LEFT_PANEL_WIDTH = 50;
 const MIN_LEFT_PANEL_WIDTH = 30;
 const MAX_LEFT_PANEL_WIDTH = 70;
-const SPLIT_PANEL_STORAGE_KEY = "engvocab:tests-split-left-panel-width";
+const SPLIT_PANEL_STORAGE_KEY = "ownlish:tests-split-left-panel-width";
 const DRAG_START_THRESHOLD_PX = 6;
 
 type PracticeSplitPlainLayoutProps = {

@@ -1,4 +1,4 @@
-export const THEME_STORAGE_KEY = "engvocab-theme";
+export const THEME_STORAGE_KEY = "ownlish-theme";
 
 export type Theme = "dark" | "light" | "system";
 
@@ -45,7 +45,7 @@ export function applyTheme(preference: Theme) {
   document.documentElement.removeAttribute("data-theme");
 }
 
-export const themeInitScript = `(function(){try{var k="engvocab-theme";var s=localStorage.getItem(k);var p=s==="light"||s==="dark"||s==="system"?s:"system";var d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.setAttribute("data-theme","dark");else document.documentElement.removeAttribute("data-theme");}catch(e){}})();`;
+export const themeInitScript = `(function(){try{var k="ownlish-theme";var s=localStorage.getItem(k);var p=s==="light"||s==="dark"||s==="system"?s:"system";var d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.setAttribute("data-theme","dark");else document.documentElement.removeAttribute("data-theme");}catch(e){}})();`;
 
 const themeListeners = new Set<() => void>();
 

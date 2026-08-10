@@ -5,7 +5,7 @@ import { SidebarLocaleToggle } from "./SidebarLocaleToggle";
 
 describe("SidebarLocaleToggle", () => {
   beforeEach(() => {
-    localStorage.removeItem("engvocab-locale");
+    localStorage.removeItem("ownlish-locale");
     document.documentElement.lang = "en";
   });
 
@@ -27,7 +27,7 @@ describe("SidebarLocaleToggle", () => {
   });
 
   it("shows the English tooltip when collapsed in Vietnamese", () => {
-    localStorage.setItem("engvocab-locale", "vi");
+    localStorage.setItem("ownlish-locale", "vi");
     document.documentElement.lang = "vi";
 
     render(

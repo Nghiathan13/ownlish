@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
 import { LocaleProvider } from "@/shared/providers/LocaleProvider";
 
-const STORAGE_KEY = "engvocab:tests-split-left-panel-width";
+const STORAGE_KEY = "ownlish:tests-split-left-panel-width";
 
 function renderLayout() {
   return render(

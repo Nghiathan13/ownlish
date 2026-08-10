@@ -183,7 +183,7 @@ export function AuthForm({
 
         {mode === "login" ? (
           <p className="text-center text-sm text-muted-foreground">
-            {t("auth.newToEngvocab")}{" "}
+            {t("auth.newToOwnlish")}{" "}
             <button
               className="cursor-pointer font-medium text-foreground underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground"
               disabled={isSubmitting}

@@ -1,8 +1,13 @@
+packages:
+  - apps/*
+
 allowBuilds:
   '@nestjs/core': true
   '@prisma/engines': true
   bcrypt: true
-  better-sqlite3: set this to true or false
+  better-sqlite3: false
+  msw: true
   prisma: true
   protobufjs: false
+  sharp: true
   unrs-resolver: true

@@ -147,7 +147,7 @@ export function GuestLanding() {
             href="/"
           >
             <LogoIcon className="size-6 shrink-0" />
-            EngVocab
+            Ownlish
           </Link>
           <div className="flex items-center gap-2">
             {SOCIAL_LINKS.map(({ href, label, Icon, themed }) => (
@@ -171,7 +171,7 @@ export function GuestLanding() {
           className="mx-4 mt-6 border-t border-border sm:mx-16"
         />
         <p className="mt-4 px-8 text-center text-sm text-muted-foreground sm:px-16 sm:text-left">
-          © {new Date().getFullYear()} EngVocab
+          © {new Date().getFullYear()} Ownlish
         </p>
       </footer>
     </div>

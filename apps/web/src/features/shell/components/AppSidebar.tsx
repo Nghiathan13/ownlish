@@ -109,7 +109,7 @@ export function AppSidebar() {
                 className="flex items-center gap-2 pl-2 text-base font-bold hover:opacity-80"
               >
                 <LogoIcon className="size-6 shrink-0" />
-                EngVocab
+                Ownlish
               </Link>
               <button
                 type="button"

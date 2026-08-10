@@ -11,31 +11,27 @@ RUN apt-get update -y \
 
 RUN corepack enable
 
-FROM base AS deps
+FROM base AS build
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/server/package.json ./apps/server/package.json
 
-RUN pnpm install --frozen-lockfile --strict-peer-dependencies=false
+RUN pnpm install --frozen-lockfile --filter ownlish-server...
 
-FROM deps AS build
+COPY apps/server ./apps/server
 
-COPY nest-cli.json tsconfig.json tsconfig.build.json prisma.config.ts ./
-COPY prisma ./prisma
-COPY src ./src
-
-RUN pnpm prisma generate
-RUN pnpm build
-RUN pnpm prune --prod
+RUN pnpm --filter ownlish-server exec prisma generate
+RUN pnpm --filter ownlish-server build
 
 FROM base AS runner
 
 ENV NODE_ENV="production"
 
-COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/prisma.config.ts ./prisma.config.ts
+COPY --from=build /app/apps/server ./apps/server
+
+WORKDIR /app/apps/server
 
 EXPOSE 3001
 

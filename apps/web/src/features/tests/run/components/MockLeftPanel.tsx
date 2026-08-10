@@ -40,7 +40,7 @@ export function MockLeftPanel({
       ) : null}
 
       {showImage && imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs are dynamic
+        // eslint-disable-next-line @next/next/no-img-element -- external catalog URLs are dynamic
         <img
           alt={formatMessage(t("tests.questionImageAlt"), {
             number: group.questionStart,

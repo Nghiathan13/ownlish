@@ -1,8 +1,8 @@
-# EngVocab Web
+# Ownlish Web
 
-EngVocab is a bilingual English-learning web app for vocabulary review, TOEIC
+Ownlish is a bilingual English-learning web app for vocabulary review, TOEIC
 practice, dictation, and learning-activity tracking. This repository contains
-the Next.js client; the companion [EngVocab API](https://github.com/Nghiathan13/engvocab-server)
+the Next.js client; the companion [Ownlish API](../../README.md)
 provides authentication, learning data, test sessions, and catalog management.
 
 ## Product snapshots
@@ -55,16 +55,9 @@ can therefore be empty until its corresponding catalog has been published.
   &nbsp;&nbsp;
   <img src="./docs/tech/tailwindcss.svg" height="42" alt="Tailwind CSS">
   &nbsp;&nbsp;
-  <img src="./docs/tech/supabase.svg" height="42" alt="Supabase">
-  &nbsp;&nbsp;
   <img src="./docs/tech/vitest.svg" height="42" alt="Vitest">
   &nbsp;&nbsp;
   <img src="./docs/tech/playwright.svg" height="42" alt="Playwright">
-  &nbsp;&nbsp;
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/tech/vercel-dark.svg">
-    <img src="./docs/tech/vercel.svg" height="42" alt="Vercel">
-  </picture>
 </p>
 
 ## Tech stack
@@ -82,14 +75,14 @@ can therefore be empty until its corresponding catalog has been published.
 ## Prerequisites
 
 - Node.js 22 and pnpm 11.2.2 (the versions used by CI).
-- A compatible EngVocab API. Local development expects it at
+- A compatible Ownlish API. Local development expects it at
   `http://localhost:3001`, with `http://localhost:3000` allowed by CORS.
 - Docker only when running the isolated browser E2E database.
 
 ## Local development
 
 Set up the API first by following its
-[Local Setup](https://github.com/Nghiathan13/engvocab-server#local-setup).
+[Local Setup](../../README.md#local-setup).
 That starts PostgreSQL, generates Prisma, applies migrations, and runs the API
 on `http://localhost:3001`.
 
@@ -176,7 +169,7 @@ the same-origin auth BFF, creating a vocabulary entry, session restoration
 after reload, and logout. It runs production builds of both Next.js and NestJS
 against a separate PostgreSQL database.
 
-Keep `engvocab-web` and `engvocab-server` as sibling directories, install both
+Keep `ownlish/apps/web` and `ownlish/apps/server` as sibling directories, install both
 repositories' dependencies, then run:
 
 ```bash
@@ -237,7 +230,7 @@ pnpm test:e2e:db:up
 In the sibling API repository, migrate, seed, and start the local API:
 
 ```bash
-export DATABASE_URL=postgresql://engvocab:engvocab@localhost:5434/engvocab_e2e
+export DATABASE_URL=postgresql://ownlish:ownlish@localhost:5434/ownlish_e2e
 export PERFORMANCE_DATABASE_URL="$DATABASE_URL"
 export JWT_SECRET=lighthouse-jwt-secret-at-least-32-characters
 export PORT=3101 CORS_ORIGIN=http://localhost:3100
@@ -249,7 +242,7 @@ pnpm build && pnpm start:prod
 Then, in this repository, set the local API and catalog roots before building:
 
 ```bash
-export LIGHTHOUSE_AUTH_EMAIL=performance-benchmark-vu-01@engvocab.local
+export LIGHTHOUSE_AUTH_EMAIL=performance-benchmark-vu-01@ownlish.local
 export LIGHTHOUSE_AUTH_PASSWORD=performance-benchmark-password
 export NEXT_PUBLIC_API_BASE_URL=http://localhost:3101 AUTH_API_BASE_URL=http://localhost:3101
 export NEXT_PUBLIC_TOEIC_CATALOG_ROOT=http://localhost:3100/toeic
@@ -310,7 +303,7 @@ theme, and immersive study controls. Internal imports use the `@/*` alias.
 
 ```text
 login / register / Google / refresh / logout
-Browser -> same-origin /api/auth/* -> Next.js BFF -> EngVocab API
+Browser -> same-origin /api/auth/* -> Next.js BFF -> Ownlish API
                                       |
                                       +-> first-party refresh cookie on web origin
 
@@ -328,32 +321,25 @@ Browser -> NEXT_PUBLIC_API_BASE_URL with an in-memory Bearer access token
 
 ## Deployment
 
-The typical production topology is:
+Ownlish runs the Next.js application and NestJS API on the VPS behind Caddy:
 
 ```text
-Vercel web client -> NestJS API -> Supabase Postgres
-                                 Supabase Storage (TOEIC and Dictation catalogs/media)
+ownlish.com -> Caddy -> Next.js + NestJS + PostgreSQL
+                         Cloudflare R2 public content/assets
 ```
 
-Set these variables in the Vercel project:
+The VPS production environment file contains:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://<backend-production-url>
-AUTH_API_BASE_URL=https://<backend-production-url>
-NEXT_PUBLIC_TOEIC_CATALOG_ROOT=https://<public-storage-root>/<toeic-prefix>
-NEXT_PUBLIC_DICTATION_CATALOG_ROOT=https://<public-storage-root>/<dictation-prefix>
+NEXT_PUBLIC_API_BASE_URL=https://api.ownlish.com
+AUTH_API_BASE_URL=http://ownlish-production-server:3001
+NEXT_PUBLIC_TOEIC_CATALOG_ROOT=https://content.ownlish.com/toeic
+NEXT_PUBLIC_DICTATION_CATALOG_ROOT=https://content.ownlish.com/dictation
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=<optional-google-web-client-id>
 ```
 
-Configure the API for the deployed web origin:
-
-```env
-CORS_ORIGIN=https://<web-production-url>
-REFRESH_TOKEN_COOKIE_NAME=engvocab.refreshToken
-```
-
-The API repository contains the database, storage, and backend deployment
-details in its [production deployment guide](https://github.com/Nghiathan13/engvocab-server#production-deployment).
+See the repository root [deployment guide](../../README.md#deployment) for
+staging, backups and cutover procedures.
 
 ## Production smoke test
 

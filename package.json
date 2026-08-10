@@ -1,0 +1,13 @@
+{
+  "name": "ownlish",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.2.2",
+  "scripts": {
+    "dev:web": "pnpm --filter ownlish-web dev",
+    "dev:server": "pnpm --filter ownlish-server start:dev",
+    "build": "pnpm --filter ownlish-web build && pnpm --filter ownlish-server build",
+    "lint": "pnpm --filter ownlish-web lint && pnpm --filter ownlish-server lint:check",
+    "test": "pnpm --filter ownlish-web test && pnpm --filter ownlish-server test"
+  }
+}

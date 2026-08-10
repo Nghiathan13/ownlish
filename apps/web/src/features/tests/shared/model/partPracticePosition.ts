@@ -4,7 +4,7 @@ export function getPartPracticePositionStorageKey(
   partNumber: number,
   mode: PracticeMode,
 ) {
-  return `engvocab:part-practice:${mode}:part:${partNumber}`;
+  return `ownlish:part-practice:${mode}:part:${partNumber}`;
 }
 
 export function readPartPracticeGroupKey(

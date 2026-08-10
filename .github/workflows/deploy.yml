@@ -1,0 +1,111 @@
+name: Deploy Ownlish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact commit SHA to deploy to production
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event_name == 'push' && 'staging' || 'production' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'push' && 'staging' || 'production' }}
+    env:
+      DEPLOY_ENVIRONMENT: ${{ github.event_name == 'push' && 'staging' || 'production' }}
+      CHECKOUT_REF: ${{ github.event_name == 'push' && github.sha || inputs.ref }}
+      DATABASE_URL: postgresql://ownlish:ownlish@127.0.0.1:5432/ownlish
+      JWT_SECRET: test-jwt-secret-at-least-32-characters
+
+    steps:
+      - name: Checkout exact release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CHECKOUT_REF }}
+
+      - name: Validate production release reference
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          [[ "$CHECKOUT_REF" =~ ^[0-9a-f]{40}$ ]]
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies=false
+
+      - name: Run release quality gates
+        run: |
+          pnpm lint
+          pnpm test
+          pnpm build
+
+      - name: Prepare SSH
+        env:
+          VPS_DEPLOY_PRIVATE_KEY: ${{ secrets.VPS_DEPLOY_PRIVATE_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_DEPLOY_PRIVATE_KEY" > ~/.ssh/ownlish_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/ownlish_deploy
+
+      - name: Package release
+        id: release
+        run: |
+          release_id=$(git rev-parse HEAD)
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+          tar \
+            --exclude-vcs \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=coverage \
+            --exclude=test-results \
+            --exclude=playwright-report \
+            --exclude=.lighthouseci \
+            --exclude=.lighthouseci-desktop \
+            --exclude=.lighthouseci-authenticated \
+            --exclude=.lighthouseci-authenticated-desktop \
+            --exclude=content \
+            -czf "/tmp/ownlish-$release_id.tar.gz" .
+
+      - name: Transfer and deploy release
+        env:
+          VPS_DEPLOY_HOST: ${{ secrets.VPS_DEPLOY_HOST }}
+          VPS_DEPLOY_PORT: ${{ secrets.VPS_DEPLOY_PORT }}
+          VPS_DEPLOY_USER: ${{ secrets.VPS_DEPLOY_USER }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          target="$VPS_DEPLOY_USER@$VPS_DEPLOY_HOST"
+          ssh_options=(-i ~/.ssh/ownlish_deploy -p "$VPS_DEPLOY_PORT" -o StrictHostKeyChecking=yes)
+          scp "${ssh_options[@]}" "/tmp/ownlish-$RELEASE_ID.tar.gz" "$target:/tmp/ownlish-$RELEASE_ID.tar.gz"
+          ssh "${ssh_options[@]}" "$target" "
+            set -euo pipefail
+            sudo mkdir -p /opt/ownlish/releases/$RELEASE_ID
+            sudo tar -xzf /tmp/ownlish-$RELEASE_ID.tar.gz -C /opt/ownlish/releases/$RELEASE_ID
+            sudo rm -f /tmp/ownlish-$RELEASE_ID.tar.gz
+            sudo bash /opt/ownlish/releases/$RELEASE_ID/infra/scripts/deploy.sh $DEPLOY_ENVIRONMENT $RELEASE_ID
+          "
+
+      - name: Publish deployment summary
+        run: |
+          {
+            echo "## Ownlish deployment"
+            echo
+            echo "- Environment: \`$DEPLOY_ENVIRONMENT\`"
+            echo "- Commit: \`${{ steps.release.outputs.release_id }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

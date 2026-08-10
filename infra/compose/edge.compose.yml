@@ -1,0 +1,25 @@
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: ownlish-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+
+volumes:
+  caddy_data:
+    name: ownlish-caddy-data
+  caddy_config:
+    name: ownlish-caddy-config
+
+networks:
+  edge:
+    external: true
+    name: ownlish-edge
