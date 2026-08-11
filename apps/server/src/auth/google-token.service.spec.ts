@@ -80,6 +80,15 @@ describe('GoogleTokenService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
+  it('rejects an authorization code when Google login is not configured', async () => {
+    env.googleClientSecret = undefined;
+
+    await expect(
+      service.verifyAuthorizationCode('authorization-code'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(mockGetToken).not.toHaveBeenCalled();
+  });
+
   it('returns verified Google claims', async () => {
     mockVerifyIdToken.mockResolvedValue({
       getPayload: () => ({
@@ -111,6 +120,47 @@ describe('GoogleTokenService', () => {
     await expect(service.verifyIdToken('id-token')).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it('rejects claims without a subject or email', async () => {
+    mockVerifyIdToken.mockResolvedValue({
+      getPayload: () => ({
+        sub: 'google-sub',
+        email_verified: true,
+      }),
+    });
+
+    await expect(service.verifyIdToken('id-token')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+  });
+
+  it('rejects ID tokens when the Google client is not configured', async () => {
+    env.googleClientId = undefined;
+
+    await expect(service.verifyIdToken('id-token')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(mockVerifyIdToken).not.toHaveBeenCalled();
+  });
+
+  it('normalizes optional blank Google profile claims to null', async () => {
+    mockVerifyIdToken.mockResolvedValue({
+      getPayload: () => ({
+        sub: 'google-sub',
+        email: 'user@example.com',
+        email_verified: true,
+        name: '   ',
+        picture: '   ',
+      }),
+    });
+
+    await expect(service.verifyIdToken('id-token')).resolves.toEqual({
+      sub: 'google-sub',
+      email: 'user@example.com',
+      name: null,
+      avatarUrl: null,
+    });
   });
 
   it('rejects invalid Google token', async () => {

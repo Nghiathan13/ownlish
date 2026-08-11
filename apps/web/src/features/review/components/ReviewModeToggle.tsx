@@ -21,7 +21,7 @@ function getModeButtonClassName(isActive: boolean) {
   return classNames(
     "inline-flex w-full cursor-pointer flex-col items-center gap-1 rounded-md p-2 text-xs",
     isActive
-      ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+      ? "bg-surface-subtle hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
       : "hover:bg-hover-overlay",
   );
 }
@@ -37,7 +37,7 @@ export function ReviewModeToggle({
   return (
     <div
       className={classNames(
-        "box-border gap-2 rounded-lg border border-border bg-surface p-2 dark:bg-[#000000]",
+        "box-border gap-2 rounded-lg border border-border bg-surface-card p-2",
         isVertical
           ? "flex w-max shrink-0 flex-col self-start"
           : "grid w-full",

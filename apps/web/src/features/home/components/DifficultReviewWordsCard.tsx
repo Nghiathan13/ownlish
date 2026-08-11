@@ -21,7 +21,7 @@ export function DifficultReviewWordsCard({
   const t = useT();
 
   return (
-    <article className="flex h-full min-h-[328px] min-w-[250px] w-full flex-col rounded-2xl border border-border bg-surface p-4 dark:bg-background lg:min-h-0">
+    <article className="flex h-full min-h-[328px] min-w-[250px] w-full flex-col rounded-2xl border border-border bg-surface-card p-4 lg:min-h-0">
       <p className="shrink-0 pb-3 text-left text-base font-semibold leading-6 text-foreground">
         {t("dashboard.difficultWords")}
       </p>
@@ -41,7 +41,7 @@ export function DifficultReviewWordsCard({
           <DifficultTableHeader />
           <div className="mt-2 grid gap-2">
             {Array.from({ length: 6 }, (_, index) => (
-              <div className="h-8 animate-pulse rounded-md bg-muted" key={index} />
+              <div className="h-8 animate-pulse rounded-md bg-muted-background" key={index} />
             ))}
           </div>
         </div>
@@ -87,7 +87,7 @@ function DifficultTableHeader() {
 
   return (
     <div
-      className={`${difficultTableGridClassName} shrink-0 border-t border-b border-border bg-[#f0f0f0] px-2 py-2 text-sm font-medium text-muted-foreground dark:bg-surface`}
+      className={`${difficultTableGridClassName} shrink-0 border-t border-b border-border bg-surface-subtle px-2 py-2 text-sm font-medium text-muted-foreground`}
     >
       <span className="truncate">{t("dashboard.difficultTableWord")}</span>
       <span className="truncate">{t("dashboard.difficultTableCollection")}</span>

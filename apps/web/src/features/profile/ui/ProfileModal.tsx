@@ -37,7 +37,7 @@ function ProfileAvatar({
 
   if (!avatarUrl || failedAvatarUrl === avatarUrl) {
     return (
-      <span className="flex size-28 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <span className="flex size-28 items-center justify-center rounded-full bg-muted-background text-muted-foreground">
         <AccountIcon className="size-16" />
       </span>
     );

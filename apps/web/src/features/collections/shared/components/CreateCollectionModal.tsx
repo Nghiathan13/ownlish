@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession } from "@/features/auth";
 import { CreateCollectionForm } from "@/features/collections/shared/components/CreateCollectionForm";
 import { useCreateCollection } from "@/features/collections/shared/mutations/hooks";
 import { useT } from "@/shared/providers/LocaleProvider";

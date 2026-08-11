@@ -36,6 +36,22 @@ const optionalNumberEnv = (key: string, fallback: number) => {
   return parsedValue;
 };
 
+const optionalNonNegativeIntegerEnv = (key: string, fallback: number) => {
+  const value = process.env[key];
+
+  if (!value) {
+    return fallback;
+  }
+
+  const parsedValue = Number(value);
+
+  if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+    throw new Error(`${key} must be a non-negative integer`);
+  }
+
+  return parsedValue;
+};
+
 const optionalBooleanEnv = (key: string, fallback: boolean) => {
   const value = process.env[key];
 
@@ -77,6 +93,10 @@ const secureRefreshTokenCookie = optionalBooleanEnv(
   'REFRESH_TOKEN_COOKIE_SECURE',
   defaultSecureCookie,
 );
+const emailOtpResendCooldownSeconds =
+  process.env.NODE_ENV === 'test'
+    ? optionalNonNegativeIntegerEnv('EMAIL_OTP_RESEND_COOLDOWN_SECONDS', 60)
+    : 60;
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
@@ -102,9 +122,19 @@ export const env = {
     ttlMs: optionalNumberEnv('AUTH_RATE_LIMIT_TTL_SECONDS', 60) * 1000,
   },
   emailOtp: {
+    mailer: (() => {
+      const value = (process.env.EMAIL_MAILER ?? 'resend').trim().toLowerCase();
+
+      if (value === 'resend' || value === 'outbox') {
+        return value;
+      }
+
+      throw new Error('EMAIL_MAILER must be resend or outbox');
+    })(),
     resendApiKey: process.env.RESEND_API_KEY ?? '',
     from: process.env.EMAIL_FROM ?? 'Ownlish <auth@ownlish.com>',
     pepper: process.env.EMAIL_OTP_PEPPER ?? '',
+    resendCooldownSeconds: emailOtpResendCooldownSeconds,
   },
   toeicGradingIndexUrl: process.env.TOEIC_GRADING_INDEX_URL ?? '',
   r2Endpoint: process.env.R2_ENDPOINT ?? '',

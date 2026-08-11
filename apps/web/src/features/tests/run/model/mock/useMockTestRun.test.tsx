@@ -19,7 +19,7 @@ import { mswServer } from "@/shared/lib/testing/mswServer";
 
 const queryMocks = vi.hoisted(() => ({ useMockRunQuery: vi.fn() }));
 
-vi.mock("@/features/auth/hooks/useAuthSession", () => ({
+vi.mock("@/features/auth", () => ({
   isAuthenticatedStatus: () => true,
   useAuthSession: () => ({ status: "authenticated", user: { id: "user-id" } }),
 }));

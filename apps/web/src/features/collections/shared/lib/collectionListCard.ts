@@ -1,5 +1,5 @@
 export const collectionListCardClassName =
-  "group relative flex flex-col gap-4 rounded-[16px] border border-border bg-surface p-4 hover:border-primary dark:bg-[#000000]";
+  "group relative flex flex-col gap-4 rounded-card border border-border bg-surface-card p-4 hover:border-primary";
 
 export const collectionListCardGridClassName =
   "grid gap-4 px-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] lg:px-16";

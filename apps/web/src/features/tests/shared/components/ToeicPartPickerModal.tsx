@@ -55,7 +55,7 @@ function PartCheckboxOption({
         disabled
           ? "cursor-not-allowed border-border opacity-60"
           : checked
-            ? "cursor-pointer border-foreground bg-muted/40 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+            ? "cursor-pointer border-foreground bg-muted-background/40 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
             : "cursor-pointer border-border hover:bg-hover-overlay",
       )}
       disabled={disabled}
@@ -116,7 +116,7 @@ function ModeToggle({
             className={classNames(
               modeToggleButtonClassName,
               isActive
-                ? "bg-muted text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+                ? "bg-muted-background text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
                 : "bg-transparent text-foreground hover:bg-hover-overlay",
             )}
             key={option.value}

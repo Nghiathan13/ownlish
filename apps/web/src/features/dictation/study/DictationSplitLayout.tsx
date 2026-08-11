@@ -127,7 +127,7 @@ export function DictationSplitLayout({
               aria-label={togglePanelLabel}
               className={classNames(
                 iconOnlyButtonClassName(
-                  "relative size-10 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] [&_svg]:size-6 dark:bg-[#000000]",
+                  "relative size-10 border border-border bg-surface-card hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] [&_svg]:size-6",
                 ),
                 iconButtonGroupClassName,
               )}
@@ -227,7 +227,7 @@ export function DictationSplitLayout({
               aria-label={t("dictation.hideTranscriptPanel")}
               className={classNames(
                 iconOnlyButtonClassName(
-                  "relative size-10 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] [&_svg]:size-6 dark:bg-[#000000]",
+                  "relative size-10 border border-border bg-surface-card hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] [&_svg]:size-6",
                 ),
                 iconButtonGroupClassName,
               )}

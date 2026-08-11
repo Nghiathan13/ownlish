@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import { isAdminUser } from "./isAdminUser";
 
 describe("isAdminUser", () => {
   it("returns false for null user", () => {

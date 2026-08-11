@@ -110,7 +110,7 @@ export function SystemCollectionWordsPanelBody({
 
       {importResultMessage ? (
         <div className="mb-4 shrink-0 px-4">
-          <p className="rounded-lg border border-border bg-muted p-3 text-sm">
+          <p className="rounded-lg border border-border bg-muted-background p-3 text-sm">
             {importResultMessage}
           </p>
         </div>

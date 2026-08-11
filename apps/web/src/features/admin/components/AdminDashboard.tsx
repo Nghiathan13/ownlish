@@ -3,7 +3,7 @@ import { Panel } from "@/shared/ui/Panel";
 
 function AdminPlaceholderCard({ title }: { title: string }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/40 p-4">
+    <div className="rounded-xl border border-border bg-muted-background/40 p-4">
       <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         Coming soon
       </p>

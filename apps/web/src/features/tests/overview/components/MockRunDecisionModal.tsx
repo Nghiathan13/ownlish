@@ -27,7 +27,7 @@ export function MockRunDecisionModal({
 
   return (
     <Modal
-      className="max-w-md gap-0 rounded-[16px] bg-surface p-0 shadow-card dark:border dark:border-border [&>div:first-child]:px-6 [&>div:first-child]:pb-4 [&>div:first-child]:pt-6"
+      className="max-w-md gap-0 rounded-card bg-surface p-0 shadow-card dark:border dark:border-border [&>div:first-child]:px-6 [&>div:first-child]:pb-4 [&>div:first-child]:pt-6"
       description={formatMessage(
         t(isPending ? "tests.mockFinishPendingDescription" : "tests.mockResumeDescription"),
         { parts: parts.join(", ") },

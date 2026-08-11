@@ -44,7 +44,7 @@ export function CollectionCard({
       {isInteractive ? (
         <Link
           aria-label={formatMessage(t("collections.openCollection"), { title })}
-          className="absolute inset-0 rounded-[16px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+          className="absolute inset-0 rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
           href={href!}
         />
       ) : null}

@@ -11,7 +11,13 @@ import { GoogleTokenService } from './google-token.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RefreshSessionsService } from './refresh-sessions.service';
 import { EmailOtpService } from './email-otp.service';
+import { LOGIN_CODE_MAILER } from './login-code-mailer';
+import { OutboxLoginCodeMailer } from './outbox-login-code-mailer';
 import { ResendEmailService } from './resend-email.service';
+import { TestEmailOutboxController } from './test-email-outbox.controller';
+
+const isTestOutboxMailerEnabled =
+  env.emailOtp.mailer === 'outbox' && env.nodeEnv === 'test';
 
 @Module({
   imports: [
@@ -30,7 +36,10 @@ import { ResendEmailService } from './resend-email.service';
       },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [
+    AuthController,
+    ...(isTestOutboxMailerEnabled ? [TestEmailOutboxController] : []),
+  ],
   providers: [
     AuthService,
     GoogleTokenService,
@@ -39,6 +48,13 @@ import { ResendEmailService } from './resend-email.service';
     RefreshSessionsService,
     EmailOtpService,
     ResendEmailService,
+    OutboxLoginCodeMailer,
+    {
+      provide: LOGIN_CODE_MAILER,
+      useExisting: isTestOutboxMailerEnabled
+        ? OutboxLoginCodeMailer
+        : ResendEmailService,
+    },
   ],
   exports: [JwtModule, AdminGuard, JwtAuthGuard],
 })

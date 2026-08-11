@@ -49,7 +49,7 @@ function VocabCardHeader({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border p-1.5 text-foreground transition-colors group-hover:border-[#1F48DA] group-hover:bg-[#1F48DA] group-hover:text-white dark:group-hover:text-foreground">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border p-1.5 text-foreground transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground dark:group-hover:text-foreground">
         <Icon className="size-8" />
       </span>
       <div className="min-w-0">
@@ -88,7 +88,7 @@ function LandingReviewCard() {
                 ({word.type})
               </span>
             </p>
-            <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
+            <span className="rounded-full border border-border bg-muted-background px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
               {word.band}
             </span>
           </div>

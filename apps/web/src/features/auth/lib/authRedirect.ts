@@ -1,4 +1,4 @@
-import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes/dashboard";
 
 export function getSafeAuthRedirectPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {

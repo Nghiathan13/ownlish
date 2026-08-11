@@ -35,8 +35,8 @@ provides authentication, learning data, test sessions, and catalog management.
   word hints, replay/loop controls, playback speed, and keyboard shortcuts.
 - **Responsive application shell:** desktop and mobile navigation, light and
   dark themes, and focused immersive layouts for study sessions.
-- **Authentication:** email/password sign-in and registration, optional Google
-  Sign-In, session restoration, and role-aware admin access.
+- **Authentication:** passwordless email OTP, optional Google Sign-In, session
+  restoration, and role-aware admin access.
 
 System catalogs and TOEIC content are supplied by the API and storage. A screen
 can therefore be empty until its corresponding catalog has been published.
@@ -71,6 +71,25 @@ can therefore be empty until its corresponding catalog has been published.
 | Testing | Vitest 4, React Testing Library, MSW 2, Playwright 1 |
 | Static analysis | ESLint 9 with Next.js Core Web Vitals and TypeScript rules |
 | Package manager | pnpm 11.2.2 |
+
+## Frontend architecture
+
+The web app uses Feature-Sliced Design (FSD) inside `src/`. Next.js App Router
+files live in root `app/` and only adapt framework routes to the FSD layers.
+
+```text
+app/          Next.js pages, layouts, loading states, and route handlers
+src/_app/     global providers, styles, and BFF route-handler logic
+src/_pages/   route-level screens
+src/widgets/  large self-sufficient UI blocks
+src/features/ user-facing interactions
+src/entities/ business-domain data and presentation
+src/shared/   reusable infrastructure and UI
+```
+
+Run `pnpm fsd:check` to validate the FSD layer boundaries.
+See [Web architecture](./docs/architecture.md) for the layer rules and route
+adapter conventions.
 
 ## Prerequisites
 
@@ -148,6 +167,7 @@ put secrets in them.
 | `pnpm lighthouse:assert` | Check route-specific Lighthouse budgets using the median of three runs |
 | `pnpm lighthouse:desktop:assert` | Check route-specific desktop Lighthouse budgets using the median of three runs |
 | `pnpm lint` | Run ESLint |
+| `pnpm fsd:check` | Validate FSD layer boundaries with Steiger |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve an existing production build |
 
@@ -164,13 +184,18 @@ frozen-lockfile install for pushes and pull requests to `main`.
 
 ### Browser E2E
 
-The Playwright golden path covers protected-route redirection, email login via
-the same-origin auth BFF, creating a vocabulary entry, session restoration
-after reload, and logout. It runs production builds of both Next.js and NestJS
-against a separate PostgreSQL database.
+The Playwright suite covers passwordless email OTP auth (API
+`EMAIL_MAILER=outbox`, codes from an in-process outbox, not Resend) and
+vocabulary flows on production builds of Next.js and NestJS against a separate
+PostgreSQL database.
 
-Keep `ownlish/apps/web` and `ownlish/apps/server` as sibling directories, install both
-repositories' dependencies, then run:
+Layout under `e2e/` (see [`e2e/README.md`](./e2e/README.md)):
+
+- `auth/` — one email-OTP lifecycle (signup, refresh, returning login, logout)
+- `vocabulary/` — add word after signup
+- `pages/` — page objects
+- `helpers/` — env, identity, email outbox
+- `fixtures/` — shared Playwright `test` / `expect` (extend here later)
 
 ```bash
 pnpm test:e2e:install

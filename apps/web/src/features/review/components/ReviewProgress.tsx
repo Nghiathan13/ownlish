@@ -19,7 +19,7 @@ export function ReviewProgress({
         aria-valuemax={totalWords}
         aria-valuemin={0}
         aria-valuenow={reviewedCount}
-        className="h-1.5 overflow-hidden rounded-full bg-[#f0f0f0] dark:bg-surface"
+        className="h-1.5 overflow-hidden rounded-full bg-surface-subtle"
         role="progressbar"
       >
         <div

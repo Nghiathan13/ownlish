@@ -97,6 +97,37 @@ describe('AuthController', () => {
     expect(responseMock.cookie).not.toHaveBeenCalled();
   });
 
+  it('sets a refresh cookie when an existing user verifies an email code', async () => {
+    const response = {
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      user: {
+        id: 'user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        role: UserRole.USER,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    };
+    authServiceMock.verifyEmailOtp.mockResolvedValue(response);
+
+    await expect(
+      controller.verifyEmailOtp(
+        { challengeId: 'challenge-id', code: '123456' },
+        responseMock as Response,
+      ),
+    ).resolves.toEqual({
+      accessToken: response.accessToken,
+      user: response.user,
+    });
+    expect(responseMock.cookie).toHaveBeenCalledWith(
+      env.refreshTokenCookie.name,
+      response.refreshToken,
+      expect.objectContaining({ httpOnly: true, path: '/auth' }),
+    );
+  });
+
   it('delegates register to AuthService', async () => {
     const dto = {
       email: 'test@example.com',
@@ -277,6 +308,17 @@ describe('AuthController', () => {
     });
   });
 
+  it('rejects refresh requests without a body or refresh cookie', async () => {
+    await expect(
+      controller.refresh(
+        { headers: {} } as Request,
+        undefined,
+        responseMock as Response,
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(authServiceMock.refresh).not.toHaveBeenCalled();
+  });
+
   it('delegates logout to AuthService', async () => {
     const dto = {
       refreshToken: 'refresh-token',
@@ -296,6 +338,22 @@ describe('AuthController', () => {
       env.refreshTokenCookie.name,
       expect.objectContaining({ path: '/auth' }),
     );
+  });
+
+  it('clears the refresh cookie when logout has no refresh token', async () => {
+    authServiceMock.logout.mockResolvedValue({ success: true });
+
+    await expect(
+      controller.logout(
+        { headers: {} } as Request,
+        undefined,
+        responseMock as Response,
+      ),
+    ).resolves.toEqual({ success: true });
+    expect(authServiceMock.logout).toHaveBeenCalledWith({
+      refreshToken: undefined,
+    });
+    expect(responseMock.clearCookie).toHaveBeenCalled();
   });
 
   it('delegates current user lookup to AuthService', async () => {

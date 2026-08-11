@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession } from "@/features/auth";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
 import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import {
@@ -124,7 +124,7 @@ export function MobileTopNav() {
           isAtTop ? "top-4 mt-4" : "top-2 mt-0",
         )}
       >
-        <div className="pointer-events-auto flex items-center justify-between rounded-[16px] border border-border bg-surface p-2">
+        <div className="pointer-events-auto flex items-center justify-between rounded-card border border-border bg-surface p-2">
           <Link
             aria-label="Ownlish"
             className="flex items-center px-2 hover:opacity-80"

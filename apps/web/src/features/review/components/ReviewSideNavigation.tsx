@@ -191,7 +191,7 @@ export function ReviewSideNavigation({
         {loading ? (
           <div
             aria-label={`Loading ${ariaLabel}`}
-            className="h-10 animate-pulse rounded-lg bg-muted"
+            className="h-10 animate-pulse rounded-lg bg-muted-background"
           />
         ) : hasItems && activeItem ? (
           <SelectDropdown
@@ -217,7 +217,7 @@ export function ReviewSideNavigation({
             value={activeItem.id}
           />
         ) : (
-          <p className="rounded-lg border border-border bg-surface px-4 py-2.5 text-center text-sm text-muted-foreground dark:bg-[#000000]">
+          <p className="rounded-lg border border-border bg-surface-card px-4 py-2.5 text-center text-sm text-muted-foreground">
             {emptyLabel}
           </p>
         )}
@@ -226,7 +226,7 @@ export function ReviewSideNavigation({
       <nav
         aria-label={ariaLabel}
         className={classNames(
-          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface p-1 dark:bg-[#000000] @min-[1216px]/review-row:sticky @min-[1216px]/review-row:top-4 @min-[1216px]/review-row:flex @min-[1216px]/review-row:self-start",
+          "relative hidden max-h-[480px] w-full shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface-card p-1 @min-[1216px]/review-row:sticky @min-[1216px]/review-row:top-4 @min-[1216px]/review-row:flex @min-[1216px]/review-row:self-start",
           widthClassName,
         )}
         onMouseEnter={() => setIsHovering(true)}
@@ -250,7 +250,7 @@ export function ReviewSideNavigation({
             ? Array.from({ length: 4 }, (_, index) => (
                 <div
                   aria-label={`Loading ${ariaLabel}`}
-                  className="h-8 animate-pulse rounded-md bg-muted"
+                  className="h-8 animate-pulse rounded-md bg-muted-background"
                   key={index}
                 />
               ))
@@ -261,7 +261,7 @@ export function ReviewSideNavigation({
                     className={classNames(
                       "block rounded-md px-3 py-2 text-left text-base font-normal text-foreground",
                       item.isActive
-                        ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+                        ? "bg-surface-subtle hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
                         : "hover:bg-hover-overlay",
                     )}
                     href={item.href}

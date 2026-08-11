@@ -2,7 +2,7 @@
 
 import { Suspense, use, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { RequireAuth } from "@/features/auth/components/RequireAuth";
+import { RequireAuth } from "@/features/auth";
 import { MockRunView } from "@/features/tests/run/ui/mock/MockRunView";
 import { PracticeRunView } from "@/features/tests/run/components/PracticeRunView";
 import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";

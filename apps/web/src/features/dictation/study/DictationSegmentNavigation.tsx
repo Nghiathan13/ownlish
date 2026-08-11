@@ -7,7 +7,7 @@ import { getDictationProgress, getDictationThumbnailUrl } from "@/entities/dicta
 import type { DictationCatalogVideo, DictationSegment } from "@/entities/dictation/model/types";
 import { getDictationProgressQueryKey } from "@/entities/dictation/model/queries";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession } from "@/features/auth";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
@@ -189,7 +189,7 @@ export function DictationSegmentNavigation({
 
   return (
     <aside
-      className="relative flex h-full min-h-0 w-full shrink-0 flex-col bg-surface dark:bg-[#000000]"
+      className="relative flex h-full min-h-0 w-full shrink-0 flex-col bg-surface-card"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => {
         if (!isDragging) setIsHovering(false);
@@ -249,7 +249,7 @@ export function DictationSegmentNavigation({
                 aria-hidden
                 className={classNames(
                   "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-100 ease-in-out",
-                  isFollowVideoEnabled ? "bg-foreground" : "bg-neutral-300 dark:bg-neutral-600",
+                  isFollowVideoEnabled ? "bg-foreground" : "bg-control-inactive",
                 )}
               >
                 <span
@@ -267,7 +267,7 @@ export function DictationSegmentNavigation({
               </span>
               <span className="font-semibold text-foreground">{completionPercentage}%</span>
             </div>
-            <div className="mt-2 h-1 overflow-hidden rounded-full bg-[#f0f0f0] dark:bg-surface">
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-subtle">
               <div
                 className="h-full rounded-full bg-foreground"
                 style={{ width: `${completionPercentage}%` }}
@@ -358,7 +358,7 @@ export function DictationSegmentNavigation({
             {videos.map((video, index) => (
               <Link
                 className={classNames(
-                  "group flex h-[140px] min-w-0 overflow-hidden rounded-lg border bg-surface dark:bg-[#000000]",
+                  "group flex h-[140px] min-w-0 overflow-hidden rounded-lg border bg-surface-card",
                   video.id === activeVideoId
                     ? "border-primary"
                     : "border-transparent hover:border-primary focus-visible:border-primary focus-visible:outline-none",
@@ -375,7 +375,7 @@ export function DictationSegmentNavigation({
                     loading="lazy"
                     src={getDictationThumbnailUrl(video.youtubeVideoId)}
                   />
-                  <span className="absolute right-2 bottom-2 inline-flex items-center gap-0.5 rounded bg-[#f0f0f0] px-1 py-0.5 text-xs font-medium tabular-nums text-foreground dark:bg-surface">
+                  <span className="absolute right-2 bottom-2 inline-flex items-center gap-0.5 rounded bg-surface-subtle px-1 py-0.5 text-xs font-medium tabular-nums text-foreground">
                     {video.category === "Music" ? <MusicIcon className="size-3.5" /> : null}
                     {formatDuration(video.durationSeconds)}
                   </span>

@@ -195,7 +195,7 @@ export function AudioPlayer({
 
       <input
         aria-label="Audio progress"
-        className="mt-1 block h-1 w-full cursor-pointer appearance-none rounded-full bg-[#f0f0f0] accent-primary [--audio-track:#f0f0f0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:[&::-moz-range-thumb]:size-3 hover:[&::-webkit-slider-thumb]:size-3 dark:bg-background dark:[--audio-track:var(--background)] [&::-moz-range-thumb]:size-2 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-webkit-slider-thumb]:size-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+        className="mt-1 block h-1 w-full cursor-pointer appearance-none rounded-full bg-surface-subtle accent-primary [--audio-track:var(--surface-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:[&::-moz-range-thumb]:size-3 hover:[&::-webkit-slider-thumb]:size-3 dark:bg-background dark:[--audio-track:var(--background)] [&::-moz-range-thumb]:size-2 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary [&::-webkit-slider-thumb]:size-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
         max={duration || 0}
         min="0"
         onChange={(event) => seek(Number(event.target.value))}
@@ -280,7 +280,7 @@ export function AudioPlayer({
                   aria-selected={playbackRate === rate}
                   className={classNames(
                     "cursor-pointer rounded-lg px-2 py-1.5 text-sm tabular-nums hover:bg-hover-overlay",
-                    playbackRate === rate && "bg-muted",
+                    playbackRate === rate && "bg-muted-background",
                   )}
                   key={rate}
                   onClick={() => {

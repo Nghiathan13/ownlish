@@ -135,7 +135,7 @@ export function PracticeLeftPanel({
       ) : null}
 
       {mediaError ? (
-        <p className="text-base text-red-600">{mediaError}</p>
+        <p className="text-base text-danger">{mediaError}</p>
       ) : null}
     </>
   );

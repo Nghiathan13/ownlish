@@ -56,11 +56,11 @@ export function GuestLanding() {
       <section className="relative isolate">
         <div
           aria-hidden
-          className="pointer-events-none absolute top-0 left-0 aspect-square w-1/2 max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1F48DA] blur-[10vw]"
+          className="pointer-events-none absolute top-0 left-0 aspect-square w-1/2 max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary blur-[10vw]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-[#1F48DA] blur-[10vw]"
+          className="pointer-events-none absolute right-0 bottom-0 aspect-square w-1/2 max-w-xl translate-x-1/2 translate-y-1/2 rounded-full bg-primary blur-[10vw]"
         />
         <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center sm:px-16 lg:py-24">
           <div className="flex items-center gap-3 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium uppercase text-muted-foreground">
@@ -120,7 +120,7 @@ export function GuestLanding() {
               <Link
                 href="/login"
                 className={iconTextButtonClassName(
-                  "border-[#1F48DA] bg-[#1F48DA] text-white hover:[box-shadow:inset_0_0_0_9999px_rgba(255,255,255,0.12)]",
+                  "border-primary bg-primary text-primary-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]",
                 )}
               >
                 {t("landing.getStarted")}

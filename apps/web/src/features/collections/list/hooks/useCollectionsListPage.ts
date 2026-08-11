@@ -8,7 +8,7 @@ import {
   getDefaultUserCollection,
   type CollectionCategory,
 } from "@/entities/collection/lib/collectionDisplay";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import {
   useDeleteCollection,

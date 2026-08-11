@@ -5,7 +5,7 @@ import { userCollectionCardGridClassName } from "@/features/collections/shared/l
 const SKELETON_CARD_COUNT = 6;
 
 function CollectionCardSkeleton() {
-  return <Skeleton className="min-h-45 w-full rounded-[16px]" />;
+  return <Skeleton className="min-h-45 w-full rounded-card" />;
 }
 
 export function CollectionsGridSkeleton() {

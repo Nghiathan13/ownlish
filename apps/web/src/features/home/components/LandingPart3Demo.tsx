@@ -100,7 +100,7 @@ export function LandingPart3Demo() {
       <div className="mx-auto grid w-full max-w-6xl gap-6 rounded-2xl border border-border bg-surface p-5 lg:grid-cols-2 lg:gap-8 lg:p-8">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className="rounded-full border border-border bg-muted-background px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {demo.label}
             </span>
             <span className="text-sm text-muted-foreground">{demo.source}</span>

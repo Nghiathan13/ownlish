@@ -37,7 +37,11 @@ describe('env', () => {
 
   it('uses the secure cookie defaults in production', () => {
     jest.resetModules();
-    setRequiredEnv({ NODE_ENV: 'production' });
+    setRequiredEnv({
+      NODE_ENV: 'production',
+      REFRESH_TOKEN_COOKIE_SECURE: '',
+      REFRESH_TOKEN_COOKIE_SAME_SITE: '',
+    });
 
     jest.isolateModules(() => {
       const { env } = jest.requireActual<typeof import('./env')>('./env');

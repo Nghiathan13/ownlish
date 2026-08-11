@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   isLoadingStatus,
   useAuthSession,
-} from "@/features/auth/hooks/useAuthSession";
+} from "@/features/auth";
 import { classNames } from "@/shared/lib/classNames";
 import { useLocale, useT } from "@/shared/providers/LocaleProvider";
 import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";
@@ -90,7 +90,7 @@ export function GuestTopNav() {
         isAtTop ? "top-4 mt-4 sm:top-8 sm:mt-8" : "top-2 mt-0 sm:top-4",
       )}
     >
-      <div className="pointer-events-auto flex items-center justify-between rounded-[16px] border border-border bg-surface p-2">
+      <div className="pointer-events-auto flex items-center justify-between rounded-card border border-border bg-surface p-2">
         <Link
           aria-label="Ownlish"
           className="flex items-center gap-2 px-2 text-base font-bold hover:opacity-80"

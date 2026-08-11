@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { isAuthenticatedStatus, useAuthSession } from "@/features/auth";
 import { useMockTestHistory } from "@/features/tests/overview/hooks/useMockTestHistory";
 import { areAllPartsSelected } from "@/features/tests/shared/lib/toeicParts";
 import { testOverviewCardClassName } from "@/features/tests/overview/lib/testOverviewCard";
@@ -96,7 +96,7 @@ export function MockTestHistoryPanel({
                     className={classNames(
                       "inline-flex flex-1 shrink-0 cursor-pointer items-center justify-center rounded-[4px] px-2 py-1 text-[15px] leading-[20px] font-normal",
                       isActive
-                        ? "bg-muted text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+                        ? "bg-muted-background text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
                         : "bg-transparent text-foreground hover:bg-hover-overlay",
                     )}
                     key={option.value}

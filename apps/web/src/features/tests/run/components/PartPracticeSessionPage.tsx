@@ -2,7 +2,7 @@
 
 import { Suspense, use } from "react";
 import { useSearchParams } from "next/navigation";
-import { RequireAuth } from "@/features/auth/components/RequireAuth";
+import { RequireAuth } from "@/features/auth";
 import { PartPracticeRunView } from "@/features/tests/run/components/PartPracticeRunView";
 import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
 import {

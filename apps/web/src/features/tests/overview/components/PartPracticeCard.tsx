@@ -75,7 +75,7 @@ export function PartPracticeCard({
               "relative bg-transparent",
               statusColorClasses.danger.text,
               statusColorClasses.danger.backgroundHover,
-              "disabled:opacity-60 disabled:hover:bg-muted",
+              "disabled:opacity-60 disabled:hover:bg-muted-background",
             )}
             disabled={isClearingHistory || isStarting || wrong === 0}
             onClick={onReviewWrong}

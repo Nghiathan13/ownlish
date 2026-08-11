@@ -12,7 +12,7 @@ import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRu
 import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
 import { toAnswerMap } from "@/entities/toeic-runtime/model/answerState";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth";
 import {
   getFirstTestPartGroupKey,
   preloadCatalogGroupMedia,

@@ -19,7 +19,7 @@ export function SystemCollectionImportButton({
     "w-full border-border bg-transparent text-foreground hover:bg-hover-overlay",
   );
   const disabledClassName = iconTextButtonClassName(
-    "w-full border-border bg-muted text-muted-foreground",
+    "w-full border-border bg-muted-background text-muted-foreground",
   );
 
   if (isDisabled) {

@@ -86,7 +86,7 @@ export function TestCard({
               "relative bg-transparent",
               statusColorClasses.danger.text,
               statusColorClasses.danger.backgroundHover,
-              "disabled:opacity-60 disabled:hover:bg-muted",
+              "disabled:opacity-60 disabled:hover:bg-muted-background",
               iconButtonGroupClassName,
             )}
             disabled={isClearingHistory || testWrongCount === 0}

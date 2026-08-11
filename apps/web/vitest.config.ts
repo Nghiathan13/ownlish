@@ -10,8 +10,8 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/**/*.d.ts"],
+      include: ["src/**/*.{ts,tsx}", "app/**/*.{ts,tsx}"],
+      exclude: ["**/*.test.{ts,tsx}", "**/*.d.ts"],
       reporter: ["text", "json-summary", "lcov", "html"],
       reportsDirectory: "./coverage",
     },
@@ -20,7 +20,7 @@ export default defineConfig({
         extends: true,
         test: {
           environment: "node",
-          include: ["src/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "app/**/*.test.ts", "scripts/**/*.test.mjs"],
           name: "unit",
         },
       },
@@ -33,7 +33,7 @@ export default defineConfig({
               url: "http://localhost:3000",
             },
           },
-          include: ["src/**/*.test.tsx"],
+          include: ["src/**/*.test.tsx", "app/**/*.test.tsx"],
           name: "component",
           setupFiles: ["./src/shared/lib/testing/setupComponentTests.ts"],
         },

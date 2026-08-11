@@ -27,7 +27,7 @@ import { getDictationCategoryPath } from "@/entities/dictation/model/categoryPat
 import type { DictationProgress, DictationSegment } from "@/entities/dictation/model/types";
 import { useDictationCatalogQuery } from "@/entities/dictation/model/useDictationCatalogQuery";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession } from "@/features/auth";
 import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
 import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { classNames } from "@/shared/lib/classNames";
@@ -59,10 +59,10 @@ import { SEGMENT_END_TOLERANCE_MS } from "./lib/segmentPlayback";
 import { YouTubeSegmentPlayer } from "./YouTubeSegmentPlayer";
 
 const dictationBackButtonClassName = iconTextButtonClassName(
-  "w-fit shrink-0 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:bg-[#000000]",
+  "w-fit shrink-0 border border-border bg-surface-card hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
 );
 const dictationBackIconButtonClassName = iconOnlyButtonClassName(
-  "size-10 border border-border bg-surface hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] [&_svg]:size-5 dark:bg-[#000000]",
+  "size-10 border border-border bg-surface-card hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] [&_svg]:size-5",
 );
 const EMPTY_SEGMENTS: DictationSegment[] = [];
 const EMPTY_HINTED_WORD_INDEXES: number[] = [];
@@ -89,7 +89,7 @@ function getBadgeClassName(state: DictationBadgeState) {
     case "red":
       return "relative rounded-lg border border-danger-border bg-danger-background px-3.5 py-2.5 text-xl leading-none tracking-wider text-danger";
     default:
-      return "relative rounded-lg border border-border bg-[#f0f0f0] px-3.5 py-2.5 text-xl leading-none tracking-wider text-muted-foreground dark:bg-surface";
+      return "relative rounded-lg border border-border bg-surface-subtle px-3.5 py-2.5 text-xl leading-none tracking-wider text-muted-foreground";
   }
 }
 
@@ -307,7 +307,7 @@ function DictationCollapsedPlayerControls({
           aria-label="Seek video"
           className={classNames(
             "group/timeline relative block h-1 w-full cursor-pointer rounded-full hover:-my-px hover:h-[6px] disabled:cursor-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-            "bg-[#f0f0f0] [--timeline-hover:rgb(0_0_0)] [--timeline-hover-start:35%] [--timeline-hover-end:20%] dark:bg-surface dark:[--timeline-hover:rgb(255_255_255)] dark:[--timeline-hover-start:70%] dark:[--timeline-hover-end:40%]",
+            "bg-surface-subtle [--timeline-hover:rgb(0_0_0)] [--timeline-hover-start:35%] [--timeline-hover-end:20%] dark:[--timeline-hover:rgb(255_255_255)] dark:[--timeline-hover-start:70%] dark:[--timeline-hover-end:40%]",
           )}
           disabled={timeline.duration <= 0}
           onClick={(event) => {
@@ -1169,13 +1169,13 @@ export function DictationStudy({ videoId }: { videoId: string }) {
                     <div className="hidden flex-wrap items-center justify-end gap-3 lg:flex">
                       <span className="inline-flex items-center gap-1.5">
                         <span>{t("dictation.replay")}</span>
-                        <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-[#f0f0f0] px-1 text-[11px] font-medium text-foreground dark:bg-surface">
+                        <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-surface-subtle px-1 text-[11px] font-medium text-foreground">
                           Ctrl
                         </kbd>
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <span>{t("dictation.nextSegment")}</span>
-                        <kbd className="inline-flex h-5 items-center justify-center rounded border border-border bg-[#f0f0f0] px-1 text-[11px] font-medium text-foreground dark:bg-surface">
+                        <kbd className="inline-flex h-5 items-center justify-center rounded border border-border bg-surface-subtle px-1 text-[11px] font-medium text-foreground">
                           Shift + Enter
                         </kbd>
                       </span>
@@ -1190,7 +1190,7 @@ export function DictationStudy({ videoId }: { videoId: string }) {
                   <input
                   autoComplete="off"
                   className={classNames(
-                    "w-full rounded-lg border border-border bg-surface px-4 py-3 text-base outline-none placeholder:text-muted-foreground focus:border-primary dark:bg-[#000000]",
+                    "w-full rounded-lg border border-border bg-surface-card px-4 py-3 text-base outline-none placeholder:text-muted-foreground focus:border-primary",
                     isSegmentAnswered
                       ? "cursor-default text-success"
                       : "text-foreground",

@@ -64,6 +64,10 @@ export default defineConfig({
         REFRESH_TOKEN_COOKIE_SECURE: "false",
         REFRESH_TOKEN_COOKIE_SAME_SITE: "lax",
         GOOGLE_CLIENT_ID: "",
+        EMAIL_MAILER: "outbox",
+        EMAIL_OTP_PEPPER: "playwright-e2e-email-otp-pepper-32chars!",
+        EMAIL_OTP_RESEND_COOLDOWN_SECONDS: "0",
+        EMAIL_FROM: "Ownlish E2E <auth@ownlish.test>",
       },
     },
     {

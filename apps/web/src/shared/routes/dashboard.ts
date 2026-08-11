@@ -1,0 +1,4 @@
+/** App route constants for the dashboard area (shared — used by multiple features). */
+export const DASHBOARD_ROOT_PATH = "/dashboard";
+export const DASHBOARD_MY_ACTIVITY_PATH = "/dashboard/my-activity";
+export const DASHBOARD_PROGRESS_PATH = "/dashboard/progress";

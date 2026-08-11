@@ -59,7 +59,7 @@ export function MockLeftPanel({
         />
       ) : null}
 
-      {mediaError ? <p className="text-base text-red-600">{mediaError}</p> : null}
+      {mediaError ? <p className="text-base text-danger">{mediaError}</p> : null}
     </div>
   );
 }

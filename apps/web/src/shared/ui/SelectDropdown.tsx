@@ -85,7 +85,7 @@ export function SelectDropdown<T extends string | number>({
             ? "shrink-0 justify-center"
             : "w-full rounded-lg px-3 py-2 text-sm",
           isSelected
-            ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+            ? "bg-surface-subtle hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
             : "hover:bg-hover-overlay",
           optionClassName,
         )}
@@ -110,7 +110,7 @@ export function SelectDropdown<T extends string | number>({
         aria-haspopup="listbox"
         aria-label={`${ariaLabel}: ${selectedLabel}`}
         className={classNames(
-          "flex h-10 w-full cursor-pointer items-center rounded-lg border border-border bg-surface text-left text-sm font-medium text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary dark:bg-[#000000]",
+          "flex h-10 w-full cursor-pointer items-center rounded-lg border border-border bg-surface-card text-left text-sm font-medium text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
           hideIcon ? "justify-center px-3" : "justify-between gap-3 px-4",
           triggerClassName,
         )}
@@ -129,7 +129,7 @@ export function SelectDropdown<T extends string | number>({
         <div
           aria-label={ariaLabel}
           className={classNames(
-            "absolute z-20 rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]",
+            "absolute z-20 rounded-lg border border-border bg-surface-card p-1",
             menuAlign === "left" ? "left-0" : "right-0",
             isHorizontal ? "flex w-max flex-row gap-1" : "min-w-full w-max",
             menuPlacement === "top"

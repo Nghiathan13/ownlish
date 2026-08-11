@@ -109,8 +109,8 @@ export function VocabWordFormFields({
                     className={classNames(
                       "h-10 cursor-pointer rounded-lg border text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] disabled:cursor-default",
                       isSelected
-                        ? "border-foreground bg-muted text-foreground"
-                        : "border-border bg-surface text-foreground dark:bg-[#000000]",
+                        ? "border-foreground bg-muted-background text-foreground"
+                        : "border-border bg-surface-card text-foreground",
                     )}
                     disabled={disabled}
                     key={band}

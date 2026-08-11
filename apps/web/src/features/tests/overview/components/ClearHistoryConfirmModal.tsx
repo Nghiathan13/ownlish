@@ -32,7 +32,7 @@ export function ClearHistoryConfirmModal({
 
   return (
     <Modal
-      className="max-w-md gap-0 rounded-[16px] bg-surface p-0 shadow-card dark:border dark:border-border [&>div:first-child]:px-6 [&>div:first-child]:pb-4 [&>div:first-child]:pt-6"
+      className="max-w-md gap-0 rounded-card bg-surface p-0 shadow-card dark:border dark:border-border [&>div:first-child]:px-6 [&>div:first-child]:pb-4 [&>div:first-child]:pt-6"
       description={subtitle}
       onClose={isConfirming ? () => undefined : onClose}
       showCloseButton={false}
@@ -52,7 +52,7 @@ export function ClearHistoryConfirmModal({
         </button>
         <button
           className={textButtonClassName(
-            "flex-1 border-red-700 bg-red-700 text-white hover:border-red-700 hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)] dark:border-red-500 dark:bg-red-500 dark:hover:border-red-500",
+            "flex-1 border-danger bg-danger text-danger-foreground hover:border-danger hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)] ",
           )}
           disabled={isConfirming}
           onClick={onConfirm}

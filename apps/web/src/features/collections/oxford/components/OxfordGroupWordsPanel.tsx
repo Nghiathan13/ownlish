@@ -194,7 +194,7 @@ export function OxfordGroupWordsPanel({
       </div>
 
       {resultMessage ? (
-        <p className="mx-4 mb-4 rounded-lg bg-muted p-3 text-sm sm:mx-16">
+        <p className="mx-4 mb-4 rounded-lg bg-muted-background p-3 text-sm sm:mx-16">
           {resultMessage}
         </p>
       ) : null}

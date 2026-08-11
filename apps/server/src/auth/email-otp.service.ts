@@ -1,6 +1,7 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -9,11 +10,10 @@ import { Prisma } from '@prisma/client';
 import { createHmac, randomBytes, randomInt } from 'node:crypto';
 import { env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
-import { ResendEmailService } from './resend-email.service';
+import { LOGIN_CODE_MAILER, type LoginCodeMailer } from './login-code-mailer';
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const ENROLLMENT_TTL_MS = 10 * 60 * 1000;
-const RESEND_COOLDOWN_MS = 60 * 1000;
 const SEND_WINDOW_MS = 15 * 60 * 1000;
 const MAX_SENDS_PER_WINDOW = 3;
 const MAX_ATTEMPTS = 5;
@@ -31,8 +31,13 @@ type OtpVerificationResult =
 export class EmailOtpService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly resendEmailService: ResendEmailService,
+    @Inject(LOGIN_CODE_MAILER)
+    private readonly loginCodeMailer: LoginCodeMailer,
   ) {}
+
+  private resendCooldownMs(): number {
+    return env.emailOtp.resendCooldownSeconds * 1000;
+  }
 
   async request(emailInput: string): Promise<OtpRequestResult> {
     this.requirePepper();
@@ -42,6 +47,7 @@ export class EmailOtpService {
     const code = this.createCode();
     const codeHash = this.hashSecret(code);
     const expiresAt = new Date(now.getTime() + OTP_TTL_MS);
+    const resendCooldownMs = this.resendCooldownMs();
 
     const challenge = await this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw(
@@ -66,7 +72,8 @@ export class EmailOtpService {
 
       if (
         latest &&
-        now.getTime() - latest.lastSentAt.getTime() < RESEND_COOLDOWN_MS
+        resendCooldownMs > 0 &&
+        now.getTime() - latest.lastSentAt.getTime() < resendCooldownMs
       ) {
         return undefined;
       }
@@ -101,7 +108,7 @@ export class EmailOtpService {
     }
 
     try {
-      await this.resendEmailService.sendLoginCode({
+      await this.loginCodeMailer.sendLoginCode({
         email,
         code,
         idempotencyKey: `email-otp:${challenge.id}`,
@@ -117,7 +124,7 @@ export class EmailOtpService {
     return {
       challengeId: challenge.id,
       resendAvailableAt: new Date(
-        now.getTime() + RESEND_COOLDOWN_MS,
+        now.getTime() + resendCooldownMs,
       ).toISOString(),
     };
   }

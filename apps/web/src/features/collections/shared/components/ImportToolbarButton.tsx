@@ -123,7 +123,7 @@ export function ImportToolbarButton({
       {isOpen ? (
         <div
           aria-label={t("collections.importInto")}
-          className="absolute top-[calc(100%+0.5rem)] left-0 z-20 w-max min-w-[12rem] rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]"
+          className="absolute top-[calc(100%+0.5rem)] left-0 z-20 w-max min-w-[12rem] rounded-lg border border-border bg-surface-card p-1"
           id={menuId}
           onMouseEnter={openMenu}
           onMouseLeave={scheduleCloseMenu}

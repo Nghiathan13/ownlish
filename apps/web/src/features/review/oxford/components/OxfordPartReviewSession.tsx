@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { isAuthenticatedStatus, useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { isAuthenticatedStatus, useAuthSession } from "@/features/auth";
 import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
 import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { getOxfordPath, type OxfordBand } from "@/features/collections/oxford/lib/oxfordNavigation";
@@ -87,12 +87,12 @@ export function OxfordPartReviewSession({ band, part }: OxfordPartReviewSessionP
 }
 
 function ReviewLoading() {
-  return <div className="h-[480px] animate-pulse rounded-lg border border-border bg-surface dark:bg-[#000000]" />;
+  return <div className="h-[480px] animate-pulse rounded-lg border border-border bg-surface-card" />;
 }
 
 function ReviewError({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
-    <div className="grid h-[480px] place-items-center rounded-lg border border-border bg-surface p-6 text-center dark:bg-[#000000]">
+    <div className="grid h-[480px] place-items-center rounded-lg border border-border bg-surface-card p-6 text-center">
       <div className="max-w-md">
         <p className="text-sm font-semibold text-danger">Review could not load</p>
         <p className="mt-3 leading-7 text-muted-foreground">{error}</p>
@@ -110,7 +110,7 @@ function ReviewError({ error, onRetry }: { error: string; onRetry: () => void })
 
 function ReviewComplete({ band, part }: OxfordPartReviewSessionProps) {
   return (
-    <div className="grid h-[480px] place-items-center rounded-lg border border-border bg-surface p-6 text-center dark:bg-[#000000]">
+    <div className="grid h-[480px] place-items-center rounded-lg border border-border bg-surface-card p-6 text-center">
       <div className="max-w-md">
         <p className="text-sm font-semibold text-muted-foreground">Part complete</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight">Nice work.</h1>

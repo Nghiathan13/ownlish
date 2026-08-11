@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser, UpdateProfileInput } from "@/entities/auth/types";
-import { isAdminUser } from "@/features/auth/lib/isAdminUser";
+import { isAdminUser } from "@/features/auth";
 import { ProfileModal } from "@/features/profile/ui/ProfileModal";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
@@ -27,7 +27,7 @@ function AdminBadge() {
   const t = useT();
 
   return (
-    <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <span className="rounded-md bg-muted-background px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
       {t("shell.admin")}
     </span>
   );

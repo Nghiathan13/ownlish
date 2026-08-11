@@ -1,8 +1,15 @@
 import type { MessageKey } from "@/shared/i18n/messages";
+import {
+  DASHBOARD_MY_ACTIVITY_PATH,
+  DASHBOARD_PROGRESS_PATH,
+  DASHBOARD_ROOT_PATH,
+} from "@/shared/routes/dashboard";
 
-export const DASHBOARD_ROOT_PATH = "/dashboard";
-export const DASHBOARD_MY_ACTIVITY_PATH = "/dashboard/my-activity";
-export const DASHBOARD_PROGRESS_PATH = "/dashboard/progress";
+export {
+  DASHBOARD_MY_ACTIVITY_PATH,
+  DASHBOARD_PROGRESS_PATH,
+  DASHBOARD_ROOT_PATH,
+};
 
 export type DashboardSection = "activity" | "progress";
 

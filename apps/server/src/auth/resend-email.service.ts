@@ -1,15 +1,10 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { Resend } from 'resend';
 import { env } from '../config/env';
-
-type SendLoginCodeInput = {
-  code: string;
-  email: string;
-  idempotencyKey: string;
-};
+import type { LoginCodeMailer, SendLoginCodeInput } from './login-code-mailer';
 
 @Injectable()
-export class ResendEmailService {
+export class ResendEmailService implements LoginCodeMailer {
   async sendLoginCode({
     code,
     email,

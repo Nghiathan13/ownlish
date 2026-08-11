@@ -299,7 +299,7 @@ export function LearningActivityCalendarCard({
         <h2 className="text-[21px] leading-8 font-semibold text-foreground">
           {t("dashboard.studyActivity")}
         </h2>
-        <article className="mx-auto max-w-full min-w-[250px] rounded-2xl border border-border bg-surface p-4 dark:bg-background">
+        <article className="mx-auto max-w-full min-w-[250px] rounded-2xl border border-border bg-surface-card p-4">
           <div
             aria-label={t("dashboard.activityPeriod")}
             className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2"
@@ -475,7 +475,7 @@ function LearningActivityMetricCard({
   value: number | string;
 }) {
   return (
-    <article className="flex min-w-[250px] flex-1 items-center gap-4 rounded-2xl border border-border bg-surface p-4 dark:bg-background">
+    <article className="flex min-w-[250px] flex-1 items-center gap-4 rounded-2xl border border-border bg-surface-card p-4">
       <span
         className={classNames(
           "inline-flex size-12 shrink-0 items-center justify-center rounded-xl",
@@ -501,7 +501,7 @@ function CalendarSkeleton() {
     <div className="overflow-x-auto pb-2" aria-label="Loading study activity">
       <div className="mx-auto grid w-max max-w-full grid-flow-col grid-rows-7 auto-cols-[1rem] gap-1">
         {Array.from({ length: 189 }, (_, index) => (
-          <span className="size-4 rounded-sm bg-muted" key={index} />
+          <span className="size-4 rounded-sm bg-muted-background" key={index} />
         ))}
       </div>
     </div>

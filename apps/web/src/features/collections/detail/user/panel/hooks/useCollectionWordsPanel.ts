@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type { VocabWord, VocabWordDefinition } from "@/entities/vocab/api/vocab";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth";
 import { useVocabularyTableColumnVisibility } from "@/features/collections/detail/user/panel/hooks/useVocabularyTableColumnVisibility";
 import { useVocabularyWords } from "@/features/collections/detail/user/data/hooks/useVocabularyWords";
 import {

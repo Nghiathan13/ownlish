@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toAnswerMap } from "@/entities/toeic-runtime/model/answerState";
 import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
-import { useAuthSession, isAuthenticatedStatus } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession, isAuthenticatedStatus } from "@/features/auth";
 import { useMockRunQuery } from "@/features/tests/run/model/mock/useMockRunQuery";
 import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRunSubmission";
 import { useMockRunTimer } from "@/features/tests/run/model/mock/useMockRunTimer";

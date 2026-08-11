@@ -20,7 +20,7 @@ import {
 import {
   isAuthenticatedStatus,
   useAuthSession,
-} from "@/features/auth/hooks/useAuthSession";
+} from "@/features/auth";
 import { PageShell } from "@/shared/ui/PageShell";
 import { useToeicCatalogQuery } from "@/entities/toeic-catalog/model/useToeicCatalogQuery";
 import { useT } from "@/shared/providers/LocaleProvider";

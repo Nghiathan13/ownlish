@@ -14,7 +14,7 @@ import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
 import { SelectDropdown } from "@/shared/ui/SelectDropdown";
 
 const paginationSurfaceButtonClassName = iconOnlyButtonClassName(
-  "border border-border bg-surface text-foreground enabled:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)] dark:bg-[#000000]",
+  "border border-border bg-surface-card text-foreground enabled:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
 );
 
 type WordsPaginationProps = {

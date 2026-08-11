@@ -5,7 +5,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { getDictationProgress, getDictationThumbnailUrl } from "@/entities/dictation/api";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
+import { useAuthSession } from "@/features/auth";
 import { getDictationCategoryPath } from "@/entities/dictation/model/categoryPath";
 import { useDictationCatalogQuery } from "@/entities/dictation/model/useDictationCatalogQuery";
 import { getDictationProgressQueryKey } from "@/entities/dictation/model/queries";
@@ -131,7 +131,7 @@ export function DictationLibrary({ category }: { category?: string }) {
 
               return (
                 <Link
-                  className="group block overflow-hidden rounded-lg border border-transparent bg-surface hover:border-primary focus-visible:border-primary focus-visible:outline-none dark:bg-[#000000]"
+                  className="group block overflow-hidden rounded-lg border border-transparent bg-surface-card hover:border-primary focus-visible:border-primary focus-visible:outline-none"
                   href={href}
                   key={video.id}
                 >
@@ -144,7 +144,7 @@ export function DictationLibrary({ category }: { category?: string }) {
                       loading="lazy"
                       src={getDictationThumbnailUrl(video.youtubeVideoId)}
                     />
-                    <span className="absolute right-2 bottom-2 inline-flex items-center gap-0.5 rounded bg-[#f0f0f0] px-1 py-0.5 text-xs font-medium tabular-nums text-foreground dark:bg-surface">
+                    <span className="absolute right-2 bottom-2 inline-flex items-center gap-0.5 rounded bg-surface-subtle px-1 py-0.5 text-xs font-medium tabular-nums text-foreground">
                       {video.category === "Music" ? <MusicIcon className="size-3.5" /> : null}
                       {formatDuration(video.durationSeconds)}
                     </span>

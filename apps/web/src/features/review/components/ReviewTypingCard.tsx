@@ -50,7 +50,7 @@ export function ReviewTypingCard({
     .join(" · ");
 
   return (
-    <article className="flex h-[480px] flex-col rounded-lg border border-border bg-surface p-5 sm:p-8 dark:bg-[#000000]">
+    <article className="flex h-[480px] flex-col rounded-lg border border-border bg-surface-card p-5 sm:p-8">
       <div className="mb-8 shrink-0">
         <ReviewProgress reviewedCount={reviewedCount} totalWords={totalWords} />
         <div className="mt-1 flex justify-end">
@@ -68,7 +68,7 @@ export function ReviewTypingCard({
                 </span>
               ) : null}
               {word.band ? (
-                <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
+                <span className="rounded-full border border-border bg-muted-background px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
                   {word.band}
                 </span>
               ) : null}
@@ -87,7 +87,7 @@ export function ReviewTypingCard({
             "transition-[width] duration-[320ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]",
             "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:rounded-full",
             "after:transition-[background-color] after:duration-[220ms] after:ease-out",
-            typedAnswer ? "after:bg-foreground" : "after:bg-muted",
+            typedAnswer ? "after:bg-foreground" : "after:bg-muted-background",
           )}
           ref={typingFieldRef}
         >

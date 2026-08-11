@@ -29,7 +29,7 @@ export function ReviewCard({
   return (
     <article
       aria-label={showMeaning ? t("review.clickToHide") : t("review.clickToReview")}
-      className="flex h-[480px] cursor-pointer flex-col rounded-lg border border-border bg-surface p-5 sm:p-8 dark:bg-[#000000]"
+      className="flex h-[480px] cursor-pointer flex-col rounded-lg border border-border bg-surface-card p-5 sm:p-8"
       onClick={onToggleMeaning}
     >
       <div className="mb-8 shrink-0">
@@ -51,7 +51,7 @@ export function ReviewCard({
               ) : null}
             </h2>
             {word.band ? (
-              <span className="rounded-full border border-border bg-muted px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
+              <span className="rounded-full border border-border bg-muted-background px-1.5 py-0.5 font-semibold text-muted-foreground text-[10px]">
                 {word.band}
               </span>
             ) : null}

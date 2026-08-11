@@ -101,7 +101,7 @@ export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
 
   return `text-base font-normal text-foreground ${
     isActive
-      ? "bg-[#f0f0f0] hover:[box-shadow:inset_0_0_0_9999px_rgba(0,0,0,0.06)] dark:bg-surface dark:hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
+      ? "bg-surface-subtle hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]"
       : "hover:bg-hover-overlay"
   }`;
 }

@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   useAuthSession: vi.fn(),
 }));
 
-vi.mock("@/features/auth/hooks/useAuthSession", () => ({
+vi.mock("@/features/auth", () => ({
   isLoadingStatus: (status: string) => status === "loading",
   useAuthSession: mocks.useAuthSession,
 }));

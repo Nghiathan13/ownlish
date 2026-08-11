@@ -31,6 +31,18 @@ describe('JwtAuthGuard', () => {
     );
   });
 
+  it.each(['Basic access-token', 'Bearer', ''])(
+    'throws unauthorized for malformed authorization header %p',
+    async (authorization) => {
+      const context = createContext({ headers: { authorization } });
+
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(jwtServiceMock.verifyAsync).not.toHaveBeenCalled();
+    },
+  );
+
   it('throws unauthorized when token is invalid', async () => {
     jwtServiceMock.verifyAsync.mockRejectedValue(new Error('invalid token'));
 

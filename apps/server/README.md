@@ -22,6 +22,14 @@ Start the local PostgreSQL service with:
 docker compose -f apps/server/docker-compose.yml up -d
 ```
 
+### Email OTP mailer
+
+| `EMAIL_MAILER` | Behavior |
+| --- | --- |
+| `resend` (default) | Sends codes through Resend (`RESEND_API_KEY` required) |
+| `outbox` | Stores codes in process memory (E2E / local without Resend). Exposes `GET /auth/test/email-outbox/latest?email=` only when `NODE_ENV` is not `production`. |
+
+Playwright and Nest e2e set `EMAIL_MAILER=outbox` and a test `EMAIL_OTP_PEPPER`.
 ## Storage
 
 R2 is S3-compatible. The API needs R2 credentials only for avatar writes;

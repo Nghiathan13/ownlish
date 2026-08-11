@@ -40,7 +40,7 @@ function EvidenceHighlightSwitch({
       aria-label={t("tests.highlightEvidence")}
       className={classNames(
         "relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        checked ? "bg-foreground" : "bg-neutral-300 dark:bg-neutral-600",
+        checked ? "bg-foreground" : "bg-control-inactive",
       )}
       onClick={() => {
         onCheckedChange(!checked);

@@ -1,0 +1,42 @@
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-border: var(--border);
+  --color-control-inactive: var(--control-inactive);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-background: var(--danger-background);
+  --color-danger-border: var(--danger-border);
+  --color-success: var(--success);
+  --color-success-background: var(--success-background);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-background: var(--warning-background);
+  --color-warning-border: var(--warning-border);
+  --color-streak: var(--streak);
+  --color-streak-background: var(--streak-background);
+  --color-information: var(--information);
+  --color-information-background: var(--information-background);
+  --color-information-border: var(--information-border);
+  --color-focus-ring: var(--focus-ring);
+  --color-foreground: var(--foreground);
+  --color-muted-background: var(--muted-background);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-status-new: var(--status-new);
+  --color-status-new-background: var(--status-new-background);
+  --color-status-new-border: var(--status-new-border);
+  --color-status-mastered: var(--status-mastered);
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-hover-overlay: var(--hover-overlay);
+  --color-hover-overlay-solid: var(--hover-overlay-solid);
+  --radius-card: 16px;
+  --shadow-card: var(--shadow-card);
+  --shadow-card-up: var(--shadow-card-up);
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+}

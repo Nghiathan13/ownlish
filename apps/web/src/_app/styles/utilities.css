@@ -1,0 +1,11 @@
+/* Hide native scrollbar; OverlayScrollArea draws an overlay thumb. */
+.overlay-scroll-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.overlay-scroll-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

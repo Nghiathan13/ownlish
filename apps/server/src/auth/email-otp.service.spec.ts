@@ -68,6 +68,34 @@ describe('EmailOtpService', () => {
     expect(emailSender.sendLoginCode).not.toHaveBeenCalled();
   });
 
+  it('rejects requests after three sends in fifteen minutes', async () => {
+    transactionClient.emailOtpChallenge.count.mockResolvedValue(3);
+
+    await expect(service.request('test@example.com')).rejects.toMatchObject({
+      status: HttpStatus.TOO_MANY_REQUESTS,
+    });
+    expect(emailSender.sendLoginCode).not.toHaveBeenCalled();
+  });
+
+  it('consumes a challenge when sending the email fails', async () => {
+    transactionClient.emailOtpChallenge.count.mockResolvedValue(0);
+    transactionClient.emailOtpChallenge.findFirst.mockResolvedValue(null);
+    transactionClient.emailOtpChallenge.updateMany.mockResolvedValue({
+      count: 0,
+    });
+    transactionClient.emailOtpChallenge.create.mockResolvedValue({
+      id: 'challenge-id',
+    });
+    emailSender.sendLoginCode.mockRejectedValue(
+      new Error('mailer unavailable'),
+    );
+
+    await expect(service.request('test@example.com')).rejects.toThrow(
+      'mailer unavailable',
+    );
+    expect(prisma.emailOtpChallenge.update).toHaveBeenCalledTimes(1);
+  });
+
   it('records an incorrect code attempt without exposing the challenge', async () => {
     transactionClient.emailOtpChallenge.findUnique.mockResolvedValue({
       attempts: 0,
@@ -107,6 +135,54 @@ describe('EmailOtpService', () => {
       email: 'test@example.com',
       kind: 'authenticated',
     });
+    expect(transactionClient.emailOtpChallenge.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns an enrollment token only after a matching code for a new user', async () => {
+    const code = '123456';
+    const codeHash = createHmac('sha256', env.emailOtp.pepper)
+      .update(code)
+      .digest('hex');
+    transactionClient.emailOtpChallenge.findUnique.mockResolvedValue({
+      attempts: 0,
+      codeHash,
+      consumedAt: null,
+      email: 'new@example.com',
+      expiresAt: new Date(Date.now() + 60_000),
+      id: 'challenge-id',
+      verifiedAt: null,
+    });
+    transactionClient.user.findUnique.mockResolvedValue(null);
+
+    const result = await service.verify('challenge-id', code);
+
+    expect(result.kind).toBe('profile_required');
+    if (result.kind === 'profile_required') {
+      expect(result.enrollmentToken).toEqual(expect.any(String));
+    }
+    expect(transactionClient.emailOtpChallenge.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('consumes a valid enrollment token exactly once', async () => {
+    const enrollmentToken = 'enrollment-token';
+    const tokenHash = createHmac('sha256', env.emailOtp.pepper)
+      .update(enrollmentToken)
+      .digest('hex');
+    prisma.emailOtpChallenge.findFirst.mockResolvedValue({
+      id: 'challenge-id',
+    });
+    transactionClient.emailOtpChallenge.findUnique.mockResolvedValue({
+      consumedAt: null,
+      email: 'new@example.com',
+      enrollmentExpiresAt: new Date(Date.now() + 60_000),
+      enrollmentTokenHash: tokenHash,
+      id: 'challenge-id',
+      verifiedAt: new Date(),
+    });
+
+    await expect(service.consumeEnrollmentToken(enrollmentToken)).resolves.toBe(
+      'new@example.com',
+    );
     expect(transactionClient.emailOtpChallenge.update).toHaveBeenCalledTimes(1);
   });
 });

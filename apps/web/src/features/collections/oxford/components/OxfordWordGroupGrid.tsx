@@ -61,7 +61,7 @@ export function OxfordWordGroupGrid({
                 band,
                 group,
               })}
-              className="absolute inset-0 rounded-[16px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+              className="absolute inset-0 rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
               href={getOxfordPath(band, group)}
               onClick={(event) => {
                 if (!shouldHandleOxfordNavigation(event)) {
@@ -86,7 +86,7 @@ export function OxfordWordGroupGrid({
                   {progress.newCount} {t("collections.new")}
                 </span>
               </div>
-              <div className="mt-2 flex h-1 overflow-hidden rounded-full bg-muted">
+              <div className="mt-2 flex h-1 overflow-hidden rounded-full bg-muted-background">
                 <span
                   className="bg-status-mastered"
                   style={{ width: `${masteredWidth}%` }}

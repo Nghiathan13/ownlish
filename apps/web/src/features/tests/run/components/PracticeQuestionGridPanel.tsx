@@ -130,7 +130,7 @@ export function PracticeQuestionGridPanel({
             <div className="flex min-w-0 items-center gap-1.5 text-sm text-foreground">
               <span
                 aria-hidden
-                className="size-5 shrink-0 rounded-[4px] border border-foreground bg-muted"
+                className="size-5 shrink-0 rounded-[4px] border border-foreground bg-muted-background"
               />
               <span className="truncate">{t("tests.gridLegendAnswered")}</span>
               <span className="font-semibold tabular-nums text-foreground">
@@ -173,7 +173,7 @@ export function PracticeQuestionGridPanel({
                           ),
                         cell.result == null &&
                           cell.isSelected &&
-                          "border-foreground bg-muted font-medium text-foreground before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-hover-overlay before:opacity-0 hover:before:opacity-100",
+                          "border-foreground bg-muted-background font-medium text-foreground before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:bg-hover-overlay before:opacity-0 hover:before:opacity-100",
                         cell.result == null &&
                           !cell.isSelected &&
                           "border-border bg-surface font-normal text-foreground hover:bg-hover-overlay",

@@ -248,7 +248,7 @@ export function ReviewProgressCard({
   }
 
   return (
-    <article className="flex h-full min-h-[328px] min-w-[250px] w-full flex-col rounded-2xl border border-border bg-surface pt-3 pr-3 pb-4 pl-4 dark:bg-background lg:min-h-0">
+    <article className="flex h-full min-h-[328px] min-w-[250px] w-full flex-col rounded-2xl border border-border bg-surface-card pt-3 pr-3 pb-4 pl-4 lg:min-h-0">
       <div className="flex shrink-0 items-center gap-3">
         <h2 className="min-w-0 flex-1 truncate text-base font-semibold leading-6 text-foreground">
           {t("dashboard.collectionProgress")}
@@ -286,7 +286,7 @@ export function ReviewProgressCard({
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <div className="mt-4 min-h-0 flex-1 animate-pulse rounded-xl bg-muted" />
+            <div className="mt-4 min-h-0 flex-1 animate-pulse rounded-xl bg-muted-background" />
           ) : (
             <ProgressContent progress={progress} view={view} />
           )}
@@ -362,7 +362,7 @@ function ProgressFilterDropdown({
       {isOpen ? (
         <div
           aria-label={ariaLabel}
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 min-w-[160px] rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-20 min-w-[160px] rounded-lg border border-border bg-surface-card p-1"
           id={menuId}
           role="menu"
         >
@@ -643,7 +643,7 @@ function ProgressContent({
               can paint toward the center without being covered — mirror of outer SVG pad.
             */}
             <div
-              className="grid place-items-center rounded-full bg-surface text-center dark:bg-background"
+              className="grid place-items-center rounded-full bg-surface-card text-center"
               style={{
                 height: `${DONUT_HOLE_DIAMETER_PCT}%`,
                 width: `${DONUT_HOLE_DIAMETER_PCT}%`,
@@ -987,7 +987,7 @@ function LevelDistributionRow({
           <span className="font-semibold">{` ${percent}%`}</span>
         </span>
       </div>
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted-background">
         <div
           className="h-full rounded-full bg-primary"
           style={{
@@ -1111,7 +1111,7 @@ export function ProgressSourceMenu({
         aria-haspopup="menu"
         aria-label={t("dashboard.switchProgressSource")}
         className={classNames(
-          "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-[#bdbdbd] dark:text-muted-foreground",
+          "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground",
           "hover:text-foreground",
           isOpen && "text-foreground",
         )}
@@ -1129,7 +1129,7 @@ export function ProgressSourceMenu({
       {isOpen ? (
         <div
           aria-label={t("dashboard.switchProgressSource")}
-          className="absolute top-0 left-full z-20 ml-1 flex min-w-[12rem] flex-col gap-1 rounded-lg border border-border bg-surface p-1 dark:bg-[#000000]"
+          className="absolute top-0 left-full z-20 ml-1 flex min-w-[12rem] flex-col gap-1 rounded-lg border border-border bg-surface-card p-1"
           id={menuId}
           onMouseEnter={isHoverCapable ? openMenu : undefined}
           onMouseLeave={isHoverCapable ? scheduleCloseMenu : undefined}
@@ -1144,7 +1144,7 @@ export function ProgressSourceMenu({
                 className={classNames(
                   "relative flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-left text-[15px] leading-5",
                   "before:pointer-events-none before:absolute before:inset-0 before:rounded-md hover:before:bg-hover-overlay",
-                  isSelected && "bg-[#f0f0f0] dark:bg-surface",
+                  isSelected && "bg-surface-subtle",
                 )}
                 key={option.id}
                 onClick={() => {
