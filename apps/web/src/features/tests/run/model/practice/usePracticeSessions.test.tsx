@@ -33,7 +33,7 @@ vi.mock("@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery", () 
     queryMocks.useRuntimePartPracticeSessionQuery,
 }));
 
-vi.mock("@/features/auth", () => ({
+vi.mock("@/entities/session", () => ({
   isAuthenticatedStatus: () => true,
   useAuthSession: () => ({
     status: "authenticated",

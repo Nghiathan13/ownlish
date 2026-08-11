@@ -2,8 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { isAuthenticatedStatus } from "../lib/authStatus";
-import { useAuthSession } from "../model/authSessionContext";
+import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 
 export function QueryReset() {
   const { status, user } = useAuthSession();

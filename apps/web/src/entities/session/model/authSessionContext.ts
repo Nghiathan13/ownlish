@@ -9,9 +9,9 @@ import type {
   RegisterInput,
   UpdateProfileInput,
   VerifyEmailOtpInput,
-} from "@/entities/auth/api/auth";
-import type { AuthUser } from "@/entities/auth/types";
-import type { AuthStatus } from "../lib/authStatus";
+} from "@/entities/auth/@x/session";
+import type { AuthUser } from "@/entities/auth/@x/session";
+import type { AuthStatus } from "./authStatus";
 
 export type AuthSessionContextValue = {
   clearSession: () => void;

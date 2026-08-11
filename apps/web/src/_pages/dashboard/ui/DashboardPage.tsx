@@ -7,11 +7,8 @@ import {
   getCollectionsListPath,
   getDefaultUserCollection,
 } from "@/entities/collection/lib/collectionDisplay";
-import {
-  RequireAuth,
-  isAuthenticatedStatus,
-  useAuthSession,
-} from "@/features/auth";
+import { RequireAuth } from "@/features/auth";
+import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
 import { DashboardTitleTabs } from "@/features/home/components/DashboardTitleTabs";
 import { DifficultReviewWordsCard } from "@/features/home/components/DifficultReviewWordsCard";

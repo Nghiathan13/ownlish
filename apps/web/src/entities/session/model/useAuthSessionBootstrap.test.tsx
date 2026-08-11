@@ -2,8 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/http";
-import type { AuthUser } from "@/entities/auth/types";
-import type { AuthStatus } from "../lib/authStatus";
+import type { AuthUser } from "@/entities/auth/@x/session";
+import type { AuthStatus } from "./authStatus";
 import { useAuthSessionBootstrap } from "./useAuthSessionBootstrap";
 
 const channelMocks = vi.hoisted(() => ({
@@ -20,7 +20,7 @@ vi.mock("@/entities/session/model/accessTokenManager", () => ({
   setSessionInvalidHandler: vi.fn(),
 }));
 
-vi.mock("../lib/authSessionChannel", () => ({
+vi.mock("./authSessionChannel", () => ({
   createAuthSessionChannel: channelMocks.createAuthSessionChannel,
   isAuthSessionMessage: (value: unknown) =>
     typeof value === "object" &&

@@ -6,18 +6,18 @@ import {
   type SetStateAction,
   useEffect,
 } from "react";
-import type { AuthUser } from "@/entities/auth/types";
+import type { AuthUser } from "@/entities/auth/@x/session";
 import {
   bootstrapClientSession,
   clearClientSession,
   discardClientAccessToken,
   setSessionInvalidHandler,
 } from "@/entities/session/model/accessTokenManager";
-import type { AuthStatus } from "../lib/authStatus";
+import type { AuthStatus } from "./authStatus";
 import {
   createAuthSessionChannel,
   isAuthSessionMessage,
-} from "../lib/authSessionChannel";
+} from "./authSessionChannel";
 import { isUnauthorizedError } from "@/shared/api/http";
 
 const BOOTSTRAP_RETRY_DELAY_MS = 1_000;

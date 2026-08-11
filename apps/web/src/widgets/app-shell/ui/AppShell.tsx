@@ -6,7 +6,7 @@ import { AppSidebar } from "@/features/shell/components/AppSidebar";
 import { GuestTopNav } from "@/features/shell/components/GuestTopNav";
 import { ImmersiveToolbar } from "@/features/shell/components/ImmersiveToolbar";
 import { MobileTopNav } from "@/features/shell/components/MobileTopNav";
-import { useAuthSession } from "@/features/auth";
+import { useAuthSession } from "@/entities/session";
 import { getShellLayoutMode } from "@/features/shell/lib/shellRoutes";
 import { isImmersiveTestPath } from "@/features/tests/shared/lib/isImmersiveTestPath";
 import { classNames } from "@/shared/lib/classNames";

@@ -21,7 +21,7 @@ vi.mock("@/entities/auth/api/auth", () => ({
   requestEmailOtp: mocks.requestEmailOtp,
 }));
 
-vi.mock("./authSessionContext", () => ({
+vi.mock("@/entities/session", () => ({
   useAuthSession: () => ({
     completeEmailOtpProfile: mocks.completeEmailOtpProfile,
     googleLogin: mocks.googleLogin,

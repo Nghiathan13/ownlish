@@ -8,7 +8,7 @@ vi.mock("@tanstack/react-query", () => ({
   useQueries: () => [{ data: null }],
 }));
 
-vi.mock("@/features/auth", () => ({
+vi.mock("@/entities/session", () => ({
   useAuthSession: () => ({
     status: "authenticated",
     user: { id: "user-1" },

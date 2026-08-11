@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
+import { AuthForm, getSafeAuthRedirectPath } from "@/features/auth";
 import {
-  AuthForm,
-  getSafeAuthRedirectPath,
   isAuthenticatedStatus,
   isLoadingStatus,
   useAuthSession,
-} from "@/features/auth";
+} from "@/entities/session";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { SessionLoadingSkeleton } from "@/shared/skeletons";
 import { iconTextButtonClassName } from "@/shared/ui/button";

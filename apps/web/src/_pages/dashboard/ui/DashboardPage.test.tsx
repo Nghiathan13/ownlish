@@ -33,6 +33,9 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/features/auth", () => ({
   RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock("@/entities/session", () => ({
   isAuthenticatedStatus: (status: string) => status === "authenticated",
   isLoadingStatus: (status: string) => status === "loading",
   useAuthSession: mocks.useAuthSession,

@@ -7,7 +7,7 @@ import { getDictationProgress, getDictationThumbnailUrl } from "@/entities/dicta
 import type { DictationCatalogVideo, DictationSegment } from "@/entities/dictation/model/types";
 import { getDictationProgressQueryKey } from "@/entities/dictation/model/queries";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession } from "@/features/auth";
+import { useAuthSession } from "@/entities/session";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/providers/LocaleProvider";
 import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";

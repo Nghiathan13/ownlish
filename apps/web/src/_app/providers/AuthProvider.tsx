@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
-import type { AuthUser } from "@/entities/auth/types";
 import {
   AuthSessionContext,
   type AuthSessionContextValue,
   type AuthStatus,
-  useAuthSessionActions,
   useAuthSessionBootstrap,
-} from "@/features/auth";
+} from "@/entities/session";
+import type { AuthUser } from "@/entities/auth/@x/session";
+import { useAuthSessionActions } from "@/features/auth";
 
 /**
  * App-layer provider (FSD App): wires the auth session feature into the tree.

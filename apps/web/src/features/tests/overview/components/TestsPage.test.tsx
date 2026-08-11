@@ -17,7 +17,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: mocks.useSearchParams,
 }));
 
-vi.mock("@/features/auth", () => ({
+vi.mock("@/entities/session", () => ({
   isAuthenticatedStatus: (status: string) => status === "authenticated",
   useAuthSession: mocks.useAuthSession,
 }));

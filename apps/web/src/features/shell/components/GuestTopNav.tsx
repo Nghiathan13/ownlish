@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   isLoadingStatus,
   useAuthSession,
-} from "@/features/auth";
+} from "@/entities/session";
 import { classNames } from "@/shared/lib/classNames";
 import { useLocale, useT } from "@/shared/providers/LocaleProvider";
 import { useResolvedTheme, useTheme } from "@/shared/providers/ThemeProvider";

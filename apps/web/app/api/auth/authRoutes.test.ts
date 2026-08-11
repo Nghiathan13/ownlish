@@ -20,14 +20,14 @@ vi.mock("@/_app/api-routes/auth/handleRefreshAuth", () => ({
   handleRefreshAuth: refreshAuthMock,
 }));
 
-import { POST as google } from "@/app/api/auth/google/route";
-import { POST as login } from "@/app/api/auth/login/route";
-import { POST as logout } from "@/app/api/auth/logout/route";
-import { POST as refresh } from "@/app/api/auth/refresh/route";
-import { POST as register } from "@/app/api/auth/register/route";
-import { POST as requestEmailOtp } from "@/app/api/auth/email-otp/request/route";
-import { POST as verifyEmailOtp } from "@/app/api/auth/email-otp/verify/route";
-import { POST as completeEmailOtpProfile } from "@/app/api/auth/email-otp/complete-profile/route";
+import { POST as google } from "./google/route";
+import { POST as login } from "./login/route";
+import { POST as logout } from "./logout/route";
+import { POST as refresh } from "./refresh/route";
+import { POST as register } from "./register/route";
+import { POST as requestEmailOtp } from "./email-otp/request/route";
+import { POST as verifyEmailOtp } from "./email-otp/verify/route";
+import { POST as completeEmailOtpProfile } from "./email-otp/complete-profile/route";
 
 describe("auth BFF routes", () => {
   beforeEach(() => {

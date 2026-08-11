@@ -7,7 +7,7 @@ import {
   useAuthSession,
   isAuthenticatedStatus,
   isLoadingStatus,
-} from "@/features/auth";
+} from "@/entities/session";
 import { SidebarLocaleToggle } from "@/features/shell/components/SidebarLocaleToggle";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
 import { SidebarThemeToggle } from "@/features/shell/components/SidebarThemeToggle";

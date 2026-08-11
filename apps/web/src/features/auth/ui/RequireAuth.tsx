@@ -2,8 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { isLoadingStatus } from "../lib/authStatus";
-import { useAuthSession } from "../model/authSessionContext";
+import { isLoadingStatus, useAuthSession } from "@/entities/session";
 import { SessionLoadingSkeleton } from "@/shared/skeletons";
 
 type RequireAuthProps = {

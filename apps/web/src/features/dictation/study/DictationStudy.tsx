@@ -27,7 +27,7 @@ import { getDictationCategoryPath } from "@/entities/dictation/model/categoryPat
 import type { DictationProgress, DictationSegment } from "@/entities/dictation/model/types";
 import { useDictationCatalogQuery } from "@/entities/dictation/model/useDictationCatalogQuery";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession } from "@/features/auth";
+import { useAuthSession } from "@/entities/session";
 import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
 import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { classNames } from "@/shared/lib/classNames";

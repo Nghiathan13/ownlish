@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useAuthSession } from "@/features/auth";
+import { useAuthSession } from "@/entities/session";
 import { SidebarUserMenu } from "@/features/shell/components/SidebarUserMenu";
 import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import {

@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
   usePathname: mocks.usePathname,
 }));
 
-vi.mock("@/features/auth", () => ({
+vi.mock("@/entities/session", () => ({
   isAuthenticatedStatus: (status: string) => status === "authenticated",
   isLoadingStatus: (status: string) => status === "loading",
   useAuthSession: mocks.useAuthSession,

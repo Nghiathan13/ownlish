@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
   usePathname: mocks.usePathname,
   useRouter: () => ({ replace: mocks.replace }),
 }));
-vi.mock("@/features/auth", () => ({ useAuthSession: mocks.useAuthSession }));
+vi.mock("@/entities/session", () => ({ useAuthSession: mocks.useAuthSession }));
 vi.mock("@/shared/providers/LocaleProvider", () => ({
   useLocale: () => ({ locale: "en", setLocale: mocks.setLocale, t: (key: string) => key }),
   useT: () => (key: string) => key,

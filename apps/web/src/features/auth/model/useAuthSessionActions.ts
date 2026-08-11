@@ -30,8 +30,7 @@ import {
   establishSession,
 } from "@/entities/session/model/accessTokenManager";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import type { AuthStatus } from "../lib/authStatus";
-import type { AuthSessionMessage } from "../lib/authSessionChannel";
+import type { AuthSessionMessage, AuthStatus } from "@/entities/session";
 
 type UseAuthSessionActionsOptions = {
   sessionChannelRef: MutableRefObject<BroadcastChannel | null>;

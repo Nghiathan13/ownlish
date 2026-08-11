@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import type { CollectionCategory } from "@/entities/collection/lib/collectionDisplay";
-import { isAuthenticatedStatus, useAuthSession } from "@/features/auth";
+import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import { getOxfordCollectionMetaQueryOptions } from "@/features/collections/oxford/model/oxfordQueries";
 import { getCollectionsListQueryOptions } from "@/features/collections/shared/data/hooks/useCollectionsListQuery";
 import { getOxfordPartReviewQueryOptions } from "@/features/review/oxford/model/oxfordReviewQueries";

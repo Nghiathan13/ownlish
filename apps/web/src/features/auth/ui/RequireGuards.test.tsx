@@ -14,15 +14,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mocks.replace }),
 }));
 
-vi.mock("../lib/authStatus", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../lib/authStatus")>();
-  return {
-    ...actual,
-    isLoadingStatus: (status: string) => status === "loading",
-  };
-});
-
-vi.mock("../model/authSessionContext", () => ({
+vi.mock("@/entities/session", () => ({
+  isLoadingStatus: (status: string) => status === "loading",
   useAuthSession: mocks.useAuthSession,
   useAuthSessionContext: mocks.useAuthSession,
 }));

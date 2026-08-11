@@ -10,7 +10,7 @@ import {
 import {
   isAuthenticatedStatus,
   useAuthSession,
-} from "@/features/auth";
+} from "@/entities/session";
 import { CreateCollectionModal } from "@/features/collections/shared/components/CreateCollectionModal";
 import { EditCollectionModal } from "@/features/collections/shared/components/EditCollectionModal";
 import { CollectionCategorySelect } from "@/features/collections/list/components/CollectionCategorySelect";

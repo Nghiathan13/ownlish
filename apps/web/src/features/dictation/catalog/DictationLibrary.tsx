@@ -5,7 +5,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { getDictationProgress, getDictationThumbnailUrl } from "@/entities/dictation/api";
 import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { useAuthSession } from "@/features/auth";
+import { useAuthSession } from "@/entities/session";
 import { getDictationCategoryPath } from "@/entities/dictation/model/categoryPath";
 import { useDictationCatalogQuery } from "@/entities/dictation/model/useDictationCatalogQuery";
 import { getDictationProgressQueryKey } from "@/entities/dictation/model/queries";

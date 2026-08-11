@@ -51,7 +51,7 @@ vi.mock("./GoogleSignInButton", () => ({
   ),
 }));
 
-vi.mock("../model/authSessionContext", () => ({
+vi.mock("@/entities/session", () => ({
   useAuthSession: sessionAuthMock,
   useAuthSessionContext: sessionAuthMock,
 }));

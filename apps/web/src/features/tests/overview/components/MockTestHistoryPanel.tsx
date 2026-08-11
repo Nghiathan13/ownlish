@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { isAuthenticatedStatus, useAuthSession } from "@/features/auth";
+import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import { useMockTestHistory } from "@/features/tests/overview/hooks/useMockTestHistory";
 import { areAllPartsSelected } from "@/features/tests/shared/lib/toeicParts";
 import { testOverviewCardClassName } from "@/features/tests/overview/lib/testOverviewCard";

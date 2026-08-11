@@ -39,7 +39,7 @@ import {
   verifyEmailOtp,
 } from "@/entities/auth/api/auth";
 import { AuthProvider } from "./AuthProvider";
-import { useAuthSessionContext } from "@/features/auth";
+import { useAuthSessionContext } from "@/entities/session";
 
 const bootstrapClientSessionMock = vi.mocked(bootstrapClientSession);
 const clearClientSessionMock = vi.mocked(clearClientSession);

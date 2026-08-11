@@ -6,7 +6,7 @@ import {
   isAuthenticatedStatus,
   isLoadingStatus,
   useAuthSession,
-} from "@/features/auth";
+} from "@/entities/session";
 import { GuestLanding } from "@/features/home/components/GuestLanding";
 import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home/lib/dashboardPaths";
 import { SessionLoadingSkeleton } from "@/shared/skeletons";

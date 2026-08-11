@@ -5,15 +5,8 @@ import { QueryReset } from "./QueryReset";
 
 const mocks = vi.hoisted(() => ({ useAuthSession: vi.fn() }));
 
-vi.mock("../lib/authStatus", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../lib/authStatus")>();
-  return {
-    ...actual,
-    isAuthenticatedStatus: (status: string) => status === "authenticated",
-  };
-});
-
-vi.mock("../model/authSessionContext", () => ({
+vi.mock("@/entities/session", () => ({
+  isAuthenticatedStatus: (status: string) => status === "authenticated",
   useAuthSession: mocks.useAuthSession,
   useAuthSessionContext: mocks.useAuthSession,
 }));

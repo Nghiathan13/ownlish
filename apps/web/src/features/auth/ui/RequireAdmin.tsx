@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
+import { isLoadingStatus, useAuthSession } from "@/entities/session";
 import { isAdminUser } from "../lib/isAdminUser";
-import { isLoadingStatus } from "../lib/authStatus";
-import { useAuthSession } from "../model/authSessionContext";
 import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes/dashboard";
 import { SessionLoadingSkeleton } from "@/shared/skeletons";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";

@@ -17,7 +17,7 @@ vi.mock("@tanstack/react-query", () => ({
   useQueries: () => mocks.progressQueries,
 }));
 
-vi.mock("@/features/auth", () => ({
+vi.mock("@/entities/session", () => ({
   useAuthSession: () => ({
     status: "authenticated",
     user: { id: "user-1" },

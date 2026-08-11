@@ -7,7 +7,7 @@ import {
   getDefaultUserCollection,
   getUserOwnedCollections,
 } from "@/entities/collection/lib/collectionDisplay";
-import { isAuthenticatedStatus, useAuthSession } from "@/features/auth";
+import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
 import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
 import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";

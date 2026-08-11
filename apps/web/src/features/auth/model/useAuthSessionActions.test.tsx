@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthUser } from "@/entities/auth/types";
-import type { AuthStatus } from "../lib/authStatus";
+import type { AuthStatus } from "@/entities/session";
 import { useAuthSessionActions } from "./useAuthSessionActions";
 
 vi.mock("@/entities/session/model/accessTokenManager", () => ({

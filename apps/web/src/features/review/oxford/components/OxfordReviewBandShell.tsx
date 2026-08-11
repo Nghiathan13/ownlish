@@ -1,6 +1,6 @@
 "use client";
 
-import { isAuthenticatedStatus, useAuthSession } from "@/features/auth";
+import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import { OxfordBandTabs } from "@/features/collections/oxford/components/OxfordBandTabs";
 import {
   type OxfordBand,

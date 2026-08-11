@@ -9,7 +9,7 @@ import { useOxfordNavigation } from "@/features/collections/oxford/model/useOxfo
 import {
   isAuthenticatedStatus,
   useAuthSession,
-} from "@/features/auth";
+} from "@/entities/session";
 import { OxfordBandTabs } from "./OxfordBandTabs";
 import { OxfordGroupWordsPanel } from "./OxfordGroupWordsPanel";
 import { OxfordWordGroupGrid } from "./OxfordWordGroupGrid";
