@@ -8,7 +8,8 @@ const mocks = vi.hoisted(() => ({
   useResolvedTheme: vi.fn(),
 }));
 
-vi.mock("@/shared/lib/providers", () => ({
+vi.mock("@/shared/lib/providers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/lib/providers")>()),
   useTheme: () => ({ setTheme: mocks.setTheme, theme: "system" }),
   useResolvedTheme: mocks.useResolvedTheme,
 }));

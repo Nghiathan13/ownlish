@@ -19,8 +19,6 @@ vi.mock("@/entities/session", () => ({ useAuthSession: mocks.useAuthSession }));
 vi.mock("@/shared/lib/providers", () => ({
   useLocale: () => ({ locale: "en", setLocale: mocks.setLocale, t: (key: string) => key }),
   useT: () => (key: string) => key,
-}));
-vi.mock("@/shared/lib/providers", () => ({
   useResolvedTheme: () => "light",
   useTheme: () => ({ setTheme: mocks.setTheme }),
 }));

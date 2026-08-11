@@ -33,7 +33,8 @@ vi.mock("../session/useRuntimePartPracticeSessionQuery", () => ({
     queryMocks.useRuntimePartPracticeSessionQuery,
 }));
 
-vi.mock("@/entities/session", () => ({
+vi.mock("@/entities/session", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/entities/session")>()),
   isAuthenticatedStatus: () => true,
   useAuthSession: () => ({
     status: "authenticated",

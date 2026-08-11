@@ -18,7 +18,8 @@ vi.mock("@/features/tests/run/model/mock/useMockTestRun", () => ({
   useMockTestRun: mocks.useMockTestRun,
 }));
 
-vi.mock("@/shared/lib/providers", () => ({
+vi.mock("@/shared/lib/providers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/lib/providers")>()),
   useImmersiveBilingual: () => null,
   useRegisterImmersiveExit: mocks.registerExit,
   useRegisterImmersiveFinish: mocks.registerFinish,

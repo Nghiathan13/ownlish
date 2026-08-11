@@ -8,6 +8,10 @@ import { useAuthSessionActions } from "./useAuthSessionActions";
 vi.mock("@/entities/session", () => ({
   clearClientSession: vi.fn(),
   establishSession: vi.fn(),
+  runAuthenticatedRequest: vi.fn(
+    async ({ request }: { request: (token: string) => Promise<AuthUser> }) =>
+      request("access-token"),
+  ),
 }));
 
 vi.mock("@/entities/session/model/authenticatedRequest", () => ({

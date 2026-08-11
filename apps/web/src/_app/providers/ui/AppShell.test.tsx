@@ -26,11 +26,6 @@ vi.mock("@/features/shell/ui/MobileTopNav", () => ({
 }));
 
 vi.mock("@/shared/lib/providers", () => ({
-  useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
-  useResolvedTheme: () => "light",
-}));
-
-vi.mock("@/shared/lib/providers", () => ({
   LocaleProvider: ({ children }: { children: React.ReactNode }) => children,
   useLocale: () => ({
     locale: "en",
@@ -44,14 +39,16 @@ vi.mock("@/shared/lib/providers", () => ({
       return labels[key] ?? key;
     },
   }),
+  useResolvedTheme: () => "light",
   useT: () => (key: string) => {
     const labels: Record<string, string> = {
       "auth.signIn": "Sign in",
       "locale.switchToVi": "Switch to Vietnamese",
       "theme.switchToDark": "Switch to dark theme",
     };
-    return labels[key] ?? key;
+      return labels[key] ?? key;
   },
+  useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
 }));
 
 describe("AppShell", () => {

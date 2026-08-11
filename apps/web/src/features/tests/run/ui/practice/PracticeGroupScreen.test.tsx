@@ -16,7 +16,8 @@ vi.mock("@/features/tests/run/model/hooks/useSignedMedia", () => ({
   }),
 }));
 
-vi.mock("@/shared/lib/providers", () => ({
+vi.mock("@/shared/lib/providers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/lib/providers")>()),
   useImmersiveBilingual: () => null,
 }));
 

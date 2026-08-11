@@ -35,13 +35,15 @@ vi.mock("@/features/auth", () => ({
   RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@/entities/session", () => ({
+vi.mock("@/entities/session", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/entities/session")>()),
   isAuthenticatedStatus: (status: string) => status === "authenticated",
   isLoadingStatus: (status: string) => status === "loading",
   useAuthSession: mocks.useAuthSession,
 }));
 
-vi.mock("@/entities/collection", () => ({
+vi.mock("@/entities/collection", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/entities/collection")>()),
   useCollectionsListQuery: mocks.useCollectionsListQuery,
 }));
 
@@ -53,17 +55,13 @@ vi.mock("@/features/home/model/useDifficultReviewWords", () => ({
   useDifficultReviewWords: mocks.useDifficultReviewWords,
 }));
 
-vi.mock("@/features/home/model/useVocabStats", () => ({
+vi.mock("@/entities/vocab", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/entities/vocab")>()),
   useVocabStats: mocks.useVocabStats,
 }));
 
 vi.mock("@/features/home/model/useOxfordProgressSummary", () => ({
   useOxfordProgressSummary: mocks.useOxfordProgressSummary,
-}));
-
-vi.mock("@/shared/lib/providers", () => ({
-  useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
-  useResolvedTheme: () => "light",
 }));
 
 vi.mock("@/shared/lib/providers", async () => {
@@ -76,7 +74,9 @@ vi.mock("@/shared/lib/providers", async () => {
       setLocale: vi.fn(),
       t: (key: Parameters<typeof translate>[1]) => translate("en", key),
     }),
+    useResolvedTheme: () => "light",
     useT: () => (key: Parameters<typeof translate>[1]) => translate("en", key),
+    useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
   };
 });
 
