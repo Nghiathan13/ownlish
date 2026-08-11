@@ -1,4 +1,4 @@
-import { isUnauthorizedError } from "@/shared/api/http";
+import { isUnauthorizedError } from "@/shared/api";
 import {
   clearClientSession,
   getValidAccessToken,

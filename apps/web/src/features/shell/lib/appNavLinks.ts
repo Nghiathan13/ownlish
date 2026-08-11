@@ -2,26 +2,26 @@ import type { ComponentType, SVGProps } from "react";
 import {
   DASHBOARD_MY_ACTIVITY_PATH,
   DASHBOARD_ROOT_PATH,
-} from "@/features/home/lib/dashboardPaths";
+} from "@/shared/routes";
 import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPath,
-} from "@/features/tests/shared/constants/toeicYears";
+} from "@/entities/toeic-runtime";
 import {
   getTestsOverviewPath,
   type TestsOverviewTab,
-} from "@/features/tests/shared/lib/partPracticePaths";
-import type { MessageKey } from "@/shared/i18n/messages";
-import { CollectionsNavFillIcon } from "@/shared/ui/icons/CollectionsNavFillIcon";
-import { CollectionsNavIcon } from "@/shared/ui/icons/CollectionsNavIcon";
-import { DashboardNavFillIcon } from "@/shared/ui/icons/DashboardNavFillIcon";
-import { DashboardNavIcon } from "@/shared/ui/icons/DashboardNavIcon";
-import { DictationIcon } from "@/shared/ui/icons/DictationIcon";
-import { DictationFillIcon } from "@/shared/ui/icons/DictationFillIcon";
-import { ReviewNavFillIcon } from "@/shared/ui/icons/ReviewNavFillIcon";
-import { ReviewNavIcon } from "@/shared/ui/icons/ReviewNavIcon";
-import { TestsNavFillIcon } from "@/shared/ui/icons/TestsNavFillIcon";
-import { TestsNavIcon } from "@/shared/ui/icons/TestsNavIcon";
+} from "@/entities/toeic-runtime";
+import type { MessageKey } from "@/shared/i18n";
+import { CollectionsNavFillIcon } from "@/shared/ui/icons";
+import { CollectionsNavIcon } from "@/shared/ui/icons";
+import { DashboardNavFillIcon } from "@/shared/ui/icons";
+import { DashboardNavIcon } from "@/shared/ui/icons";
+import { DictationIcon } from "@/shared/ui/icons";
+import { DictationFillIcon } from "@/shared/ui/icons";
+import { ReviewNavFillIcon } from "@/shared/ui/icons";
+import { ReviewNavIcon } from "@/shared/ui/icons";
+import { TestsNavFillIcon } from "@/shared/ui/icons";
+import { TestsNavIcon } from "@/shared/ui/icons";
 
 export type AppNavIcon = ComponentType<SVGProps<SVGSVGElement>>;
 

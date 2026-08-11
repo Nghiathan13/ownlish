@@ -7,16 +7,16 @@ const { credentialAuthMock, logoutAuthMock, publicAuthMock, refreshAuthMock } = 
   refreshAuthMock: vi.fn(),
 }));
 
-vi.mock("@/_app/api-routes/auth/handleCredentialAuth", () => ({
+vi.mock("@/_app/api-routes/auth/lib/handleCredentialAuth", () => ({
   handleCredentialAuth: credentialAuthMock,
   handlePublicAuth: publicAuthMock,
 }));
 
-vi.mock("@/_app/api-routes/auth/handleLogoutAuth", () => ({
+vi.mock("@/_app/api-routes/auth/lib/handleLogoutAuth", () => ({
   handleLogoutAuth: logoutAuthMock,
 }));
 
-vi.mock("@/_app/api-routes/auth/handleRefreshAuth", () => ({
+vi.mock("@/_app/api-routes/auth/lib/handleRefreshAuth", () => ({
   handleRefreshAuth: refreshAuthMock,
 }));
 

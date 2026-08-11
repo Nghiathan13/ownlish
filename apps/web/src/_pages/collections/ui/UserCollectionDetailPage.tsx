@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { CollectionDetailShell } from "@/features/collections/detail/page/components/CollectionDetailShell";
+import { CollectionDetailShell } from "./user-detail/CollectionDetailShell";
 
 export function UserCollectionDetailPage() {
   const params = useParams<{ collectionId: string | string[] }>();

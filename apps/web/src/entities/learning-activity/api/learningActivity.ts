@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "@/shared/config/env";
-import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import { API_BASE_URL } from "@/shared/config";
+import { apiRequest, invalidApiResponse } from "@/shared/api";
 import { isNumber, isRecord, isString } from "@/shared/lib/parse";
 import type {
   LearningActivityCalendar,

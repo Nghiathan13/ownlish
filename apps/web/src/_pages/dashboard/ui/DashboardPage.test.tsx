@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "./DashboardPage";
-import { getVietnamDateKey } from "@/features/home/lib/learningActivityCalendar";
+import { getVietnamDateKey } from "@/features/home";
 
 function renderDashboard(ui: React.ReactElement) {
   const queryClient = new QueryClient({
@@ -41,33 +41,33 @@ vi.mock("@/entities/session", () => ({
   useAuthSession: mocks.useAuthSession,
 }));
 
-vi.mock("@/features/collections/shared/data/hooks", () => ({
+vi.mock("@/entities/collection", () => ({
   useCollectionsListQuery: mocks.useCollectionsListQuery,
 }));
 
-vi.mock("@/features/home/hooks/useLearningActivityCalendar", () => ({
+vi.mock("@/features/home/model/useLearningActivityCalendar", () => ({
   useLearningActivityCalendar: mocks.useLearningActivityCalendar,
 }));
 
-vi.mock("@/features/home/hooks/useDifficultReviewWords", () => ({
+vi.mock("@/features/home/model/useDifficultReviewWords", () => ({
   useDifficultReviewWords: mocks.useDifficultReviewWords,
 }));
 
-vi.mock("@/features/home/hooks/useVocabStats", () => ({
+vi.mock("@/features/home/model/useVocabStats", () => ({
   useVocabStats: mocks.useVocabStats,
 }));
 
-vi.mock("@/features/home/hooks/useOxfordProgressSummary", () => ({
+vi.mock("@/features/home/model/useOxfordProgressSummary", () => ({
   useOxfordProgressSummary: mocks.useOxfordProgressSummary,
 }));
 
-vi.mock("@/shared/providers/ThemeProvider", () => ({
+vi.mock("@/shared/lib/providers", () => ({
   useTheme: () => ({ setTheme: vi.fn(), theme: "system" }),
   useResolvedTheme: () => "light",
 }));
 
-vi.mock("@/shared/providers/LocaleProvider", async () => {
-  const { translate } = await import("@/shared/i18n/messages");
+vi.mock("@/shared/lib/providers", async () => {
+  const { translate } = await import("@/shared/i18n");
 
   return {
     LocaleProvider: ({ children }: { children: React.ReactNode }) => children,

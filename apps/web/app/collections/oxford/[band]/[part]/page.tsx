@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import {
   parseOxfordBand,
   parseOxfordGroup,
-} from "@/features/collections/oxford/lib/oxfordNavigation";
+} from "@/entities/collection";
 
 type OxfordPartPageProps = {
   params: Promise<{ band: string; part: string }>;

@@ -39,6 +39,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@feature-sliced/steiger-plugin": "0.7.0",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",

@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),

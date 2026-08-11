@@ -1,17 +1,17 @@
 "use client";
 
-import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftPanel";
-import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
+import { PracticeLeftPanel } from "@/features/tests/run/ui/PracticeLeftPanel";
+import { PracticeSplitPlainLayout } from "@/features/tests/run/ui/PracticeSplitPlainLayout";
 import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
 import { useDeferredGroupAnswerFlow } from "@/features/tests/run/model/practice/useDeferredGroupAnswerFlow";
 import { PracticeQuestionBlock } from "@/features/tests/run/ui/practice/PracticeQuestionBlock";
 import { PracticeSubmissionAlert } from "@/features/tests/run/ui/practice/PracticeSubmissionAlert";
-import { useSignedMedia } from "@/features/tests/run/hooks/useSignedMedia";
+import { useSignedMedia } from "@/features/tests/run/model/hooks/useSignedMedia";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { getPracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
-import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
-import { showsGroupContentTranslation } from "@/features/tests/shared/lib/partTranslationVisibility";
-import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
+import { getPartPracticeConfig } from "@/entities/toeic-runtime";
+import { showsGroupContentTranslation } from "@/entities/toeic-runtime";
+import { useImmersiveBilingual } from "@/shared/lib/providers";
 
 type PracticeGroupScreenProps = {
   partNumber: number;

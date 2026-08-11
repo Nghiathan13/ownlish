@@ -4,7 +4,7 @@ import {
   getOxfordPartReview,
   gradeOxfordReviewDefinition,
 } from "@/entities/review/api/oxfordReview";
-import { mswServer } from "@/shared/lib/testing/mswServer";
+import { mswServer } from "@/shared/lib/testing";
 
 const URL = "http://localhost:3001/reviews/oxford/A1/parts/1";
 const DEFINITION_ID = "00000000-0000-4000-8000-000000000001";

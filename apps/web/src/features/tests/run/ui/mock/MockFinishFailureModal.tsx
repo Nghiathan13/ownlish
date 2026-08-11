@@ -2,7 +2,7 @@
 
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { Modal } from "@/shared/ui/Modal";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 
 type MockFinishFailureModalProps = {
   error: string;

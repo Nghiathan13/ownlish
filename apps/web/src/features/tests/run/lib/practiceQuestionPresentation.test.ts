@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
-import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
+import type { ToeicQuestion } from "@/entities/toeic-runtime";
+import type { PartPracticeConfig } from "@/entities/toeic-runtime";
 import { getPracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
 
 const partConfig: PartPracticeConfig = {

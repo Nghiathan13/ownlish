@@ -4,35 +4,34 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createRuntimeTestRun,
-  restartRuntimeMockRun,
-} from "@/entities/toeic-runtime/api/runtime";
-import {
   getRuntimeTestSessionQueryKey,
   invalidateRuntimeTestPracticeOverview,
-} from "@/entities/toeic-runtime/model/cache";
+  restartRuntimeMockRun,
+} from "@/entities/toeic-runtime";
 import {
   materializeTestSession,
   type RuntimeTestSessionMode,
-} from "@/entities/toeic-runtime/model/materializeTestSession";
+} from "./session/materializeTestSession";
 import {
   getToeicCatalogDocument,
-} from "@/entities/toeic-catalog/api/catalog";
-import type { ToeicCatalogSource, ToeicCatalogTest } from "@/entities/toeic-catalog/model/types";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { getToeicRunPath } from "@/features/tests/shared/lib/toeicRunPaths";
-import { normalizeSelectedParts } from "@/features/tests/shared/lib/toeicParts";
+  type ToeicCatalogSource,
+  type ToeicCatalogTest,
+} from "@/entities/toeic-catalog";
+import { runAuthenticatedRequest } from "@/entities/session";
+import { getToeicRunPath } from "@/entities/toeic-runtime";
+import { normalizeSelectedParts } from "@/entities/toeic-runtime";
 import {
   getFirstTestPartGroupKey,
   preloadCatalogGroupMedia,
   preloadFirstTestPartImage,
-} from "@/features/tests/shared/model/preloadToeicSessionMedia";
+} from "@/entities/toeic-catalog";
 import {
   readTestPracticeGroupKey,
   writeTestPracticeGroupKey,
-} from "@/features/tests/shared/model/testPracticePosition";
+} from "@/entities/toeic-runtime";
 import { toQueryErrorMessage } from "@/shared/lib/toQueryErrorMessage";
-import { getLocaleSnapshot } from "@/shared/i18n/locale";
-import { translate } from "@/shared/i18n/messages";
+import { getLocaleSnapshot } from "@/shared/i18n";
+import { translate } from "@/shared/i18n";
 
 export type StartRuntimeTestRunVariables = {
   test: ToeicCatalogTest;

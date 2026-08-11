@@ -1,6 +1,9 @@
-import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+import type {
+  OptionKey,
+  ToeicQuestionGroup,
+} from "@/entities/toeic-runtime";
 
-export type OptionKey = "A" | "B" | "C" | "D";
+export type { OptionKey } from "@/entities/toeic-runtime";
 
 export function buildAnswerKeyMap(
   groups: ToeicQuestionGroup[],

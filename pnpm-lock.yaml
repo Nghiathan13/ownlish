@@ -183,6 +183,9 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
     devDependencies:
+      '@feature-sliced/steiger-plugin':
+        specifier: 0.7.0
+        version: 0.7.0(typescript@5.9.3)
       '@lhci/cli':
         specifier: ^0.15.1
         version: 0.15.1

@@ -5,7 +5,7 @@ import {
   GoogleSignInButton,
   isGoogleSignInConfigured,
 } from "./GoogleSignInButton";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { EmailIcon } from "@/shared/ui/icons";
 import { TextInput } from "@/shared/ui/TextInput";

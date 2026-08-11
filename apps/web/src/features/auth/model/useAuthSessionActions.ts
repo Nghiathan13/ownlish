@@ -23,13 +23,13 @@ import {
   type UpdateProfileInput,
   type VerifyEmailOtpInput,
   updateProfile as updateProfileRequest,
-} from "@/entities/auth/api/auth";
-import type { AuthUser } from "@/entities/auth/types";
+} from "@/entities/auth";
+import type { AuthUser } from "@/entities/auth";
 import {
   clearClientSession,
   establishSession,
-} from "@/entities/session/model/accessTokenManager";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+} from "@/entities/session";
+import { runAuthenticatedRequest } from "@/entities/session";
 import type { AuthSessionMessage, AuthStatus } from "@/entities/session";
 
 type UseAuthSessionActionsOptions = {

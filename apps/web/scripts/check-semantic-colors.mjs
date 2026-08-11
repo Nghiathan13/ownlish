@@ -9,24 +9,8 @@ const TEST_FILE_PATTERN = /\.(?:test|spec)\.(?:ts|tsx)$/;
 const COLOR_PATTERN = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)|\b(?:bg|text|border|fill|stroke|ring|outline|accent)-(?:red|emerald|amber|sky|neutral|black|white)(?:-\d{2,3})?(?:\/\d+)?/gi;
 
 const allowedTokensByFile = new Map([
-  // Deliberate neon treatment for the collection add-word action.
   [
-    "src/features/collections/detail/user/panel/components/CollectionWordsPanelBody.tsx",
-    new Set([
-      "text-white",
-      "#001651",
-      "#0040f0",
-      "#638dff",
-      "#0043fb",
-      "#001e8a",
-      "#013eff",
-      "#0055db",
-      "#5cceff",
-      "#5cc3ff",
-    ]),
-  ],
-  [
-    "src/features/dictation/study/DictationStudy.tsx",
+    "src/_pages/dictation/ui/study/DictationStudy.tsx",
     new Set([
       "bg-black/50",
       "text-white",
@@ -40,12 +24,12 @@ const allowedTokensByFile = new Map([
   ],
   // Native-video fallback needs fixed contrast.
   [
-    "src/features/dictation/study/YouTubeSegmentPlayer.tsx",
+    "src/_pages/dictation/ui/study/YouTubeSegmentPlayer.tsx",
     new Set(["bg-black"]),
   ],
   // Intentional landing-page artwork uses its own visual treatment.
   [
-    "src/features/home/components/GuestLanding.tsx",
+    "src/_pages/landing/ui/GuestLanding.tsx",
     new Set([
       "#1418a8",
       "#000",
@@ -57,7 +41,7 @@ const allowedTokensByFile = new Map([
   ],
   // The donut uses black only as an alpha-mask paint, never as visible UI color.
   [
-    "src/features/home/components/ReviewProgressCard.tsx",
+    "src/features/home/ui/ReviewProgressCard.tsx",
     new Set(["#000"]),
   ],
   // The login background is a local decorative illustration.

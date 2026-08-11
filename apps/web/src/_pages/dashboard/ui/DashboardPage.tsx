@@ -6,29 +6,29 @@ import { LEARNING_ACTIVITY_CALENDAR_MODES } from "@/entities/learning-activity";
 import {
   getCollectionsListPath,
   getDefaultUserCollection,
-} from "@/entities/collection/lib/collectionDisplay";
+} from "@/entities/collection";
 import { RequireAuth } from "@/features/auth";
 import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
-import { useCollectionsListQuery } from "@/features/collections/shared/data/hooks";
-import { DashboardTitleTabs } from "@/features/home/components/DashboardTitleTabs";
-import { DifficultReviewWordsCard } from "@/features/home/components/DifficultReviewWordsCard";
-import { HomeDashboardSkeleton } from "@/features/home/components/HomeDashboardSkeleton";
-import { LearningActivityCalendarCard } from "@/features/home/components/LearningActivityCalendarCard";
+import { useCollectionsListQuery } from "@/entities/collection";
+import { DashboardTitleTabs } from "@/features/home";
+import { DifficultReviewWordsCard } from "@/features/home";
+import { HomeDashboardSkeleton } from "@/features/home";
+import { LearningActivityCalendarCard } from "@/features/home";
 import {
   ProgressSourceMenu,
   ReviewProgressCard,
   type ProgressSource,
-} from "@/features/home/components/ReviewProgressCard";
-import { useDifficultReviewWords } from "@/features/home/hooks/useDifficultReviewWords";
-import { useLearningActivityCalendar } from "@/features/home/hooks/useLearningActivityCalendar";
-import type { DashboardSection } from "@/features/home/lib/dashboardPaths";
+} from "@/features/home";
+import { useDifficultReviewWords } from "@/features/home";
+import { useLearningActivityCalendar } from "@/features/home";
+import type { DashboardSection } from "@/features/home";
 import { classNames } from "@/shared/lib/classNames";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import {
   primaryTextButtonClassName,
   secondaryTextButtonClassName,
 } from "@/shared/ui/button";
-import { ArrowForwardIcon } from "@/shared/ui/icons/ArrowForwardIcon";
+import { ArrowForwardIcon } from "@/shared/ui/icons";
 import { PageShell } from "@/shared/ui/PageShell";
 
 const dashboardButtonInteractionClassName =

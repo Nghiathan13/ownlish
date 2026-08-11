@@ -2,8 +2,8 @@
 
 import { classNames } from "@/shared/lib/classNames";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
-import { statusColorClasses } from "@/shared/ui/theme/statusColors";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { statusColorClasses } from "@/shared/ui/theme";
+import { useT } from "@/shared/lib/providers";
 
 type MockSubmissionAlertProps = {
   hasSyncFailures: boolean;

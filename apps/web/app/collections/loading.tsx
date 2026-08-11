@@ -1,5 +1,5 @@
-import { CollectionsPageSkeleton } from "@/features/collections/list/components/CollectionsPageSkeleton";
+import { CollectionsWorkspacePageSkeleton } from "@/_pages/collections";
 
 export default function CollectionsLoading() {
-  return <CollectionsPageSkeleton />;
+  return <CollectionsWorkspacePageSkeleton />;
 }

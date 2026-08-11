@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { updateRuntimeMockTimer } from "@/entities/toeic-runtime/api/runtime";
-import { isAccessTokenExpired } from "@/entities/session/lib/accessTokenExpiry";
-import { getStoredAccessToken } from "@/entities/session/model/accessTokenStore";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
-import { formatMockCountdown } from "@/features/tests/shared/lib/mockTestTimer";
+import { updateRuntimeMockTimer } from "@/entities/toeic-runtime";
+import { isAccessTokenExpired } from "@/entities/session";
+import { getStoredAccessToken } from "@/entities/session";
+import { runAuthenticatedRequest } from "@/entities/session";
+import { formatMockCountdown } from "@/entities/toeic-runtime";
 
 const TIMER_SYNC_INTERVAL_MS = 60_000;
 

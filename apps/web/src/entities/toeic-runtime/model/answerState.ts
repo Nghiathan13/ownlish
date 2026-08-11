@@ -1,9 +1,8 @@
 import type {
+  OptionKey,
   ToeicQuestion,
   ToeicQuestionGroup,
 } from "@/entities/toeic-runtime/model/presentation";
-import { isPracticeAnswerGraded } from "@/features/tests/run/lib/practiceAnswers";
-import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 
 type SessionWithGroups = {
   groups: ToeicQuestionGroup[];
@@ -20,13 +19,19 @@ export function toAnswerMap(groups: ToeicQuestionGroup[]) {
 function getNextGroupStatus(
   questions: ToeicQuestion[],
 ): ToeicQuestionGroup["groupStatus"] {
-  if (!questions.every((question) => isPracticeAnswerGraded(question))) {
+  if (!questions.every(isToeicQuestionGraded)) {
     return null;
   }
 
   return questions.some((question) => question.status === "wrong")
     ? "wrong"
     : "right";
+}
+
+export function isToeicQuestionGraded(
+  answer: Pick<ToeicQuestion, "status">,
+): boolean {
+  return answer.status === "right" || answer.status === "wrong";
 }
 
 export function updateQuestion<T extends SessionWithGroups>(

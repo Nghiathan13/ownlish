@@ -1,4 +1,7 @@
-import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
+import {
+  isToeicQuestionGraded,
+  type ToeicQuestion,
+} from "@/entities/toeic-runtime";
 
 export type PracticeAnswer = Pick<
   ToeicQuestion,
@@ -14,7 +17,7 @@ export function hasPracticeSelection(
 export function isPracticeAnswerGraded(
   answer?: PracticeAnswer | null,
 ): boolean {
-  return answer?.status === "right" || answer?.status === "wrong";
+  return answer != null && isToeicQuestionGraded(answer);
 }
 
 export type QuestionGridResult = "correct" | "wrong" | null;

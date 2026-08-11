@@ -1,13 +1,13 @@
 "use client";
 
-import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
-import { practiceSurfaceFrameClassName } from "@/features/tests/run/components/PracticeTranslationCard";
-import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
-import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
+import { PracticeQuestionPrompt } from "@/features/tests/run/ui/PracticeQuestionPrompt";
+import { practiceSurfaceFrameClassName } from "@/features/tests/run/ui/PracticeTranslationCard";
+import { QuestionOptions } from "@/features/tests/run/ui/QuestionOptions";
+import { QuestionTranslationPanel } from "@/features/tests/run/ui/QuestionTranslationPanel";
 import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
 import type { PracticeQuestionPresentation } from "@/features/tests/run/lib/practiceQuestionPresentation";
-import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
-import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
+import type { PartPracticeConfig } from "@/entities/toeic-runtime";
+import type { ToeicQuestion } from "@/entities/toeic-runtime";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import { classNames } from "@/shared/lib/classNames";
 

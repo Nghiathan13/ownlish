@@ -1,11 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
+import type { RuntimeTestSession } from "../session/materializeTestSession";
 import {
   clearStoredAccessToken,
   setStoredAccessToken,
-} from "@/entities/session/model/accessTokenStore";
+} from "@/entities/session";
 import {
   readMockFinishCommand,
   storeMockFinishCommand,
@@ -14,8 +14,8 @@ import { useMockTestRun } from "@/features/tests/run/model/mock/useMockTestRun";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
-} from "@/shared/lib/testing/reactQuery";
-import { mswServer } from "@/shared/lib/testing/mswServer";
+} from "@/shared/lib/testing";
+import { mswServer } from "@/shared/lib/testing";
 
 const queryMocks = vi.hoisted(() => ({ useMockRunQuery: vi.fn() }));
 

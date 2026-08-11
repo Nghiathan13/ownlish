@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getToeicCatalog } from "../api/catalog";
-import { TOEIC_CATALOG_ROOT } from "@/shared/config/env";
+import { TOEIC_CATALOG_ROOT } from "@/shared/config";
 
 export const toeicCatalogQueryKey = ["toeic-catalog"] as const;
 

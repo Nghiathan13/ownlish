@@ -1,7 +1,4 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { getReviewQueueUserQueryKey } from "@/entities/vocab/lib/reviewQueueCache";
-import { getVocabUserQueryKey } from "@/entities/vocab/lib/vocabCache";
-import { getVocabStatsQueryKey } from "@/entities/vocab/lib/vocabStatsCache";
 
 export function getCollectionsQueryKey(userId: string | null) {
   return ["collections", { userId }] as const;
@@ -57,25 +54,9 @@ export function invalidateCollectionDetail(
   });
 }
 
-export function invalidateImportedVocabulary(
-  queryClient: QueryClient,
-  userId: string | null,
-) {
-  void queryClient.invalidateQueries({
-    queryKey: getVocabUserQueryKey(userId),
-  });
-  void queryClient.invalidateQueries({
-    queryKey: getReviewQueueUserQueryKey(userId),
-  });
-  void queryClient.invalidateQueries({
-    queryKey: getVocabStatsQueryKey(userId),
-  });
-}
-
 export function invalidateCollectionMutationQueries(
   queryClient: QueryClient,
   userId: string | null,
 ) {
   invalidateCollectionsList(queryClient, userId);
-  invalidateImportedVocabulary(queryClient, userId);
 }

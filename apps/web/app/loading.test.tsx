@@ -1,19 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/features/collections/detail/page/components/CollectionDetailPageSkeleton", () => ({
+vi.mock("@/_pages/collections", () => ({
   CollectionDetailPageSkeleton: () => <div>Collection detail skeleton</div>,
+  CollectionsWorkspacePageSkeleton: () => <div>Collections skeleton</div>,
 }));
-vi.mock("@/features/collections/list/components/CollectionsPageSkeleton", () => ({
-  CollectionsPageSkeleton: () => <div>Collections skeleton</div>,
-}));
-vi.mock("@/features/review/components/ReviewPageSkeleton", () => ({
+vi.mock("@/_pages/review", () => ({
   ReviewPageSkeleton: () => <div>Review skeleton</div>,
 }));
-vi.mock("@/features/tests/overview/components/TestsOverviewPageSkeleton", () => ({
+vi.mock("@/_pages/tests/ui/overview/components/TestsOverviewPageSkeleton", () => ({
   TestsOverviewPageSkeleton: () => <div>Tests skeleton</div>,
 }));
-vi.mock("@/features/tests/run/components/TestRunLoadingSkeleton", () => ({
+vi.mock("@/features/tests/run/ui/TestRunLoadingSkeleton", () => ({
   TestRunLoadingSkeleton: ({ variant }: { variant: string }) => (
     <div>Run skeleton: {variant}</div>
   ),

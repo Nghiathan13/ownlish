@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MockSubmissionAlert } from "@/features/tests/run/ui/mock/MockSubmissionAlert";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
 describe("MockSubmissionAlert", () => {
   it("offers an actionable retry when answers are not saved", async () => {

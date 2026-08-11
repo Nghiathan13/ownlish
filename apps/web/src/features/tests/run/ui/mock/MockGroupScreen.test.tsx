@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime";
 import { MockGroupScreen } from "@/features/tests/run/ui/mock/MockGroupScreen";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
 const group: ToeicQuestionGroup = {
   id: 11,

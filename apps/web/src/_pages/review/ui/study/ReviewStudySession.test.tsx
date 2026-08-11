@@ -1,0 +1,80 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { LocaleProvider } from "@/shared/lib/providers";
+import { ReviewStudySession } from "./ReviewStudySession";
+
+const word = {
+  band: "A1",
+  definitions: [
+    {
+      id: "definition-id",
+      definition: null,
+      example: null,
+      exampleVi: null,
+      meaningVi: "khoảng",
+      type: "adverb",
+    },
+  ],
+  id: "word-id",
+  ipa: null,
+  types: ["adverb"],
+  word: "about",
+};
+
+describe("ReviewStudySession", () => {
+  it("uses Keyboard mode to show correctness without grading until a rating is selected", () => {
+    const onEasy = vi.fn();
+    const onMaster = vi.fn();
+
+    const { rerender } = render(
+      <LocaleProvider>
+        <ReviewStudySession
+          isSubmitting={false}
+          level={0}
+          mode="flashcard"
+          onAgain={() => {}}
+          onEasy={onEasy}
+          onGood={() => {}}
+          onHard={() => {}}
+          onMaster={onMaster}
+          onModeChange={() => {}}
+          reviewedCount={0}
+          totalWords={20}
+          word={word}
+        />
+      </LocaleProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Master" }));
+    expect(onMaster).toHaveBeenCalledOnce();
+
+    rerender(
+      <LocaleProvider>
+        <ReviewStudySession
+          isSubmitting={false}
+          level={0}
+          mode="typing"
+          onAgain={() => {}}
+          onEasy={onEasy}
+          onGood={() => {}}
+          onHard={() => {}}
+          onMaster={onMaster}
+          onModeChange={() => {}}
+          reviewedCount={0}
+          totalWords={20}
+          word={word}
+        />
+      </LocaleProvider>,
+    );
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "wrong" } });
+    fireEvent.keyDown(window, { key: "Enter" });
+
+    expect(screen.getByText("Incorrect")).toBeInTheDocument();
+    expect(onEasy).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: /Easy/ }));
+
+    expect(onEasy).toHaveBeenCalledOnce();
+  });
+});

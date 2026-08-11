@@ -18,7 +18,7 @@ import {
   createAuthSessionChannel,
   isAuthSessionMessage,
 } from "./authSessionChannel";
-import { isUnauthorizedError } from "@/shared/api/http";
+import { isUnauthorizedError } from "@/shared/api";
 
 const BOOTSTRAP_RETRY_DELAY_MS = 1_000;
 

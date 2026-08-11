@@ -9,10 +9,10 @@ import {
   isLoadingStatus,
   useAuthSession,
 } from "@/entities/session";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import { SessionLoadingSkeleton } from "@/shared/skeletons";
 import { iconTextButtonClassName } from "@/shared/ui/button";
-import { ArrowBackIcon } from "@/shared/ui/icons/ArrowBackIcon";
+import { ArrowBackIcon } from "@/shared/ui/icons";
 
 export function LoginPage() {
   return (

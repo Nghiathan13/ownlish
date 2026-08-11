@@ -3,6 +3,7 @@ export {
   submitLearningActivityCheckpoint,
   submitLearningActivityCheckpointKeepalive,
 } from "./api/learningActivity";
+export { useLearningActivityTracker } from "./model/useLearningActivityTracker";
 export {
   LEARNING_ACTIVITY_TYPES,
   LEARNING_ACTIVITY_CALENDAR_MODES,

@@ -5,18 +5,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   finishRuntimeMockRun,
   submitRuntimeAnswer,
-} from "@/entities/toeic-runtime/api/runtime";
-import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
-import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
-import { updateQuestionSelection } from "@/entities/toeic-runtime/model/answerState";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+} from "@/entities/toeic-runtime";
+import type { ToeicQuestion } from "@/entities/toeic-runtime";
+import type { RuntimeTestSession } from "../session/materializeTestSession";
+import { updateQuestionSelection } from "@/entities/toeic-runtime";
+import { runAuthenticatedRequest } from "@/entities/session";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import {
   removeMockFinishCommand,
   storeMockFinishCommand,
 } from "@/features/tests/run/model/mock/mockFinishOutbox";
-import { getLocaleSnapshot } from "@/shared/i18n/locale";
-import { translate } from "@/shared/i18n/messages";
+import { getLocaleSnapshot } from "@/shared/i18n";
+import { translate } from "@/shared/i18n";
 
 function answerSyncErrorMessage() {
   return translate(

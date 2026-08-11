@@ -26,8 +26,19 @@ export function getVocabQueryKey(
   ] as const;
 }
 
+import { getReviewQueueUserQueryKey } from "./reviewQueueCache";
+
 export function getVocabUserQueryKey(userId: string | null) {
   return ["vocab", { userId }] as const;
+}
+
+export function invalidateVocabUserQueries(
+  queryClient: QueryClient,
+  userId: string | null,
+) {
+  void queryClient.invalidateQueries({ queryKey: getVocabUserQueryKey(userId) });
+  void queryClient.invalidateQueries({ queryKey: getReviewQueueUserQueryKey(userId) });
+  void queryClient.invalidateQueries({ queryKey: getVocabStatsQueryKey(userId) });
 }
 
 type InvalidateVocabMutationQueriesParams = {

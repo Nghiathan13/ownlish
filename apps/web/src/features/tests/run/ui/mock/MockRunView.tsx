@@ -5,20 +5,26 @@ import { useRouter } from "next/navigation";
 import { MockGroupScreen } from "@/features/tests/run/ui/mock/MockGroupScreen";
 import { MockFinishFailureModal } from "@/features/tests/run/ui/mock/MockFinishFailureModal";
 import { MockSubmissionAlert } from "@/features/tests/run/ui/mock/MockSubmissionAlert";
-import { TestRunLoadingSkeleton } from "@/features/tests/run/components/TestRunLoadingSkeleton";
-import { PracticeNavigationButtons } from "@/features/tests/run/components/PracticeNavigationButtons";
+import { TestRunLoadingSkeleton } from "@/features/tests/run/ui/TestRunLoadingSkeleton";
+import { PracticeNavigationButtons } from "@/features/tests/run/ui/PracticeNavigationButtons";
 import { useMockTestRun } from "@/features/tests/run/model/mock/useMockTestRun";
 import {
   useRegisterImmersiveExit,
   useRegisterImmersiveFinish,
-} from "@/features/shell/providers/ImmersiveToolbarProvider";
-import { LEARNING_ACTIVITY_TYPES } from "@/entities/learning-activity";
-import { useLearningActivityTracker } from "@/features/learning-activity/model/useLearningActivityTracker";
-import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+} from "@/shared/lib/providers";
+import {
+  LEARNING_ACTIVITY_TYPES,
+  useLearningActivityTracker,
+} from "@/entities/learning-activity";
+import {
+  getStoredAccessToken,
+  runAuthenticatedRequest,
+} from "@/entities/session";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime";
 import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPathFromYearValue,
-} from "@/features/tests/shared/constants/toeicYears";
+} from "@/entities/toeic-runtime";
 import type { QuestionGridSection } from "@/features/tests/run/lib/practiceQuestionGrid";
 import { getToeicQuestionGridDisplayNumber } from "@/features/tests/run/lib/practiceQuestionGrid";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
@@ -29,8 +35,8 @@ import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { Modal } from "@/shared/ui/Modal";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
-import { formatMessage } from "@/shared/i18n/messages";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { formatMessage } from "@/shared/i18n";
+import { useT } from "@/shared/lib/providers";
 
 type MockRunViewProps = {
   sessionId: string;
@@ -387,6 +393,8 @@ export function MockRunView({
 
   useLearningActivityTracker({
     activityType: LEARNING_ACTIVITY_TYPES.TEST_MOCK,
+    getAccessToken: getStoredAccessToken,
+    runAuthenticatedRequest,
     enabled:
       !mock.isLoading &&
       !mock.loadError &&

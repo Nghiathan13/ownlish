@@ -9,6 +9,8 @@ export type ToeicQuestionOptions = {
   D_vi: string | null;
 };
 
+export type OptionKey = "A" | "B" | "C" | "D";
+
 export type ToeicQuestion = {
   id: number;
   questionNumber: number;
@@ -17,8 +19,8 @@ export type ToeicQuestion = {
   questionVi: string | null;
   options: ToeicQuestionOptions;
   optionCount: number;
-  answerKey: "A" | "B" | "C" | "D" | null;
-  selectedKey: "A" | "B" | "C" | "D" | null;
+  answerKey: OptionKey | null;
+  selectedKey: OptionKey | null;
   status: "selected" | "right" | "wrong" | null;
   isCorrect: boolean | null;
 };

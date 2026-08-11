@@ -14,7 +14,7 @@ vi.mock("@/_pages/collections", () => ({
 vi.mock("@/_pages/review", () => ({
   ReviewWorkspacePage: () => <div>Review workspace</div>,
 }));
-vi.mock("@/features/review/hooks/useReviewMode", () => ({
+vi.mock("@/_pages/review", () => ({
   ReviewModeProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 

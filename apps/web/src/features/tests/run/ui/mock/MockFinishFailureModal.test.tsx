@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MockFinishFailureModal } from "@/features/tests/run/ui/mock/MockFinishFailureModal";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
 describe("MockFinishFailureModal", () => {
   it("keeps Finish retry actionable while explaining local-only edits", async () => {

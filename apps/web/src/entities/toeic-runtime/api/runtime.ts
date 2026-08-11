@@ -1,4 +1,4 @@
-import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import { apiRequest, invalidApiResponse } from "@/shared/api";
 import { isNumber, isRecord, isString } from "@/shared/lib/parse";
 import type {
   RuntimeAnswerStatus,

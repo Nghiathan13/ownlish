@@ -2,24 +2,24 @@
 
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
+import { submitRuntimeAnswer } from "@/entities/toeic-runtime";
 import type {
   PracticeMode,
   SubmitAnswerResult,
-} from "@/entities/toeic-runtime/model/presentation";
+} from "@/entities/toeic-runtime";
 import {
   getPartPracticeSessionQueryKey,
   getPartPracticeOverviewQueryKey,
-} from "@/entities/toeic-runtime/model/cache";
-import { useRuntimePartPracticeSessionQuery } from "@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery";
-import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
-import { toAnswerMap } from "@/entities/toeic-runtime/model/answerState";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+} from "@/entities/toeic-runtime";
+import { useRuntimePartPracticeSessionQuery } from "../session/useRuntimePartPracticeSessionQuery";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog";
+import { toAnswerMap } from "@/entities/toeic-runtime";
+import { runAuthenticatedRequest } from "@/entities/session";
 import { useAuthSession, isAuthenticatedStatus } from "@/entities/session";
 import {
   getFirstPartPracticeGroupKey,
   preloadCatalogGroupMedia,
-} from "@/features/tests/shared/model/preloadToeicSessionMedia";
+} from "@/entities/toeic-catalog";
 import {
   buildAnswerKeyMap,
   type OptionKey,

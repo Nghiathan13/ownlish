@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PracticeSubmissionAlert } from "@/features/tests/run/ui/practice/PracticeSubmissionAlert";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
 describe("PracticeSubmissionAlert", () => {
   it("shows the save failure and retries it", async () => {

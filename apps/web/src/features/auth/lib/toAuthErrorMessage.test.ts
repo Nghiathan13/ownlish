@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApiError } from "@/shared/api/http";
+import { ApiError } from "@/shared/api";
 import { toAuthErrorMessage } from "./toAuthErrorMessage";
 
 describe("toAuthErrorMessage", () => {

@@ -1,20 +1,20 @@
 "use client";
 
-import { MockLeftPanel } from "@/features/tests/run/components/MockLeftPanel";
-import { PracticeLeftPanel } from "@/features/tests/run/components/PracticeLeftPanel";
-import { PracticeQuestionPrompt } from "@/features/tests/run/components/PracticeQuestionPrompt";
-import { PracticeSplitPlainLayout } from "@/features/tests/run/components/PracticeSplitPlainLayout";
-import { practiceSurfaceFrameClassName } from "@/features/tests/run/components/PracticeTranslationCard";
-import { QuestionOptions } from "@/features/tests/run/components/QuestionOptions";
-import { QuestionTranslationPanel } from "@/features/tests/run/components/QuestionTranslationPanel";
-import { useImmersiveBilingual } from "@/features/shell/providers/ImmersiveToolbarProvider";
-import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import { MockLeftPanel } from "@/features/tests/run/ui/MockLeftPanel";
+import { PracticeLeftPanel } from "@/features/tests/run/ui/PracticeLeftPanel";
+import { PracticeQuestionPrompt } from "@/features/tests/run/ui/PracticeQuestionPrompt";
+import { PracticeSplitPlainLayout } from "@/features/tests/run/ui/PracticeSplitPlainLayout";
+import { practiceSurfaceFrameClassName } from "@/features/tests/run/ui/PracticeTranslationCard";
+import { QuestionOptions } from "@/features/tests/run/ui/QuestionOptions";
+import { QuestionTranslationPanel } from "@/features/tests/run/ui/QuestionTranslationPanel";
+import { useImmersiveBilingual } from "@/shared/lib/providers";
+import { getPartPracticeConfig } from "@/entities/toeic-runtime";
 import {
   showsGroupContentTranslation,
   showsOptionTranslation,
   showsQuestionTranslation,
-} from "@/features/tests/shared/lib/partTranslationVisibility";
-import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+} from "@/entities/toeic-runtime";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime";
 import type { OptionKey } from "@/features/tests/run/lib/answerKeyMap";
 import { classNames } from "@/shared/lib/classNames";
 

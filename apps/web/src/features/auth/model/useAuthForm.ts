@@ -2,11 +2,11 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { requestEmailOtp } from "@/entities/auth/api/auth";
+import { requestEmailOtp } from "@/entities/auth";
 import { toAuthErrorMessage } from "../lib/toAuthErrorMessage";
 import { useAuthSession } from "@/entities/session";
-import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes/dashboard";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes";
+import { useT } from "@/shared/lib/providers";
 
 export type AuthStep = "email" | "otp" | "profile";
 

@@ -13,6 +13,4 @@ export { RequireAuth } from "./ui/RequireAuth";
 export { useAuthSessionActions } from "./model/useAuthSessionActions";
 
 export { getSafeAuthRedirectPath } from "./lib/authRedirect";
-export { isAdminUser } from "./lib/isAdminUser";
-
 export { isGoogleSignInConfigured } from "./config/googleSignIn";

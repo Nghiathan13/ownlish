@@ -1,7 +1,7 @@
 // Client-side session lifecycle only (not server RefreshSessions).
 
-import type { AuthResponse } from "@/entities/auth/types";
-import { ApiError, isUnauthorizedError } from "@/shared/api/http";
+import type { AuthResponse } from "@/entities/auth/@x/session";
+import { ApiError, isUnauthorizedError } from "@/shared/api";
 import { refreshSession as refreshSessionRequest } from "@/entities/session/api/refreshSession";
 import { isAccessTokenExpired } from "@/entities/session/lib/accessTokenExpiry";
 import {

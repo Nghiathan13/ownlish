@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime";
 import { MockRunView } from "@/features/tests/run/ui/mock/MockRunView";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
 const mocks = vi.hoisted(() => ({
   registerExit: vi.fn(),
@@ -18,7 +18,7 @@ vi.mock("@/features/tests/run/model/mock/useMockTestRun", () => ({
   useMockTestRun: mocks.useMockTestRun,
 }));
 
-vi.mock("@/features/shell/providers/ImmersiveToolbarProvider", () => ({
+vi.mock("@/shared/lib/providers", () => ({
   useImmersiveBilingual: () => null,
   useRegisterImmersiveExit: mocks.registerExit,
   useRegisterImmersiveFinish: mocks.registerFinish,

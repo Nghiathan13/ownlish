@@ -1,4 +1,4 @@
-import { EVIDENCE_HIGHLIGHT_STORAGE_KEY } from "@/features/tests/run/constants/storageKeys";
+import { EVIDENCE_HIGHLIGHT_STORAGE_KEY } from "@/features/tests/run/config/storageKeys";
 
 export function parseEvidenceHighlightEnabled(raw: string | null) {
   return raw !== "false";

@@ -1,7 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { getDifficultReviewWords } from "@/entities/review/api/difficultReviewWords";
-import { mswServer } from "@/shared/lib/testing/mswServer";
+import { mswServer } from "@/shared/lib/testing";
 
 describe("difficult review words API", () => {
   it("requests collection words by default", async () => {

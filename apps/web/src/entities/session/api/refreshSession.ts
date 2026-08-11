@@ -1,5 +1,5 @@
-import { parseAuthResponse } from "@/entities/auth/lib/parseAuthResponse";
-import { apiRequest } from "@/shared/api/http";
+import { parseAuthResponse } from "@/entities/auth/@x/session";
+import { apiRequest } from "@/shared/api";
 
 export function refreshSession() {
   return apiRequest("/api/auth/refresh", {

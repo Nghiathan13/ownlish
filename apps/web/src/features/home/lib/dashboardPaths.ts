@@ -1,9 +1,9 @@
-import type { MessageKey } from "@/shared/i18n/messages";
+import type { MessageKey } from "@/shared/i18n";
 import {
   DASHBOARD_MY_ACTIVITY_PATH,
   DASHBOARD_PROGRESS_PATH,
   DASHBOARD_ROOT_PATH,
-} from "@/shared/routes/dashboard";
+} from "@/shared/routes";
 
 export {
   DASHBOARD_MY_ACTIVITY_PATH,

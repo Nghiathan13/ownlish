@@ -5,18 +5,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import type {
   PracticeMode,
   SubmitAnswerResult,
-} from "@/entities/toeic-runtime/model/presentation";
-import { submitRuntimeAnswer } from "@/entities/toeic-runtime/api/runtime";
-import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime/model/cache";
-import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRuntimeTestSessionQuery";
-import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
-import { toAnswerMap } from "@/entities/toeic-runtime/model/answerState";
-import { runAuthenticatedRequest } from "@/entities/session/model/authenticatedRequest";
+} from "@/entities/toeic-runtime";
+import { submitRuntimeAnswer } from "@/entities/toeic-runtime";
+import { invalidateRuntimeTestPracticeOverview } from "@/entities/toeic-runtime";
+import { useRuntimeTestSessionQuery } from "../session/useRuntimeTestSessionQuery";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog";
+import { toAnswerMap } from "@/entities/toeic-runtime";
+import { runAuthenticatedRequest } from "@/entities/session";
 import { useAuthSession, isAuthenticatedStatus } from "@/entities/session";
 import {
   getFirstTestPartGroupKey,
   preloadCatalogGroupMedia,
-} from "@/features/tests/shared/model/preloadToeicSessionMedia";
+} from "@/entities/toeic-catalog";
 import {
   buildAnswerKeyMap,
   type OptionKey,

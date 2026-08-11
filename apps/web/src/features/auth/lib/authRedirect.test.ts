@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes/dashboard";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes";
 import { getSafeAuthRedirectPath } from "./authRedirect";
 
 describe("getSafeAuthRedirectPath", () => {

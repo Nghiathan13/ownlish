@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AuthUser } from "@/entities/auth/types";
+import type { AuthUser } from "@/entities/auth";
 import type { AuthStatus } from "@/entities/session";
 import { useAuthSessionActions } from "./useAuthSessionActions";
 
-vi.mock("@/entities/session/model/accessTokenManager", () => ({
+vi.mock("@/entities/session", () => ({
   clearClientSession: vi.fn(),
   establishSession: vi.fn(),
 }));
@@ -17,7 +17,7 @@ vi.mock("@/entities/session/model/authenticatedRequest", () => ({
   ),
 }));
 
-vi.mock("@/entities/auth/api/auth", () => ({
+vi.mock("@/entities/auth", () => ({
   completeEmailOtpProfile: vi.fn(),
   googleLogin: vi.fn(),
   login: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock("@/entities/auth/api/auth", () => ({
 import {
   clearClientSession,
   establishSession,
-} from "@/entities/session/model/accessTokenManager";
+} from "@/entities/session";
 import {
   completeEmailOtpProfile,
   googleLogin,
@@ -39,7 +39,7 @@ import {
   register,
   updateProfile,
   verifyEmailOtp,
-} from "@/entities/auth/api/auth";
+} from "@/entities/auth";
 
 const clearClientSessionMock = vi.mocked(clearClientSession);
 const establishSessionMock = vi.mocked(establishSession);

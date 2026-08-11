@@ -1,5 +1,5 @@
 import { RequireAdmin } from "@/features/auth";
-import { AdminDashboard } from "@/features/admin/components/AdminDashboard";
+import { AdminDashboard } from "./AdminDashboard";
 
 export function AdminPage() {
   return (

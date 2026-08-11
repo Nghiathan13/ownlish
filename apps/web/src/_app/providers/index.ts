@@ -1,2 +1,2 @@
-export { AuthProvider } from "./AuthProvider";
-export { AppProviders } from "./AppProviders";
+export { AuthProvider } from "./ui/AuthProvider";
+export { AppProviders } from "./ui/AppProviders";

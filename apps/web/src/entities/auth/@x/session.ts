@@ -1,4 +1,5 @@
 export type {
+  AuthResponse,
   AuthUser,
   CompleteEmailOtpProfileInput,
   EmailOtpVerification,
@@ -7,4 +8,5 @@ export type {
   RegisterInput,
   UpdateProfileInput,
   VerifyEmailOtpInput,
-} from "../types";
+} from "../model/types";
+export { parseAuthResponse } from "../lib/parseAuthResponse";

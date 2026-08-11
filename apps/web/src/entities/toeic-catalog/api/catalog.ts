@@ -1,4 +1,4 @@
-import { TOEIC_CATALOG_ROOT } from "@/shared/config/env";
+import { TOEIC_CATALOG_ROOT } from "@/shared/config";
 import type {
   ToeicCatalogDocument,
   ToeicCatalogManifest,

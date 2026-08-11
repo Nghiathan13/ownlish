@@ -1,11 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ToeicRunResult } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicRunResult } from "@/entities/toeic-runtime";
 import {
   clearStoredAccessToken,
   setStoredAccessToken,
-} from "@/entities/session/model/accessTokenStore";
+} from "@/entities/session";
 import {
   readMockFinishCommand,
   storeMockFinishCommand,
@@ -14,8 +14,8 @@ import { useMockRunSubmission } from "@/features/tests/run/model/mock/useMockRun
 import {
   createQueryClientWrapper,
   createTestQueryClient,
-} from "@/shared/lib/testing/reactQuery";
-import { mswServer } from "@/shared/lib/testing/mswServer";
+} from "@/shared/lib/testing";
+import { mswServer } from "@/shared/lib/testing";
 
 const SESSION_ID = "00000000-0000-4000-8000-000000000001";
 const QUERY_KEY = ["runtime-test-session", SESSION_ID, "mock_test"] as const;

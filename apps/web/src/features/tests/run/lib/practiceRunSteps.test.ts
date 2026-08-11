@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic-runtime";
 import {
   buildAggregatePracticeRunSteps,
   buildPracticeRunSteps,

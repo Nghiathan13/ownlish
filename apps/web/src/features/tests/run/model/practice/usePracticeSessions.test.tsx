@@ -4,31 +4,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ToeicQuestion,
   ToeicQuestionGroup,
-} from "@/entities/toeic-runtime/model/presentation";
+} from "@/entities/toeic-runtime";
 import {
   clearStoredAccessToken,
   setStoredAccessToken,
-} from "@/entities/session/model/accessTokenStore";
+} from "@/entities/session";
 import { usePartPracticeSession } from "@/features/tests/run/model/practice/usePartPracticeSession";
 import { usePracticeSession } from "@/features/tests/run/model/practice/usePracticeSession";
-import type { RuntimePartPracticeSession } from "@/entities/toeic-runtime/model/materializePartPracticeSession";
-import type { RuntimeTestSession } from "@/entities/toeic-runtime/model/materializeTestSession";
+import type { RuntimePartPracticeSession } from "../session/materializePartPracticeSession";
+import type { RuntimeTestSession } from "../session/materializeTestSession";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
-} from "@/shared/lib/testing/reactQuery";
-import { mswServer } from "@/shared/lib/testing/mswServer";
+} from "@/shared/lib/testing";
+import { mswServer } from "@/shared/lib/testing";
 
 const queryMocks = vi.hoisted(() => ({
   useRuntimePartPracticeSessionQuery: vi.fn(),
   useRuntimeTestSessionQuery: vi.fn(),
 }));
 
-vi.mock("@/entities/toeic-runtime/model/useRuntimeTestSessionQuery", () => ({
+vi.mock("../session/useRuntimeTestSessionQuery", () => ({
   useRuntimeTestSessionQuery: queryMocks.useRuntimeTestSessionQuery,
 }));
 
-vi.mock("@/entities/toeic-runtime/model/useRuntimePartPracticeSessionQuery", () => ({
+vi.mock("../session/useRuntimePartPracticeSessionQuery", () => ({
   useRuntimePartPracticeSessionQuery:
     queryMocks.useRuntimePartPracticeSessionQuery,
 }));

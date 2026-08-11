@@ -1,4 +1,4 @@
-import { isImmersiveTestPath } from "@/features/tests/shared/lib/isImmersiveTestPath";
+import { isImmersiveTestPath } from "@/entities/toeic-runtime";
 
 export type ShellLayoutMode = "bare" | "immersive" | "default";
 

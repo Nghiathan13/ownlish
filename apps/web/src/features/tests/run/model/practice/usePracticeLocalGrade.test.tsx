@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicQuestion, ToeicQuestionGroup } from "@/entities/toeic-runtime";
 import { usePracticeLocalGrade } from "@/features/tests/run/model/practice/usePracticeLocalGrade";
 import {
   createQueryClientWrapper,
   createTestQueryClient,
-} from "@/shared/lib/testing/reactQuery";
+} from "@/shared/lib/testing";
 
 function createQuestion(
   id: number,

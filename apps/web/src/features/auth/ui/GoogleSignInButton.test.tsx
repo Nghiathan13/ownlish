@@ -38,7 +38,7 @@ async function loadGoogleSignInButton() {
   const [{ GoogleSignInButton, isGoogleSignInConfigured }, { LocaleProvider }] =
     await Promise.all([
       import("./GoogleSignInButton"),
-      import("@/shared/providers/LocaleProvider"),
+      import("@/shared/lib/providers"),
     ]);
 
   return { GoogleSignInButton, isGoogleSignInConfigured, LocaleProvider };

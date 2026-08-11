@@ -1,5 +1,5 @@
-import type { ToeicQuestionGroup } from "@/entities/toeic-runtime/model/presentation";
-import { getPartPracticeConfig } from "@/features/tests/shared/lib/partPracticeConfig";
+import type { ToeicQuestionGroup } from "@/entities/toeic-runtime";
+import { getPartPracticeConfig } from "@/entities/toeic-runtime";
 import type { PracticeGroup, PracticeItem } from "@/features/tests/run/lib/practiceGroups";
 
 export type PracticeRunQuestionItem = PracticeItem & {

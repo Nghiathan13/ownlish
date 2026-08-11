@@ -4,7 +4,7 @@ vi.mock("@/entities/session/api/refreshSession", () => ({
   refreshSession: vi.fn(),
 }));
 
-vi.mock("@/shared/api/http", () => {
+vi.mock("@/shared/api", () => {
   class ApiError extends Error {
     status: number;
 
@@ -21,8 +21,8 @@ vi.mock("@/shared/api/http", () => {
   };
 });
 
-import { ApiError } from "@/shared/api/http";
-import type { AuthResponse } from "@/entities/auth/types";
+import { ApiError } from "@/shared/api";
+import type { AuthResponse } from "@/entities/auth/@x/session";
 import { refreshSession } from "@/entities/session/api/refreshSession";
 import {
   clearStoredAccessToken,

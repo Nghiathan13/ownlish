@@ -1,6 +1,6 @@
-import { invalidApiResponse } from "@/shared/api/http";
+import { invalidApiResponse } from "@/shared/api";
 import { isNullableString, isRecord, isString } from "@/shared/lib/parse";
-import type { AuthResponse, AuthUser, UserRole } from "@/entities/auth/types";
+import type { AuthResponse, AuthUser, UserRole } from "@/entities/auth";
 
 function parseUserRole(value: unknown): UserRole {
   if (value === "USER" || value === "ADMIN") {

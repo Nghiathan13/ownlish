@@ -1,5 +1,5 @@
-import { CollectionsPage } from "@/features/collections/list/components/CollectionsPage";
+import { CollectionsWorkspacePageContent } from "./CollectionsWorkspacePageContent";
 
 export function CollectionsWorkspacePage() {
-  return <CollectionsPage />;
+  return <CollectionsWorkspacePageContent />;
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRuntimeTestSessionQuery } from "@/entities/toeic-runtime/model/useRuntimeTestSessionQuery";
-import type { ToeicCatalogSource } from "@/entities/toeic-catalog/model/types";
+import { useRuntimeTestSessionQuery } from "../session/useRuntimeTestSessionQuery";
+import type { ToeicCatalogSource } from "@/entities/toeic-catalog";
 import {
   preloadFirstTestPartImage,
-} from "@/features/tests/shared/model/preloadToeicSessionMedia";
+} from "@/entities/toeic-catalog";
 
 export type UseMockRunQueryParams = {
   sessionId: string;

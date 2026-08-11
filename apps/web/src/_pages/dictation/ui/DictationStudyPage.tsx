@@ -1,5 +1,5 @@
 import { RequireAuth } from "@/features/auth";
-import { DictationStudy } from "@/features/dictation/study/DictationStudy";
+import { DictationStudy } from "./study/DictationStudy";
 
 type DictationStudyPageProps = {
   videoId: string;

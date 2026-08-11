@@ -7,7 +7,7 @@ import {
   useEffect,
   useRef,
 } from "react";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { classNames } from "@/shared/lib/classNames";
 

@@ -1,4 +1,4 @@
-import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import { apiRequest, invalidApiResponse } from "@/shared/api";
 import {
   isBoolean,
   isNullableString,

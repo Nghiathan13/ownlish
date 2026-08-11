@@ -2,7 +2,7 @@ import {
   apiFormRequest,
   apiRequest,
   invalidApiResponse,
-} from "@/shared/api/http";
+} from "@/shared/api";
 import {
   parseAuthResponse,
   parseAuthUser,
@@ -18,7 +18,7 @@ import type {
   RegisterInput,
   UpdateProfileInput,
   VerifyEmailOtpInput,
-} from "@/entities/auth/types";
+} from "../model/types";
 
 export type {
   AuthResponse,
@@ -33,7 +33,7 @@ export type {
   RegisterInput,
   UpdateProfileInput,
   VerifyEmailOtpInput,
-} from "@/entities/auth/types";
+} from "../model/types";
 
 function parseLogoutResponse(body: unknown): { success: true } {
   if (!isRecord(body) || body.success !== true) {

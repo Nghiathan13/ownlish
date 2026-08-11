@@ -1,13 +1,13 @@
-import type { PartPracticeConfig } from "@/features/tests/shared/constants/partPracticeConfig";
+import type { PartPracticeConfig } from "@/entities/toeic-runtime";
 import {
   isPracticeAnswerGraded,
   type PracticeAnswer,
 } from "@/features/tests/run/lib/practiceAnswers";
-import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicQuestion } from "@/entities/toeic-runtime";
 import {
   showsOptionTranslation,
   showsQuestionTranslation,
-} from "@/features/tests/shared/lib/partTranslationVisibility";
+} from "@/entities/toeic-runtime";
 
 type OptionKey = "A" | "B" | "C" | "D";
 

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { parseOxfordBand } from "@/features/collections/oxford/lib/oxfordNavigation";
+import { parseOxfordBand } from "@/entities/collection";
 
 type OxfordBandPageProps = {
   params: Promise<{ band: string }>;

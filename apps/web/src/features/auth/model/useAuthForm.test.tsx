@@ -1,8 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError } from "@/shared/api/http";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { ApiError } from "@/shared/api";
+import { LocaleProvider } from "@/shared/lib/providers";
 import { useAuthForm } from "./useAuthForm";
 
 const mocks = vi.hoisted(() => ({

@@ -1,5 +1,5 @@
-import type { CatalogDefinition } from "@/entities/collection/api/collections";
-import { apiRequest, invalidApiResponse } from "@/shared/api/http";
+import type { CatalogDefinition } from "@/entities/collection/@x/review";
+import { apiRequest, invalidApiResponse } from "@/shared/api";
 import {
   isNullableString,
   isNumber,

@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import { primaryTextButtonClassName } from "@/shared/ui/button";
 import { TextInput } from "@/shared/ui/TextInput";
 

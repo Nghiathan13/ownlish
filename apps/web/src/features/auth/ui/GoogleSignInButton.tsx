@@ -4,7 +4,7 @@ import Image from "next/image";
 import Script from "next/script";
 import { GIS_SCRIPT_SRC } from "../config/googleSignIn";
 import { useGoogleCodeClient } from "../model/useGoogleCodeClient";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 
 export { isGoogleSignInConfigured } from "../config/googleSignIn";

@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { ToeicQuestion } from "@/entities/toeic-runtime/model/presentation";
+import type { ToeicQuestion } from "@/entities/toeic-runtime";
 import type { PracticeSessionController } from "@/features/tests/run/model/practice/practiceSessionController";
 import type { PracticeGroup } from "@/features/tests/run/lib/practiceGroups";
 import { PracticeGroupScreen } from "@/features/tests/run/ui/practice/PracticeGroupScreen";
-import { LocaleProvider } from "@/shared/providers/LocaleProvider";
+import { LocaleProvider } from "@/shared/lib/providers";
 
-vi.mock("@/features/tests/run/hooks/useSignedMedia", () => ({
+vi.mock("@/features/tests/run/model/hooks/useSignedMedia", () => ({
   useSignedMedia: () => ({
     audioUrl: null,
     imageUrl: null,
@@ -16,11 +16,11 @@ vi.mock("@/features/tests/run/hooks/useSignedMedia", () => ({
   }),
 }));
 
-vi.mock("@/features/shell/providers/ImmersiveToolbarProvider", () => ({
+vi.mock("@/shared/lib/providers", () => ({
   useImmersiveBilingual: () => null,
 }));
 
-vi.mock("@/features/tests/run/components/PracticeLeftPanel", () => ({
+vi.mock("@/features/tests/run/ui/PracticeLeftPanel", () => ({
   PracticeLeftPanel: () => <div>Practice context</div>,
 }));
 

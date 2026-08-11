@@ -4,7 +4,7 @@ import { FormEmailStep } from "./FormEmailStep";
 import { FormOtpStep } from "./FormOtpStep";
 import { FormProfileStep } from "./FormProfileStep";
 import { useAuthForm } from "../model/useAuthForm";
-import { useT } from "@/shared/providers/LocaleProvider";
+import { useT } from "@/shared/lib/providers";
 import { Panel } from "@/shared/ui/Panel";
 
 type FormProps = {

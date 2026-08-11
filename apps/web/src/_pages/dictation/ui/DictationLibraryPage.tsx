@@ -1,5 +1,5 @@
 import { RequireAuth } from "@/features/auth";
-import { DictationLibrary } from "@/features/dictation/catalog/DictationLibrary";
+import { DictationLibrary } from "./catalog/DictationLibrary";
 
 type DictationLibraryPageProps = {
   category?: string;
