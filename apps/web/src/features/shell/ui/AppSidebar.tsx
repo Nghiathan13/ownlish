@@ -51,6 +51,12 @@ const sidebarOpenButtonClassName = classNames(
   "cursor-ew-resize",
 );
 
+const sidebarCollapseEdgeClassName = classNames(
+  "absolute inset-y-0 right-0 z-30 w-4 translate-x-1/2 cursor-col-resize touch-none select-none",
+  "before:absolute before:inset-y-0 before:left-1/2 before:w-px before:-translate-x-1/2 before:bg-border",
+  "hover:before:bg-foreground",
+);
+
 export function AppSidebar() {
   const t = useT();
   const pathname = usePathname();
@@ -72,10 +78,20 @@ export function AppSidebar() {
     <aside
       className={classNames(
         "relative z-20 flex h-full shrink-0 flex-col bg-background backdrop-blur-md",
-        collapsed && "cursor-ew-resize",
+        collapsed ? "cursor-ew-resize border-r border-border" : null,
       )}
       onClick={collapsed ? handleCollapsedSidebarClick : undefined}
     >
+      {!collapsed ? (
+        <button
+          type="button"
+          aria-label={t("shell.closeSidebar")}
+          className={sidebarCollapseEdgeClassName}
+          onClick={() => {
+            setCollapsed(true);
+          }}
+        />
+      ) : null}
       <div
         className={classNames(
           "flex min-h-0 flex-1 flex-col",
@@ -153,12 +169,7 @@ export function AppSidebar() {
                         collapsed && "z-10 justify-center",
                       )}
                     >
-                      <Icon
-                        className={classNames(
-                          "size-6 shrink-0",
-                          isActive && "text-primary",
-                        )}
-                      />
+                      <Icon className="size-6 shrink-0" />
                       {!collapsed ? <span>{label}</span> : null}
                       {collapsed ? (
                         <Tooltip group="sidebar-link" placement="right">

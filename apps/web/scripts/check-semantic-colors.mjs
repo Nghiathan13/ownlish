@@ -41,7 +41,7 @@ const allowedTokensByFile = new Map([
   ],
   // The donut uses black only as an alpha-mask paint, never as visible UI color.
   [
-    "src/features/home/ui/ReviewProgressCard.tsx",
+    "src/features/dashboard-progress/lib/reviewProgressDonut.ts",
     new Set(["#000"]),
   ],
   // The login background is a local decorative illustration.

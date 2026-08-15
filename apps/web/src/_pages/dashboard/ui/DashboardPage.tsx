@@ -10,18 +10,20 @@ import {
 import { RequireAuth } from "@/features/auth";
 import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import { useCollectionsListQuery } from "@/entities/collection";
-import { DashboardTitleTabs } from "@/features/home";
-import { DifficultReviewWordsCard } from "@/features/home";
-import { HomeDashboardSkeleton } from "@/features/home";
-import { LearningActivityCalendarCard } from "@/features/home";
 import {
+  LearningActivityCalendarCard,
+  useLearningActivityCalendar,
+} from "@/features/dashboard-activity";
+import {
+  DifficultReviewWordsCard,
   ProgressSourceMenu,
   ReviewProgressCard,
+  useDifficultReviewWords,
   type ProgressSource,
-} from "@/features/home";
-import { useDifficultReviewWords } from "@/features/home";
-import { useLearningActivityCalendar } from "@/features/home";
-import type { DashboardSection } from "@/features/home";
+} from "@/features/dashboard-progress";
+import type { DashboardSection } from "../lib/dashboardPaths";
+import { DashboardTitleTabs } from "./DashboardTitleTabs";
+import { HomeDashboardSkeleton } from "./HomeDashboardSkeleton";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/lib/providers";
 import {

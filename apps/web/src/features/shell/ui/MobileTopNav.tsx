@@ -176,12 +176,7 @@ export function MobileTopNav() {
                   onClick={() => setMenuOpen(false)}
                   scroll={false}
                 >
-                  <Icon
-                    className={classNames(
-                      "size-6 shrink-0",
-                      isActive && "text-primary",
-                    )}
-                  />
+                  <Icon className="size-6 shrink-0" />
                   <span>{t(link.labelKey)}</span>
                 </Link>
               );

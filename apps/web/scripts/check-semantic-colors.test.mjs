@@ -15,13 +15,13 @@ describe("semantic color guard", () => {
     expect(
       findDisallowedColors(
         'const mask = "radial-gradient(#000, transparent)";',
-        "src/features/home/ui/ReviewProgressCard.tsx",
+        "src/features/dashboard-progress/lib/reviewProgressDonut.ts",
       ),
     ).toEqual([]);
     expect(
       findDisallowedColors(
         'const color = "#ff0000";',
-        "src/features/home/ui/ReviewProgressCard.tsx",
+        "src/features/dashboard-progress/lib/reviewProgressDonut.ts",
       ),
     ).toEqual(["#ff0000"]);
   });

@@ -8,7 +8,7 @@ import {
   useAuthSession,
 } from "@/entities/session";
 import { GuestLanding } from "./GuestLanding";
-import { DASHBOARD_MY_ACTIVITY_PATH } from "@/features/home";
+import { DASHBOARD_MY_ACTIVITY_PATH } from "@/shared/routes";
 import { SessionLoadingSkeleton } from "@/shared/skeletons";
 import { PageShell } from "@/shared/ui/PageShell";
 

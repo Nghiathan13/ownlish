@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "./DashboardPage";
-import { getVietnamDateKey } from "@/features/home";
+import { getVietnamDateKey } from "@/features/dashboard-activity";
 
 function renderDashboard(ui: React.ReactElement) {
   const queryClient = new QueryClient({
@@ -47,11 +47,13 @@ vi.mock("@/entities/collection", async (importOriginal) => ({
   useCollectionsListQuery: mocks.useCollectionsListQuery,
 }));
 
-vi.mock("@/features/home/model/useLearningActivityCalendar", () => ({
+vi.mock("@/features/dashboard-activity", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/dashboard-activity")>()),
   useLearningActivityCalendar: mocks.useLearningActivityCalendar,
 }));
 
-vi.mock("@/features/home/model/useDifficultReviewWords", () => ({
+vi.mock("@/features/dashboard-progress", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/dashboard-progress")>()),
   useDifficultReviewWords: mocks.useDifficultReviewWords,
 }));
 
@@ -60,7 +62,7 @@ vi.mock("@/entities/vocab", async (importOriginal) => ({
   useVocabStats: mocks.useVocabStats,
 }));
 
-vi.mock("@/features/home/model/useOxfordProgressSummary", () => ({
+vi.mock("@/features/dashboard-progress/model/useOxfordProgressSummary", () => ({
   useOxfordProgressSummary: mocks.useOxfordProgressSummary,
 }));
 

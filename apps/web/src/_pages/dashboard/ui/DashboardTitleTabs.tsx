@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   DASHBOARD_SUB_LINKS,
   parseDashboardSection,
-} from "@/features/home/lib/dashboardPaths";
+} from "../lib/dashboardPaths";
 import { useT } from "@/shared/lib/providers";
 import { UnderlineTabs } from "@/shared/ui/UnderlineTabs";
 

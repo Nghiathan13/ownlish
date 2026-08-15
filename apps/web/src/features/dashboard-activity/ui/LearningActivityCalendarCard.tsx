@@ -10,7 +10,7 @@ import {
   getLearningActivitySecondsByDate,
   getNavigableLearningActivityPeriods,
   getVietnamDateKey,
-} from "@/features/home/lib/learningActivityCalendar";
+} from "../lib/learningActivityCalendar";
 import { classNames } from "@/shared/lib/classNames";
 import { useLocale } from "@/shared/lib/providers";
 import { Tooltip } from "@/shared/ui/Tooltip";
