@@ -12,6 +12,7 @@ import {
   PartPracticeRunView,
   TestRunLoadingSkeleton,
 } from "@/features/tests/run";
+import { DictionaryLookupBoundary } from "@/features/dictionary-lookup";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
 import { useT } from "@/shared/lib/providers";
@@ -26,12 +27,14 @@ function PartPracticeSessionContent({ sessionId }: { sessionId: string }) {
   const partNumber = parsePartPracticeRunPartParam(searchParams.get("part"));
 
   return (
-    <PartPracticeRunView
-      key={`${mode}-${sessionId}`}
-      practiceMode={mode}
-      partNumber={partNumber}
-      sessionId={sessionId}
-    />
+    <DictionaryLookupBoundary>
+      <PartPracticeRunView
+        key={`${mode}-${sessionId}`}
+        practiceMode={mode}
+        partNumber={partNumber}
+        sessionId={sessionId}
+      />
+    </DictionaryLookupBoundary>
   );
 }
 

@@ -16,6 +16,7 @@ import {
   PracticeRunView,
   TestRunLoadingSkeleton,
 } from "@/features/tests/run";
+import { DictionaryLookupBoundary } from "@/features/dictionary-lookup";
 import { secondaryTextButtonClassName } from "@/shared/ui/button";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";
@@ -90,23 +91,27 @@ function ToeicSessionContent({ mode, sessionId }: { mode: ToeicSessionMode; sess
 
   if (mode === "mock_test") {
     return (
-      <MockRunView
-        key={sessionId}
-        sessionId={sessionId}
-        selectedParts={selectedParts}
-        testKey={testKey}
-      />
+      <DictionaryLookupBoundary>
+        <MockRunView
+          key={sessionId}
+          sessionId={sessionId}
+          selectedParts={selectedParts}
+          testKey={testKey}
+        />
+      </DictionaryLookupBoundary>
     );
   }
 
   return (
-    <PracticeRunView
-      key={`${mode}-${sessionId}`}
-      practiceMode={mode}
-      selectedParts={selectedParts}
-      sessionId={sessionId}
-      testKey={testKey}
-    />
+    <DictionaryLookupBoundary>
+      <PracticeRunView
+        key={`${mode}-${sessionId}`}
+        practiceMode={mode}
+        selectedParts={selectedParts}
+        sessionId={sessionId}
+        testKey={testKey}
+      />
+    </DictionaryLookupBoundary>
   );
 }
 

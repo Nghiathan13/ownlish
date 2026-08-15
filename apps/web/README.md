@@ -137,6 +137,7 @@ catalog JSON files are available under `public/dictation`.
 | `AUTH_API_BASE_URL` | No | `NEXT_PUBLIC_API_BASE_URL`, then `http://localhost:3001` | Server-only API base URL for the same-origin auth BFF |
 | `NEXT_PUBLIC_TOEIC_CATALOG_ROOT` | TOEIC runtime | Empty | Public root of the published TOEIC catalog |
 | `NEXT_PUBLIC_DICTATION_CATALOG_ROOT` | Dictation runtime | Empty | Public root containing `catalog.json` and video JSON files |
+| `NEXT_PUBLIC_DICTIONARY_ROOT` | Dictionary lookup runtime | Empty | Public root containing one JSON entry per normalized English word |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Sign-In only | Empty | Google Identity Services web client ID |
 
 Variables prefixed with `NEXT_PUBLIC_` are part of the browser bundle. Never
@@ -272,6 +273,7 @@ export LIGHTHOUSE_AUTH_PASSWORD=performance-benchmark-password
 export NEXT_PUBLIC_API_BASE_URL=http://localhost:3101 AUTH_API_BASE_URL=http://localhost:3101
 export NEXT_PUBLIC_TOEIC_CATALOG_ROOT=http://localhost:3100/toeic
 export NEXT_PUBLIC_DICTATION_CATALOG_ROOT=http://localhost:3100/dictation
+export NEXT_PUBLIC_DICTIONARY_ROOT=http://localhost:3100/dictionary
 pnpm build
 pnpm lighthouse:authenticated
 pnpm lighthouse:authenticated:summary
@@ -360,6 +362,7 @@ NEXT_PUBLIC_API_BASE_URL=https://api.ownlish.com
 AUTH_API_BASE_URL=http://ownlish-production-server:3001
 NEXT_PUBLIC_TOEIC_CATALOG_ROOT=https://content.ownlish.com/toeic
 NEXT_PUBLIC_DICTATION_CATALOG_ROOT=https://content.ownlish.com/dictation
+NEXT_PUBLIC_DICTIONARY_ROOT=https://content.ownlish.com/dictionary
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=<optional-google-web-client-id>
 ```
 

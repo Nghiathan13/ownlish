@@ -64,6 +64,22 @@ pnpm --filter ownlish-server storage:configure-cors -- \
 pnpm --filter ownlish-server storage:configure-cors -- --bucket ownlish-assets-staging
 ```
 
+### Dictionary entries
+
+Dictionary entries are public, static JSON under the `dictionary/` prefix of
+the content bucket. Upload the initial local `a.json` as `dictionary/a.json`
+with `Content-Type: application/json` and:
+
+```text
+Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+```
+
+After upload, check that the staging and production URLs return `200` with the
+expected content type and cache header. Verify browser `GET` CORS access from
+local, staging, and production origins using the existing content-bucket
+GET/HEAD CORS rule. The web build receives the matching
+`NEXT_PUBLIC_DICTIONARY_ROOT` value from the environment file.
+
 For the one-time old Storage copy, run `storage:migrate-supabase` with a
 protected shell that has both the old Supabase service-role key and the target
 R2 token. Run `--dry-run` and compare the object count, key manifest and byte

@@ -6,3 +6,6 @@ export const TOEIC_CATALOG_ROOT =
 
 export const DICTATION_CATALOG_ROOT =
   process.env.NEXT_PUBLIC_DICTATION_CATALOG_ROOT ?? "";
+
+export const DICTIONARY_ROOT =
+  process.env.NEXT_PUBLIC_DICTIONARY_ROOT ?? "";
