@@ -1,13 +1,26 @@
-# Web architecture
+# Ownlish Web architecture
 
 ## Purpose and scope
 
 This document defines the boundaries of the Ownlish Next.js frontend. It
 explains where code belongs, which modules may depend on each other, and how
-the framework routing tree connects to Feature-Sliced Design (FSD).
+the framework routing tree connects to Feature-Sliced Design (FSD). It applies
+to all new web work and to code deliberately touched during a refactor; it
+does not require an unrelated rewrite of legacy code.
 
 It applies only to `apps/web`. The Nest API in `apps/server` follows Nest
 modules and domain boundaries; it does not use FSD.
+
+## Authority and terminology
+
+FSD defines its layers, lower-layer import rule, slices, segments, and public
+APIs. Next.js defines the App Router's special files and URL behavior. Neither
+standard prescribes Ownlish's `_app` and `_pages` names or documentation
+layout; those are local conventions documented here.
+
+- [Feature-Sliced Design layers](https://feature-sliced.design/docs/reference/layers)
+- [Feature-Sliced Design slices and segments](https://feature-sliced.design/docs/reference/slices-segments)
+- [Next.js project structure](https://nextjs.org/docs/app/getting-started/project-structure)
 
 ## System context
 
@@ -35,7 +48,7 @@ app/                         Next.js framework adapter
 src/
   _app/                      FSD App layer
   _pages/                    FSD Pages layer
-  widgets/
+  widgets/                   Optional FSD Widgets layer
   features/
   entities/
   shared/
@@ -150,6 +163,22 @@ The same-origin authentication BFF is implemented in
 route contract. Cookie behavior and public `/api/auth/*` URLs are therefore
 independent of internal BFF organization.
 
+```text
+login / Google / refresh / logout
+Browser → same-origin /api/auth/* → Next.js auth BFF → Ownlish API
+                                           │
+                                           └─ refresh cookie on the Web origin
+
+authenticated application data
+Browser → NEXT_PUBLIC_API_BASE_URL → Ownlish API with in-memory access token
+```
+
+The BFF reads the server-only `AUTH_API_BASE_URL`; browser data requests read
+`NEXT_PUBLIC_API_BASE_URL`. The BFF owns the refresh cookie, while
+`localStorage` holds UI and study preferences only, never access or refresh
+tokens. See [CONFIGURATION.md](./CONFIGURATION.md) for the environment
+relationship and secret boundary.
+
 ## Styling and theme tokens
 
 Tailwind is the primary styling API. `app/layout.tsx` imports exactly one global
@@ -206,7 +235,8 @@ pnpm build
 `pnpm lint` runs ESLint for both `src` and root `app`, then runs
 `pnpm fsd:check`. Steiger validates FSD layer and public-API rules. Coverage
 also includes both `src/**` and root `app/**` so route adapters remain visible
-in the report.
+in the report. See [TESTING.md](./TESTING.md) for test levels, local data
+requirements, and CI coverage behavior.
 
 ## References
 

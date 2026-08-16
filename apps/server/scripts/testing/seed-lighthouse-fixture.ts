@@ -2,7 +2,7 @@ import {
   createPerformancePrisma,
   getPerformanceEmail,
   seedPerformanceFixture,
-} from '../performance/fixture';
+} from '../../performance/fixture';
 
 const DICTATION_VIDEO_ID = 'Ys7-6_t7OEQ';
 

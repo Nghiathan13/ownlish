@@ -13,7 +13,7 @@ import {
   buildToeicCatalog,
   copyToeicCatalogMediaArtifacts,
   writeToeicCatalogArtifacts,
-} from '../src/entities/toeic-catalog/lib/catalog-builder';
+} from '../../src/entities/toeic-catalog/lib/catalog-builder';
 
 function readArgument(name: string): string {
   const index = process.argv.indexOf(name);

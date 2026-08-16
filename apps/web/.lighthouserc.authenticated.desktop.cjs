@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-const createLighthouseConfig = require("./lighthouse.config.cjs");
+const createLighthouseConfig = require("./scripts/lighthouse/create-config.cjs");
 
 const FIXTURE_COLLECTION_ID = "20000000-0000-4000-8000-000000000001";
 const urls = [

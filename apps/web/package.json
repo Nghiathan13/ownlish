@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint src app && pnpm fsd:check && pnpm styles:check",
     "fsd:check": "steiger src",
-    "styles:check": "node scripts/check-semantic-colors.mjs",
+    "styles:check": "node scripts/quality/check-semantic-colors.mjs",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:unit": "vitest run --project unit",

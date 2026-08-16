@@ -34,8 +34,9 @@ In this document:
 apps/server/
 ├─ ARCHITECTURE.md        # This code-architecture and policy document
 ├─ README.md              # Setup, operations, storage, deployment, commands
+├─ TESTING.md             # Test execution, data safety, and CI behavior
 ├─ prisma/                # Prisma schema and append-only SQL migrations
-├─ scripts/               # Explicit operational commands
+├─ scripts/               # Explicit operational commands; see scripts/README.md
 ├─ src/
 │  ├─ app/                # Composition root: AppModule and application shell
 │  ├─ common/             # Technical code genuinely shared by multiple features
@@ -132,11 +133,14 @@ catalog before projecting it into PostgreSQL.
 features and has no product-domain owner: for example, a generic guard,
 decorator, or date utility. It is not a catch-all folder.
 
-`config/` owns runtime configuration for application modules. Feature code
-imports the typed `env` object instead of reading environment variables
-directly. A script may read explicit command configuration at its entry point
-before it invokes code under `src/`; test setup and observability bootstrap are
-the existing non-feature exceptions.
+`config/` owns runtime configuration for application modules. `load-env.ts`
+loads `.env.local` before the legacy `.env` fallback, while process-provided
+values retain precedence. Feature code imports the typed `env` object instead
+of reading environment variables directly. A script may read explicit command
+configuration at its entry point before it invokes code under `src/`; test
+setup and observability bootstrap are the existing non-feature exceptions. See
+[CONFIGURATION.md](CONFIGURATION.md) for variable ownership and deployment
+configuration.
 
 `prisma/` provides the Nest integration for database access. The declarative
 schema and migration history remain in `apps/server/prisma/`, not inside a

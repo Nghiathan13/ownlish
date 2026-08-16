@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const WEB_ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const WEB_ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const SOURCE_ROOTS = ["src", "app"];
 const SOURCE_FILE_PATTERN = /\.(?:ts|tsx)$/;
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.(?:ts|tsx)$/;

@@ -100,6 +100,23 @@ Run one daily backup and restore its custom-format dump into an isolated
 database before cutover. Do not route public traffic or stop the old backend
 until that restore and staging smoke tests pass.
 
+## Application smoke tests
+
+After both applications and their catalogs are deployed to staging or
+production:
+
+- Sign in, reload, and confirm the session restores.
+- Open the dashboard and verify learning activity and study time update after
+  study activity.
+- Create, edit, delete, and review vocabulary in a personal collection.
+- Browse an Oxford band and complete a short review.
+- Start TOEIC practice, wrong-answer review, and a mock test; finish the mock
+  test and verify its result and history.
+- Open a Dictation category, play a video, select segments, and submit an
+  answer after the environment's catalog projection is synced.
+- Confirm direct API requests have no CORS errors and that browser storage does
+  not contain access or refresh tokens.
+
 ## Final database cutover
 
 Use Supabase's direct PostgreSQL connection string, not its pooler. During a

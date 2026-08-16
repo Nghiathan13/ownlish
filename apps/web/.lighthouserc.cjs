@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-const createLighthouseConfig = require("./lighthouse.config.cjs");
+const createLighthouseConfig = require("./scripts/lighthouse/create-config.cjs");
 
 module.exports = createLighthouseConfig({
   outputDir: ".lighthouseci",
