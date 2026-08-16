@@ -55,7 +55,7 @@ const dashboardModeLabelKeys = {
 } as const;
 
 type DashboardPageProps = {
-  section: DashboardSection;
+  section: Exclude<DashboardSection, "leaderboard">;
 };
 
 export function DashboardPage({ section }: DashboardPageProps) {

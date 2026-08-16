@@ -2,6 +2,7 @@ import { AuthModule } from '../auth/auth.module';
 import { CollectionsModule } from '../collections/collections.module';
 import { DictationModule } from '../dictation/dictation.module';
 import { LearningActivityModule } from '../features/learning-activity/learning-activity.module';
+import { LeaderboardModule } from '../features/leaderboard/leaderboard.module';
 import { ToeicRuntimeModule } from '../features/toeic-runtime/toeic-runtime.module';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { UsersModule } from '../users/users.module';
@@ -21,6 +22,7 @@ describe('AppModule', () => {
       ReviewsModule,
       ToeicRuntimeModule,
       LearningActivityModule,
+      LeaderboardModule,
     ]);
     expect(Reflect.getMetadata('controllers', AppModule)).toEqual([
       AppController,

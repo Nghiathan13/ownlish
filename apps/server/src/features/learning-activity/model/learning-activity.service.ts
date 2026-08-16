@@ -1,37 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import {
+  getVietnamLearningDay,
+  getVietnamLearningDayStart,
+} from '../../../common/lib/vietnam-learning-day';
 import type { SubmitLearningActivityCheckpointDto } from '../api/dto/submit-learning-activity-checkpoint.dto';
-
-const VIETNAM_UTC_OFFSET_MS = 7 * 60 * 60 * 1000;
 
 type DailyIncrement = {
   learnedOn: Date;
   seconds: number;
 };
-
-function getVietnamDayStart(date: Date) {
-  const localDate = new Date(date.getTime() + VIETNAM_UTC_OFFSET_MS);
-
-  return new Date(
-    Date.UTC(
-      localDate.getUTCFullYear(),
-      localDate.getUTCMonth(),
-      localDate.getUTCDate(),
-    ) - VIETNAM_UTC_OFFSET_MS,
-  );
-}
-
-function getVietnamDayValue(date: Date) {
-  const localDate = new Date(date.getTime() + VIETNAM_UTC_OFFSET_MS);
-
-  return new Date(
-    Date.UTC(
-      localDate.getUTCFullYear(),
-      localDate.getUTCMonth(),
-      localDate.getUTCDate(),
-    ),
-  );
-}
 
 export function splitCheckpointByVietnamDay(
   receivedAt: Date,
@@ -39,12 +17,12 @@ export function splitCheckpointByVietnamDay(
 ): DailyIncrement[] {
   const startedAt = new Date(receivedAt.getTime() - elapsedSeconds * 1000);
   const dayEnd = new Date(
-    getVietnamDayStart(startedAt).getTime() + 24 * 60 * 60 * 1000,
+    getVietnamLearningDayStart(startedAt).getTime() + 24 * 60 * 60 * 1000,
   );
 
   if (receivedAt < dayEnd) {
     return [
-      { learnedOn: getVietnamDayValue(receivedAt), seconds: elapsedSeconds },
+      { learnedOn: getVietnamLearningDay(receivedAt), seconds: elapsedSeconds },
     ];
   }
 
@@ -53,9 +31,9 @@ export function splitCheckpointByVietnamDay(
   );
 
   return [
-    { learnedOn: getVietnamDayValue(startedAt), seconds: firstDaySeconds },
+    { learnedOn: getVietnamLearningDay(startedAt), seconds: firstDaySeconds },
     {
-      learnedOn: getVietnamDayValue(receivedAt),
+      learnedOn: getVietnamLearningDay(receivedAt),
       seconds: elapsedSeconds - firstDaySeconds,
     },
   ].filter((increment) => increment.seconds > 0);

@@ -64,6 +64,7 @@ model UserLearningDaily {
 
   @@id([userId, learnedOn, activityType])
   @@index([userId, learnedOn])
+  @@index([learnedOn, userId])
   @@map("user_learning_daily")
 }
 
