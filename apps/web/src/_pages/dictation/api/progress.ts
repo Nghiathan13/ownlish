@@ -43,7 +43,7 @@ export function getDictationProgress(token: string, videoId: string) {
 export function submitDictationAnswer(
   token: string,
   input: {
-    isCompleted: boolean;
+    answer: string;
     segmentId: string;
     videoId: string;
   },
@@ -53,7 +53,7 @@ export function submitDictationAnswer(
     token,
     body: JSON.stringify({
       segmentId: input.segmentId,
-      isCompleted: input.isCompleted,
+      answer: input.answer,
     }),
   }).then((body) => parseProgress(body) ?? invalidApiResponse());
 }

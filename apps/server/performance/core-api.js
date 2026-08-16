@@ -267,7 +267,7 @@ export default function ({ accessTokens }) {
   record(http.get(`${baseUrl}/vocab/review/due?collectionId=${collectionId}&limit=20&offset=0`, { headers: authHeaders }), 'api_vocab_due_duration');
   record(http.get(`${baseUrl}/vocab/${vocabId}`, { headers: authHeaders }), 'api_vocab_get_duration');
   record(
-    http.patch(`${baseUrl}/vocab/${vocabId}/review`, json({ rating: 'GOOD' }), { headers: authHeaders }),
+    http.patch(`${baseUrl}/vocab/${vocabId}/review`, json({ rating: 'GOOD', submissionId: '10000000-0000-4000-8000-000000000002' }), { headers: authHeaders }),
     'api_vocab_review_duration',
   );
   record(
@@ -281,7 +281,7 @@ export default function ({ accessTokens }) {
   record(
     http.post(
       `${baseUrl}/reviews/oxford/A1/parts/1/definitions/${systemEntryId}/grade`,
-      json({ rating: 'FORGET' }),
+      json({ rating: 'FORGET', submissionId: '10000000-0000-4000-8000-000000000003' }),
       { headers: authHeaders },
     ),
     'api_review_grade_duration',
@@ -290,11 +290,6 @@ export default function ({ accessTokens }) {
 
   const videoId = `performance-${profileName}-video-${__VU}-${__ITER}`;
   record(http.get(`${baseUrl}/dictation/videos/${videoId}/progress`, { headers: authHeaders }), 'api_dictation_progress_duration');
-  record(
-    http.post(`${baseUrl}/dictation/videos/${videoId}/answers`, json({ segmentId: 's001', isCompleted: false }), { headers: authHeaders }),
-    'api_dictation_answer_duration',
-    201,
-  );
   record(http.del(`${baseUrl}/dictation/videos/${videoId}/progress`, null, { headers: authHeaders }), 'api_dictation_reset_duration');
 
   const testRun = record(

@@ -86,7 +86,7 @@ export type CreateVocabWordInput = {
 
 export type UpdateVocabWordInput = Partial<Omit<CreateVocabWordInput, "collectionId">>;
 
-export type UpdateVocabReviewInput = { rating: ReviewRating };
+export type UpdateVocabReviewInput = { rating: ReviewRating; submissionId: string };
 
 export type DeleteVocabEntryResult = { deletedEntryId: string };
 

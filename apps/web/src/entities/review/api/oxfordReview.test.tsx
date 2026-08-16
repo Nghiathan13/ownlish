@@ -47,10 +47,13 @@ describe("Oxford part review API", () => {
     });
   });
 
-  it("sends only the Oxford review rating when grading", async () => {
+  it("sends the Oxford review rating with its idempotency UUID", async () => {
     mswServer.use(
       http.post(`${URL}/definitions/${DEFINITION_ID}/grade`, async ({ request }) => {
-        await expect(request.json()).resolves.toEqual({ rating: "EASY" });
+        await expect(request.json()).resolves.toEqual({
+          rating: "EASY",
+          submissionId: "11111111-1111-4111-8111-111111111111",
+        });
         return HttpResponse.json({
           level: 1,
           wrongCount: 0,
@@ -66,6 +69,7 @@ describe("Oxford part review API", () => {
         part: 1,
         definitionId: DEFINITION_ID,
         rating: "EASY",
+        submissionId: "11111111-1111-4111-8111-111111111111",
       }),
     ).resolves.toEqual({
       level: 1,

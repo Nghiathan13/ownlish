@@ -1,4 +1,4 @@
-import { IsEnum } from 'class-validator';
+import { IsEnum, IsUUID } from 'class-validator';
 import {
   REVIEW_ACTIONS,
   type ReviewAction,
@@ -7,4 +7,7 @@ import {
 export class UpdateVocabReviewDto {
   @IsEnum(REVIEW_ACTIONS)
   rating: ReviewAction;
+
+  @IsUUID('4')
+  submissionId: string;
 }

@@ -6,6 +6,7 @@ import { ReviewsModule } from '../reviews/reviews.module';
 import { ToeicRuntimeModule } from '../features/toeic-runtime/toeic-runtime.module';
 import { LearningActivityModule } from '../features/learning-activity/learning-activity.module';
 import { LeaderboardModule } from '../features/leaderboard/leaderboard.module';
+import { ExperienceModule } from '../features/experience/experience.module';
 import { UsersModule } from '../users/users.module';
 import { VocabModule } from '../vocab/vocab.module';
 import { AppController } from './app.controller';
@@ -22,6 +23,7 @@ import { AppService } from './app.service';
     ToeicRuntimeModule,
     LearningActivityModule,
     LeaderboardModule,
+    ExperienceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

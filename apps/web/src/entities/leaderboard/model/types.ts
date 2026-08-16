@@ -13,3 +13,14 @@ export type StudyTimeLeaderboard = {
   endsOn: string | null;
   entries: StudyTimeLeaderboardEntry[];
 };
+
+export type ExperienceLeaderboardEntry = {
+  rank: number;
+  displayName: string;
+  avatarUrl: string | null;
+  experience: number;
+};
+
+export type ExperienceLeaderboard = {
+  entries: ExperienceLeaderboardEntry[];
+};

@@ -3,16 +3,15 @@ import { describe, expect, it } from "vitest";
 import { LeaderboardRow } from "./LeaderboardRow";
 
 describe("LeaderboardRow", () => {
-  it("renders a top-three learner with formatted study time", () => {
+  it("renders a top-three learner with a prepared metric value", () => {
     render(
       <LeaderboardRow
         entry={{
           rank: 1,
           displayName: "Linh",
           avatarUrl: null,
-          studySeconds: 7_500,
+          value: "2 h 5 min",
         }}
-        locale="en"
       />,
     );
 

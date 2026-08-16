@@ -4,9 +4,13 @@ import { LocaleProvider } from "@/shared/lib/providers";
 import { LeaderboardPanel } from "./LeaderboardPanel";
 
 const useStudyTimeLeaderboard = vi.hoisted(() => vi.fn());
+const useExperienceLeaderboard = vi.hoisted(() => vi.fn());
 
 vi.mock("../model/useStudyTimeLeaderboard", () => ({
   useStudyTimeLeaderboard,
+}));
+vi.mock("../model/useExperienceLeaderboard", () => ({
+  useExperienceLeaderboard,
 }));
 
 function renderPanel(
@@ -51,11 +55,17 @@ describe("LeaderboardPanel", () => {
       },
       reload: vi.fn(),
     });
+    useExperienceLeaderboard.mockReturnValue({
+      error: null,
+      isLoading: false,
+      leaderboard: { entries: [] },
+      reload: vi.fn(),
+    });
   });
 
   afterEach(() => vi.useRealTimers());
 
-  it("renders public leaderboard rows and the V2 metric tab", () => {
+  it("renders public leaderboard rows and the Experience metric tab", () => {
     renderPanel({ metric: "study-time", period: "all", anchor: null });
 
     expect(screen.getByRole("heading", { name: "Leaderboard" })).toBeInTheDocument();
@@ -66,20 +76,33 @@ describe("LeaderboardPanel", () => {
       "src",
       "https://assets.example/minh.png",
     );
-    expect(screen.getByRole("tab", { name: "Experience · V2" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Experience" })).toHaveAttribute(
       "href",
       "/dashboard/leaderboard?metric=experience",
     );
   });
 
-  it("shows the intentional Experience V2 state without enabling study-time data", () => {
+  it("loads the Experience leaderboard without enabling study-time data", () => {
+    useExperienceLeaderboard.mockReturnValue({
+      error: null,
+      isLoading: false,
+      leaderboard: {
+        entries: [
+          { rank: 1, displayName: "Linh", avatarUrl: null, experience: 880 },
+        ],
+      },
+      reload: vi.fn(),
+    });
     renderPanel({ metric: "experience", period: "all", anchor: null });
 
-    expect(screen.getByText("The Experience leaderboard is coming in V2.")).toBeInTheDocument();
+    expect(screen.getByText("880 XP")).toBeInTheDocument();
     expect(useStudyTimeLeaderboard).toHaveBeenLastCalledWith(
       expect.objectContaining({ enabled: false }),
     );
-    expect(screen.queryByText("Rank")).not.toBeInTheDocument();
+    expect(useExperienceLeaderboard).toHaveBeenLastCalledWith(
+      expect.objectContaining({ enabled: true }),
+    );
+    expect(screen.queryByRole("button", { name: "Next period" })).not.toBeInTheDocument();
   });
 
   it("disables future navigation for the current anchored period", () => {

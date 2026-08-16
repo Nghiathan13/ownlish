@@ -2,7 +2,7 @@ import { DictationController } from './dictation.controller';
 
 describe('DictationController', () => {
   const request = { user: { id: 'user-id' } } as never;
-  const dto = { segmentId: 's12', isCompleted: false };
+  const dto = { segmentId: 's12', answer: 'Hello world' };
 
   function createController() {
     const service = {

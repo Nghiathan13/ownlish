@@ -1000,16 +1000,12 @@ export function DictationStudy({ videoId }: { videoId: string }) {
     setAnswerInput(completedSegmentInput);
     setHintedWordIndexes([]);
 
-    const isCompleted = segments.every(
-      (segment) => segment.id === segmentId || answeredSegmentIds.includes(segment.id),
-    );
-
     void runAuthenticatedRequest({
       request: (token) =>
         submitDictationAnswer(token, {
           videoId,
           segmentId,
-          isCompleted,
+          answer: completedSegmentInput,
         }),
     })
       .catch(() => {

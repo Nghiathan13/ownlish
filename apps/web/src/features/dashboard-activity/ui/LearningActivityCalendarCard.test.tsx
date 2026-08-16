@@ -42,6 +42,8 @@ function renderCard(
     <LocaleProvider>
       <LearningActivityCalendarCard
         calendar={{ days: sampleDays }}
+        experienceTotalXp={880}
+        isExperienceLoading={false}
         isLoading={false}
         {...props}
       />
@@ -69,6 +71,7 @@ describe("LearningActivityCalendarCard", () => {
     // 125 + 300 seconds on 2026-07-15 → 7 minutes
     expect(screen.getByText("7")).toBeInTheDocument();
     expect(screen.getByText("Experience")).toBeInTheDocument();
+    expect(screen.getByText("880")).toBeInTheDocument();
     expect(screen.getByText("Ranking")).toBeInTheDocument();
   });
 

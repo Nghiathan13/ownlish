@@ -137,6 +137,7 @@ export const env = {
     resendCooldownSeconds: emailOtpResendCooldownSeconds,
   },
   toeicGradingIndexUrl: process.env.TOEIC_GRADING_INDEX_URL ?? '',
+  dictationCatalogRoot: process.env.DICTATION_CATALOG_ROOT ?? '',
   r2Endpoint: process.env.R2_ENDPOINT ?? '',
   r2AccessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
   r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? '',

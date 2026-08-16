@@ -40,7 +40,7 @@ describe("useStudyTimeLeaderboard", () => {
     mocks.runAuthenticatedRequest.mockClear();
   });
 
-  it("does not request study time while the Experience V2 tab is active", () => {
+  it("does not request study time while the Experience tab is active", () => {
     renderHook(
       () =>
         useStudyTimeLeaderboard({

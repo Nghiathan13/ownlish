@@ -1,6 +1,6 @@
-import type { StudyTimeLeaderboardEntry } from "@/entities/leaderboard";
 import { useLocale } from "@/shared/lib/providers";
 import { OverlayScrollArea } from "@/shared/ui/OverlayScrollArea";
+import type { LeaderboardListEntry } from "../lib/leaderboardList";
 import { LeaderboardRow, leaderboardRowGridClassName } from "./LeaderboardRow";
 
 export function LeaderboardList({
@@ -8,13 +8,15 @@ export function LeaderboardList({
   error,
   isLoading,
   onRetry,
+  valueLabel,
 }: {
-  entries: StudyTimeLeaderboardEntry[];
+  entries: LeaderboardListEntry[];
   error: string | null;
   isLoading: boolean;
   onRetry: () => void;
+  valueLabel: string;
 }) {
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
 
   return (
     <article className="flex min-h-[360px] min-w-[250px] flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface-card">
@@ -23,7 +25,7 @@ export function LeaderboardList({
       >
         <span>{t("dashboard.leaderboardRank")}</span>
         <span>{t("dashboard.leaderboardLearner")}</span>
-        <span>{t("dashboard.leaderboardStudyTime")}</span>
+        <span>{valueLabel}</span>
       </div>
       {error ? (
         <div className="p-4 text-sm text-muted-foreground">
@@ -60,7 +62,6 @@ export function LeaderboardList({
               <LeaderboardRow
                 entry={entry}
                 key={`${entry.rank}-${entry.displayName}-${index}`}
-                locale={locale}
               />
             ))}
           </div>

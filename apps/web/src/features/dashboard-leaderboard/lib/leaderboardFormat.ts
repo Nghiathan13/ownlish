@@ -44,3 +44,7 @@ export function formatStudyTime(seconds: number, locale: "en" | "vi") {
     ? `${hours} giờ ${minutes} phút`
     : `${hours} h ${minutes} min`;
 }
+
+export function formatExperience(experience: number, locale: "en" | "vi") {
+  return `${new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(experience)} XP`;
+}

@@ -35,8 +35,88 @@ model User {
   toeicRuns              ToeicRun[]
   dictationProgress      DictationProgress[]
   learningDaily          UserLearningDaily[]
+  experience             UserExperience?
+  experienceEvents       ExperienceEvent[]
+  reviewGradeReceipts    ReviewGradeReceipt[]
 
   @@map("users")
+}
+
+enum ExperienceEventKind {
+  TEST_CORRECT
+  TEST_MILESTONE
+  MOCK_CORRECT
+  MOCK_MILESTONE
+  MOCK_PART
+  DICTATION_SEGMENT
+  DICTATION_VIDEO
+  REVIEW_EASY
+}
+
+enum ReviewGradeSource {
+  USER_VOCAB
+  OXFORD
+}
+
+model UserExperience {
+  userId    String   @id @map("user_id")
+  totalXp   Int      @default(0) @map("total_xp")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_experience")
+}
+
+model ExperienceEvent {
+  id         String              @id @default(uuid())
+  userId     String              @map("user_id")
+  learnedOn  DateTime            @db.Date @map("learned_on")
+  kind       ExperienceEventKind
+  subjectKey String              @map("subject_key")
+  xp         Int
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, learnedOn, kind, subjectKey])
+  @@index([userId, learnedOn, kind])
+  @@index([userId])
+  @@map("experience_events")
+}
+
+model ReviewGradeReceipt {
+  userId       String            @map("user_id")
+  submissionId String            @map("submission_id") @db.Uuid
+  source       ReviewGradeSource
+  subjectId    String            @map("subject_id")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, submissionId])
+  @@map("review_grade_receipts")
+}
+
+model DictationCatalogVideo {
+  videoId      String                    @id @map("video_id")
+  segmentCount Int                       @map("segment_count")
+  updatedAt    DateTime                  @updatedAt @map("updated_at")
+  segments     DictationCatalogSegment[]
+
+  @@map("dictation_catalog_videos")
+}
+
+model DictationCatalogSegment {
+  videoId    String   @map("video_id")
+  segmentId  String   @map("segment_id")
+  transcript String
+
+  video DictationCatalogVideo @relation(fields: [videoId], references: [videoId], onDelete: Cascade)
+
+  @@id([videoId, segmentId])
+  @@map("dictation_catalog_segments")
 }
 
 model DictationProgress {

@@ -47,7 +47,10 @@ describe('VocabController', () => {
       }),
     ).resolves.toBe(entry);
     await expect(
-      controller.updateReview(request, 'entry-id', { rating: 'GOOD' }),
+      controller.updateReview(request, 'entry-id', {
+        rating: 'GOOD',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      }),
     ).resolves.toBe(entry);
     await expect(controller.delete(request, 'entry-id')).resolves.toEqual({
       deletedEntryId: 'entry-id',
@@ -59,7 +62,10 @@ describe('VocabController', () => {
     expect(vocabService.updateReview).toHaveBeenCalledWith(
       'user-id',
       'entry-id',
-      { rating: 'GOOD' },
+      {
+        rating: 'GOOD',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      },
     );
     expect(vocabService.delete).toHaveBeenCalledWith('user-id', 'entry-id');
   });

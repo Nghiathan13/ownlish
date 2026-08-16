@@ -13,6 +13,7 @@ function renderList(props: Partial<React.ComponentProps<typeof LeaderboardList>>
         error={null}
         isLoading={false}
         onRetry={onRetry}
+        valueLabel="Study time"
         {...props}
       />
     </LocaleProvider>,
@@ -25,7 +26,7 @@ describe("LeaderboardList", () => {
   it("renders loading and empty states", () => {
     const { rerender } = render(
       <LocaleProvider>
-        <LeaderboardList entries={[]} error={null} isLoading onRetry={vi.fn()} />
+        <LeaderboardList entries={[]} error={null} isLoading onRetry={vi.fn()} valueLabel="Study time" />
       </LocaleProvider>,
     );
 
@@ -33,11 +34,11 @@ describe("LeaderboardList", () => {
 
     rerender(
       <LocaleProvider>
-        <LeaderboardList entries={[]} error={null} isLoading={false} onRetry={vi.fn()} />
+        <LeaderboardList entries={[]} error={null} isLoading={false} onRetry={vi.fn()} valueLabel="Study time" />
       </LocaleProvider>,
     );
     expect(
-      screen.getByText("No study time has been recorded for this period yet."),
+      screen.getByText("No results have been recorded for this leaderboard yet."),
     ).toBeInTheDocument();
   });
 

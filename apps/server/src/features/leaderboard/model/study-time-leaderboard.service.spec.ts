@@ -1,24 +1,20 @@
-import { LeaderboardService } from './leaderboard.service';
+import { StudyTimeLeaderboardService } from './study-time-leaderboard.service';
 
 function createService() {
-  const studyTimeLeaderboardRepository = {
-    getEntries: jest.fn(),
-  };
-  const profileAvatarStorageService = {
-    getPublicUrl: jest.fn(),
-  };
+  const studyTimeLeaderboardRepository = { getEntries: jest.fn() };
+  const profileAvatarStorageService = { getPublicUrl: jest.fn() };
 
   return {
     studyTimeLeaderboardRepository,
     profileAvatarStorageService,
-    service: new LeaderboardService(
+    service: new StudyTimeLeaderboardService(
       studyTimeLeaderboardRepository as never,
       profileAvatarStorageService as never,
     ),
   };
 }
 
-describe('LeaderboardService', () => {
+describe('StudyTimeLeaderboardService', () => {
   it('returns only public ranked learner data', async () => {
     const {
       studyTimeLeaderboardRepository,
@@ -55,9 +51,7 @@ describe('LeaderboardService', () => {
       'https://assets.example/users/linh/avatar.png',
     );
 
-    await expect(
-      service.getStudyTimeLeaderboard({ period: 'all' }),
-    ).resolves.toEqual({
+    await expect(service.getLeaderboard({ period: 'all' })).resolves.toEqual({
       period: 'all',
       startsOn: null,
       endsOn: null,
@@ -110,10 +104,7 @@ describe('LeaderboardService', () => {
     profileAvatarStorageService.getPublicUrl.mockReturnValue(null);
 
     await expect(
-      service.getStudyTimeLeaderboard({
-        period: 'week',
-        anchor: '2026-08-10',
-      }),
+      service.getLeaderboard({ period: 'week', anchor: '2026-08-10' }),
     ).resolves.toEqual({
       period: 'week',
       startsOn: '2026-08-10',

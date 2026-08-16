@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -16,6 +17,11 @@ import {
   ToeicCatalogGradingIndex,
 } from '../../../entities/toeic-catalog/lib/grading-index';
 import { PrismaService } from '../../../prisma/prisma.service';
+import {
+  EXPERIENCE_AWARDER,
+  noExperienceAwards,
+  type ExperienceAwarder,
+} from '../../experience/experience-awarder';
 import type { CreateToeicRuntimePartPracticeRunDto } from '../api/dto/create-part-practice-run.dto';
 import type { CreateToeicRuntimeTestRunDto } from '../api/dto/create-test-run.dto';
 import type { SubmitToeicRuntimeAnswerDto } from '../api/dto/submit-answer.dto';
@@ -24,6 +30,7 @@ import type { UpdateMockTimerDto } from '../api/dto/update-mock-timer.dto';
 
 type RuntimeRun = {
   id: string;
+  userId: string;
   scope: ToeicRunScope;
   testKey: string | null;
   partNumber: number | null;
@@ -141,6 +148,8 @@ export class ToeicRuntimeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gradingIndex: ToeicCatalogGradingIndex,
+    @Inject(EXPERIENCE_AWARDER)
+    private readonly experienceAwarder: ExperienceAwarder = noExperienceAwards,
   ) {}
 
   async createTestRun(userId: string, dto: CreateToeicRuntimeTestRunDto) {
@@ -837,24 +846,31 @@ export class ToeicRuntimeService {
       }
 
       graded = true;
-      await Promise.all(
-        groupQuestions.map((item) => {
-          const answer = answerByKey.get(item.questionKey);
-          if (!answer || answer.status === ToeicRunQuestionStatus.RIGHT) {
-            return Promise.resolve();
-          }
-          return tx.toeicRunAnswer.update({
-            where: { id: answer.id },
-            data: {
-              status:
-                answer.selectedKey === item.answerKey
-                  ? ToeicRunQuestionStatus.RIGHT
-                  : ToeicRunQuestionStatus.WRONG,
-              gradedAt: new Date(),
-            },
+      for (const item of groupQuestions) {
+        const answer = answerByKey.get(item.questionKey);
+        if (!answer || answer.status === ToeicRunQuestionStatus.RIGHT) {
+          continue;
+        }
+
+        const isCorrect = answer.selectedKey === item.answerKey;
+        await tx.toeicRunAnswer.update({
+          where: { id: answer.id },
+          data: {
+            status: isCorrect
+              ? ToeicRunQuestionStatus.RIGHT
+              : ToeicRunQuestionStatus.WRONG,
+            gradedAt: new Date(),
+          },
+        });
+        if (isCorrect) {
+          await this.experienceAwarder.award(tx, {
+            type: 'correct-answer',
+            userId: run.userId,
+            questionKey: item.questionKey,
+            bucket: 'test',
           });
-        }),
-      );
+        }
+      }
       await this.recalculateTotals(tx, run.id);
     });
 
@@ -969,26 +985,48 @@ export class ToeicRuntimeService {
           run.answers.map((answer) => [answer.questionKey, answer]),
         );
         let totalRight = 0;
-        await Promise.all(
-          questions.map((question) => {
-            const answer = answers.get(question.questionKey);
-            const isCorrect = answer?.selectedKey === question.answerKey;
-            if (isCorrect) {
-              totalRight += 1;
-            }
-            return answer
-              ? tx.toeicRunAnswer.update({
-                  where: { id: answer.id },
-                  data: {
-                    status: isCorrect
-                      ? ToeicRunQuestionStatus.RIGHT
-                      : ToeicRunQuestionStatus.WRONG,
-                    gradedAt: new Date(),
-                  },
-                })
-              : Promise.resolve();
-          }),
-        );
+        for (const question of questions) {
+          const answer = answers.get(question.questionKey);
+          const isCorrect = answer?.selectedKey === question.answerKey;
+          if (isCorrect) {
+            totalRight += 1;
+          }
+          if (answer) {
+            await tx.toeicRunAnswer.update({
+              where: { id: answer.id },
+              data: {
+                status: isCorrect
+                  ? ToeicRunQuestionStatus.RIGHT
+                  : ToeicRunQuestionStatus.WRONG,
+                gradedAt: new Date(),
+              },
+            });
+          }
+          if (isCorrect) {
+            await this.experienceAwarder.award(tx, {
+              type: 'correct-answer',
+              userId: run.userId,
+              questionKey: question.questionKey,
+              bucket: 'mock',
+            });
+          }
+        }
+        for (const partNumber of run.selectedParts) {
+          const partQuestions = questions.filter(
+            (question) => question.partNumber === partNumber,
+          );
+          if (
+            partQuestions.length > 0 &&
+            partQuestions.every((question) => answers.has(question.questionKey))
+          ) {
+            await this.experienceAwarder.award(tx, {
+              type: 'mock-part',
+              userId: run.userId,
+              testKey: run.testKey,
+              partNumber,
+            });
+          }
+        }
         await tx.toeicRun.update({
           where: { id: run.id },
           data: {

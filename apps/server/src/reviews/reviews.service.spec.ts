@@ -3,10 +3,20 @@ import { ReviewsService } from './reviews.service';
 
 describe('ReviewsService', () => {
   const now = new Date('2026-07-24T10:00:00.000Z');
-  const prisma = {
+  const transaction = {
+    $executeRaw: jest.fn(),
+    reviewGradeReceipt: {
+      create: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     $queryRaw: jest.fn(),
     systemVocabularyEntry: { findMany: jest.fn() },
     userSystemVocabularyProgress: { findUnique: jest.fn(), upsert: jest.fn() },
+  };
+  const prisma = {
+    ...transaction,
+    $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+      callback(transaction),
   };
   const service = new ReviewsService(prisma as never);
 
@@ -118,7 +128,10 @@ describe('ReviewsService', () => {
         nextReviewAt: nextReviewAt ? new Date(nextReviewAt) : null,
       });
 
-      await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', rating);
+      await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', {
+        rating,
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      });
 
       const [input] = prisma.userSystemVocabularyProgress.upsert.mock
         .calls[0] as unknown as [
@@ -146,7 +159,10 @@ describe('ReviewsService', () => {
     prisma.systemVocabularyEntry.findMany.mockResolvedValue([{ id: '2' }]);
 
     await expect(
-      service.gradeOxfordDefinition('user-id', 'A1', 1, '1', 'GOOD'),
+      service.gradeOxfordDefinition('user-id', 'A1', 1, '1', {
+        rating: 'GOOD',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.userSystemVocabularyProgress.upsert).not.toHaveBeenCalled();
   });
@@ -161,9 +177,43 @@ describe('ReviewsService', () => {
       nextReviewAt: now,
     });
 
-    await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', 'GOOD');
+    await service.gradeOxfordDefinition('user-id', 'A1', 1, '1', {
+      rating: 'GOOD',
+      submissionId: '11111111-1111-4111-8111-111111111111',
+    });
 
     expect(prisma.userSystemVocabularyProgress.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('awards XP for an EASY rating only when Oxford progress increases', async () => {
+    const experienceAwarder = { award: jest.fn() };
+    const serviceWithExperience = new ReviewsService(
+      prisma as never,
+      experienceAwarder,
+    );
+    prisma.systemVocabularyEntry.findMany.mockResolvedValue([{ id: '1' }]);
+    prisma.userSystemVocabularyProgress.findUnique.mockResolvedValue({
+      level: 2,
+      wrongCount: 0,
+    });
+    prisma.userSystemVocabularyProgress.upsert.mockResolvedValue({
+      level: 3,
+      wrongCount: 0,
+      lastReviewAt: now,
+      nextReviewAt: now,
+    });
+
+    await serviceWithExperience.gradeOxfordDefinition('user-id', 'A1', 1, '1', {
+      rating: 'EASY',
+      submissionId: '11111111-1111-4111-8111-111111111111',
+    });
+
+    expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+      type: 'review-easy',
+      userId: 'user-id',
+      source: 'oxford',
+      subjectId: '1',
+    });
   });
 });
 

@@ -82,10 +82,10 @@ export function useOxfordPartReviewQueue({
   const currentWord = queue[0] ?? null;
 
   const mutation = useMutation({
-    mutationFn: ({ definitionId, rating }: { definitionId: string; rating: OxfordReviewRating }) => {
+    mutationFn: ({ definitionId, rating, submissionId }: { definitionId: string; rating: OxfordReviewRating; submissionId: string }) => {
       return runAuthenticatedRequest({
         request: (token) =>
-          gradeOxfordReviewDefinition(token, { band, part, definitionId, rating }),
+          gradeOxfordReviewDefinition(token, { band, part, definitionId, rating, submissionId }),
       });
     },
     onMutate: async ({ definitionId }) => {
@@ -130,7 +130,7 @@ export function useOxfordPartReviewQueue({
   const gradeCurrentWord = useCallback(
     (rating: OxfordReviewRating) => {
       if (!currentWord || mutation.isPending || isShowingPreviousData) return;
-      mutation.mutate({ definitionId: currentWord.id, rating });
+      mutation.mutate({ definitionId: currentWord.id, rating, submissionId: crypto.randomUUID() });
     },
     [currentWord, isShowingPreviousData, mutation],
   );

@@ -1,6 +1,5 @@
-import type { StudyTimeLeaderboardEntry } from "@/entities/leaderboard";
 import { classNames } from "@/shared/lib/classNames";
-import { formatStudyTime } from "../lib/leaderboardFormat";
+import type { LeaderboardListEntry } from "../lib/leaderboardList";
 import { LeaderboardAvatar } from "./LeaderboardAvatar";
 
 export const leaderboardRowGridClassName =
@@ -8,10 +7,8 @@ export const leaderboardRowGridClassName =
 
 export function LeaderboardRow({
   entry,
-  locale,
 }: {
-  entry: StudyTimeLeaderboardEntry;
-  locale: "en" | "vi";
+  entry: LeaderboardListEntry;
 }) {
   return (
     <div
@@ -37,7 +34,7 @@ export function LeaderboardRow({
         </span>
       </span>
       <span className="font-mono font-semibold tabular-nums text-foreground">
-        {formatStudyTime(entry.studySeconds, locale)}
+        {entry.value}
       </span>
     </div>
   );

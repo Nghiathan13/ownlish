@@ -66,7 +66,7 @@ export class ReviewsController {
       band,
       part,
       definitionId,
-      body.rating,
+      body,
     );
   }
 }

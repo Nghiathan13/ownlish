@@ -709,4 +709,148 @@ describe('ToeicRuntimeService', () => {
       }),
     ).rejects.toThrow(ConflictException);
   });
+
+  it('awards Test XP only when a practice answer transitions to RIGHT', async () => {
+    const experienceAwarder = { award: jest.fn() };
+    const transaction = {
+      $queryRaw: jest.fn().mockResolvedValue([
+        {
+          id: 'run-id',
+          finishRequestedAt: null,
+          completedAt: null,
+          remainingSeconds: null,
+        },
+      ]),
+      toeicRun: { update: jest.fn() },
+      toeicRunAnswer: {
+        count: jest.fn().mockResolvedValueOnce(1).mockResolvedValueOnce(0),
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'answer-id',
+            questionKey: 'q1',
+            selectedKey: 'A',
+            status: ToeicRunQuestionStatus.SELECTED,
+          },
+        ]),
+        findUnique: jest.fn().mockResolvedValue(null),
+        update: jest.fn(),
+        upsert: jest.fn(),
+      },
+    };
+    const gradingIndex = {
+      getGroupQuestions: jest.fn().mockResolvedValue([
+        {
+          testKey: 'ets26-t01',
+          partNumber: 1,
+          groupKey: 'q1',
+          questionKey: 'q1',
+          answerKey: 'A',
+        },
+      ]),
+    };
+    const service = new ToeicRuntimeService(
+      {
+        $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+          callback(transaction),
+      } as never,
+      gradingIndex as never,
+      experienceAwarder,
+    );
+
+    await expect(
+      (
+        service as unknown as {
+          savePracticeAnswer(
+            run: object,
+            question: object,
+            questionKey: string,
+            selectedKey: string,
+            reviewWrong: boolean,
+          ): Promise<{ graded: boolean }>;
+        }
+      ).savePracticeAnswer(
+        { id: 'run-id', userId: 'user-id' },
+        { testKey: 'ets26-t01', partNumber: 1, groupKey: 'q1' },
+        'q1',
+        'A',
+        false,
+      ),
+    ).resolves.toEqual({ graded: true });
+
+    expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+      type: 'correct-answer',
+      userId: 'user-id',
+      questionKey: 'q1',
+      bucket: 'test',
+    });
+  });
+
+  it('awards correct Mock answers and a part bonus only after finalization with every part question submitted', async () => {
+    const experienceAwarder = { award: jest.fn() };
+    const transaction = {
+      $queryRaw: jest.fn().mockResolvedValue([{ id: 'run-id' }]),
+      toeicRun: { update: jest.fn(), findUnique: jest.fn() },
+      toeicRunAnswer: { update: jest.fn() },
+    };
+    const finalizedRun = {
+      id: 'run-id',
+      userId: 'user-id',
+      testKey: 'ets26-t01',
+      selectedParts: [1],
+      finishRequestedAt: new Date(),
+      completedAt: null,
+      answers: [
+        { id: 'answer-1', questionKey: 'q1', selectedKey: 'A' },
+        { id: 'answer-2', questionKey: 'q2', selectedKey: 'B' },
+      ],
+    };
+    const prisma = {
+      toeicRun: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce({
+            testKey: 'ets26-t01',
+            selectedParts: [1],
+            finishRequestedAt: new Date(),
+            completedAt: null,
+          })
+          .mockResolvedValueOnce(finalizedRun),
+      },
+      $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+        callback(transaction),
+    };
+    transaction.toeicRun.findUnique.mockResolvedValue(finalizedRun);
+    const gradingIndex = {
+      getTestQuestions: jest.fn().mockResolvedValue([
+        { questionKey: 'q1', partNumber: 1, answerKey: 'A' },
+        { questionKey: 'q2', partNumber: 1, answerKey: 'A' },
+      ]),
+    };
+    const service = new ToeicRuntimeService(
+      prisma as never,
+      gradingIndex as never,
+      experienceAwarder,
+    );
+
+    await expect(
+      (
+        service as unknown as {
+          completeMockRun(runId: string): Promise<boolean>;
+        }
+      ).completeMockRun('run-id'),
+    ).resolves.toBe(true);
+
+    expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+      type: 'correct-answer',
+      userId: 'user-id',
+      questionKey: 'q1',
+      bucket: 'mock',
+    });
+    expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+      type: 'mock-part',
+      userId: 'user-id',
+      testKey: 'ets26-t01',
+      partNumber: 1,
+    });
+  });
 });

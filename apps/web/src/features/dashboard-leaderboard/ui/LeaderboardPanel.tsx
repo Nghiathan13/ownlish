@@ -1,7 +1,8 @@
 "use client";
 
 import { useLocale } from "@/shared/lib/providers";
-import { ExperienceLeaderboardState } from "./ExperienceLeaderboardState";
+import { toExperienceLeaderboardListEntries, toStudyTimeLeaderboardListEntries } from "../lib/leaderboardList";
+import { useExperienceLeaderboard } from "../model/useExperienceLeaderboard";
 import { LeaderboardList } from "./LeaderboardList";
 import { LeaderboardMetricTabs } from "./LeaderboardMetricTabs";
 import { LeaderboardPeriodControls } from "./LeaderboardPeriodControls";
@@ -19,7 +20,7 @@ export function LeaderboardPanel({
   location,
   userId,
 }: LeaderboardPanelProps) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const isStudyTime = location.metric === "study-time";
   const leaderboard = useStudyTimeLeaderboard({
     anchor: location.anchor,
@@ -28,6 +29,21 @@ export function LeaderboardPanel({
     period: location.period,
     userId,
   });
+  const experienceLeaderboard = useExperienceLeaderboard({
+    enabled: !isStudyTime,
+    isAuthenticated,
+    userId,
+  });
+  const entries = isStudyTime
+    ? toStudyTimeLeaderboardListEntries(
+        leaderboard.leaderboard?.entries ?? [],
+        locale,
+      )
+    : toExperienceLeaderboardListEntries(
+        experienceLeaderboard.leaderboard?.entries ?? [],
+        locale,
+      );
+  const activeLeaderboard = isStudyTime ? leaderboard : experienceLeaderboard;
 
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-5">
@@ -43,16 +59,19 @@ export function LeaderboardPanel({
       {isStudyTime ? (
         <>
           <LeaderboardPeriodControls location={location} />
-          <LeaderboardList
-            entries={leaderboard.leaderboard?.entries ?? []}
-            error={leaderboard.error}
-            isLoading={leaderboard.isLoading}
-            onRetry={() => void leaderboard.reload()}
-          />
         </>
-      ) : (
-        <ExperienceLeaderboardState />
-      )}
+      ) : null}
+      <LeaderboardList
+        entries={entries}
+        error={activeLeaderboard.error}
+        isLoading={activeLeaderboard.isLoading}
+        onRetry={() => void activeLeaderboard.reload()}
+        valueLabel={
+          isStudyTime
+            ? t("dashboard.leaderboardStudyTime")
+            : t("dashboard.leaderboardExperience")
+        }
+      />
     </section>
   );
 }

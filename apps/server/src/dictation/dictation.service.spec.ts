@@ -1,4 +1,5 @@
 import { DictationService } from './dictation.service';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 const now = new Date('2026-07-27T00:00:00.000Z');
 
@@ -18,6 +19,12 @@ describe('DictationService', () => {
   function createService(existing: ReturnType<typeof createProgress> | null) {
     const transaction = {
       $executeRaw: jest.fn(),
+      dictationCatalogSegment: {
+        findUnique: jest.fn().mockResolvedValue({ transcript: 'Hello world' }),
+      },
+      dictationCatalogVideo: {
+        findUnique: jest.fn().mockResolvedValue({ segmentCount: 2 }),
+      },
       dictationProgress: {
         create: jest.fn(),
         findUnique: jest.fn().mockResolvedValue(existing),
@@ -32,16 +39,18 @@ describe('DictationService', () => {
         findUnique: jest.fn(),
       },
     };
+    const experienceAwarder = { award: jest.fn().mockResolvedValue(4) };
 
     return {
-      service: new DictationService(prisma as never),
+      service: new DictationService(prisma as never, experienceAwarder),
+      experienceAwarder,
       transaction,
       prisma,
     };
   }
 
   it('creates progress for the first answered segment', async () => {
-    const { service, transaction } = createService(null);
+    const { experienceAwarder, service, transaction } = createService(null);
     transaction.dictationProgress.create.mockResolvedValue(
       createProgress({ answeredSegmentIds: ['s1'] }),
     );
@@ -49,7 +58,7 @@ describe('DictationService', () => {
     await expect(
       service.submitAnswer('user-id', 'video-id', {
         segmentId: 's1',
-        isCompleted: false,
+        answer: 'Hello world',
       }),
     ).resolves.toMatchObject({
       answeredSegmentIds: ['s1'],
@@ -65,6 +74,12 @@ describe('DictationService', () => {
       },
     });
     expect(transaction.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+      type: 'dictation-segment',
+      userId: 'user-id',
+      videoId: 'video-id',
+      segmentId: 's1',
+    });
   });
 
   it('returns formatted progress when it exists', async () => {
@@ -110,7 +125,7 @@ describe('DictationService', () => {
     await expect(
       service.submitAnswer('user-id', 'video-id', {
         segmentId: 's2',
-        isCompleted: false,
+        answer: 'Hello world',
       }),
     ).resolves.toMatchObject({
       answeredSegmentIds: ['s1', 's2'],
@@ -119,7 +134,7 @@ describe('DictationService', () => {
     expect(transaction.dictationProgress.update).toHaveBeenCalledTimes(1);
   });
 
-  it('marks progress complete when the client has answered every segment', async () => {
+  it('derives completion from the synced segment count', async () => {
     jest.useFakeTimers();
     jest.setSystemTime(now);
     const existing = createProgress({ answeredSegmentIds: ['s1'] });
@@ -135,7 +150,7 @@ describe('DictationService', () => {
     try {
       await service.submitAnswer('user-id', 'video-id', {
         segmentId: 's2',
-        isCompleted: true,
+        answer: 'Hello world',
       });
 
       expect(transaction.dictationProgress.update).toHaveBeenCalledWith({
@@ -145,6 +160,33 @@ describe('DictationService', () => {
           correctCount: 2,
           completedAt: now,
         },
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('awards a video only when its final server-verified segment is accepted', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(now);
+    const { experienceAwarder, service, transaction } = createService(null);
+    transaction.dictationCatalogVideo.findUnique.mockResolvedValue({
+      segmentCount: 1,
+    });
+    transaction.dictationProgress.create.mockResolvedValue(
+      createProgress({ completedAt: now }),
+    );
+
+    try {
+      await service.submitAnswer('user-id', 'video-id', {
+        segmentId: 's1',
+        answer: 'Hello world',
+      });
+
+      expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+        type: 'dictation-video',
+        userId: 'user-id',
+        videoId: 'video-id',
       });
     } finally {
       jest.useRealTimers();
@@ -161,13 +203,46 @@ describe('DictationService', () => {
     await expect(
       service.submitAnswer('user-id', 'video-id', {
         segmentId: 's1',
-        isCompleted: false,
+        answer: 'Hello world',
       }),
     ).resolves.toMatchObject({
       answeredSegmentIds: ['s1'],
       correctCount: 1,
     });
     expect(transaction.dictationProgress.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects unknown segments and answers that do not match the synced transcript', async () => {
+    const { service, transaction } = createService(null);
+    transaction.dictationCatalogSegment.findUnique.mockResolvedValueOnce(null);
+
+    await expect(
+      service.submitAnswer('user-id', 'video-id', {
+        segmentId: 's999',
+        answer: 'Hello world',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    transaction.dictationCatalogSegment.findUnique.mockResolvedValueOnce({
+      transcript: 'Hello world',
+    });
+    await expect(
+      service.submitAnswer('user-id', 'video-id', {
+        segmentId: 's1',
+        answer: 'Wrong answer',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    transaction.dictationCatalogSegment.findUnique.mockResolvedValueOnce({
+      transcript: 'Hello world',
+    });
+    transaction.dictationCatalogVideo.findUnique.mockResolvedValueOnce(null);
+    await expect(
+      service.submitAnswer('user-id', 'video-id', {
+        segmentId: 's1',
+        answer: 'Hello world',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('removes a user video progress record on restart', async () => {

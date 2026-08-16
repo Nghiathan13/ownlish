@@ -1,5 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { EXPERIENCE_AWARDER } from '../features/experience/experience-awarder';
+import { EXPERIENCE_REVIEW_RECEIPTS } from '../features/experience/experience-review-receipts';
 import { PrismaService } from '../prisma/prisma.service';
 import { VocabService } from './vocab.service';
 
@@ -27,7 +29,12 @@ describe('VocabService', () => {
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   };
-  const prisma = {
+  const transaction = {
+    $executeRaw: jest.fn(),
+    reviewGradeReceipt: {
+      create: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     wordCollection: { findFirst: jest.fn() },
     userVocabularyEntry: {
       findMany: jest.fn(),
@@ -38,13 +45,31 @@ describe('VocabService', () => {
       delete: jest.fn(),
     },
   };
+  const prisma = {
+    ...transaction,
+    $transaction: <T>(callback: (tx: typeof transaction) => Promise<T>) =>
+      callback(transaction),
+  };
   let service: VocabService;
+  const experienceAwarder = { award: jest.fn() };
+  const experienceReviewReceipts = {
+    isDuplicate: jest.fn().mockResolvedValue(false),
+    record: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     prisma.wordCollection.findFirst.mockResolvedValue({ id: 'collection-id' });
     const module: TestingModule = await Test.createTestingModule({
-      providers: [VocabService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        VocabService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: EXPERIENCE_AWARDER, useValue: experienceAwarder },
+        {
+          provide: EXPERIENCE_REVIEW_RECEIPTS,
+          useValue: experienceReviewReceipts,
+        },
+      ],
     }).compile();
     service = module.get(VocabService);
   });
@@ -204,7 +229,10 @@ describe('VocabService', () => {
     prisma.userVocabularyEntry.update.mockResolvedValue(entry);
 
     try {
-      await service.updateReview('user-id', 'entry-id', { rating: 'FORGET' });
+      await service.updateReview('user-id', 'entry-id', {
+        rating: 'FORGET',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      });
       const [input] = prisma.userVocabularyEntry.update.mock
         .calls[0] as unknown as [
         {
@@ -221,6 +249,37 @@ describe('VocabService', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('awards XP only when EASY advances an owned word level', async () => {
+    prisma.userVocabularyEntry.findFirst.mockResolvedValue(entry);
+    prisma.userVocabularyEntry.update.mockResolvedValue({ ...entry, level: 3 });
+
+    await service.updateReview('user-id', 'entry-id', {
+      rating: 'EASY',
+      submissionId: '11111111-1111-4111-8111-111111111112',
+    });
+
+    expect(experienceAwarder.award).toHaveBeenCalledWith(transaction, {
+      type: 'review-easy',
+      userId: 'user-id',
+      source: 'user-vocab',
+      subjectId: 'entry-id',
+    });
+  });
+
+  it('does not reschedule or award twice when a review submission is retried', async () => {
+    experienceReviewReceipts.isDuplicate.mockResolvedValue(true);
+    prisma.userVocabularyEntry.findFirst.mockResolvedValue(entry);
+
+    await expect(
+      service.updateReview('user-id', 'entry-id', {
+        rating: 'EASY',
+        submissionId: '11111111-1111-4111-8111-111111111113',
+      }),
+    ).resolves.toEqual(entry);
+    expect(prisma.userVocabularyEntry.update).not.toHaveBeenCalled();
+    expect(experienceAwarder.award).not.toHaveBeenCalled();
   });
 
   it('hard deletes only an owned entry', async () => {

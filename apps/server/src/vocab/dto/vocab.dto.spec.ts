@@ -49,10 +49,16 @@ describe('vocabulary DTOs', () => {
 
   it('accepts supported review ratings only', async () => {
     await expect(
-      isValid(UpdateVocabReviewDto, { rating: 'GOOD' }),
+      isValid(UpdateVocabReviewDto, {
+        rating: 'GOOD',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      }),
     ).resolves.toBe(true);
     await expect(
-      isValid(UpdateVocabReviewDto, { rating: 'later' }),
+      isValid(UpdateVocabReviewDto, {
+        rating: 'later',
+        submissionId: 'invalid',
+      }),
     ).resolves.toBe(false);
   });
 });

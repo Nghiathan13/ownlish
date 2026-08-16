@@ -4,7 +4,9 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { UsersModule } from '../../users/users.module';
 import { LeaderboardController } from './api/leaderboard.controller';
 import { StudyTimeLeaderboardRepository } from './data/study-time-leaderboard.repository';
-import { LeaderboardService } from './model/leaderboard.service';
+import { ExperienceLeaderboardRepository } from './data/experience-leaderboard.repository';
+import { ExperienceLeaderboardService } from './model/experience-leaderboard.service';
+import { StudyTimeLeaderboardService } from './model/study-time-leaderboard.service';
 import { LeaderboardModule } from './leaderboard.module';
 
 describe('LeaderboardModule', () => {
@@ -17,6 +19,11 @@ describe('LeaderboardModule', () => {
     ).toEqual([LeaderboardController]);
     expect(
       Reflect.getMetadata(MODULE_METADATA.PROVIDERS, LeaderboardModule),
-    ).toEqual([StudyTimeLeaderboardRepository, LeaderboardService]);
+    ).toEqual([
+      StudyTimeLeaderboardRepository,
+      ExperienceLeaderboardRepository,
+      StudyTimeLeaderboardService,
+      ExperienceLeaderboardService,
+    ]);
   });
 });

@@ -9,15 +9,16 @@ import type {
   StudyTimeLeaderboardQuery,
   StudyTimeLeaderboardResponse,
 } from './study-time-leaderboard.types';
+import { toPublicLeaderProfile } from './public-leader-profile';
 
 @Injectable()
-export class LeaderboardService {
+export class StudyTimeLeaderboardService {
   constructor(
     private readonly studyTimeLeaderboardRepository: StudyTimeLeaderboardRepository,
     private readonly profileAvatarStorageService: ProfileAvatarStorageService,
   ) {}
 
-  async getStudyTimeLeaderboard(
+  async getLeaderboard(
     query: StudyTimeLeaderboardQuery,
   ): Promise<StudyTimeLeaderboardResponse> {
     const range = getStudyTimeLeaderboardRange(query);
@@ -29,13 +30,7 @@ export class LeaderboardService {
       endsOn: range ? formatLeaderboardDateKey(range.endsOn) : null,
       entries: entries.map((entry) => ({
         rank: entry.rank,
-        displayName: entry.name?.trim() || 'Learner',
-        avatarUrl:
-          (entry.avatarStoragePath
-            ? this.profileAvatarStorageService.getPublicUrl(
-                entry.avatarStoragePath,
-              )
-            : null) ?? entry.avatarUrl,
+        ...toPublicLeaderProfile(entry, this.profileAvatarStorageService),
         studySeconds: entry.studySeconds,
       })),
     };

@@ -1,14 +1,27 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma, ReviewGradeSource } from '@prisma/client';
+import {
+  EXPERIENCE_AWARDER,
+  noExperienceAwards,
+  type ExperienceAwarder,
+} from '../features/experience/experience-awarder';
+import {
+  EXPERIENCE_REVIEW_RECEIPTS,
+  noExperienceReviewReceipts,
+  type ExperienceReviewReceipts,
+} from '../features/experience/experience-review-receipts';
 import { PrismaService } from '../prisma/prisma.service';
+import { GradeOxfordWordDto } from './dto/grade-oxford-word.dto';
 import {
   OXFORD_CEFR_LEVELS,
   OXFORD_DEFINITION_SOURCES,
 } from '../collections/collections.constants';
-import { type ReviewAction, scheduleReview } from './lib/review-schedule';
+import { scheduleReview } from './lib/review-schedule';
 
 type DifficultReviewWord = {
   word: string;
@@ -18,7 +31,13 @@ type DifficultReviewWord = {
 
 @Injectable()
 export class ReviewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(EXPERIENCE_AWARDER)
+    private readonly experienceAwarder: ExperienceAwarder = noExperienceAwards,
+    @Inject(EXPERIENCE_REVIEW_RECEIPTS)
+    private readonly experienceReviewReceipts: ExperienceReviewReceipts = noExperienceReviewReceipts,
+  ) {}
 
   async getOxfordPart(userId: string, band: string, part: number) {
     this.assertOxfordPart(band, part);
@@ -130,7 +149,7 @@ export class ReviewsService {
     band: string,
     part: number,
     definitionId: string,
-    rating: ReviewAction,
+    dto: GradeOxfordWordDto,
   ) {
     this.assertOxfordPart(band, part);
 
@@ -149,45 +168,84 @@ export class ReviewsService {
       throw new NotFoundException('Oxford word not found in this part');
     }
 
-    const existingProgress =
-      await this.prisma.userSystemVocabularyProgress.findUnique({
+    return this.prisma.$transaction(async (tx) => {
+      const receipt = {
+        userId,
+        submissionId: dto.submissionId,
+        source: ReviewGradeSource.OXFORD,
+        subjectId: definitionId,
+      };
+      if (await this.experienceReviewReceipts.isDuplicate(tx, receipt)) {
+        return this.getOxfordProgress(tx, userId, definitionId);
+      }
+
+      const existingProgress = await tx.userSystemVocabularyProgress.findUnique(
+        {
+          where: {
+            userId_systemEntryId: { userId, systemEntryId: definitionId },
+          },
+          select: { level: true, wrongCount: true },
+        },
+      );
+      const progress = scheduleReview(
+        {
+          level: existingProgress?.level ?? 0,
+          wrongCount: existingProgress?.wrongCount ?? 0,
+        },
+        dto.rating,
+      );
+      const updated = await tx.userSystemVocabularyProgress.upsert({
         where: {
           userId_systemEntryId: {
             userId,
             systemEntryId: definitionId,
           },
         },
-        select: { level: true, wrongCount: true },
-      });
-    const progress = scheduleReview(
-      {
-        level: existingProgress?.level ?? 0,
-        wrongCount: existingProgress?.wrongCount ?? 0,
-      },
-      rating,
-    );
-
-    return this.prisma.userSystemVocabularyProgress.upsert({
-      where: {
-        userId_systemEntryId: {
+        create: {
           userId,
           systemEntryId: definitionId,
+          level: progress.level,
+          wrongCount: progress.wrongCount,
+          lastReviewAt: progress.lastReviewAt,
+          nextReviewAt: progress.nextReviewAt,
         },
-      },
-      create: {
-        userId,
-        systemEntryId: definitionId,
-        level: progress.level,
-        wrongCount: progress.wrongCount,
-        lastReviewAt: progress.lastReviewAt,
-        nextReviewAt: progress.nextReviewAt,
-      },
-      update: {
-        level: progress.level,
-        wrongCount: progress.wrongCount,
-        lastReviewAt: progress.lastReviewAt,
-        nextReviewAt: progress.nextReviewAt,
-      },
+        update: {
+          level: progress.level,
+          wrongCount: progress.wrongCount,
+          lastReviewAt: progress.lastReviewAt,
+          nextReviewAt: progress.nextReviewAt,
+        },
+        select: {
+          level: true,
+          wrongCount: true,
+          lastReviewAt: true,
+          nextReviewAt: true,
+        },
+      });
+      await this.experienceReviewReceipts.record(tx, receipt);
+      if (
+        dto.rating === 'EASY' &&
+        progress.level > (existingProgress?.level ?? 0)
+      ) {
+        await this.experienceAwarder.award(tx, {
+          type: 'review-easy',
+          userId,
+          source: 'oxford',
+          subjectId: definitionId,
+        });
+      }
+
+      return updated;
+    });
+  }
+
+  private getOxfordProgress(
+    client: Prisma.TransactionClient,
+    userId: string,
+    definitionId: string,
+  ) {
+    return client.userSystemVocabularyProgress.findUnique({
+      where: { userId_systemEntryId: { userId, systemEntryId: definitionId } },
       select: {
         level: true,
         wrongCount: true,

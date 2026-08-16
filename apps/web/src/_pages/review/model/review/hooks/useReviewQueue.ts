@@ -92,10 +92,10 @@ export function useReviewQueue({
     error: gradeError,
     isPending: isSubmittingGrade,
   } = useMutation({
-    mutationFn: ({ word, rating }: { word: UserVocabularyEntry; rating: ReviewRating }) => {
+    mutationFn: ({ word, rating, submissionId }: { word: UserVocabularyEntry; rating: ReviewRating; submissionId: string }) => {
       return runAuthenticatedRequest({
         request: (token) =>
-          updateVocabReview(token, word.id, { rating }),
+          updateVocabReview(token, word.id, { rating, submissionId }),
       });
     },
     onMutate: async ({ word }) => {
@@ -140,7 +140,7 @@ export function useReviewQueue({
   const gradeCurrentWord = useCallback(
     (rating: ReviewRating) => {
       if (!currentWord) return Promise.resolve();
-      return gradeWord({ word: currentWord, rating });
+      return gradeWord({ word: currentWord, rating, submissionId: crypto.randomUUID() });
     },
     [currentWord, gradeWord],
   );

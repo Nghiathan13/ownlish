@@ -20,6 +20,15 @@ type LeaderboardBody = {
   }>;
 };
 
+type ExperienceLeaderboardBody = {
+  entries: Array<{
+    rank: number;
+    displayName: string;
+    avatarUrl: string | null;
+    experience: number;
+  }>;
+};
+
 const emails = [
   'leaderboard-alpha@example.com',
   'leaderboard-beta@example.com',
@@ -101,6 +110,13 @@ describe('LeaderboardController (e2e)', () => {
         },
       ],
     });
+    await prisma.userExperience.createMany({
+      data: [
+        { userId: alpha.userId, totalXp: 880 },
+        { userId: beta.userId, totalXp: 880 },
+        { userId: gamma.userId, totalXp: 120 },
+      ],
+    });
   });
 
   afterEach(async () => {
@@ -164,6 +180,53 @@ describe('LeaderboardController (e2e)', () => {
     expect(body.entries[0]).toMatchObject({
       displayName: 'Alpha',
       studySeconds: 150_000_000,
+    });
+  });
+
+  it('returns an authenticated all-time Experience leaderboard and summary with public fields only', async () => {
+    await request(app.getHttpServer())
+      .get('/leaderboard/experience')
+      .expect(401);
+    await request(app.getHttpServer()).get('/experience/summary').expect(401);
+
+    const [leaderboardResponse, summaryResponse] = await Promise.all([
+      request(app.getHttpServer())
+        .get('/leaderboard/experience')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200),
+      request(app.getHttpServer())
+        .get('/experience/summary')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200),
+    ]);
+    const leaderboard =
+      parseResponseBody<ExperienceLeaderboardBody>(leaderboardResponse);
+
+    expect(leaderboard.entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rank: 1,
+          displayName: 'Alpha',
+          experience: 880,
+        }),
+        expect.objectContaining({
+          rank: 1,
+          displayName: 'Beta',
+          experience: 880,
+        }),
+      ]),
+    );
+    expect(Object.keys(leaderboard.entries[0])).toEqual([
+      'rank',
+      'displayName',
+      'avatarUrl',
+      'experience',
+    ]);
+    expect(JSON.stringify(leaderboard)).not.toContain(
+      'leaderboard-alpha@example.com',
+    );
+    expect(parseResponseBody<{ totalXp: number }>(summaryResponse)).toEqual({
+      totalXp: 880,
     });
   });
 });

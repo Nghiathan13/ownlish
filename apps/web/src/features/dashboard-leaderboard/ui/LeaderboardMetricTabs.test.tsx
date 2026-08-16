@@ -21,7 +21,7 @@ describe("LeaderboardMetricTabs", () => {
       "href",
       "/dashboard/leaderboard?metric=study-time&period=week&anchor=2026-08-10",
     );
-    expect(screen.getByRole("tab", { name: "Experience · V2" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Experience" })).toHaveAttribute(
       "href",
       "/dashboard/leaderboard?metric=experience",
     );
@@ -36,7 +36,7 @@ describe("LeaderboardMetricTabs", () => {
       </LocaleProvider>,
     );
 
-    expect(screen.getByRole("tab", { name: "Experience · V2" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Experience" })).toHaveAttribute(
       "aria-selected",
       "true",
     );

@@ -1,8 +1,20 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma, ReviewGradeSource } from '@prisma/client';
+import {
+  EXPERIENCE_AWARDER,
+  noExperienceAwards,
+  type ExperienceAwarder,
+} from '../features/experience/experience-awarder';
+import {
+  EXPERIENCE_REVIEW_RECEIPTS,
+  noExperienceReviewReceipts,
+  type ExperienceReviewReceipts,
+} from '../features/experience/experience-review-receipts';
 import { PrismaService } from '../prisma/prisma.service';
 import { OXFORD_DEFINITION_SOURCES } from '../collections/collections.constants';
 import { scheduleReview } from '../reviews/lib/review-schedule';
@@ -50,7 +62,13 @@ function buildListResponse<TItems extends { length: number }>(
 
 @Injectable()
 export class VocabService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(EXPERIENCE_AWARDER)
+    private readonly experienceAwarder: ExperienceAwarder = noExperienceAwards,
+    @Inject(EXPERIENCE_REVIEW_RECEIPTS)
+    private readonly experienceReviewReceipts: ExperienceReviewReceipts = noExperienceReviewReceipts,
+  ) {}
 
   async list(
     userId: string,
@@ -166,20 +184,42 @@ export class VocabService {
   ): Promise<
     Awaited<ReturnType<PrismaService['userVocabularyEntry']['update']>>
   > {
-    const entry = await this.findEntryOrThrow(userId, id);
-    const progress = scheduleReview(
-      { level: entry.level, wrongCount: entry.wrongCount },
-      dto.rating,
-    );
+    return this.prisma.$transaction(async (tx) => {
+      const receipt = {
+        userId,
+        submissionId: dto.submissionId,
+        source: ReviewGradeSource.USER_VOCAB,
+        subjectId: id,
+      };
+      if (await this.experienceReviewReceipts.isDuplicate(tx, receipt)) {
+        return this.findEntryOrThrowWithClient(tx, userId, id);
+      }
 
-    return this.prisma.userVocabularyEntry.update({
-      where: { id: entry.id },
-      data: {
-        level: progress.level,
-        wrongCount: progress.wrongCount,
-        lastReview: progress.lastReviewAt,
-        nextReview: progress.nextReviewAt,
-      },
+      const entry = await this.findEntryOrThrowWithClient(tx, userId, id);
+      const progress = scheduleReview(
+        { level: entry.level, wrongCount: entry.wrongCount },
+        dto.rating,
+      );
+      const updated = await tx.userVocabularyEntry.update({
+        where: { id: entry.id },
+        data: {
+          level: progress.level,
+          wrongCount: progress.wrongCount,
+          lastReview: progress.lastReviewAt,
+          nextReview: progress.nextReviewAt,
+        },
+      });
+      await this.experienceReviewReceipts.record(tx, receipt);
+      if (dto.rating === 'EASY' && progress.level > entry.level) {
+        await this.experienceAwarder.award(tx, {
+          type: 'review-easy',
+          userId,
+          source: 'user-vocab',
+          subjectId: id,
+        });
+      }
+
+      return updated;
     });
   }
 
@@ -199,6 +239,22 @@ export class VocabService {
     id: string,
   ): Promise<ActiveVocabularyEntry> {
     const entry = await this.prisma.userVocabularyEntry.findFirst({
+      where: { id, userId },
+    });
+
+    if (!entry) {
+      throw new NotFoundException('Vocabulary entry not found');
+    }
+
+    return entry;
+  }
+
+  private async findEntryOrThrowWithClient(
+    client: Prisma.TransactionClient,
+    userId: string,
+    id: string,
+  ) {
+    const entry = await client.userVocabularyEntry.findFirst({
       where: { id, userId },
     });
 

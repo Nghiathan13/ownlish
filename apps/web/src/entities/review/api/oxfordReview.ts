@@ -156,6 +156,7 @@ export function gradeOxfordReviewDefinition(
     part: number;
     definitionId: string;
     rating: OxfordReviewRating;
+    submissionId: string;
   },
 ) {
   return apiRequest(
@@ -163,7 +164,7 @@ export function gradeOxfordReviewDefinition(
     {
       method: "POST",
       token,
-      body: JSON.stringify({ rating: input.rating }),
+      body: JSON.stringify({ rating: input.rating, submissionId: input.submissionId }),
     },
   ).then(parseOxfordWordProgressResponse);
 }

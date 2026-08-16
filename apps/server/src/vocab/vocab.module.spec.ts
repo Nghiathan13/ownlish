@@ -1,5 +1,6 @@
 import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ExperienceModule } from '../features/experience/experience.module';
 import { VocabController } from './vocab.controller';
 import { VocabModule } from './vocab.module';
 import { VocabStatsService } from './vocab-stats.service';
@@ -10,6 +11,7 @@ describe('VocabModule', () => {
     expect(Reflect.getMetadata('imports', VocabModule)).toEqual([
       PrismaModule,
       AuthModule,
+      ExperienceModule,
     ]);
     expect(Reflect.getMetadata('controllers', VocabModule)).toEqual([
       VocabController,

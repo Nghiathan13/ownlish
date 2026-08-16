@@ -63,7 +63,10 @@ describe("vocabulary API", () => {
     apiRequest.mockResolvedValueOnce(entry).mockResolvedValueOnce(entry).mockResolvedValueOnce({ deletedEntryId: "entry-1" });
 
     await expect(createVocabWord("token", { collectionId: "collection-1", word: "learn" })).resolves.toMatchObject({ definitions: [entry] });
-    await expect(updateVocabReview("token", "entry-1", { rating: "GOOD" })).resolves.toEqual(entry);
+    await expect(updateVocabReview("token", "entry-1", {
+      rating: "GOOD",
+      submissionId: "11111111-1111-4111-8111-111111111111",
+    })).resolves.toEqual(entry);
     await expect(deleteVocabEntry("token", "entry-1")).resolves.toEqual({ deletedEntryId: "entry-1" });
     expect(apiRequest).toHaveBeenLastCalledWith("/vocab/entry-1", { method: "DELETE", token: "token" });
   });

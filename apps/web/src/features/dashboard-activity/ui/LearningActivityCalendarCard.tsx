@@ -193,9 +193,13 @@ function LearningActivityDayTooltip({ tooltip }: { tooltip: DayTooltip | null })
 
 export function LearningActivityCalendarCard({
   calendar,
+  experienceTotalXp,
+  isExperienceLoading,
   isLoading,
 }: {
   calendar: LearningActivityCalendar | null;
+  experienceTotalXp: number;
+  isExperienceLoading: boolean;
   isLoading: boolean;
 }) {
   const { locale, t } = useLocale();
@@ -281,8 +285,8 @@ export function LearningActivityCalendarCard({
             iconBackgroundClassName="bg-success-background"
             iconClassName="text-success"
             label={t("dashboard.experience")}
-            suffix={t("dashboard.comingSoon")}
-            value="—"
+            suffix="XP"
+            value={isExperienceLoading ? "—" : experienceTotalXp}
           />
           <LearningActivityMetricCard
             icon={<TrophyIcon className="size-7" />}

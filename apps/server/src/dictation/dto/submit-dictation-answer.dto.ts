@@ -1,4 +1,4 @@
-import { IsBoolean, IsString, Matches } from 'class-validator';
+import { IsString, Matches, MaxLength } from 'class-validator';
 
 const SEGMENT_ID_PATTERN = /^s\d+$/;
 
@@ -7,6 +7,7 @@ export class SubmitDictationAnswerDto {
   @Matches(SEGMENT_ID_PATTERN)
   segmentId!: string;
 
-  @IsBoolean()
-  isCompleted!: boolean;
+  @IsString()
+  @MaxLength(5_000)
+  answer!: string;
 }

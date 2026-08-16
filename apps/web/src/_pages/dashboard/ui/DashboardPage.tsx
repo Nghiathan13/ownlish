@@ -14,6 +14,7 @@ import {
   LearningActivityCalendarCard,
   useLearningActivityCalendar,
 } from "@/features/dashboard-activity";
+import { useExperienceSummary } from "@/features/dashboard-experience";
 import {
   DifficultReviewWordsCard,
   ProgressSourceMenu,
@@ -89,6 +90,11 @@ function DashboardPageContent({ section }: DashboardPageProps) {
     isAuthenticated,
     userId: user?.id ?? null,
   });
+  const experienceSummary = useExperienceSummary({
+    enabled: section === "activity",
+    isAuthenticated,
+    userId: user?.id ?? null,
+  });
   const difficultReviewWords = useDifficultReviewWords({
     enabled:
       section === "progress" &&
@@ -151,6 +157,8 @@ function DashboardPageContent({ section }: DashboardPageProps) {
         <div className="mt-6 min-h-0 flex-1 px-4 pb-4 lg:px-16 lg:pb-8">
           <LearningActivityCalendarCard
             calendar={learningActivity.calendar}
+            experienceTotalXp={experienceSummary.totalXp}
+            isExperienceLoading={experienceSummary.isLoading}
             isLoading={learningActivity.isLoading}
           />
         </div>

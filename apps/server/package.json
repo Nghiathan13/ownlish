@@ -26,6 +26,7 @@
     "admin:grant": "ts-node scripts/grant-admin.ts",
     "toeic:catalog": "ts-node scripts/build-toeic-catalog.ts",
     "toeic:publish": "ts-node scripts/publish-toeic-catalog.ts",
+    "dictation:sync-catalog": "ts-node scripts/sync-dictation-catalog.ts",
     "storage:configure-cors": "ts-node scripts/configure-r2-cors.ts",
     "storage:migrate-supabase": "ts-node scripts/migrate-supabase-storage.ts",
     "storage:manifest": "ts-node scripts/r2-manifest.ts",

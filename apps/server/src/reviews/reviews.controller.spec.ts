@@ -42,6 +42,7 @@ describe('ReviewsController', () => {
       controller.getOxfordPart(request, 'A1', 2),
       controller.gradeOxfordDefinition(request, 'A1', 2, 'definition-id', {
         rating: 'GOOD',
+        submissionId: '11111111-1111-4111-8111-111111111111',
       } as never),
     ]);
 
@@ -51,7 +52,10 @@ describe('ReviewsController', () => {
       'A1',
       2,
       'definition-id',
-      'GOOD',
+      {
+        rating: 'GOOD',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      },
     );
   });
 });

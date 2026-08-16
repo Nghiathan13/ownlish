@@ -4,6 +4,9 @@ NestJS API for authentication, vocabulary review, TOEIC sessions, Dictation
 progress and learning activity. It uses Prisma/PostgreSQL and Cloudflare R2 for
 public assets.
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for server code structure, feature-layer
+boundaries, migration rules, and test policy.
+
 ## Local development
 
 From the repository root:
@@ -49,6 +52,10 @@ pnpm --filter ownlish-server storage:configure-cors -- \
 # Inspect an R2 prefix without changing it
 pnpm --filter ownlish-server storage:manifest -- \
   --bucket ownlish-content-staging --prefix toeic
+
+# After the Dictation catalog is published, validate and project approved
+# transcripts into PostgreSQL before releasing the client that submits answers.
+pnpm --filter ownlish-server dictation:sync-catalog
 ```
 
 `storage:migrate-supabase` is an idempotent copy tool for the existing
