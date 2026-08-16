@@ -86,7 +86,10 @@ describe('VocabController (e2e)', () => {
     await request(app.getHttpServer())
       .patch(`/vocab/${entry.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ rating: 'FORGET' })
+      .send({
+        rating: 'FORGET',
+        submissionId: '11111111-1111-4111-8111-111111111111',
+      })
       .expect(200)
       .expect((response) => {
         expect(parseResponseBody<VocabularyEntryBody>(response)).toMatchObject({
@@ -99,7 +102,10 @@ describe('VocabController (e2e)', () => {
     await request(app.getHttpServer())
       .patch(`/vocab/${entry.id}/review`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ rating: 'MASTER' })
+      .send({
+        rating: 'MASTER',
+        submissionId: '11111111-1111-4111-8111-111111111112',
+      })
       .expect(200)
       .expect((response) => {
         expect(parseResponseBody(response)).toMatchObject({
