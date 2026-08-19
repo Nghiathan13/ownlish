@@ -9,9 +9,7 @@ describe('Dictation catalog parsing', () => {
     expect(
       parseDictationCatalogIndex({
         version: 1,
-        categories: [
-          { id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' },
-        ],
+        categories: [{ id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' }],
       }),
     ).toEqual([{ id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' }]);
   });

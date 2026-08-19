@@ -74,6 +74,7 @@ function DictationStudyPageContent({ videoId }: DictationStudyPageProps) {
     userId: user?.id ?? null,
     videoId,
   });
+  const video = videoQuery.data;
   const isLoading = videoQuery.isLoading || progressQuery.isLoading;
   const loadError =
     videoQuery.error || !rootUrl
@@ -81,13 +82,22 @@ function DictationStudyPageContent({ videoId }: DictationStudyPageProps) {
       : progressQuery.error
         ? t("dictation.progressLoadError")
         : null;
-  const isReady = Boolean(videoQuery.data && !loadError);
+  const isReady = Boolean(video && !loadError);
 
   return (
     <PageShell className={isReady ? "lg:overflow-y-hidden" : undefined}>
       {isLoading ? (
         <DictationStudyPageSkeleton />
-      ) : !isReady ? (
+      ) : video && !loadError ? (
+        <DictationStudy
+          key={videoId}
+          backHref={backHref}
+          catalogVideos={catalogVideos}
+          initialProgress={progressQuery.data ?? null}
+          video={video}
+          videoId={videoId}
+        />
+      ) : (
         <div className="w-full px-4 py-4">
           <div>
             <Link className={dictationBackButtonClassName} href={backHref}>
@@ -98,15 +108,6 @@ function DictationStudyPageContent({ videoId }: DictationStudyPageProps) {
             </p>
           </div>
         </div>
-      ) : (
-        <DictationStudy
-          key={videoId}
-          backHref={backHref}
-          catalogVideos={catalogVideos}
-          initialProgress={progressQuery.data ?? null}
-          video={videoQuery.data}
-          videoId={videoId}
-        />
       )}
     </PageShell>
   );
