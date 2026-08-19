@@ -1,4 +1,4 @@
-import { ToeicSessionRoutePage } from "@/_pages/tests";
+import { PracticeSessionRoutePage } from "@/_pages/tests";
 
 type PracticePageProps = {
   params: Promise<{
@@ -7,5 +7,5 @@ type PracticePageProps = {
 };
 
 export default function PracticePage({ params }: PracticePageProps) {
-  return <ToeicSessionRoutePage mode="practice" params={params} />;
+  return <PracticeSessionRoutePage mode="practice" params={params} />;
 }

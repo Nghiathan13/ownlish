@@ -4,7 +4,7 @@ import {
   getTestsListPath,
   parseToeicYearParam,
 } from "../config/toeicYears";
-import { isToeicPartNumber } from "./toeicParts";
+import { DEFAULT_TOEIC_PART, isToeicPartNumber, type ToeicPartNumber } from "./toeicParts";
 import { isToeicSessionId } from "./toeicRunPaths";
 
 export type TestsOverviewTab = "mock_tests" | "part_practice";
@@ -29,14 +29,12 @@ export function getTestsOverviewPath(options?: {
   const tab = options?.tab ?? "mock_tests";
 
   if (tab === "part_practice") {
-    const params = new URLSearchParams();
+    const part =
+      options?.part != null && isToeicPartNumber(options.part)
+        ? options.part
+        : DEFAULT_TOEIC_PART;
 
-    if (options?.part != null && isToeicPartNumber(options.part)) {
-      params.set("part", String(options.part));
-    }
-
-    const query = params.toString();
-    return query ? `/tests/part-practice?${query}` : "/tests/part-practice";
+    return `/tests/part-practice?part=${part}`;
   }
 
   const year = parseToeicYearParam(
@@ -47,7 +45,7 @@ export function getTestsOverviewPath(options?: {
 
 export function parsePracticeOverviewPartParam(
   value: string | null | undefined,
-): number | null {
+): ToeicPartNumber | null {
   if (value == null) {
     return null;
   }
@@ -74,7 +72,7 @@ function buildCanonicalTestsOverviewPath(
   if (tab === "part_practice") {
     const part = parsePracticeOverviewPartParam(searchParams.get("part"));
 
-    return getTestsOverviewPath({ tab, part: part ?? undefined });
+    return getTestsOverviewPath({ tab, part: part ?? DEFAULT_TOEIC_PART });
   }
 
   const year = parseToeicYearParam(searchParams.get("year")) ?? DEFAULT_TOEIC_YEAR;

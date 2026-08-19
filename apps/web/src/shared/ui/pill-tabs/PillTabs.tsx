@@ -40,7 +40,7 @@ export function PillTabs<Key extends string>({
     <div
       aria-label={ariaLabel}
       className={classNames(
-        "flex w-fit max-w-full gap-3 overflow-x-auto",
+        "mx-4 my-4 flex w-fit max-w-[calc(100%-2rem)] shrink-0 gap-3 overflow-x-auto lg:mx-16 lg:max-w-[calc(100%-8rem)]",
         className,
       )}
       role="tablist"

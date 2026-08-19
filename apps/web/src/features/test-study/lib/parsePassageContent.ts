@@ -1,0 +1,183 @@
+import {
+  hasContextEvidenceMarkers,
+} from "@/features/test-study/lib/parseContextEvidence";
+import type {
+  ParsePassageContentResult,
+  PassageBlock,
+  PassageInline,
+  PassageTableRow,
+} from "@/features/test-study/lib/passageContent.types";
+import {
+  hasPassageFormatMarkers,
+  hasPassageWrapperMarkers,
+  isValidPassageBlockMarkup,
+  parsePassageBlocks,
+  type RawPassageBlock,
+} from "@/features/test-study/lib/parsePassageBlocks";
+import {
+  hasPassageInlineFormatMarkers,
+  isValidPassageInlineMarkup,
+  parsePassageInlines,
+} from "@/features/test-study/lib/parsePassageInlines";
+import { parsePassageTable } from "@/features/test-study/lib/parsePassageTable";
+
+function toPassageBlock(block: RawPassageBlock): PassageBlock | null {
+  if (block.type === "passage") {
+    const blocks = block.children
+      .map(toPassageBlock)
+      .filter((child): child is PassageBlock => child !== null);
+
+    if (blocks.length !== block.children.length) {
+      return null;
+    }
+
+    return {
+      type: "passage",
+      border: block.passageAttrs.border,
+      blocks,
+    };
+  }
+
+  if (block.type === "center") {
+    const blocks = block.children
+      .map(toPassageBlock)
+      .filter((child): child is PassageBlock => child !== null);
+
+    if (blocks.length !== block.children.length) {
+      return null;
+    }
+
+    return {
+      type: "center",
+      blocks,
+    };
+  }
+
+  if (block.type === "table") {
+    const table = parsePassageTable(block.raw);
+    if (!table) {
+      return null;
+    }
+
+    return {
+      type: "table",
+      bold: block.tableAttrs.bold,
+      center: block.tableAttrs.center,
+      widthPercent: block.tableAttrs.widthPercent,
+      rows: table.rows,
+    };
+  }
+
+  const inlines = parsePassageInlines(block.raw);
+  if (!inlines) {
+    return null;
+  }
+
+  return {
+    type: block.type,
+    inlines,
+  } as PassageBlock;
+}
+
+function wrapInDefaultPassage(blocks: PassageBlock[]): PassageBlock[] {
+  return [
+    {
+      type: "passage",
+      border: false,
+      blocks,
+    },
+  ];
+}
+
+function normalizeTopLevelBlocks(
+  blocks: PassageBlock[],
+  content: string,
+): PassageBlock[] {
+  if (hasPassageWrapperMarkers(content)) {
+    return blocks;
+  }
+
+  return wrapInDefaultPassage(blocks);
+}
+
+function inlineHasEvidence(inline: PassageInline): boolean {
+  if (inline.type === "evidence") {
+    return true;
+  }
+
+  if (inline.type === "bold" || inline.type === "border") {
+    return inline.inlines.some(inlineHasEvidence);
+  }
+
+  return false;
+}
+
+function tableRowHasEvidence(row: PassageTableRow) {
+  return row.cols.some((col) => col.inlines.some(inlineHasEvidence));
+}
+
+function blockHasEvidence(block: PassageBlock) {
+  if (block.type === "passage" || block.type === "center") {
+    return block.blocks.some(blockHasEvidence);
+  }
+
+  if (block.type === "table") {
+    return block.rows.some(tableRowHasEvidence);
+  }
+
+  return block.inlines.some(inlineHasEvidence);
+}
+
+export function parsePassageContent(content: string): ParsePassageContentResult {
+  if (hasPassageInlineFormatMarkers(content) && !isValidPassageInlineMarkup(content)) {
+    return { kind: "raw", content };
+  }
+
+  if (hasPassageFormatMarkers(content)) {
+    if (!isValidPassageBlockMarkup(content)) {
+      return { kind: "raw", content };
+    }
+
+    const rawBlocks = parsePassageBlocks(content);
+    if (!rawBlocks) {
+      return { kind: "raw", content };
+    }
+
+    const blocks = rawBlocks
+      .map(toPassageBlock)
+      .filter((block): block is PassageBlock => block !== null);
+
+    if (blocks.length !== rawBlocks.length) {
+      return { kind: "raw", content };
+    }
+
+    return {
+      kind: "parsed",
+      blocks: normalizeTopLevelBlocks(blocks, content),
+    };
+  }
+
+  const inlines = parsePassageInlines(content);
+  if (!inlines) {
+    return { kind: "raw", content };
+  }
+
+  return {
+    kind: "parsed",
+    blocks: wrapInDefaultPassage([
+      {
+        type: "plain",
+        inlines,
+      },
+    ]),
+  };
+}
+
+export function passageContentHasEvidence(content: string) {
+  const parsed = parsePassageContent(content);
+  if (parsed.kind === "raw") {
+    return hasContextEvidenceMarkers(content);
+  }
+
+  return parsed.blocks.some(blockHasEvidence);
+}

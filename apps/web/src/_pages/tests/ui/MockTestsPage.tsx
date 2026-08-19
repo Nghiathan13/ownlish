@@ -1,44 +1,22 @@
-"use client";
-
-import { RequireAuth } from "@/features/auth";
+import type { ToeicYear } from "@/entities/toeic-runtime";
 import {
-  isAuthenticatedStatus,
-  useAuthSession,
-} from "@/entities/session";
-import { useToeicCatalogQuery } from "@/entities/toeic-catalog";
-import { DEFAULT_TOEIC_YEAR, type ToeicYear } from "@/entities/toeic-runtime";
-import { useT } from "@/shared/lib/providers";
-import { PageShell } from "@/shared/ui/PageShell";
-import { MockTestsTab } from "./overview/components/MockTestsTab";
-import { TestsOverviewTabs } from "./overview/components/TestsOverviewTabs";
+  MockTestsCardFrame,
+  MockTestsCards,
+  MockTestsTab,
+} from "@/features/test-overview";
+import { TestsScreen } from "./TestsScreen";
 
 type MockTestsPageProps = {
-  year?: ToeicYear;
+  year: ToeicYear;
 };
 
-export function MockTestsPage({
-  year = DEFAULT_TOEIC_YEAR,
-}: MockTestsPageProps) {
-  const t = useT();
-  const { status } = useAuthSession();
-  const catalog = useToeicCatalogQuery(isAuthenticatedStatus(status));
-
+export function MockTestsPage({ year }: MockTestsPageProps) {
   return (
-    <RequireAuth>
-      <PageShell>
-        <TestsOverviewTabs />
-        <MockTestsTab
-          catalogError={
-            catalog.error instanceof Error
-              ? catalog.error.message
-              : catalog.error
-                ? t("tests.cannotLoadCatalog")
-                : null
-          }
-          selectedYear={year}
-          source={catalog.data}
-        />
-      </PageShell>
-    </RequireAuth>
+    <TestsScreen>
+      <MockTestsTab selectedYear={year} />
+      <MockTestsCardFrame>
+        <MockTestsCards selectedYear={year} />
+      </MockTestsCardFrame>
+    </TestsScreen>
   );
 }

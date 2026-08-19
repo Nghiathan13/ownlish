@@ -1,4 +1,4 @@
-import { ToeicSessionRoutePage } from "@/_pages/tests";
+import { MockSessionRoutePage } from "@/_pages/tests";
 
 type MockTestPageProps = {
   params: Promise<{
@@ -7,5 +7,5 @@ type MockTestPageProps = {
 };
 
 export default function MockTestPage({ params }: MockTestPageProps) {
-  return <ToeicSessionRoutePage mode="mock_test" params={params} />;
+  return <MockSessionRoutePage params={params} />;
 }

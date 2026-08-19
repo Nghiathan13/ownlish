@@ -1,15 +1,22 @@
-import { RequireAuth } from "@/features/auth";
-import { PageShell } from "@/shared/ui/PageShell";
-import { PracticeTab } from "./overview/components/PracticeTab";
-import { TestsOverviewTabs } from "./overview/components/TestsOverviewTabs";
+import type { ToeicPartNumber } from "@/entities/toeic-runtime";
+import {
+  PartPracticeCard,
+  PartPracticeCardFrame,
+  PartPracticeTabs,
+} from "@/features/test-overview";
+import { TestsScreen } from "./TestsScreen";
 
-export function PartPracticePage() {
+type PartPracticePageProps = {
+  partNumber: ToeicPartNumber;
+};
+
+export function PartPracticePage({ partNumber }: PartPracticePageProps) {
   return (
-    <RequireAuth>
-      <PageShell>
-        <TestsOverviewTabs />
-        <PracticeTab />
-      </PageShell>
-    </RequireAuth>
+    <TestsScreen>
+      <PartPracticeTabs selectedPartNumber={partNumber} />
+      <PartPracticeCardFrame>
+        <PartPracticeCard selectedPartNumber={partNumber} />
+      </PartPracticeCardFrame>
+    </TestsScreen>
   );
 }

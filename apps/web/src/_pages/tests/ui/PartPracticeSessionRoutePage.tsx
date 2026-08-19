@@ -11,7 +11,7 @@ import {
 import {
   PartPracticeRunView,
   TestRunLoadingSkeleton,
-} from "@/features/tests/run";
+} from "@/features/test-study";
 import { DictionaryLookupBoundary } from "@/features/dictionary-lookup";
 import { PageShell } from "@/shared/ui/PageShell";
 import { Panel } from "@/shared/ui/Panel";

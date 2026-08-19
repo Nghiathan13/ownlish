@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { collectionListCardClassName } from "../../lib/collectionListCard";
 import { formatMessage } from "@/shared/i18n";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/lib/providers";
@@ -37,7 +36,7 @@ export function CollectionCard({
   return (
     <article
       className={classNames(
-        collectionListCardClassName,
+        "group relative flex flex-col gap-4 rounded-card border border-border bg-surface-card p-4 hover:border-primary",
         !isInteractive && "opacity-50",
       )}
     >

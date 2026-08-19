@@ -81,7 +81,6 @@ function DashboardModeTabs({ mode }: { mode: DashboardProgressMode }) {
     <PillTabs
       activeKey={mode}
       ariaLabel={t("dashboard.activityMode")}
-      className="mx-4 my-6 max-w-[calc(100%-2rem)] shrink-0 lg:mx-16 lg:max-w-[calc(100%-8rem)]"
       items={DASHBOARD_PROGRESS_MODES.map((item) => ({
         href: getDashboardProgressPath(item),
         key: item,

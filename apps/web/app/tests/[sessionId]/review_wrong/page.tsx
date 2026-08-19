@@ -1,4 +1,4 @@
-import { ToeicSessionRoutePage } from "@/_pages/tests";
+import { PracticeSessionRoutePage } from "@/_pages/tests";
 
 type ReviewWrongPageProps = {
   params: Promise<{
@@ -7,5 +7,5 @@ type ReviewWrongPageProps = {
 };
 
 export default function ReviewWrongPage({ params }: ReviewWrongPageProps) {
-  return <ToeicSessionRoutePage mode="review_wrong" params={params} />;
+  return <PracticeSessionRoutePage mode="review_wrong" params={params} />;
 }

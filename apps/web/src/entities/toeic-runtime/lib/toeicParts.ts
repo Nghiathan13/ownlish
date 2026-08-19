@@ -2,6 +2,8 @@ export const ALL_TOEIC_PART_NUMBERS = [1, 2, 3, 4, 5, 6, 7] as const;
 
 export type ToeicPartNumber = (typeof ALL_TOEIC_PART_NUMBERS)[number];
 
+export const DEFAULT_TOEIC_PART: ToeicPartNumber = ALL_TOEIC_PART_NUMBERS[0];
+
 export function isToeicPartNumber(value: number): value is ToeicPartNumber {
   return ALL_TOEIC_PART_NUMBERS.includes(value as ToeicPartNumber);
 }

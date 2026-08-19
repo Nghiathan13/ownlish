@@ -28,13 +28,13 @@ describe("partPracticePaths", () => {
   it("builds canonical tests overview paths", () => {
     expect(getTestsOverviewPath()).toBe("/tests/mock-tests?year=2026");
     expect(getTestsOverviewPath({ tab: "part_practice" })).toBe(
-      "/tests/part-practice",
+      "/tests/part-practice?part=1",
     );
     expect(getTestsOverviewPath({ tab: "part_practice", part: 4 })).toBe(
       "/tests/part-practice?part=4",
     );
     expect(getTestsOverviewPath({ year: 2024, tab: "part_practice" })).toBe(
-      "/tests/part-practice",
+      "/tests/part-practice?part=1",
     );
     expect(getTestsOverviewPath({ year: 2024, tab: "mock_tests" })).toBe(
       "/tests/mock-tests?year=2024",
@@ -75,7 +75,7 @@ describe("partPracticePaths", () => {
       getTestsOverviewRedirectTarget(
         new URLSearchParams("tab=practice&year=2024"),
       ),
-    ).toBe("/tests/part-practice");
+    ).toBe("/tests/part-practice?part=1");
     expect(getTestsOverviewRedirectTarget(new URLSearchParams("year=abc"))).toBe(
       "/tests/mock-tests?year=2026",
     );

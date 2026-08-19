@@ -17,7 +17,7 @@ vi.mock("@/features/auth", () => ({
   RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@/features/tests/run", () => ({
+vi.mock("@/features/test-study", () => ({
   PartPracticeRunView: mocks.partPracticeRunView,
   TestRunLoadingSkeleton: () => <div data-testid="run-loading" />,
 }));

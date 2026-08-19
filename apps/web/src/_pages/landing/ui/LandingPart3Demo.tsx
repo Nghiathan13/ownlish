@@ -10,9 +10,9 @@ import {
   type LandingOptionKey,
   type LandingPart3Question,
 } from "@/_pages/landing/model/part3DemoData";
-import { PassagePanel } from "@/features/tests/run";
-import { QuestionOptions } from "@/features/tests/run";
-import { QuestionTranslationPanel } from "@/features/tests/run";
+import { PassagePanel } from "@/features/test-study";
+import { QuestionOptions } from "@/features/test-study";
+import { QuestionTranslationPanel } from "@/features/test-study";
 import {
   iconTextButtonClassName,
 } from "@/shared/ui/button";
