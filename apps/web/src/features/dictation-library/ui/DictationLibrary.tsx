@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   getDictationThumbnailUrl,
+  getDictationWatchPath,
   type DictationCatalogVideo,
 } from "@/entities/dictation-library";
 import { useDictationProgressQueries } from "@/entities/dictation-study";
@@ -47,7 +48,7 @@ export function DictationLibrary({ videos }: DictationLibraryProps) {
     <div className="mb-4 grid gap-4 px-4 sm:grid-cols-2 xl:grid-cols-3 lg:px-16">
       {videos.map((video, index) => {
         const progress = progressQueries[index]?.data;
-        const href = `/dictation/${video.id}`;
+        const href = getDictationWatchPath(video.id);
 
         return (
           <Link

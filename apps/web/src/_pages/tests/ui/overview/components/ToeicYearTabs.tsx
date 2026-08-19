@@ -1,55 +1,28 @@
 "use client";
 
-import Link from "next/link";
 import {
   getTestsListPath,
   getToeicYearButtonLabel,
+  TOEIC_YEARS,
   type ToeicYear,
 } from "@/entities/toeic-runtime";
-import { classNames } from "@/shared/lib/classNames";
-
-const toeicYearButtonClassName =
-  "inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal";
-
-function getToeicYearButtonClassName(isActive: boolean) {
-  return classNames(
-    toeicYearButtonClassName,
-    isActive
-      ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
-      : "bg-surface-subtle text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-  );
-}
+import { PillTabs } from "@/shared/ui/pill-tabs";
 
 type ToeicYearTabsProps = {
-  availableYears: ToeicYear[];
   selectedYear: ToeicYear;
 };
 
-export function ToeicYearTabs({
-  availableYears,
-  selectedYear,
-}: ToeicYearTabsProps) {
-  if (availableYears.length === 0) {
-    return null;
-  }
-
+export function ToeicYearTabs({ selectedYear }: ToeicYearTabsProps) {
   return (
-    <div className="mx-4 my-6 flex w-fit max-w-[calc(100%-2rem)] gap-3 overflow-x-auto lg:mx-16 lg:max-w-[calc(100%-8rem)]">
-      {availableYears.map((year) => {
-        const isActive = selectedYear === year;
-
-        return (
-          <Link
-            aria-current={isActive ? "page" : undefined}
-            className={getToeicYearButtonClassName(isActive)}
-            href={getTestsListPath(year)}
-            key={year}
-            scroll={false}
-          >
-            {getToeicYearButtonLabel(year)}
-          </Link>
-        );
-      })}
-    </div>
+    <PillTabs
+      activeKey={String(selectedYear)}
+      ariaLabel="TOEIC year"
+      className="mx-4 my-6 max-w-[calc(100%-2rem)] shrink-0 lg:mx-16 lg:max-w-[calc(100%-8rem)]"
+      items={TOEIC_YEARS.map((year) => ({
+        href: getTestsListPath(year),
+        key: String(year),
+        label: getToeicYearButtonLabel(year),
+      }))}
+    />
   );
 }

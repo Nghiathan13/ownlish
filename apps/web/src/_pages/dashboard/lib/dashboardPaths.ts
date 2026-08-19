@@ -4,6 +4,7 @@ import {
   DASHBOARD_LEADERBOARD_DEFAULT_PATH,
   DASHBOARD_MY_ACTIVITY_PATH,
   DASHBOARD_PROGRESS_PATH,
+  DASHBOARD_PROGRESS_DEFAULT_PATH,
   DASHBOARD_ROOT_PATH,
 } from "@/shared/routes";
 
@@ -11,6 +12,7 @@ export {
   DASHBOARD_LEADERBOARD_PATH,
   DASHBOARD_MY_ACTIVITY_PATH,
   DASHBOARD_PROGRESS_PATH,
+  DASHBOARD_PROGRESS_DEFAULT_PATH,
   DASHBOARD_ROOT_PATH,
 };
 
@@ -29,7 +31,7 @@ export const DASHBOARD_SUB_LINKS: DashboardSubLink[] = [
     section: "activity",
   },
   {
-    href: DASHBOARD_PROGRESS_PATH,
+    href: DASHBOARD_PROGRESS_DEFAULT_PATH,
     labelKey: "dashboard.tabProgress",
     section: "progress",
   },
@@ -41,7 +43,7 @@ export const DASHBOARD_SUB_LINKS: DashboardSubLink[] = [
 ];
 
 export function getDashboardSectionPath(section: DashboardSection) {
-  if (section === "progress") return DASHBOARD_PROGRESS_PATH;
+  if (section === "progress") return DASHBOARD_PROGRESS_DEFAULT_PATH;
   if (section === "leaderboard") return DASHBOARD_LEADERBOARD_PATH;
   return DASHBOARD_MY_ACTIVITY_PATH;
 }

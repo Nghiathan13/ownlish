@@ -28,8 +28,8 @@ describe("CollectionCategorySelect", () => {
 
     await user.click(screen.getByRole("tab", { name: "Oxford" }));
 
-    expect(pushState).toHaveBeenCalledWith(null, "", "/collections/oxford/A1");
-    expect(mocks.push).toHaveBeenCalledWith("/collections/oxford/A1", {
+    expect(pushState).toHaveBeenCalledWith(null, "", "/collections/oxford?band=A1");
+    expect(mocks.push).toHaveBeenCalledWith("/collections/oxford?band=A1", {
       scroll: false,
     });
     expect(pushState.mock.invocationCallOrder[0]).toBeLessThan(

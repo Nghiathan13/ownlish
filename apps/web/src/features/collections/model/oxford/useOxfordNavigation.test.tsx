@@ -58,33 +58,33 @@ describe("useOxfordNavigation", () => {
       1,
       null,
       "",
-      "/collections/oxford/B1",
+      "/collections/oxford?band=B1",
     );
     expect(pushState).toHaveBeenNthCalledWith(
       2,
       null,
       "",
-      "/collections/oxford/A1",
+      "/collections/oxford?band=A1",
     );
     expect(pushState).toHaveBeenNthCalledWith(
       3,
       null,
       "",
-      "/collections/oxford/B1",
+      "/collections/oxford?band=B1",
     );
     expect(mocks.push).toHaveBeenNthCalledWith(
       1,
-      "/collections/oxford/B1",
+      "/collections/oxford?band=B1",
       { scroll: false },
     );
     expect(mocks.push).toHaveBeenNthCalledWith(
       2,
-      "/collections/oxford/A1",
+      "/collections/oxford?band=A1",
       { scroll: false },
     );
     expect(mocks.push).toHaveBeenNthCalledWith(
       3,
-      "/collections/oxford/B1",
+      "/collections/oxford?band=B1",
       { scroll: false },
     );
     expect(pushState.mock.invocationCallOrder[0]).toBeLessThan(
@@ -115,22 +115,22 @@ describe("useOxfordNavigation", () => {
       1,
       null,
       "",
-      "/collections/oxford/A1/part-2",
+      "/collections/oxford?band=A1&group=2",
     );
     expect(pushState).toHaveBeenNthCalledWith(
       2,
       null,
       "",
-      "/collections/oxford/A1",
+      "/collections/oxford?band=A1",
     );
     expect(mocks.push).toHaveBeenNthCalledWith(
       1,
-      "/collections/oxford/A1/part-2",
+      "/collections/oxford?band=A1&group=2",
       { scroll: false },
     );
     expect(mocks.push).toHaveBeenNthCalledWith(
       2,
-      "/collections/oxford/A1",
+      "/collections/oxford?band=A1",
       { scroll: false },
     );
   });

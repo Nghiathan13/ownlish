@@ -6,7 +6,7 @@ import {
   parseDashboardSection,
 } from "../lib/dashboardPaths";
 import { useT } from "@/shared/lib/providers";
-import { UnderlineTabs } from "@/shared/ui/UnderlineTabs";
+import { PageHeader, PageHeaderTabs } from "@/shared/ui/page-header";
 
 export function DashboardTitleTabs() {
   const t = useT();
@@ -14,8 +14,8 @@ export function DashboardTitleTabs() {
   const activeSection = parseDashboardSection(pathname) ?? "activity";
 
   return (
-    <div className="mt-3 px-4 lg:mt-6 lg:px-16">
-      <UnderlineTabs
+    <PageHeader>
+      <PageHeaderTabs
         activeKey={activeSection}
         ariaLabel={t("nav.dashboard")}
         items={DASHBOARD_SUB_LINKS.map((link) => ({
@@ -24,6 +24,6 @@ export function DashboardTitleTabs() {
           label: t(link.labelKey),
         }))}
       />
-    </div>
+    </PageHeader>
   );
 }

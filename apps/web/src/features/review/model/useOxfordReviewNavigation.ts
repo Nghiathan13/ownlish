@@ -4,17 +4,29 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
-  formatOxfordPartSegment,
+  DEFAULT_OXFORD_BAND,
   parseOxfordBand,
-  parseOxfordGroup,
+  parseOxfordGroupParam,
   type OxfordBand,
 } from "@/entities/collection";
 import { getOxfordPartReviewQueryOptions } from "@/entities/review";
+import {
+  DEFAULT_OXFORD_REVIEW_GROUP,
+  getOxfordReviewPath,
+} from "../lib/oxfordReviewPath";
+
+export {
+  DEFAULT_OXFORD_REVIEW_GROUP,
+  getOxfordReviewLegacyPathRedirect,
+  getOxfordReviewPath,
+  getOxfordReviewPathRedirectTarget,
+  OXFORD_REVIEW_PATH,
+} from "../lib/oxfordReviewPath";
 
 type UseOxfordReviewNavigationParams = {
   bandParam: string | null;
   isAuthenticated: boolean;
-  partParam: string | null;
+  groupParam: string | null;
   userId: string | null;
 };
 
@@ -23,27 +35,22 @@ type OxfordReviewLocation = {
   part: number;
 };
 
-export function getOxfordReviewPath(band: OxfordBand, part: number) {
-  return `/review/oxford/${band}/part-${part}`;
-}
-
 export function useOxfordReviewNavigation({
   bandParam,
   isAuthenticated,
-  partParam,
+  groupParam,
   userId,
 }: UseOxfordReviewNavigationParams) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const routeBand = parseOxfordBand(bandParam) ?? "A1";
-  const routePart = parseOxfordGroup(partParam) ?? 1;
+  const routeBand = parseOxfordBand(bandParam) ?? DEFAULT_OXFORD_BAND;
+  const routePart =
+    parseOxfordGroupParam(groupParam) ?? DEFAULT_OXFORD_REVIEW_GROUP;
   const routePath = getOxfordReviewPath(routeBand, routePart);
-  const isPartSegmentCanonical =
-    partParam !== null &&
-    parseOxfordGroup(partParam) !== null &&
-    partParam === formatOxfordPartSegment(routePart);
+  const isGroupCanonical =
+    groupParam !== null && groupParam === String(routePart);
   const shouldResetPath =
-    bandParam !== routeBand || !isPartSegmentCanonical;
+    parseOxfordBand(bandParam) == null || !isGroupCanonical;
   const [location, setLocation] = useState<OxfordReviewLocation>({
     band: routeBand,
     part: routePart,
@@ -88,7 +95,7 @@ export function useOxfordReviewNavigation({
       pendingPathRef.current = nextPath;
       setLocation({ band, part });
 
-      if (window.location.pathname !== nextPath) {
+      if (`${window.location.pathname}${window.location.search}` !== nextPath) {
         window.history.pushState(null, "", nextPath);
       }
 
@@ -105,7 +112,7 @@ export function useOxfordReviewNavigation({
 
   const navigateBand = useCallback(
     (band: OxfordBand) => {
-      navigate(band, 1);
+      navigate(band, DEFAULT_OXFORD_REVIEW_GROUP);
     },
     [navigate],
   );

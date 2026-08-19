@@ -17,11 +17,11 @@ describe("getAppNavLinksForUser", () => {
     expect(links.some((link) => link.href.startsWith("/admin/"))).toBe(false);
   });
 
-  it("links Tests nav to canonical mock overview URL", () => {
+  it("links Tests nav to canonical mock tests route", () => {
     const testsLink = getAppNavLinksForUser().find(
       (link) => link.labelKey === "nav.tests",
     );
 
-    expect(testsLink?.href).toBe("/tests?tab=mock_tests&year=2026");
+    expect(testsLink?.href).toBe("/tests/mock-tests?year=2026");
   });
 });

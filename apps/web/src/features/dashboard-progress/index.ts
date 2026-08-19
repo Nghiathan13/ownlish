@@ -3,6 +3,7 @@ export * from "./ui/DifficultReviewWordsCard";
 export * from "./ui/ProgressSourceMenu";
 export * from "./ui/ReviewProgressCard";
 
+export * from "./lib/progressMode";
 export * from "./model/types";
 export * from "./model/useDifficultReviewWords";
 export * from "./model/useReviewProgress";

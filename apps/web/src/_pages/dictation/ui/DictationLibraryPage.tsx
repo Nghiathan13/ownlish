@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { RequireAuth } from "@/features/auth";
 import { DictationLibrary } from "@/features/dictation-library";
 import {
-  findDictationCatalogCategory,
-  getDictationCategoryPath,
-  useDictationCatalogIndexQuery,
+  getDictationCategory,
   useDictationCatalogQuery,
-  type DictationCatalogIndexCategory,
+  type DictationCategoryId,
   type DictationCatalogVideo,
 } from "@/entities/dictation-library";
 import { useT } from "@/shared/lib/providers";
@@ -19,10 +15,9 @@ import { Skeleton } from "@/shared/ui/Skeleton";
 import { DictationCategoryTabs } from "./DictationCategoryTabs";
 
 const EMPTY_VIDEOS: DictationCatalogVideo[] = [];
-const EMPTY_CATEGORIES: DictationCatalogIndexCategory[] = [];
 
 type DictationLibraryPageProps = {
-  categoryId?: string;
+  categoryId: DictationCategoryId;
 };
 
 export function DictationLibraryPage({ categoryId }: DictationLibraryPageProps) {
@@ -45,43 +40,19 @@ function DictationLibrarySkeleton() {
 
 function DictationLibraryPageContent({ categoryId }: DictationLibraryPageProps) {
   const t = useT();
-  const router = useRouter();
-  const indexQuery = useDictationCatalogIndexQuery();
-  const categories = indexQuery.data?.index.categories ?? EMPTY_CATEGORIES;
-  const activeCategory = categoryId
-    ? findDictationCatalogCategory(categories, categoryId)
-    : null;
-  const catalogQuery = useDictationCatalogQuery(activeCategory?.path ?? null);
+  const category = getDictationCategory(categoryId);
+  const catalogQuery = useDictationCatalogQuery(category.path);
   const videos = catalogQuery.data?.catalog.videos ?? EMPTY_VIDEOS;
-
-  useEffect(() => {
-    if (categoryId || !indexQuery.data) {
-      return;
-    }
-
-    const firstCategory = indexQuery.data.index.categories[0];
-    if (firstCategory) {
-      router.replace(getDictationCategoryPath(firstCategory.id));
-    }
-  }, [categoryId, indexQuery.data, router]);
-
-  const isLoading =
-    indexQuery.isLoading ||
-    (!categoryId && Boolean(indexQuery.data?.index.categories[0])) ||
-    (Boolean(activeCategory) && catalogQuery.isLoading);
-  const loadError = indexQuery.error || catalogQuery.error;
   const retry = () => {
-    void indexQuery.refetch();
     void catalogQuery.refetch();
   };
 
   return (
     <PageShell>
-      {isLoading ? (
+      <DictationCategoryTabs activeCategoryId={category.id} />
+      {catalogQuery.isLoading ? (
         <DictationLibrarySkeleton />
-      ) : !categoryId && categories.length === 0 ? (
-        <DictationLibrary videos={EMPTY_VIDEOS} />
-      ) : loadError ? (
+      ) : catalogQuery.error ? (
         <div className="px-4 text-sm text-muted-foreground lg:px-16">
           <div className="space-y-3">
             <p>{t("dictation.catalogLoadError")}</p>
@@ -94,16 +65,8 @@ function DictationLibraryPageContent({ categoryId }: DictationLibraryPageProps) 
             </button>
           </div>
         </div>
-      ) : !activeCategory ? (
-        <DictationLibrarySkeleton />
       ) : (
-        <>
-          <DictationCategoryTabs
-            activeCategoryId={activeCategory.id}
-            categories={categories}
-          />
-          <DictationLibrary videos={videos} />
-        </>
+        <DictationLibrary videos={videos} />
       )}
     </PageShell>
   );

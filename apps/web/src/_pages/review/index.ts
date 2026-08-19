@@ -4,5 +4,11 @@ export {
   getReviewLocation,
   getReviewLocationPath,
 } from "./lib/reviewPaths";
+export {
+  getOxfordReviewLegacyPathRedirect,
+  getOxfordReviewPathRedirectTarget,
+} from "@/features/review";
+export { OxfordReviewPage } from "./ui/OxfordReviewPage";
+export { ReviewCategoryTabs } from "./ui/ReviewCategoryTabs";
 export { ReviewPageSkeleton } from "./ui/ReviewPageSkeleton";
-export { ReviewWorkspacePage } from "./ui/ReviewWorkspacePage";
+export { UserReviewPage } from "./ui/UserReviewPage";

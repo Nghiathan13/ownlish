@@ -2,20 +2,12 @@ import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleProvider } from "@/shared/lib/providers";
-import type {
-  DictationCatalogIndexCategory,
-  DictationCatalogVideo,
-} from "@/entities/dictation-library";
+import type { DictationCatalogVideo } from "@/entities/dictation-library";
 import type { DictationProgress, DictationVideo } from "@/entities/dictation-study";
 import { DictationStudyPage } from "./DictationStudyPage";
 
 const mocks = vi.hoisted(() => ({
   rootUrl: "https://content.example/dictation/" as string | null,
-  indexQuery: {
-    data: null as { index: { categories: DictationCatalogIndexCategory[] } } | null,
-    error: null as Error | null,
-    isLoading: false,
-  },
   catalogQuery: {
     data: null as { catalog: { videos: DictationCatalogVideo[] } } | null,
     error: null as Error | null,
@@ -48,7 +40,6 @@ vi.mock("@/entities/session", () => ({
 vi.mock("@/entities/dictation-library", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/entities/dictation-library")>()),
   getDictationCatalogRootUrl: () => mocks.rootUrl,
-  useDictationCatalogIndexQuery: () => mocks.indexQuery,
   useDictationCatalogQuery: () => mocks.catalogQuery,
 }));
 
@@ -110,16 +101,6 @@ function renderPage(videoId = "music-1") {
 describe("DictationStudyPage", () => {
   beforeEach(() => {
     mocks.rootUrl = "https://content.example/dictation/";
-    mocks.indexQuery.data = {
-      index: {
-        categories: [
-          { id: "bbc", label: "BBC", path: "catalogs/bbc.json" },
-          { id: "music", label: "Music", path: "catalogs/music.json" },
-        ],
-      },
-    };
-    mocks.indexQuery.error = null;
-    mocks.indexQuery.isLoading = false;
     mocks.catalogQuery.data = { catalog: { videos: [catalogVideo] } };
     mocks.catalogQuery.error = null;
     mocks.catalogQuery.isLoading = false;

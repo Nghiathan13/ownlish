@@ -7,6 +7,7 @@ import {
   useOxfordCollectionMetaQuery,
 } from "@/features/collections/@x/review";
 import {
+  DEFAULT_OXFORD_REVIEW_GROUP,
   getOxfordReviewPath,
   useOxfordReviewNavigation,
 } from "../../model/useOxfordReviewNavigation";
@@ -16,23 +17,23 @@ import { OxfordPartReviewSession } from "./OxfordPartReviewSession";
 
 type OxfordReviewBandShellProps = {
   bandParam: string;
-  partParam: string;
+  groupParam: string;
 };
 
 function getOxfordReviewBandPath(band: OxfordBand) {
-  return getOxfordReviewPath(band, 1);
+  return getOxfordReviewPath(band, DEFAULT_OXFORD_REVIEW_GROUP);
 }
 
 export function OxfordReviewBandShell({
   bandParam,
-  partParam,
+  groupParam,
 }: OxfordReviewBandShellProps) {
   const { status, user } = useAuthSession();
   const isAuthenticated = isAuthenticatedStatus(status);
   const navigation = useOxfordReviewNavigation({
     bandParam,
     isAuthenticated,
-    partParam,
+    groupParam,
     userId: user?.id ?? null,
   });
   const metaQuery = useOxfordCollectionMetaQuery({
@@ -47,7 +48,6 @@ export function OxfordReviewBandShell({
         <OxfordBandTabs
           activeBand={navigation.band}
           getHref={getOxfordReviewBandPath}
-          onSelectBand={navigation.navigateBand}
         />
       }
     >

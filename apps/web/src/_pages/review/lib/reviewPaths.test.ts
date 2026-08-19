@@ -6,21 +6,26 @@ import {
 } from "./reviewPaths";
 
 describe("reviewPaths", () => {
-  it("parses Oxford review routes and defaults other paths to the user queue", () => {
-    expect(getReviewLocation("/review/oxford/A1/part-1")).toEqual({
+  it("parses Oxford review query routes and defaults other paths to the user queue", () => {
+    expect(
+      getReviewLocation(
+        "/review/oxford",
+        new URLSearchParams("band=A1&group=1"),
+      ),
+    ).toEqual({
       band: "A1",
       category: "oxford",
-      part: "part-1",
+      group: 1,
     });
     expect(getReviewLocation("/review")).toEqual({
       band: "A1",
       category: "user",
-      part: "part-1",
+      group: 1,
     });
     expect(getReviewLocation("/review/oxford/A1")).toEqual({
       band: "A1",
       category: "user",
-      part: "part-1",
+      group: 1,
     });
   });
 
@@ -29,20 +34,22 @@ describe("reviewPaths", () => {
       getReviewLocationPath({
         band: "B1",
         category: "oxford",
-        part: "part-2",
+        group: 2,
       }),
-    ).toBe("/review/oxford/B1/part-2");
+    ).toBe("/review/oxford?band=B1&group=2");
     expect(
       getReviewLocationPath({
         band: "A1",
         category: "user",
-        part: "part-1",
+        group: 1,
       }),
     ).toBe("/review");
   });
 
   it("maps category tabs to the default review routes", () => {
     expect(getReviewCategoryPath("user")).toBe("/review");
-    expect(getReviewCategoryPath("oxford")).toBe("/review/oxford/A1/part-1");
+    expect(getReviewCategoryPath("oxford")).toBe(
+      "/review/oxford?band=A1&group=1",
+    );
   });
 });

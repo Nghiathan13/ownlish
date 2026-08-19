@@ -1,16 +1,8 @@
 import { describe, expect, it } from "vitest";
-import {
-  findDictationVideo,
-  getDictationCatalogIndexQueryKey,
-  getDictationCatalogQueryKey,
-} from "./queries";
+import { findDictationVideo, getDictationCatalogQueryKey } from "./queries";
 
 describe("dictation library query helpers", () => {
-  it("builds stable index and category catalog query keys", () => {
-    expect(getDictationCatalogIndexQueryKey()).toEqual([
-      "dictation",
-      "catalog-index",
-    ]);
+  it("builds a stable category catalog query key", () => {
     expect(getDictationCatalogQueryKey("catalogs/bbc.json")).toEqual([
       "dictation",
       "catalog",

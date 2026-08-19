@@ -16,7 +16,7 @@ import { ArrowBackIcon } from "@/shared/ui/icons";
 
 export function LoginPage() {
   return (
-    <Suspense fallback={<SessionLoadingSkeleton centered />}>
+    <Suspense fallback={<SessionLoadingSkeleton />}>
       <LoginPageContent />
     </Suspense>
   );
@@ -36,7 +36,7 @@ function LoginPageContent() {
   }, [redirectTo, router, status]);
 
   if (isLoadingStatus(status) || isAuthenticatedStatus(status)) {
-    return <SessionLoadingSkeleton centered />;
+    return <SessionLoadingSkeleton />;
   }
 
   return (

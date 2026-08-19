@@ -7,10 +7,6 @@ import {
   DEFAULT_TOEIC_YEAR,
   getTestsListPath,
 } from "@/entities/toeic-runtime";
-import {
-  getTestsOverviewPath,
-  type TestsOverviewTab,
-} from "@/entities/toeic-runtime";
 import type { MessageKey } from "@/shared/i18n";
 import { CollectionsNavFillIcon } from "@/shared/ui/icons";
 import { CollectionsNavIcon } from "@/shared/ui/icons";
@@ -105,22 +101,3 @@ export function getAppSidebarLinkClass(pathname: string, link: AppNavLink) {
       : "hover:bg-hover-overlay"
   }`;
 }
-
-export type TestsSubLink = {
-  href: string;
-  labelKey: MessageKey;
-  tab: TestsOverviewTab;
-};
-
-export const TESTS_SUB_LINKS: TestsSubLink[] = [
-  {
-    href: getTestsListPath(DEFAULT_TOEIC_YEAR),
-    labelKey: "nav.mockTests",
-    tab: "mock_tests",
-  },
-  {
-    href: getTestsOverviewPath({ tab: "part_practice" }),
-    labelKey: "nav.partPractice",
-    tab: "part_practice",
-  },
-];

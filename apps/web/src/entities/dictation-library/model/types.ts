@@ -4,11 +4,6 @@ export type DictationCatalogIndexCategory = {
   path: string;
 };
 
-export type DictationCatalogIndex = {
-  version: 1;
-  categories: DictationCatalogIndexCategory[];
-};
-
 export type DictationCatalogVideo = {
   category: string;
   durationSeconds: number;

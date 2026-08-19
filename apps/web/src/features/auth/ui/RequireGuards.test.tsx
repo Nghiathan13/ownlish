@@ -27,13 +27,13 @@ describe("auth route guards", () => {
     window.history.replaceState({}, "", "/review?part=1");
   });
 
-  it("shows a loading skeleton while an auth session is loading", () => {
+  it("shows a loading spinner while an auth session is loading", () => {
     mocks.useAuthSession.mockReturnValue({ status: "loading" });
 
     render(<RequireAuth><div>Protected content</div></RequireAuth>);
 
     expect(screen.queryByText("Protected content")).not.toBeInTheDocument();
-    expect(document.querySelectorAll("[class*='animate-pulse']").length).toBeGreaterThan(0);
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
   });
 
   it("redirects a guest to login with the current path and query", async () => {

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_LEADERBOARD_METRIC,
   getCurrentLeaderboardPeriod,
   getLeaderboardLocation,
   getLeaderboardPath,
   getLeaderboardPeriodLocation,
   getNextLeaderboardLocation,
   getPreviousLeaderboardLocation,
+  LEADERBOARD_METRICS,
+  parseLeaderboardMetric,
 } from "./leaderboardLocation";
 
 const now = new Date("2026-08-16T10:00:00.000Z");
@@ -129,6 +132,17 @@ describe("leaderboard location", () => {
     expect(
       getLeaderboardPeriodLocation(historicalWeek, "week", now),
     ).toEqual(historicalWeek);
+  });
+
+  it("parses only configured metrics and defaults the first one", () => {
+    expect(DEFAULT_LEADERBOARD_METRIC).toBe(LEADERBOARD_METRICS[0]);
+    expect(parseLeaderboardMetric("study-time")).toBe("study-time");
+    expect(parseLeaderboardMetric("experience")).toBe("experience");
+    expect(parseLeaderboardMetric(null)).toBeNull();
+    expect(parseLeaderboardMetric("unknown")).toBeNull();
+    expect(
+      getLeaderboardLocation({ metric: "unknown" }, now).metric,
+    ).toBe(DEFAULT_LEADERBOARD_METRIC);
   });
 
   it("identifies the current period without treating historical ranges as current", () => {

@@ -1,30 +1,11 @@
-import { classNames } from "@/shared/lib/classNames";
-import { Panel } from "@/shared/ui/Panel";
-import { PageShell } from "@/shared/ui/PageShell";
-import { PANEL_CARD_CLASS } from "@/shared/ui/layout";
-import { Skeleton } from "@/shared/ui/Skeleton";
-
-type SessionLoadingSkeletonProps = {
-  centered?: boolean;
-};
-
-export function SessionLoadingSkeleton({
-  centered = false,
-}: SessionLoadingSkeletonProps) {
+export function SessionLoadingSkeleton() {
   return (
-    <PageShell centered={centered}>
-      <Panel
-        className={classNames(
-          centered && PANEL_CARD_CLASS,
-          centered && "w-[min(420px,100%)]",
-        )}
-      >
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-8 w-3/4 max-w-xs" />
-          <Skeleton className="h-4 w-2/3 max-w-[200px]" />
-        </div>
-      </Panel>
-    </PageShell>
+    <div className="flex min-h-0 flex-1 items-center justify-center">
+      <span
+        aria-label="Loading"
+        className="size-8 animate-spin rounded-full border-2 border-border border-t-foreground"
+        role="status"
+      />
+    </div>
   );
 }

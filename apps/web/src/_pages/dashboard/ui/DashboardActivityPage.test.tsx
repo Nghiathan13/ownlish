@@ -82,7 +82,7 @@ describe("DashboardActivityPage", () => {
     );
     expect(screen.getByRole("tab", { name: "Progress" })).toHaveAttribute(
       "href",
-      "/dashboard/progress",
+      "/dashboard/progress?mode=review",
     );
     expect(screen.getByText("Activity panel")).toBeInTheDocument();
     expect(screen.queryByText("Progress panel")).not.toBeInTheDocument();

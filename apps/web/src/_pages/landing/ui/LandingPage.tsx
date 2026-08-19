@@ -23,11 +23,11 @@ export function LandingPage() {
   }, [router, status]);
 
   if (isLoadingStatus(status)) {
-    return <SessionLoadingSkeleton centered />;
+    return <SessionLoadingSkeleton />;
   }
 
   if (isAuthenticatedStatus(status)) {
-    return <SessionLoadingSkeleton centered />;
+    return <SessionLoadingSkeleton />;
   }
 
   return (

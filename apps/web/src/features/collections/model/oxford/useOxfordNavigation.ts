@@ -5,10 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import {
-  formatOxfordPartSegment,
   getOxfordPath,
   parseOxfordBand,
-  parseOxfordGroup,
+  parseOxfordGroupParam,
   type OxfordBand,
 } from "@/entities/collection";
 import {
@@ -54,15 +53,15 @@ export function useOxfordNavigation({
   const router = useRouter();
   const queryClient = useQueryClient();
   const routeBand = parseOxfordBand(bandParam) ?? "A1";
-  const routeGroup = parseOxfordGroup(groupParam);
+  const routeGroup = parseOxfordGroupParam(groupParam);
   const routePath = getLocationPath({ band: routeBand, group: routeGroup });
-  const isGroupSegmentCanonical =
+  const isGroupCanonical =
     groupParam === null ||
-    (routeGroup !== null && groupParam === formatOxfordPartSegment(routeGroup));
+    (routeGroup !== null && groupParam === String(routeGroup));
   const shouldResetPath =
-    bandParam !== routeBand ||
+    parseOxfordBand(bandParam) == null ||
     (groupParam !== null && routeGroup === null) ||
-    (routeGroup !== null && !isGroupSegmentCanonical);
+    !isGroupCanonical;
   const [location, setLocation] = useState<OxfordLocation>({
     band: routeBand,
     group: routeGroup,
@@ -107,7 +106,7 @@ export function useOxfordNavigation({
       pendingPathRef.current = nextPath;
       setLocation(nextLocation);
 
-      if (window.location.pathname !== nextPath) {
+      if (`${window.location.pathname}${window.location.search}` !== nextPath) {
         window.history.pushState(null, "", nextPath);
       }
 

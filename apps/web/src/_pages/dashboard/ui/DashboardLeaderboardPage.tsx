@@ -4,23 +4,24 @@ import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import {
   getLeaderboardLocation,
   LeaderboardPanel,
+  type LeaderboardMetric,
 } from "@/features/dashboard-leaderboard";
 import { DashboardScreen } from "./DashboardScreen";
 
 type DashboardLeaderboardPageProps = {
   anchorParam: string | null;
-  metricParam: string | null;
+  metric: LeaderboardMetric;
   periodParam: string | null;
 };
 
 export function DashboardLeaderboardPage({
   anchorParam,
-  metricParam,
+  metric,
   periodParam,
 }: DashboardLeaderboardPageProps) {
   const { status, user } = useAuthSession();
   const location = getLeaderboardLocation({
-    metric: metricParam,
+    metric,
     period: periodParam,
     anchor: anchorParam,
   });

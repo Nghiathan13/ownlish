@@ -1,27 +1,13 @@
-import { notFound } from "next/navigation";
-import {
-  parseOxfordBand,
-  parseOxfordGroup,
-} from "@/entities/collection";
+import { getOxfordReviewLegacyPathRedirect } from "@/_pages/review";
+import { redirect } from "next/navigation";
 
-type OxfordPartReviewRouteProps = {
-  params: Promise<{
-    band: string;
-    part: string;
-  }>;
+type OxfordReviewPartLegacyRouteProps = {
+  params: Promise<{ band: string; part: string }>;
 };
 
-/** Validates route params; the review session lives in the oxford layout shell. */
-export default async function OxfordPartReviewRoute({
+export default async function OxfordReviewPartLegacyRoute({
   params,
-}: OxfordPartReviewRouteProps) {
-  const { band: bandParam, part: partParam } = await params;
-  const band = parseOxfordBand(bandParam);
-  const part = parseOxfordGroup(partParam);
-
-  if (!band || !part) {
-    notFound();
-  }
-
-  return null;
+}: OxfordReviewPartLegacyRouteProps) {
+  const { band, part } = await params;
+  redirect(getOxfordReviewLegacyPathRedirect(band, part));
 }

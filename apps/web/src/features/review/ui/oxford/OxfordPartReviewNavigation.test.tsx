@@ -16,7 +16,7 @@ describe("OxfordPartReviewNavigation", () => {
     expect(screen.getAllByRole("link", { name: /Part/ })).toHaveLength(3);
     expect(screen.getByRole("link", { name: "Part 2" })).toHaveAttribute(
       "href",
-      "/review/oxford/A2/part-2",
+      "/review/oxford?band=A2&group=2",
     );
   });
 

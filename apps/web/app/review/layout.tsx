@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import { RequireAuth } from "@/features/auth";
 import { ReviewModeProvider } from "@/features/review";
-import { ReviewWorkspacePage } from "@/_pages/review";
+import { ReviewCategoryTabs } from "@/_pages/review";
+import { PageShell } from "@/shared/ui/PageShell";
 
 type ReviewLayoutProps = {
   children: ReactNode;
@@ -13,8 +14,10 @@ export default function ReviewLayout({ children }: ReviewLayoutProps) {
   return (
     <RequireAuth>
       <ReviewModeProvider>
-        <ReviewWorkspacePage />
-        {children}
+        <PageShell>
+          <ReviewCategoryTabs />
+          {children}
+        </PageShell>
       </ReviewModeProvider>
     </RequireAuth>
   );

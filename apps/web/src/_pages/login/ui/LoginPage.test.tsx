@@ -46,11 +46,7 @@ vi.mock("@/entities/session", () => ({
 }));
 
 vi.mock("@/shared/skeletons", () => ({
-  SessionLoadingSkeleton: ({ centered }: { centered?: boolean }) => (
-    <div data-testid="session-loading">
-      {centered ? "centered" : "default"}
-    </div>
-  ),
+  SessionLoadingSkeleton: () => <div data-testid="session-loading" />,
 }));
 import { LoginPage } from "./LoginPage";
 
@@ -70,12 +66,12 @@ describe("login page", () => {
     mocks.searchParamsGet.mockReturnValue(null);
   });
 
-  it("shows a centered loading skeleton while the session is restoring", () => {
+  it("shows a loading spinner while the session is restoring", () => {
     mocks.useAuthSession.mockReturnValue({ status: "loading" });
 
     renderLoginPage();
 
-    expect(screen.getByTestId("session-loading")).toHaveTextContent("centered");
+    expect(screen.getByTestId("session-loading")).toBeInTheDocument();
     expect(screen.queryByTestId("auth-form")).not.toBeInTheDocument();
     expect(mocks.replace).not.toHaveBeenCalled();
   });

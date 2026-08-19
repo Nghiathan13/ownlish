@@ -10,4 +10,14 @@ export {
   getDashboardSectionPath,
   parseDashboardSection,
 } from "./lib/dashboardPaths";
+export {
+  DEFAULT_DASHBOARD_PROGRESS_MODE,
+  getDashboardProgressPath,
+  parseDashboardProgressMode,
+} from "@/features/dashboard-progress";
+export {
+  DEFAULT_LEADERBOARD_METRIC,
+  getLeaderboardPath,
+  parseLeaderboardMetric,
+} from "@/features/dashboard-leaderboard";
 

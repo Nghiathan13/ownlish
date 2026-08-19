@@ -1,9 +1,13 @@
 import {
   parseApprovedDictationVideo,
   parseDictationCatalog,
-  parseDictationCatalogIndex,
 } from '../model/parse-approved-dictation-catalog';
 import type { ApprovedDictationCatalogVideo } from '../model/approved-dictation-catalog.types';
+
+const DICTATION_CATEGORY_CATALOGS = [
+  'catalogs/bbc.json',
+  'catalogs/music.json',
+] as const;
 
 export async function loadApprovedDictationCatalog(
   root: string,
@@ -13,13 +17,10 @@ export async function loadApprovedDictationCatalog(
   }
 
   const rootUrl = new URL(root.endsWith('/') ? root : `${root}/`);
-  const index = parseDictationCatalogIndex(
-    await fetchJson(new URL('index.json', rootUrl)),
-  );
   const catalog = (
     await Promise.all(
-      index.map((category) =>
-        fetchJson(new URL(category.path, rootUrl)).then(parseDictationCatalog),
+      DICTATION_CATEGORY_CATALOGS.map((path) =>
+        fetchJson(new URL(path, rootUrl)).then(parseDictationCatalog),
       ),
     )
   ).flat();

@@ -1,6 +1,7 @@
 import type { PracticeMode } from "@/entities/toeic-runtime/model/presentation";
 import {
   DEFAULT_TOEIC_YEAR,
+  getTestsListPath,
   parseToeicYearParam,
 } from "../config/toeicYears";
 import { isToeicPartNumber } from "./toeicParts";
@@ -28,24 +29,20 @@ export function getTestsOverviewPath(options?: {
   const tab = options?.tab ?? "mock_tests";
 
   if (tab === "part_practice") {
-    const params = new URLSearchParams({ tab: "part_practice" });
+    const params = new URLSearchParams();
 
     if (options?.part != null && isToeicPartNumber(options.part)) {
       params.set("part", String(options.part));
     }
 
-    return `/tests?${params.toString()}`;
+    const query = params.toString();
+    return query ? `/tests/part-practice?${query}` : "/tests/part-practice";
   }
 
   const year = parseToeicYearParam(
     options?.year != null ? String(options.year) : null,
   ) ?? DEFAULT_TOEIC_YEAR;
-  const params = new URLSearchParams({
-    tab: "mock_tests",
-    year: String(year),
-  });
-
-  return `/tests?${params.toString()}`;
+  return getTestsListPath(year);
 }
 
 export function parsePracticeOverviewPartParam(
@@ -75,14 +72,9 @@ function buildCanonicalTestsOverviewPath(
   const tab = parseTestsOverviewTab(searchParams.get("tab"));
 
   if (tab === "part_practice") {
-    const params = new URLSearchParams({ tab: "part_practice" });
     const part = parsePracticeOverviewPartParam(searchParams.get("part"));
 
-    if (part != null) {
-      params.set("part", String(part));
-    }
-
-    return `/tests?${params.toString()}`;
+    return getTestsOverviewPath({ tab, part: part ?? undefined });
   }
 
   const year = parseToeicYearParam(searchParams.get("year")) ?? DEFAULT_TOEIC_YEAR;
@@ -91,13 +83,9 @@ function buildCanonicalTestsOverviewPath(
 }
 
 export function getTestsOverviewRedirectTarget(
-  searchParams: Pick<URLSearchParams, "get" | "toString">,
-): string | null {
-  const canonical = buildCanonicalTestsOverviewPath(searchParams);
-  const query = searchParams.toString();
-  const current = query ? `/tests?${query}` : "/tests";
-
-  return current === canonical ? null : canonical;
+  searchParams: Pick<URLSearchParams, "get">,
+): string {
+  return buildCanonicalTestsOverviewPath(searchParams);
 }
 
 const PART_PRACTICE_RUN_PATH =

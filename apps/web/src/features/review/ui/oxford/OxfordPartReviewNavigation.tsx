@@ -2,6 +2,7 @@ import {
   OXFORD_GROUP_SIZE,
   type OxfordBand,
 } from "@/entities/collection";
+import { getOxfordReviewPath } from "../../model/useOxfordReviewNavigation";
 import { ReviewSideNavigation } from "../study/ReviewSideNavigation";
 
 type OxfordPartReviewNavigationProps = {
@@ -13,7 +14,7 @@ type OxfordPartReviewNavigationProps = {
 };
 
 function getReviewPath(band: OxfordBand, part: number) {
-  return `/review/oxford/${band}/part-${part}`;
+  return getOxfordReviewPath(band, part);
 }
 
 export function OxfordPartReviewNavigation({

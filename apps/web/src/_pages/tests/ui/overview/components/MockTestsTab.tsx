@@ -23,14 +23,12 @@ import { MockRunDecisionModal } from "./MockRunDecisionModal";
 import { getToeicRunPath } from "@/entities/toeic-runtime";
 
 type MockTestsTabProps = {
-  availableYears: ToeicYear[];
   selectedYear: ToeicYear;
   source: ToeicCatalogSource | undefined;
   catalogError: string | null;
 };
 
 export function MockTestsTab({
-  availableYears,
   selectedYear,
   source,
   catalogError,
@@ -43,10 +41,7 @@ export function MockTestsTab({
 
   return (
     <>
-      <ToeicYearTabs
-        availableYears={availableYears}
-        selectedYear={selectedYear}
-      />
+      <ToeicYearTabs selectedYear={selectedYear} />
 
       <div className="mb-4 flex flex-col gap-4 px-4 lg:px-16">
         {overview.isLoadingTests ? (

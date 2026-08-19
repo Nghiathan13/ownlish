@@ -27,6 +27,25 @@ describe("LeaderboardMetricTabs", () => {
     );
   });
 
+  it("renders every configured metric as a canonical tab", () => {
+    render(
+      <LocaleProvider>
+        <LeaderboardMetricTabs
+          location={{ metric: "study-time", period: "all", anchor: null }}
+        />
+      </LocaleProvider>,
+    );
+
+    expect(screen.getByRole("tab", { name: "Study time" })).toHaveAttribute(
+      "href",
+      "/dashboard/leaderboard?metric=study-time&period=all",
+    );
+    expect(screen.getByRole("tab", { name: "Experience" })).toHaveAttribute(
+      "href",
+      "/dashboard/leaderboard?metric=experience",
+    );
+  });
+
   it("marks Experience active when its route is selected", () => {
     render(
       <LocaleProvider>

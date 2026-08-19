@@ -1,5 +1,7 @@
 export const OXFORD_BANDS = ["A1", "A2", "B1", "B2", "C1"] as const;
 export const OXFORD_GROUP_SIZE = 20;
+export const DEFAULT_OXFORD_BAND: OxfordBand = OXFORD_BANDS[0];
+export const OXFORD_COLLECTIONS_PATH = "/collections/oxford";
 
 export type OxfordBand = (typeof OXFORD_BANDS)[number];
 
@@ -31,12 +33,52 @@ export function parseOxfordGroup(value: string | null) {
   return null;
 }
 
-export function getOxfordPath(band: OxfordBand, group?: number) {
-  if (group) {
-    return `/collections/oxford/${band}/${formatOxfordPartSegment(group)}`;
+export function parseOxfordGroupParam(value: string | null) {
+  if (!value || !/^\d+$/.test(value)) {
+    return null;
   }
 
-  return `/collections/oxford/${band}`;
+  const group = Number(value);
+  return Number.isSafeInteger(group) && group > 0 ? group : null;
+}
+
+export function getOxfordPath(band: OxfordBand, group?: number) {
+  const params = new URLSearchParams({ band });
+  if (group) {
+    params.set("group", String(group));
+  }
+
+  return `${OXFORD_COLLECTIONS_PATH}?${params.toString()}`;
+}
+
+export function getOxfordPathRedirectTarget(searchParams: {
+  get: (key: string) => string | null;
+}) {
+  const bandParam = searchParams.get("band");
+  const groupParam = searchParams.get("group");
+  const band = parseOxfordBand(bandParam);
+  const group = parseOxfordGroupParam(groupParam);
+
+  if (band == null) {
+    return getOxfordPath(DEFAULT_OXFORD_BAND, group ?? undefined);
+  }
+
+  if (groupParam != null && group == null) {
+    return getOxfordPath(band);
+  }
+
+  if (group != null && groupParam !== String(group)) {
+    return getOxfordPath(band, group);
+  }
+
+  return null;
+}
+
+export function getOxfordLegacyPathRedirect(band: string, part?: string) {
+  const resolvedBand = parseOxfordBand(band) ?? DEFAULT_OXFORD_BAND;
+  const group = part == null ? undefined : (parseOxfordGroup(part) ?? undefined);
+
+  return getOxfordPath(resolvedBand, group);
 }
 
 export function getOxfordGroupRange(group: number, totalWords: number) {

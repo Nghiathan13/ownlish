@@ -2,14 +2,17 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { AppSidebar } from "@/features/shell";
-import { GuestTopNav } from "@/features/shell";
-import { ImmersiveToolbar } from "@/features/shell";
-import { MobileTopNav } from "@/features/shell";
-import { useAuthSession } from "@/entities/session";
-import { getShellLayoutMode } from "@/features/shell";
+import {
+  getShellLayoutMode,
+  GuestTopNav,
+  ImmersiveToolbar,
+} from "@/features/shell";
+import { isLoadingStatus, useAuthSession } from "@/entities/session";
+import { MobileTopNav } from "@/widgets/mobile-nav";
+import { AppSidebar } from "@/widgets/sidebar";
 import { isImmersiveTestPath } from "@/entities/toeic-runtime";
 import { classNames } from "@/shared/lib/classNames";
+import { SessionLoadingSkeleton } from "@/shared/skeletons";
 
 type AppShellProps = {
   children: ReactNode;
@@ -22,6 +25,10 @@ export function AppShell({ children }: AppShellProps) {
 
   if (layoutMode === "bare") {
     return <>{children}</>;
+  }
+
+  if (isLoadingStatus(status)) {
+    return <SessionLoadingSkeleton />;
   }
 
   if (layoutMode === "immersive") {

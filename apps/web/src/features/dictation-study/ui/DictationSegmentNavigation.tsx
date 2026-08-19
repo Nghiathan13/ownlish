@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   getDictationThumbnailUrl,
+  getDictationWatchPath,
   type DictationCatalogVideo,
 } from "@/entities/dictation-library";
 import {
@@ -360,7 +361,7 @@ export function DictationSegmentNavigation({
                     ? "border-primary"
                     : "border-transparent hover:border-primary focus-visible:border-primary focus-visible:outline-none",
                 )}
-                href={`/dictation/${video.id}`}
+                href={getDictationWatchPath(video.id)}
                 key={video.id}
               >
                 <div className="relative h-full shrink-0 aspect-video">

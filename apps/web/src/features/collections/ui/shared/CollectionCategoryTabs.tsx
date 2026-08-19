@@ -1,9 +1,12 @@
 "use client";
 
 import type { CollectionCategory } from "@/entities/collection";
-import { collectionCategoryTabs } from "@/entities/collection";
-import { classNames } from "@/shared/lib/classNames";
+import {
+  collectionCategoryTabs,
+  getCollectionsListPath,
+} from "@/entities/collection";
 import { useT } from "@/shared/lib/providers";
+import { PageHeaderTabs } from "@/shared/ui/page-header";
 
 type CollectionCategoryTabsProps = {
   activeCategory: CollectionCategory;
@@ -26,46 +29,15 @@ export function CollectionCategoryTabs({
   const t = useT();
 
   return (
-    <div className="relative">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-0 -left-4 -right-4 z-0 h-[0.5px] bg-border lg:-left-16 lg:-right-16"
-      />
-      <div
-        aria-label={ariaLabel}
-        className="relative z-10 flex items-end gap-9 pl-3"
-        role="tablist"
-      >
-        {collectionCategoryTabs.map((category) => {
-          const isActive = activeCategory === category.key;
-          const label = getCategoryLabel(category.key, t);
-
-          return (
-            <button
-              aria-selected={isActive}
-              className={classNames(
-                "group/category-tab relative inline-flex cursor-pointer pb-3 text-base font-normal",
-                isActive ? "text-foreground" : "text-muted-foreground",
-              )}
-              key={category.key}
-              onClick={() => onCategoryChange(category.key)}
-              role="tab"
-              type="button"
-            >
-              {label}
-              <span
-                aria-hidden
-                className={classNames(
-                  "absolute -right-3 -left-3 bottom-[1px] h-[2.5px]",
-                  isActive
-                    ? "bg-foreground"
-                    : "bg-transparent group-hover/category-tab:bg-border",
-                )}
-              />
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <PageHeaderTabs
+      activeKey={activeCategory}
+      ariaLabel={ariaLabel}
+      items={collectionCategoryTabs.map((category) => ({
+        href: getCollectionsListPath(category.key),
+        key: category.key,
+        label: getCategoryLabel(category.key, t),
+      }))}
+      onTabChange={onCategoryChange}
+    />
   );
 }

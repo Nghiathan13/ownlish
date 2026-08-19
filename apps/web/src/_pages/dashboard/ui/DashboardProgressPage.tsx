@@ -1,15 +1,22 @@
 "use client";
 
-import { DashboardProgressPanel } from "@/features/dashboard-progress";
+import {
+  DashboardProgressPanel,
+  type DashboardProgressMode,
+} from "@/features/dashboard-progress";
 import { DashboardCollectionGate } from "./DashboardCollectionGate";
 import { DashboardProgressSkeleton } from "./DashboardProgressSkeleton";
 import { DashboardScreen } from "./DashboardScreen";
 
-export function DashboardProgressPage() {
+type DashboardProgressPageProps = {
+  mode: DashboardProgressMode;
+};
+
+export function DashboardProgressPage({ mode }: DashboardProgressPageProps) {
   return (
     <DashboardScreen>
       <DashboardCollectionGate skeleton={<DashboardProgressSkeleton />}>
-        <DashboardProgressPanel />
+        <DashboardProgressPanel mode={mode} />
       </DashboardCollectionGate>
     </DashboardScreen>
   );

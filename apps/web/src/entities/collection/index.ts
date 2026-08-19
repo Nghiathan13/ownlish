@@ -1,12 +1,17 @@
 export { invalidateCollectionMutationQueries } from "./lib/collectionsCache";
 export {
+  DEFAULT_OXFORD_BAND,
   formatOxfordPartSegment,
   getOxfordGroupRange,
+  getOxfordLegacyPathRedirect,
   getOxfordPath,
+  getOxfordPathRedirectTarget,
   OXFORD_BANDS,
+  OXFORD_COLLECTIONS_PATH,
   OXFORD_GROUP_SIZE,
   parseOxfordBand,
   parseOxfordGroup,
+  parseOxfordGroupParam,
 } from "./lib/oxfordNavigation";
 export type { OxfordBand } from "./lib/oxfordNavigation";
 export {

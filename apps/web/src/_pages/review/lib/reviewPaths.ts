@@ -1,27 +1,50 @@
-import type { CollectionCategory } from "@/entities/collection";
+import type { CollectionCategory, OxfordBand } from "@/entities/collection";
+import {
+  DEFAULT_OXFORD_BAND,
+  parseOxfordBand,
+  parseOxfordGroupParam,
+} from "@/entities/collection";
+import {
+  DEFAULT_OXFORD_REVIEW_GROUP,
+  getOxfordReviewPath,
+  OXFORD_REVIEW_PATH,
+} from "@/features/review";
 
 export type ReviewLocation = {
-  band: string;
+  band: OxfordBand;
   category: CollectionCategory;
-  part: string;
+  group: number;
 };
 
-export function getReviewLocation(pathname: string): ReviewLocation {
-  const match = pathname.match(/^\/review\/oxford\/([^/]+)\/([^/]+)$/);
-
-  if (match) {
-    return { band: match[1], category: "oxford", part: match[2] };
+export function getReviewLocation(
+  pathname: string,
+  searchParams: Pick<URLSearchParams, "get"> = new URLSearchParams(),
+): ReviewLocation {
+  if (pathname === OXFORD_REVIEW_PATH) {
+    return {
+      band: parseOxfordBand(searchParams.get("band")) ?? DEFAULT_OXFORD_BAND,
+      category: "oxford",
+      group:
+        parseOxfordGroupParam(searchParams.get("group")) ??
+        DEFAULT_OXFORD_REVIEW_GROUP,
+    };
   }
 
-  return { band: "A1", category: "user", part: "part-1" };
+  return {
+    band: DEFAULT_OXFORD_BAND,
+    category: "user",
+    group: DEFAULT_OXFORD_REVIEW_GROUP,
+  };
 }
 
 export function getReviewLocationPath(location: ReviewLocation) {
   return location.category === "oxford"
-    ? `/review/oxford/${location.band}/${location.part}`
+    ? getOxfordReviewPath(location.band, location.group)
     : "/review";
 }
 
 export function getReviewCategoryPath(category: CollectionCategory) {
-  return category === "oxford" ? "/review/oxford/A1/part-1" : "/review";
+  return category === "oxford"
+    ? getOxfordReviewPath(DEFAULT_OXFORD_BAND, DEFAULT_OXFORD_REVIEW_GROUP)
+    : "/review";
 }

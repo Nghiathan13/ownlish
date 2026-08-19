@@ -1,73 +1,33 @@
 "use client";
 
-import Link from "next/link";
-import { classNames } from "@/shared/lib/classNames";
 import {
   getOxfordPath,
   OXFORD_BANDS,
   type OxfordBand,
 } from "@/entities/collection";
-import { shouldHandleOxfordNavigation } from "../../model/oxford/useOxfordNavigation";
 import { useT } from "@/shared/lib/providers";
-
-const oxfordBandButtonClassName =
-  "inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal";
-
-function getOxfordBandButtonClassName(isActive: boolean) {
-  return classNames(
-    oxfordBandButtonClassName,
-    isActive
-      ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
-      : "bg-surface-subtle text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-  );
-}
+import { PillTabs } from "@/shared/ui/pill-tabs";
 
 type OxfordBandTabsProps = {
   activeBand: OxfordBand;
   getHref?: (band: OxfordBand) => string;
-  onSelectBand?: (band: OxfordBand) => void;
 };
 
 export function OxfordBandTabs({
   activeBand,
   getHref = getOxfordPath,
-  onSelectBand,
 }: OxfordBandTabsProps) {
   const t = useT();
 
   return (
-    <nav
-      aria-label={t("collections.oxfordCefrLevels")}
-      className="flex w-fit max-w-full gap-3 overflow-x-auto"
-    >
-      {OXFORD_BANDS.map((band) => {
-        const isActive = band === activeBand;
-
-        return (
-          <Link
-            aria-current={isActive ? "page" : undefined}
-            className={getOxfordBandButtonClassName(isActive)}
-            href={getHref(band)}
-            key={band}
-            onClick={
-              onSelectBand
-                ? (event) => {
-                    if (!shouldHandleOxfordNavigation(event)) {
-                      return;
-                    }
-
-                    event.preventDefault();
-                    onSelectBand(band);
-                  }
-                : undefined
-            }
-            prefetch={false}
-            scroll={false}
-          >
-            {band}
-          </Link>
-        );
-      })}
-    </nav>
+    <PillTabs
+      activeKey={activeBand}
+      ariaLabel={t("collections.oxfordCefrLevels")}
+      items={OXFORD_BANDS.map((band) => ({
+        href: getHref(band),
+        key: band,
+        label: band,
+      }))}
+    />
   );
 }

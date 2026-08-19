@@ -10,15 +10,9 @@ vi.mock("@/shared/config/env", () => ({
 
 import {
   getDictationCatalog,
-  getDictationCatalogIndex,
   getDictationCatalogRootUrl,
   getDictationThumbnailUrl,
 } from "./catalog";
-
-const index = {
-  version: 1,
-  categories: [{ id: "music", label: "Music", path: "catalogs/music.json" }],
-};
 
 const catalog = {
   version: 1,
@@ -54,21 +48,7 @@ describe("dictation catalog API", () => {
     expect(getDictationCatalogRootUrl()).toBeNull();
   });
 
-  it("loads a valid catalog index and forwards an abort signal", async () => {
-    const signal = new AbortController().signal;
-    vi.mocked(fetch).mockResolvedValue(jsonResponse(index));
-
-    await expect(getDictationCatalogIndex({ signal })).resolves.toEqual({
-      index,
-      rootUrl: "https://content.example/dictation/",
-    });
-    expect(fetch).toHaveBeenCalledWith(
-      new URL("https://content.example/dictation/index.json"),
-      { cache: "no-store", signal },
-    );
-  });
-
-  it("loads a category catalog from the index path", async () => {
+  it("loads a category catalog from the category path", async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse(catalog));
 
     await expect(getDictationCatalog("catalogs/music.json")).resolves.toEqual({
@@ -91,17 +71,12 @@ describe("dictation catalog API", () => {
     await expect(getDictationCatalog("catalogs/music.json")).rejects.toThrow(
       "Invalid Dictation catalog.",
     );
-
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ version: 1, categories: [{}] }));
-    await expect(getDictationCatalogIndex()).rejects.toThrow(
-      "Invalid Dictation catalog index.",
-    );
   });
 
   it("requires a configured root before issuing a request", async () => {
     dictationCatalogRoot.value = "";
 
-    await expect(getDictationCatalogIndex()).rejects.toThrow(
+    await expect(getDictationCatalog("catalogs/music.json")).rejects.toThrow(
       "Dictation catalog is not configured.",
     );
     expect(fetch).not.toHaveBeenCalled();

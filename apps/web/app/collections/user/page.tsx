@@ -1,3 +1,5 @@
-export default function UserCollectionsPage() {
-  return null;
+import { UserCollectionsPage } from "@/_pages/collections";
+
+export default function UserCollectionsRoute() {
+  return <UserCollectionsPage />;
 }

@@ -1,16 +1,13 @@
-import { notFound } from "next/navigation";
-import { parseOxfordBand } from "@/entities/collection";
+import { getOxfordLegacyPathRedirect } from "@/entities/collection";
+import { redirect } from "next/navigation";
 
-type OxfordBandPageProps = {
+type OxfordBandLegacyRouteProps = {
   params: Promise<{ band: string }>;
 };
 
-export default async function OxfordBandPage({ params }: OxfordBandPageProps) {
+export default async function OxfordBandLegacyRoute({
+  params,
+}: OxfordBandLegacyRouteProps) {
   const { band } = await params;
-
-  if (!parseOxfordBand(band)) {
-    notFound();
-  }
-
-  return null;
+  redirect(getOxfordLegacyPathRedirect(band));
 }

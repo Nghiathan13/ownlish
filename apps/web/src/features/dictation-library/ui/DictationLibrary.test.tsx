@@ -16,7 +16,8 @@ vi.mock("@/entities/session", () => ({
   }),
 }));
 
-vi.mock("@/entities/dictation-library", () => ({
+vi.mock("@/entities/dictation-library", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/entities/dictation-library")>()),
   getDictationThumbnailUrl: () => "https://example.com/thumbnail.jpg",
 }));
 
@@ -64,7 +65,7 @@ describe("DictationLibrary", () => {
 
     expect(screen.getByRole("link", { name: /Music video/i })).toHaveAttribute(
       "href",
-      "/dictation/music-1",
+      "/dictation/watch?v=music-1",
     );
     expect(screen.getByText("Not started")).toBeInTheDocument();
     expect(screen.getByText("12 segments")).toBeInTheDocument();

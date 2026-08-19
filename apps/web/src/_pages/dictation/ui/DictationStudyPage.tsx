@@ -4,10 +4,10 @@ import Link from "next/link";
 import { RequireAuth } from "@/features/auth";
 import { DictationStudy } from "@/features/dictation-study";
 import {
+  DICTATION_CATEGORIES,
   findDictationCatalogCategoryByLabel,
   getDictationCatalogRootUrl,
   getDictationCategoryPath,
-  useDictationCatalogIndexQuery,
   useDictationCatalogQuery,
   type DictationCatalogVideo,
 } from "@/entities/dictation-library";
@@ -59,10 +59,9 @@ function DictationStudyPageContent({ videoId }: DictationStudyPageProps) {
     rootUrl ?? undefined,
     { id: videoId, path: getDictationVideoDocumentPath(videoId) },
   );
-  const indexQuery = useDictationCatalogIndexQuery();
   const category = videoQuery.data
     ? findDictationCatalogCategoryByLabel(
-        indexQuery.data?.index.categories ?? [],
+        DICTATION_CATEGORIES,
         videoQuery.data.video.category,
       )
     : null;

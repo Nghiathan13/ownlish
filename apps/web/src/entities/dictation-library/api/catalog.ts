@@ -2,8 +2,6 @@ import { DICTATION_CATALOG_ROOT } from "@/shared/config";
 import { isNumber, isRecord, isString } from "@/shared/lib/parse";
 import type {
   DictationCatalog,
-  DictationCatalogIndex,
-  DictationCatalogIndexCategory,
   DictationCatalogSource,
   DictationCatalogVideo,
 } from "../model/types";
@@ -37,37 +35,6 @@ async function fetchJson(url: URL, signal?: AbortSignal): Promise<unknown> {
   return response.json() as Promise<unknown>;
 }
 
-function parseCatalogIndexCategory(value: unknown): DictationCatalogIndexCategory {
-  if (!isRecord(value)) throw new Error("Invalid Dictation catalog index.");
-
-  const { id, label, path } = value;
-  if (
-    !isString(id) ||
-    !id.trim() ||
-    !isString(label) ||
-    !label.trim() ||
-    !isString(path) ||
-    !path.trim()
-  ) {
-    throw new Error("Invalid Dictation catalog index.");
-  }
-
-  return { id, label, path };
-}
-
-function parseCatalogIndex(value: unknown): DictationCatalogIndex {
-  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.categories)) {
-    throw new Error("Invalid Dictation catalog index.");
-  }
-
-  const categories = value.categories.map(parseCatalogIndexCategory);
-  if (new Set(categories.map((category) => category.id)).size !== categories.length) {
-    throw new Error("Invalid Dictation catalog index: category IDs must be unique.");
-  }
-
-  return { version: 1, categories };
-}
-
 function parseCatalogVideo(value: unknown): DictationCatalogVideo {
   if (!isRecord(value)) throw new Error("Invalid Dictation catalog.");
 
@@ -99,17 +66,6 @@ function parseCatalog(value: unknown): DictationCatalog {
   }
 
   return { version: 1, videos: value.videos.map(parseCatalogVideo) };
-}
-
-export async function getDictationCatalogIndex(
-  options: { signal?: AbortSignal } = {},
-): Promise<{ index: DictationCatalogIndex; rootUrl: string }> {
-  const rootUrl = getCatalogRootUrl();
-  const index = parseCatalogIndex(
-    await fetchJson(new URL("index.json", rootUrl), options.signal),
-  );
-
-  return { index, rootUrl: rootUrl.toString() };
 }
 
 export async function getDictationCatalog(

@@ -4,14 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardProgressPanel } from "./DashboardProgressPanel";
 
-function renderPanel() {
+function renderPanel(mode: "review" | "practice" = "review") {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <DashboardProgressPanel />
+      <DashboardProgressPanel mode={mode} />
     </QueryClientProvider>,
   );
 }
@@ -140,14 +140,17 @@ describe("DashboardProgressPanel", () => {
     });
   });
 
-  it("shows progress modes with Review selected by default", () => {
+  it("marks Review active and links each mode on the progress URL", () => {
     renderPanel();
 
     expect(screen.getByRole("tab", { name: "Review" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    expect(screen.getByRole("tab", { name: "Practice" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Practice" })).toHaveAttribute(
+      "href",
+      "/dashboard/progress?mode=practice",
+    );
     expect(screen.getByText("Difficult words")).toBeInTheDocument();
   });
 
@@ -222,9 +225,16 @@ describe("DashboardProgressPanel", () => {
 
     expect(screen.getByText("Level 0")).toBeInTheDocument();
     expect(screen.getByText("Level 7")).toBeInTheDocument();
+    expect(screen.getByText("Difficult words")).toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole("tab", { name: "Practice" }));
+  it("hides review cards when another mode is selected", () => {
+    renderPanel("practice");
 
+    expect(screen.getByRole("tab", { name: "Practice" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(screen.queryByText("Difficult words")).not.toBeInTheDocument();
   });
 

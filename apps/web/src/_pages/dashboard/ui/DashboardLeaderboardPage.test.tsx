@@ -48,7 +48,7 @@ describe("DashboardLeaderboardPage", () => {
     render(
       <DashboardLeaderboardPage
         anchorParam={null}
-        metricParam="experience"
+        metric="experience"
         periodParam={null}
       />,
     );

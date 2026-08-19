@@ -74,7 +74,7 @@ describe("DashboardProgressPage", () => {
   });
 
   it("marks Progress active and composes the progress panel", () => {
-    render(<DashboardProgressPage />);
+    render(<DashboardProgressPage mode="review" />);
 
     expect(screen.getByRole("tab", { name: "Progress" })).toHaveAttribute(
       "aria-selected",
@@ -96,7 +96,7 @@ describe("DashboardProgressPage", () => {
       reloadCollections: vi.fn(),
     });
 
-    const { container } = render(<DashboardProgressPage />);
+    const { container } = render(<DashboardProgressPage mode="review" />);
 
     expect(screen.getByRole("tab", { name: "Progress" })).toBeInTheDocument();
     expect(container.querySelector("[aria-hidden]")).toBeTruthy();
@@ -113,7 +113,7 @@ describe("DashboardProgressPage", () => {
       reloadCollections,
     });
 
-    render(<DashboardProgressPage />);
+    render(<DashboardProgressPage mode="review" />);
 
     expect(
       screen.getByText("We couldn't load your collections."),
@@ -130,7 +130,7 @@ describe("DashboardProgressPage", () => {
       reloadCollections: vi.fn(),
     });
 
-    render(<DashboardProgressPage />);
+    render(<DashboardProgressPage mode="review" />);
 
     expect(screen.getByText("Set up your vocabulary space")).toBeInTheDocument();
     expect(screen.queryByText("Progress panel")).not.toBeInTheDocument();

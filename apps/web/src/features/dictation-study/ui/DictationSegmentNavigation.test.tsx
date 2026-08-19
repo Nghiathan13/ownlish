@@ -12,7 +12,8 @@ vi.mock("@/entities/session", () => ({
   }),
 }));
 
-vi.mock("@/entities/dictation-library", () => ({
+vi.mock("@/entities/dictation-library", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/entities/dictation-library")>()),
   getDictationThumbnailUrl: () => "https://example.com/thumbnail.jpg",
 }));
 

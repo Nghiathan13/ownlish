@@ -1,34 +1,9 @@
 import {
   parseApprovedDictationVideo,
   parseDictationCatalog,
-  parseDictationCatalogIndex,
 } from './parse-approved-dictation-catalog';
 
 describe('Dictation catalog parsing', () => {
-  it('parses a versioned catalog index', () => {
-    expect(
-      parseDictationCatalogIndex({
-        version: 1,
-        categories: [{ id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' }],
-      }),
-    ).toEqual([{ id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' }]);
-  });
-
-  it('rejects an invalid catalog index', () => {
-    expect(() => parseDictationCatalogIndex(null)).toThrow(
-      'Invalid Dictation catalog index.',
-    );
-    expect(() =>
-      parseDictationCatalogIndex({
-        version: 1,
-        categories: [
-          { id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' },
-          { id: 'bbc', label: 'BBC 2', path: 'catalogs/bbc-2.json' },
-        ],
-      }),
-    ).toThrow('category IDs must be unique');
-  });
-
   it('parses a versioned catalog and approved video', () => {
     expect(
       parseDictationCatalog({

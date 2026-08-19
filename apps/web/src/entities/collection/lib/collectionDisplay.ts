@@ -1,4 +1,10 @@
 import type { CollectionSummary } from "@/entities/collection/api/collections";
+import {
+  getOxfordPath,
+  parseOxfordBand,
+  parseOxfordGroupParam,
+  DEFAULT_OXFORD_BAND,
+} from "./oxfordNavigation";
 
 export type CollectionCategory = "user" | "oxford";
 
@@ -71,7 +77,7 @@ export function getCollectionsListCategory(
 
 export function getCollectionsListPath(category: CollectionCategory) {
   if (category === "oxford") {
-    return "/collections/oxford/A1";
+    return getOxfordPath(DEFAULT_OXFORD_BAND);
   }
 
   return `/collections/${category}`;
@@ -108,18 +114,11 @@ export function getCollectionsLegacyRedirectPath(
     return getCollectionsListPath(category);
   }
 
-  const bandParam = searchParams.get("band");
-  const groupParam = searchParams.get("group");
   const resolvedBand =
-    bandParam && ["A1", "A2", "B1", "B2", "C1"].includes(bandParam)
-      ? bandParam
-      : "A1";
+    parseOxfordBand(searchParams.get("band")) ?? DEFAULT_OXFORD_BAND;
+  const group = parseOxfordGroupParam(searchParams.get("group"));
 
-  if (groupParam && /^\d+$/.test(groupParam) && Number(groupParam) > 0) {
-    return `/collections/oxford/${resolvedBand}/part-${groupParam}`;
-  }
-
-  return `/collections/oxford/${resolvedBand}`;
+  return getOxfordPath(resolvedBand, group ?? undefined);
 }
 
 export function findCollectionById(

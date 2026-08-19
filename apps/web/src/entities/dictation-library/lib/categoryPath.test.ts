@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_DICTATION_CATEGORY_ID,
+  DICTATION_CATEGORIES,
   findDictationCatalogCategory,
   findDictationCatalogCategoryByLabel,
   getDictationCategoryPath,
+  getDictationWatchPath,
+  parseDictationCategoryId,
+  parseDictationWatchVideoId,
 } from "./categoryPath";
 
 const categories = [
@@ -14,6 +19,18 @@ describe("dictation category helpers", () => {
   it("builds a category library path from the category id", () => {
     expect(getDictationCategoryPath("music")).toBe("/dictation/music");
     expect(getDictationCategoryPath("bbc")).toBe("/dictation/bbc");
+    expect(DEFAULT_DICTATION_CATEGORY_ID).toBe(DICTATION_CATEGORIES[0].id);
+    expect(parseDictationCategoryId("bbc")).toBe("bbc");
+    expect(parseDictationCategoryId("podcast")).toBeNull();
+  });
+
+  it("builds and parses the watch query URL", () => {
+    expect(getDictationWatchPath("7BIp53who2A")).toBe(
+      "/dictation/watch?v=7BIp53who2A",
+    );
+    expect(parseDictationWatchVideoId("7BIp53who2A")).toBe("7BIp53who2A");
+    expect(parseDictationWatchVideoId(null)).toBeNull();
+    expect(parseDictationWatchVideoId("  ")).toBeNull();
   });
 
   it("finds a category by id or label", () => {

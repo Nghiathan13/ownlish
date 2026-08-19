@@ -1,7 +1,12 @@
 import type { StudyTimeLeaderboardPeriod } from "@/entities/leaderboard";
 import { DASHBOARD_LEADERBOARD_PATH } from "@/shared/routes";
 
-export type LeaderboardMetric = "study-time" | "experience";
+export const LEADERBOARD_METRICS = ["study-time", "experience"] as const;
+
+export type LeaderboardMetric = (typeof LEADERBOARD_METRICS)[number];
+
+export const DEFAULT_LEADERBOARD_METRIC: LeaderboardMetric =
+  LEADERBOARD_METRICS[0];
 
 export type LeaderboardLocation = {
   metric: LeaderboardMetric;
@@ -57,10 +62,20 @@ function addMonths(date: Date, months: number) {
   );
 }
 
-function parseLeaderboardMetric(
+export function isLeaderboardMetric(
+  value: string,
+): value is LeaderboardMetric {
+  return LEADERBOARD_METRICS.includes(value as LeaderboardMetric);
+}
+
+export function parseLeaderboardMetric(
   value: string | null | undefined,
-): LeaderboardMetric {
-  return value === "experience" ? "experience" : "study-time";
+): LeaderboardMetric | null {
+  if (value == null || !isLeaderboardMetric(value)) {
+    return null;
+  }
+
+  return value;
 }
 
 function parseLeaderboardPeriod(
@@ -77,7 +92,8 @@ export function getLeaderboardLocation(
   },
   now = new Date(),
 ): LeaderboardLocation {
-  const metric = parseLeaderboardMetric(input.metric);
+  const metric =
+    parseLeaderboardMetric(input.metric) ?? DEFAULT_LEADERBOARD_METRIC;
   const period = parseLeaderboardPeriod(input.period);
 
   if (metric === "experience" || period === "all") {

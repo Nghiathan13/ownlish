@@ -9,6 +9,7 @@ import {
   type OxfordBand,
 } from "@/entities/collection";
 import { shouldHandleOxfordNavigation } from "@/features/collections";
+import { getOxfordReviewPath } from "@/features/review";
 import { formatMessage } from "@/shared/i18n";
 import { useT } from "@/shared/lib/providers";
 import { iconTextButtonClassName } from "@/shared/ui/button";
@@ -98,7 +99,7 @@ export function OxfordWordGroupGrid({
               className={iconTextButtonClassName(
                 "relative z-10 w-full border-border bg-transparent text-foreground hover:bg-hover-overlay",
               )}
-              href={`/review/oxford/${band}/part-${group}`}
+              href={getOxfordReviewPath(band, group)}
               prefetch={false}
             >
               <StartIcon />

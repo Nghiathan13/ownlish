@@ -36,6 +36,10 @@ describe("DashboardTitleTabs", () => {
       "href",
       "/dashboard/my-activity",
     );
+    expect(screen.getByRole("tab", { name: "Progress" })).toHaveAttribute(
+      "href",
+      "/dashboard/progress?mode=review",
+    );
   });
 
   it("defaults to activity when the path is not a dashboard section", () => {

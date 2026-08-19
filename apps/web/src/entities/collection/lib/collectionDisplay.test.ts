@@ -49,7 +49,9 @@ describe("collection display helpers", () => {
 
   it("builds collections list paths from category", () => {
     expect(getCollectionsListPath("user")).toBe("/collections/user");
-    expect(getCollectionsListPath("oxford")).toBe("/collections/oxford/A1");
+    expect(getCollectionsListPath("oxford")).toBe(
+      "/collections/oxford?band=A1",
+    );
     expect(parseCollectionCategoryTab("oxford")).toBe("oxford");
     expect(parseCollectionCategoryTab("toeic")).toBeNull();
     expect(parseCollectionCategoryTab("invalid")).toBeNull();
@@ -60,10 +62,10 @@ describe("collection display helpers", () => {
       getCollectionsLegacyRedirectPath(
         new URLSearchParams("tab=oxford&band=B1&group=2"),
       ),
-    ).toBe("/collections/oxford/B1/part-2");
+    ).toBe("/collections/oxford?band=B1&group=2");
     expect(
       getCollectionsLegacyRedirectPath(new URLSearchParams("tab=oxford")),
-    ).toBe("/collections/oxford/A1");
+    ).toBe("/collections/oxford?band=A1");
     expect(
       getCollectionsLegacyRedirectPath(new URLSearchParams("tab=toeic")),
     ).toBe("/collections/user");

@@ -8,14 +8,14 @@ describe('syncApprovedDictationCatalog', () => {
       ok: true,
       json: jest.fn().mockResolvedValue({
         version: 1,
-        categories: [{ id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' }],
+        videos: [{ id: 'video-1', path: 'video-1.json', segmentCount: 1 }],
       }),
     } as Response);
     jest.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValue({
         version: 1,
-        videos: [{ id: 'video-1', path: 'video-1.json', segmentCount: 1 }],
+        videos: [],
       }),
     } as Response);
     jest.mocked(fetch).mockResolvedValueOnce({

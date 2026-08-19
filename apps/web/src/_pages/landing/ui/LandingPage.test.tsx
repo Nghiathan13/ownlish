@@ -42,11 +42,7 @@ vi.mock("@/entities/session", () => ({
 }));
 
 vi.mock("@/shared/skeletons", () => ({
-  SessionLoadingSkeleton: ({ centered }: { centered?: boolean }) => (
-    <div data-testid="session-loading">
-      {centered ? "centered" : "default"}
-    </div>
-  ),
+  SessionLoadingSkeleton: () => <div data-testid="session-loading" />,
 }));
 
 function mockMatchMedia() {
@@ -80,12 +76,12 @@ describe("landing page", () => {
     mocks.useAuthSession.mockReset();
   });
 
-  it("shows a centered loading skeleton while the session is restoring", () => {
+  it("shows a loading spinner while the session is restoring", () => {
     mocks.useAuthSession.mockReturnValue({ status: "loading" });
 
     renderLandingPage();
 
-    expect(screen.getByTestId("session-loading")).toHaveTextContent("centered");
+    expect(screen.getByTestId("session-loading")).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: /Grow your vocabulary/i }),
     ).not.toBeInTheDocument();

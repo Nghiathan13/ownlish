@@ -17,11 +17,11 @@ vi.mock("@/entities/session", () => ({
   useAuthSession: mocks.useAuthSession,
 }));
 
-vi.mock("@/features/shell/ui/AppSidebar", () => ({
+vi.mock("@/widgets/sidebar", () => ({
   AppSidebar: () => <div data-testid="app-sidebar" />,
 }));
 
-vi.mock("@/features/shell/ui/MobileTopNav", () => ({
+vi.mock("@/widgets/mobile-nav", () => ({
   MobileTopNav: () => <div data-testid="mobile-top-nav" />,
 }));
 
@@ -91,5 +91,22 @@ describe("AppShell", () => {
     );
     expect(screen.queryByTestId("app-sidebar")).not.toBeInTheDocument();
     expect(screen.queryByTestId("mobile-top-nav")).not.toBeInTheDocument();
+  });
+
+  it("hides chrome and shows a centered spinner while the session is loading", () => {
+    mocks.useAuthSession.mockReturnValue({ status: "loading" });
+    mocks.usePathname.mockReturnValue("/dashboard/my-activity");
+
+    render(
+      <AppShell>
+        <div>Protected content</div>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+    expect(screen.queryByTestId("app-sidebar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mobile-top-nav")).not.toBeInTheDocument();
+    expect(screen.queryByText("Protected content")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
   });
 });

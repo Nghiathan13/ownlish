@@ -1,15 +1,27 @@
-import Link from "next/link";
-import { classNames } from "@/shared/lib/classNames";
 import { useLocale } from "@/shared/lib/providers";
+import { PillTabs } from "@/shared/ui/pill-tabs";
 import {
   getExperienceMetricLocation,
   getLeaderboardPath,
   getStudyTimeMetricLocation,
+  LEADERBOARD_METRICS,
   type LeaderboardLocation,
+  type LeaderboardMetric,
 } from "../model/leaderboardLocation";
 
-const metricTabClassName =
-  "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg px-3 py-1.5 text-[15px] leading-[20px] font-normal";
+const leaderboardMetricLabelKeys = {
+  experience: "dashboard.leaderboardExperience",
+  "study-time": "dashboard.leaderboardStudyTime",
+} as const;
+
+function getMetricLocation(
+  metric: LeaderboardMetric,
+  location: LeaderboardLocation,
+) {
+  return metric === "experience"
+    ? getExperienceMetricLocation()
+    : getStudyTimeMetricLocation(location);
+}
 
 export function LeaderboardMetricTabs({
   location,
@@ -19,48 +31,14 @@ export function LeaderboardMetricTabs({
   const { t } = useLocale();
 
   return (
-    <div
-      aria-label={t("dashboard.leaderboardMetric")}
-      className="flex w-fit max-w-full gap-3 overflow-x-auto"
-      role="tablist"
-    >
-      <LeaderboardMetricTab
-        active={location.metric === "study-time"}
-        href={getLeaderboardPath(getStudyTimeMetricLocation(location))}
-        label={t("dashboard.leaderboardStudyTime")}
-      />
-      <LeaderboardMetricTab
-        active={location.metric === "experience"}
-        href={getLeaderboardPath(getExperienceMetricLocation())}
-        label={t("dashboard.leaderboardExperience")}
-      />
-    </div>
-  );
-}
-
-function LeaderboardMetricTab({
-  active,
-  href,
-  label,
-}: {
-  active: boolean;
-  href: string;
-  label: string;
-}) {
-  return (
-    <Link
-      aria-selected={active}
-      className={classNames(
-        metricTabClassName,
-        active
-          ? "bg-foreground text-background hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay-solid)]"
-          : "bg-surface-subtle text-foreground hover:[box-shadow:inset_0_0_0_9999px_var(--hover-overlay)]",
-      )}
-      href={href}
-      role="tab"
-      scroll={false}
-    >
-      {label}
-    </Link>
+    <PillTabs
+      activeKey={location.metric}
+      ariaLabel={t("dashboard.leaderboardMetric")}
+      items={LEADERBOARD_METRICS.map((metric) => ({
+        href: getLeaderboardPath(getMetricLocation(metric, location)),
+        key: metric,
+        label: t(leaderboardMetricLabelKeys[metric]),
+      }))}
+    />
   );
 }
