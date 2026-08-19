@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
+import { LandingVocabSection } from "@/features/landing-vocab";
 import { LandingPart3Demo } from "./LandingPart3Demo";
-import { LandingVocabSection } from "./LandingVocabSection";
 import { classNames } from "@/shared/lib/classNames";
 import { useT } from "@/shared/lib/providers";
 import { useResolvedTheme } from "@/shared/lib/providers";

@@ -58,5 +58,11 @@ describe("DashboardLeaderboardPage", () => {
       "aria-selected",
       "true",
     );
+    expect(screen.getByRole("tab", { name: "My activity" })).toHaveAttribute(
+      "href",
+      "/dashboard/my-activity",
+    );
+    expect(screen.queryByText("We couldn't load your collections.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Set up your vocabulary space")).not.toBeInTheDocument();
   });
 });

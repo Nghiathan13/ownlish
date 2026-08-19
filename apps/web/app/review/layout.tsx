@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { RequireAuth } from "@/features/auth";
-import { ReviewModeProvider } from "@/_pages/review";
+import { ReviewModeProvider } from "@/features/review";
 import { ReviewWorkspacePage } from "@/_pages/review";
 
 type ReviewLayoutProps = {

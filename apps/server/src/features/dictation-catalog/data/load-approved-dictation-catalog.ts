@@ -1,6 +1,7 @@
 import {
   parseApprovedDictationVideo,
   parseDictationCatalog,
+  parseDictationCatalogIndex,
 } from '../model/parse-approved-dictation-catalog';
 import type { ApprovedDictationCatalogVideo } from '../model/approved-dictation-catalog.types';
 
@@ -12,9 +13,19 @@ export async function loadApprovedDictationCatalog(
   }
 
   const rootUrl = new URL(root.endsWith('/') ? root : `${root}/`);
-  const catalog = parseDictationCatalog(
-    await fetchJson(new URL('catalog.json', rootUrl)),
+  const index = parseDictationCatalogIndex(
+    await fetchJson(new URL('index.json', rootUrl)),
   );
+  const catalog = (
+    await Promise.all(
+      index.map((category) =>
+        fetchJson(new URL(category.path, rootUrl)).then(parseDictationCatalog),
+      ),
+    )
+  ).flat();
+  if (new Set(catalog.map((video) => video.id)).size !== catalog.length) {
+    throw new Error('Invalid Dictation catalog: video IDs must be unique.');
+  }
   const videos: ApprovedDictationCatalogVideo[] = [];
 
   for (const catalogVideo of catalog) {

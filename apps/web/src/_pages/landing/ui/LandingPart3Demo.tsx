@@ -9,7 +9,7 @@ import {
   LANDING_PART3_DEMO,
   type LandingOptionKey,
   type LandingPart3Question,
-} from "@/_pages/landing/model/landingDemoData";
+} from "@/_pages/landing/model/part3DemoData";
 import { PassagePanel } from "@/features/tests/run";
 import { QuestionOptions } from "@/features/tests/run";
 import { QuestionTranslationPanel } from "@/features/tests/run";

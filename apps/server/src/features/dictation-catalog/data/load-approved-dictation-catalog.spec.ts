@@ -1,5 +1,9 @@
 import { loadApprovedDictationCatalog } from './load-approved-dictation-catalog';
 
+const index = {
+  version: 1,
+  categories: [{ id: 'bbc', label: 'BBC', path: 'catalogs/bbc.json' }],
+};
 const catalog = {
   version: 1,
   videos: [{ id: 'video-1', path: 'videos/video-1.json', segmentCount: 2 }],
@@ -24,6 +28,7 @@ describe('loadApprovedDictationCatalog', () => {
   it('loads approved videos with matching segment counts', async () => {
     jest
       .mocked(fetch)
+      .mockResolvedValueOnce(response(index))
       .mockResolvedValueOnce(response(catalog))
       .mockResolvedValueOnce(response(video));
 
@@ -51,6 +56,7 @@ describe('loadApprovedDictationCatalog', () => {
 
     jest
       .mocked(fetch)
+      .mockResolvedValueOnce(response(index))
       .mockResolvedValueOnce(response(catalog))
       .mockResolvedValueOnce(
         response({ ...video, segments: [video.segments[0]] }),

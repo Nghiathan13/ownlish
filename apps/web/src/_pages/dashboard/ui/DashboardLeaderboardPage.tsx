@@ -1,13 +1,11 @@
 "use client";
 
-import { RequireAuth } from "@/features/auth";
 import { isAuthenticatedStatus, useAuthSession } from "@/entities/session";
 import {
   getLeaderboardLocation,
   LeaderboardPanel,
 } from "@/features/dashboard-leaderboard";
-import { PageShell } from "@/shared/ui/PageShell";
-import { DashboardTitleTabs } from "./DashboardTitleTabs";
+import { DashboardScreen } from "./DashboardScreen";
 
 type DashboardLeaderboardPageProps = {
   anchorParam: string | null;
@@ -15,15 +13,7 @@ type DashboardLeaderboardPageProps = {
   periodParam: string | null;
 };
 
-export function DashboardLeaderboardPage(props: DashboardLeaderboardPageProps) {
-  return (
-    <RequireAuth>
-      <DashboardLeaderboardPageContent {...props} />
-    </RequireAuth>
-  );
-}
-
-function DashboardLeaderboardPageContent({
+export function DashboardLeaderboardPage({
   anchorParam,
   metricParam,
   periodParam,
@@ -36,8 +26,7 @@ function DashboardLeaderboardPageContent({
   });
 
   return (
-    <PageShell className="max-lg:overflow-y-auto" fillViewport>
-      <DashboardTitleTabs />
+    <DashboardScreen>
       <div className="mt-6 flex min-h-0 flex-1 flex-col px-4 pb-4 max-lg:flex-none lg:px-16 lg:pb-8">
         <LeaderboardPanel
           isAuthenticated={isAuthenticatedStatus(status)}
@@ -45,6 +34,6 @@ function DashboardLeaderboardPageContent({
           userId={user?.id ?? null}
         />
       </div>
-    </PageShell>
+    </DashboardScreen>
   );
 }

@@ -10,7 +10,7 @@ const COLOR_PATTERN = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\([^)]*\)|\b(?:bg|text|
 
 const allowedTokensByFile = new Map([
   [
-    "src/_pages/dictation/ui/study/DictationStudy.tsx",
+    "src/features/dictation-study/ui/DictationStudy.tsx",
     new Set([
       "bg-black/50",
       "text-white",
@@ -24,7 +24,7 @@ const allowedTokensByFile = new Map([
   ],
   // Native-video fallback needs fixed contrast.
   [
-    "src/_pages/dictation/ui/study/YouTubeSegmentPlayer.tsx",
+    "src/features/dictation-study/ui/YouTubeSegmentPlayer.tsx",
     new Set(["bg-black"]),
   ],
   // Intentional landing-page artwork uses its own visual treatment.

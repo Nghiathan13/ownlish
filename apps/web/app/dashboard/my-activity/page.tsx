@@ -1,5 +1,5 @@
-import { DashboardPage } from "@/_pages/dashboard";
+import { DashboardActivityPage } from "@/_pages/dashboard";
 
-export default function DashboardMyActivityPage() {
-  return <DashboardPage section="activity" />;
+export default function DashboardMyActivityRoute() {
+  return <DashboardActivityPage />;
 }

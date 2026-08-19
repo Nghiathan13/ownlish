@@ -1,0 +1,129 @@
+import { DICTATION_CATALOG_ROOT } from "@/shared/config";
+import { isNumber, isRecord, isString } from "@/shared/lib/parse";
+import type {
+  DictationCatalog,
+  DictationCatalogIndex,
+  DictationCatalogIndexCategory,
+  DictationCatalogSource,
+  DictationCatalogVideo,
+} from "../model/types";
+
+export function getDictationCatalogRootUrl() {
+  if (!DICTATION_CATALOG_ROOT) {
+    return null;
+  }
+
+  return DICTATION_CATALOG_ROOT.endsWith("/")
+    ? DICTATION_CATALOG_ROOT
+    : `${DICTATION_CATALOG_ROOT}/`;
+}
+
+function getCatalogRootUrl() {
+  const rootUrl = getDictationCatalogRootUrl();
+  if (!rootUrl) {
+    throw new Error("Dictation catalog is not configured.");
+  }
+
+  return new URL(rootUrl);
+}
+
+async function fetchJson(url: URL, signal?: AbortSignal): Promise<unknown> {
+  const response = await fetch(url, { cache: "no-store", signal });
+
+  if (!response.ok) {
+    throw new Error("Cannot load Dictation catalog.");
+  }
+
+  return response.json() as Promise<unknown>;
+}
+
+function parseCatalogIndexCategory(value: unknown): DictationCatalogIndexCategory {
+  if (!isRecord(value)) throw new Error("Invalid Dictation catalog index.");
+
+  const { id, label, path } = value;
+  if (
+    !isString(id) ||
+    !id.trim() ||
+    !isString(label) ||
+    !label.trim() ||
+    !isString(path) ||
+    !path.trim()
+  ) {
+    throw new Error("Invalid Dictation catalog index.");
+  }
+
+  return { id, label, path };
+}
+
+function parseCatalogIndex(value: unknown): DictationCatalogIndex {
+  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.categories)) {
+    throw new Error("Invalid Dictation catalog index.");
+  }
+
+  const categories = value.categories.map(parseCatalogIndexCategory);
+  if (new Set(categories.map((category) => category.id)).size !== categories.length) {
+    throw new Error("Invalid Dictation catalog index: category IDs must be unique.");
+  }
+
+  return { version: 1, categories };
+}
+
+function parseCatalogVideo(value: unknown): DictationCatalogVideo {
+  if (!isRecord(value)) throw new Error("Invalid Dictation catalog.");
+
+  const { category, durationSeconds, id, language, path, segmentCount, title, youtubeVideoId } = value;
+  if (
+    !isString(category) ||
+    !category.trim() ||
+    !isNumber(durationSeconds) ||
+    !Number.isInteger(durationSeconds) ||
+    durationSeconds < 1 ||
+    !isString(id) ||
+    !isString(language) ||
+    !isString(path) ||
+    !isNumber(segmentCount) ||
+    !Number.isInteger(segmentCount) ||
+    segmentCount < 1 ||
+    !isString(title) ||
+    !isString(youtubeVideoId)
+  ) {
+    throw new Error("Invalid Dictation catalog.");
+  }
+
+  return { category, durationSeconds, id, language, path, segmentCount, title, youtubeVideoId };
+}
+
+function parseCatalog(value: unknown): DictationCatalog {
+  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.videos)) {
+    throw new Error("Invalid Dictation catalog.");
+  }
+
+  return { version: 1, videos: value.videos.map(parseCatalogVideo) };
+}
+
+export async function getDictationCatalogIndex(
+  options: { signal?: AbortSignal } = {},
+): Promise<{ index: DictationCatalogIndex; rootUrl: string }> {
+  const rootUrl = getCatalogRootUrl();
+  const index = parseCatalogIndex(
+    await fetchJson(new URL("index.json", rootUrl), options.signal),
+  );
+
+  return { index, rootUrl: rootUrl.toString() };
+}
+
+export async function getDictationCatalog(
+  catalogPath: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<DictationCatalogSource> {
+  const rootUrl = getCatalogRootUrl();
+  const catalog = parseCatalog(
+    await fetchJson(new URL(catalogPath, rootUrl), options.signal),
+  );
+
+  return { catalog, rootUrl: rootUrl.toString() };
+}
+
+export function getDictationThumbnailUrl(youtubeVideoId: string) {
+  return `https://i.ytimg.com/vi/${youtubeVideoId}/hqdefault.jpg`;
+}

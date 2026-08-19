@@ -12,8 +12,10 @@ vi.mock("@/_pages/collections", () => ({
   CollectionsWorkspacePage: () => <div>Collections workspace</div>,
 }));
 vi.mock("@/_pages/review", () => ({
-  ReviewModeProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
   ReviewWorkspacePage: () => <div>Review workspace</div>,
+}));
+vi.mock("@/features/review", () => ({
+  ReviewModeProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 import CollectionsLayout from "./collections/layout";

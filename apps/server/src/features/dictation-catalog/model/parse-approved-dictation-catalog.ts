@@ -3,6 +3,38 @@ import type {
   DictationCatalogVideo,
 } from './approved-dictation-catalog.types';
 
+export type DictationCatalogIndexCategory = {
+  id: string;
+  label: string;
+  path: string;
+};
+
+export function parseDictationCatalogIndex(
+  value: unknown,
+): DictationCatalogIndexCategory[] {
+  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.categories)) {
+    throw new Error('Invalid Dictation catalog index.');
+  }
+
+  const categories = value.categories.map((item): DictationCatalogIndexCategory => {
+    if (!isRecord(item)) {
+      throw new Error('Invalid Dictation catalog index.');
+    }
+
+    return {
+      id: requireNonEmptyString(item.id, 'Invalid Dictation catalog index.'),
+      label: requireNonEmptyString(item.label, 'Invalid Dictation catalog index.'),
+      path: requireNonEmptyString(item.path, 'Invalid Dictation catalog index.'),
+    };
+  });
+  assertUniqueIds(
+    categories,
+    'Invalid Dictation catalog index: category IDs must be unique.',
+  );
+
+  return categories;
+}
+
 export function parseDictationCatalog(value: unknown): DictationCatalogVideo[] {
   if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.videos)) {
     throw new Error('Invalid Dictation catalog.');
